@@ -1,0 +1,9 @@
+- hosts: '{{ host }}'
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: makedir
+      file: path='{{ dir }}' state=directory owner=root group=root mode=0755
+    - name: cp img
+      copy: src='{{ cp }}' dest='{{ dir }}{{ to }}' owner=root group=root mode=0644

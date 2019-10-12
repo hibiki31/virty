@@ -1,0 +1,49 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: makedir
+      file: path=/gsfs/brick1 state=directory owner=root group=root mode=0755
+    - name: makedir
+      file: path=/gsfs/brick2 state=directory owner=root group=root mode=0755
+    - name: Create a new primary partition for GPT
+      parted:
+        device: "/dev/{{ vol1 }}"
+        name: brick1
+        number: 1
+        label: gpt
+        state: present
+    - name: Create a new primary partition for GPT
+      parted:
+        device: "/dev/{{ vol2 }}"
+        name: brick2
+        number: 1
+        label: gpt
+        state: present
+    - name: Create a XFS filesystem
+      filesystem:
+        fstype: xfs
+        dev: "/dev/{{ vol1 }}1"
+        opts: -i size=512
+    - name: Create a XFS filesystem
+      filesystem:
+        fstype: xfs
+        dev: "/dev/{{ vol2 }}1"
+        opts: -i size=512
+    - name: Mount up device by label
+      mount:
+        path: /gsfs/brick1
+        src: /dev/disk/by-partlabel/brick1
+        fstype: xfs
+        state: mounted
+    - name: Mount up device by label
+      mount:
+        path: /gsfs/brick2
+        src: /dev/disk/by-partlabel/brick2
+        fstype: xfs
+        state: mounted
+    - name: makedir
+      file: path=/gsfs/brick1/data state=directory owner=root group=root mode=0755
+    - name: makedir
+      file: path=/gsfs/brick2/data state=directory owner=root group=root mode=0755

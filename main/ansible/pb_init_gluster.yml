@@ -1,0 +1,26 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: install gluster repo
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages: 
+          - centos-release-gluster6
+          - centos-release-storage-common
+        state: present
+    - name: install gluster
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages: 
+          - glusterfs-server
+        state: present
+    - name: restart gluster
+      systemd:
+        name: glusterd
+        state: restarted
+        daemon_reload: yes
+        enabled: yes

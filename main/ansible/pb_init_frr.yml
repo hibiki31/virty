@@ -1,0 +1,32 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: install frr form rpm
+      yum:
+        name: https://github.com/FRRouting/frr/releases/download/frr-5.0.1/frr-5.0.1-2018070501.el7.centos.x86_64.rpm
+
+    - name: "No Password"
+      lineinfile:
+          path: /etc/frr/daemons
+          regexp: '^zebra='
+          line: 'zebra=yes'
+    - name: "No Password"
+      lineinfile:
+          path: /etc/frr/daemons
+          regexp: '^bgpd='
+          line: 'bgpd=yes'
+
+    - name: "ipv4 forward"
+      lineinfile:
+          path: /etc/sysctl.conf
+          regexp: 'net.ipv4.ip_forward'
+          line: 'net.ipv4.ip_forward = 1'
+
+    - name: restart frr
+      systemd:
+        name: frr
+        state: restarted
+        daemon_reload: yes
+        enabled: yes

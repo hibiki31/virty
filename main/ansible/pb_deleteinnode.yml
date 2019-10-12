@@ -1,0 +1,7 @@
+- hosts: '{{ host }}'
+  gather_facts: false
+  tasks:
+    - name: Remove a file, if present
+      file:
+        path: '{{ file }}'
+        state: absent

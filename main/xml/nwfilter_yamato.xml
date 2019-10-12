@@ -1,0 +1,15 @@
+<filter name='yamato' chain='root'>
+  <filterref filter='clean-traffic'/>
+  <rule action='accept' direction='in' priority='500'>
+    <tcp srcipaddr='192.168.144.0' srcipmask='24'/>
+  </rule>
+  <rule action='accept' direction='inout' priority='500'>
+    <icmp/>
+  </rule>
+  <rule action='accept' direction='out' priority='500'>
+    <all/>
+  </rule>
+  <rule action='drop' direction='in' priority='500'>
+    <all/>
+  </rule>
+</filter>

@@ -1,0 +1,7 @@
+<network>
+  <name>LNet043</name>
+  <bridge name="LNet043" />
+  <forward mode="route" />
+  <ip address="10.0.1.85" netmask="255.255.255.254">
+  </ip>
+</network>
