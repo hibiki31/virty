@@ -7,7 +7,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h2>Domain Make <small>beta</small></h2>
+            <h2>Domain Undefine <small>beta</small></h2>
             <ul class="nav navbar-right panel_toolbox">
               <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
               </li>
@@ -27,12 +27,23 @@
           </div>
           <div class="x_content">
             <br />
-            <form action="/api/domain/listinit" method="post" data-parsley-validate class="form-horizontal form-label-left">
-  
-             
+            <form action="/api/add/undefine" method="post" data-parsley-validate class="form-horizontal form-label-left">
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="domain-list" name="domain-list" class="form-control" required="">
+                    {% for dom in domain %}
+                    <option value={{dom[0]}}>{{dom[0]}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+              <div class="ln_solid"></div>
               <div class="form-group">
                 <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                  <button name="status" value="init" class="btn btn-success">Refresh</button>
+                  <button name="status" value="undefine" class="btn btn-danger">Undefine</button>
                 </div>
               </div>
 

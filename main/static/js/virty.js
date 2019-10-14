@@ -5,12 +5,8 @@ $(function(){
 $('#demo-plus').on('click', function(){
     var inputCount = $('#demo-area .unit').length;
     if (inputCount < maxCount){
-    var element = $('#demo-area .unit:last-child').clone(true);
-    var inputList = element[0].querySelectorAll('input[type="text"]');
-    for (var i = 0; i < inputList.length; i++) {
-        inputList[i].value = "";
-    }
-    $('#demo-area .unit').parent().append(element);
+        var element = $('#demo-area .unit:last-child').clone(true);
+        $('#demo-area .unit').parent().append(element);
     }
 });
 $('.demo-minus').on('click', function(){
@@ -22,7 +18,7 @@ $('.demo-minus').on('click', function(){
 });
 
 $(function() {
-    $.getJSON('/api/node_list.json', function(data) {
+    $.getJSON('/api/sql/kvm_node.json', function(data) {
         for (var domain in data.ResultSet){
             $('#node-list').append('<option value="'+data.ResultSet[domain][0]+'">'+data.ResultSet[domain][0]+'</option>');
         }
@@ -45,7 +41,7 @@ $('#node-list').on('change', function() {
 $('#node-list').on('change', function() {
     $('#archive-list').children().remove();
         var node = $('#node-list option:selected').val();
-        $.getJSON('/api/archive_list.json', function(data) {
+        $.getJSON('/api/sql/kvm_archive.json', function(data) {
         for (var domain in data.ResultSet){
             if (data.ResultSet[domain][2] == node){
                 $('#archive-list').append('<option value="'+data.ResultSet[domain][0]+'">'+data.ResultSet[domain][0]+'</option>');

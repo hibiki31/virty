@@ -11,6 +11,6 @@ up:
 down:
 	docker-compose down
 login:
-	docker exec -it virty_uwsgi_1 bash
+	docker exec -it virty_main_1 bash
 remove:
 	docker system prune --volumes

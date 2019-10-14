@@ -1,6 +1,6 @@
 version: "3"
 services:
-  uwsgi:
+  main:
     build: ./docker/virty-main
     volumes:
       - ./key:/root/.ssh
@@ -13,12 +13,12 @@ services:
     restart: always
 
   nginx:
-    build: ./docker/virty-web
+    build: ./docker/virty-nginx
     volumes:
       - ./docker/volume/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/volume/nginx_log:/var/log/nginx/
     links:
-      - uwsgi
+      - main
     ports:
       - "80:80"
     environment:

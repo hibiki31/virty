@@ -1,20 +1,16 @@
 from flask import Flask, render_template, jsonify, request
-import virty,time,subprocess
 from time import  sleep
-
-virty.Pooler()
-
-
+import subprocess
+import virty
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def route():
-    DATA = virty.SqlSumDomain()
+    DATA = virty.vsql.SqlSumDomain()
     if DATA[0] > 1000:
         DATA[0] = str(int(DATA[0])/1000) + "GB"
-    html = render_template('index.html',domain=virty.SqlGetAll("kvm_domain"),sumdata= DATA)
+    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAll("kvm_domain"),sumdata= DATA)
     return html
 
 @app.route('/domain/info/<DOM_NAME>')
@@ -22,99 +18,93 @@ def info_domain(DOM_NAME):
     html = render_template('DomainInfo.html',domain=virty.VirtyDomXmlSummryGet(DOM_NAME))
     return html
 
-@app.route('/node/list')
-def node_list():
-    html = render_template('NodeList.html',domain=virty.SqlGetAll("kvm_node"),sumdata=virty.SqlSumNode())
-    return html
+@app.route('/list/<GET_DATA>')
+def node_list(GET_DATA):
+    if GET_DATA == "node":
+        html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("kvm_node"),sumdata=virty.vsql.SqlSumNode())
+        return html
+    elif GET_DATA == "archive":
+        html = render_template('ArchiveList.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
+        return html
+    elif GET_DATA == "storage":
+        html = render_template('StorageList.html',domain=virty.vsql.SqlGetAll("kvm_storage"))
+        return html
+    elif GET_DATA == "network":
+        html = render_template('NetworkList.html',domain=virty.vsql.SqlGetAll("kvm_network"))
+        return html
+    elif GET_DATA == "que":
+        html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.QueuStatus())
+        return html
 
-@app.route('/archive/list')
-def archive_list():
-    html = render_template('ArchiveList.html',domain=virty.SqlGetAll("kvm_archive"))
-    return html
 
-@app.route('/domain/add')
+@app.route('/domain/define')
 def domain_add():
     virty.Pooler()
-    html = render_template('DomainAdd.html',domain=virty.SqlGetAll("kvm_archive"))
+    html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
 @app.route('/domain/power')
 def domain_power():
     virty.Pooler()
-    html = render_template('DomainPower.html',domain=virty.SqlGetAll("kvm_domain"))
+    html = render_template('DomainPower.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
 
-@app.route('/domain/listinit')
+@app.route('/domain/undefine')
+def domain_undefine():
+    virty.Pooler()
+    html = render_template('DomainUndefine.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
+    return html
+ 
+
+@app.route('/domain/listreload')
 def domain_listinit():
     virty.Pooler()
-    html = render_template('DomainListinit.html')
+    html = render_template('DomainListReload.html')
     return html
-
-@app.route('/storage/list')
-def storage_list():
-    html = render_template('StorageList.html',domain=virty.SqlGetAll("kvm_storage"))
-    return html
-
-@app.route('/network/list')
-def network_list():
-    html = render_template('NetworkList.html',domain=virty.SqlGetAll("kvm_network"))
-    return html
-
-@app.route('/node/add')
-def node_add():
-    html = render_template('NodeAdd.html')
-    return html
-
-@app.route('/api/domainlist.json')
-def hello_world():
-    result=virty.SqlGetAll("kvm_domain")
-    return jsonify(ResultSet=result)
-
-@app.route('/api/node_list.json')
-def api_node_list():
-    result=virty.SqlGetAll("kvm_node")
-    return jsonify(ResultSet=result)
-
-@app.route('/api/archive_list.json')
-def api_archive_list():
-    result=virty.SqlGetAll("kvm_archive")
-    return jsonify(ResultSet=result)
 
 @app.route('/api/sql/<TABLE_NAME>.json')
 def api_sql(TABLE_NAME):
-    result=virty.SqlGetAll(TABLE_NAME)
+    result=virty.vsql.SqlGetAll(TABLE_NAME)
     return jsonify(ResultSet=result)
 
-@app.route("/api/domain/add",methods=["POST"])
-def api_domain_add():
-    response = str(request.form)
-    task = {}
-    task["nic"] = []
-    for key, value in request.form.items():
-        if key == "bridge":
-            task['nic'].append(["bridge",value])
-        else:
+
+@app.route("/api/add/<POST_TASK>",methods=["POST"])
+def api_add(POST_TASK):
+    if POST_TASK == "domain":
+        task = {}
+        task["nic"] = []
+        for key, value in request.form.items():
+            if key == "bridge":
+                for nic in request.form.getlist('bridge'):
+                    task['nic'].append(["bridge",nic])
+            else:
+                task[key]=value
+        virty.vsql.SqlQueuing("domain",task)
+        return task
+    elif POST_TASK == "que_clear":
+        if request.form["status"] == "que_clear":
+            virty.vsql.SqlDeleteAll("kvm_que")
+            return "que_list_clear"
+    elif POST_TASK == "undefine":
+        task = {}
+        for key, value in request.form.items():
             task[key]=value
-    virty.SqlQueDomain("domain",task)
-    return task
+            virty.vsql.SqlQueuing("undefine",task)
+        return task
+    elif POST_TASK == "power":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("power",task)
+        return task  
+    elif POST_TASK == "dom_reload":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("listinit",task)
+        return task
 
-@app.route("/api/domain/power",methods=["POST"])
-def api_domain_power():
-    response = str(request.form)
-    task = {}
-    for key, value in request.form.items():
-        task[key]=value
-    virty.SqlQueDomain("power",task)
-    return task
 
-@app.route("/api/domain/listinit",methods=["POST"])
-def api_domain_listinit():
-    response = str(request.form)
-    task = {}
-    for key, value in request.form.items():
-        task[key]=value
-    virty.SqlQueDomain("listinit",task)
-    return task
 
 if __name__ == "__main__":
     virty.Pooler()    
