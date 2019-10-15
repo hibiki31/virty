@@ -1,19 +1,106 @@
+import libvirt, sys, sqlite3, subprocess, os
+import vsql, vxml, vansible, vhelp,os, uuid
 import xml.etree.ElementTree as ET
-import os, uuid, vsql, vvirt
+
 
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
+def DomXmldump(DOM_NAME):
+	NODE_NAME = vsql.SqlGetData("DOM_NAME","NODE_NAME",DOM_NAME)
+	NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
+	conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
+	con = conn.lookupByName(DOM_NAME)
+	return con.XMLDesc()
 
-class XmlEdit():
-	def __init__(self,xmldata):
-		self.root = ET.fromstring(xmldata)
-	def dump(self):
-		print(ET.tostring(self.root).decode())
-	def name(self,NEW_NAME):
-		self.root.findall('name')[0].text = NEW_NAME
 
+def DomainDefine(XML_DATA,NODE_IP):
+    conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
+    conn.defineXML(XML_DATA)
+
+
+class Libvirtc():
+    def __init__(self,NODE_DOMAIN):
+        self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+
+    def DomainXmlOpen(self,DOMAIN_UUID):
+        self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
+        self.dxml = ET.fromstring(self.con.XMLDesc())
+        self.dpower = self.con.state()[0]
+        #5:OFF
+    
+    def DomainXmlDump(self):
+        self.dxmldump = ET.tostring(self.dxml).decode()
+        return self.dxmldump
+
+    def DomainNameEdit(self,NEW_NAME):
+        self.dxml.findall('name')[0].text = NEW_NAME
+
+    def DomainXmlUpdate(self):
+        if self.dpower == 5:
+            self.con.undefine()
+            self.node.defineXML(self.dxmldump)
+            return [0,"domain","define",""]
+        else:
+            return [1,"domain","define",""]
+
+    def DomainPowerGet(self):
+        if self.dpower == 5:
+            return "SHT"
+        else :
+            return "RUN"
+    
+    def DomainDestroy(self):
+        if self.dpower == 5:
+            return [2,"domain","stop","Already stop domain"]
+        try:
+            self.con.destroy()
+        except:
+            return [1,"domain","stop",""]
+        else:
+            return [0,"domain","stop",""]
+
+    def DomainShutdown(self):
+        if self.dpower == 5:
+            return [2,"domain","shutdown","Already shutdown domain"]
+        try:
+            self.con.shutdown()
+        except:
+            return [1,"domain","shutdown",""]
+        else:
+            return [0,"domain","shutdown",""]
+
+    def DomainPoweron(self):
+        if self.dpower == 1:
+            return [2,"domain","poweron","Already poweron domain"]
+        try:
+            self.con.create()
+        except:
+            return [1,"domain","poweron",""]
+        else:
+            return [0,"domain","poweron",""]
 	
+    def NetworkXmlTemplate(self,NETWORK_TEMPLATE):
+        tree = ET.parse(NETWORK_TEMPLATE) 
+        self.nxml = tree.getroot()
+
+    def NetworkXmlL2lEdit(self,NAME,GW):
+        self.nxml.findall('name')[0].text= NAME
+        bridge = self.nxml.findall('bridge')[0]
+        ip = self.nxml.findall('ip')[0]
+        ip.set('address',GW)
+        bridge.set('name',NAME)
+
+    def NetworkXmlDefine(self,NODEIP):
+        self.nobj = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
+
+    def NetworkXmlDump(self):
+        self.nxmldump = ET.tostring(self.nxml).decode()
+        return self.nxmldump
+
+    def NetworkStart(self):
+        self.nobj.create()
+
 	# xml = dom.XMLDesc()
 
 	# macaddress = vxml.XmlGenMac()

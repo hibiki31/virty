@@ -43,6 +43,12 @@ def domain_add():
     html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
+@app.route('/network/define')
+def net_define():
+    virty.Pooler()
+    html = render_template('NetDefine.html')
+    return html
+
 @app.route('/domain/power')
 def domain_power():
     virty.Pooler()
@@ -89,7 +95,7 @@ def api_add(POST_TASK):
         task = {}
         for key, value in request.form.items():
             task[key]=value
-            virty.vsql.SqlQueuing("undefine",task)
+        virty.vsql.SqlQueuing("undefine",task)
         return task
     elif POST_TASK == "power":
         task = {}
@@ -102,6 +108,13 @@ def api_add(POST_TASK):
         for key, value in request.form.items():
             task[key]=value
         virty.vsql.SqlQueuing("listinit",task)
+        return task
+
+    elif POST_TASK == "network":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("2ldefine",task)
         return task
 
 

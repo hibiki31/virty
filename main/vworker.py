@@ -2,6 +2,9 @@ import virty
 import ast
 from time import sleep
 
+SPATH = '/root/virty/main'
+SQLFILE = SPATH + '/data.sqlite'
+
 while True:
     sleep(3)
     que = virty.vsql.SqlQueuget()
@@ -56,5 +59,13 @@ while True:
             virty.VirtyDomainListInit()
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
-
-
+        elif que[4] == "2ldefine":
+            print("2ldefine")
+            dic = ast.literal_eval(que[5])
+            NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",dic['node-list'])
+            XML_PATH = SPATH + '/xml/net_l2less.xml'
+            NAME = dic['net-name']
+            GW = dic['net-gw']
+            virty.VirtyNetwork2lDefine(NODE_IP,XML_PATH,NAME,GW)
+            virty.vsql.SqlAddNetwork([("l2l",NAME,dic['node-list'])])
+            virty.vsql.SqlDequeuing(que[0],"finish",100)

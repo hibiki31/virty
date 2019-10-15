@@ -1,6 +1,6 @@
-#!/bin/python3
+#!/usr/local/bin/python3
 import libvirt, sys, sqlite3, subprocess, os
-import vsql, vxml, vansible
+import vsql, vxml, vansible, vhelp, vvirt
 
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
@@ -19,10 +19,6 @@ class Color():
 	UNDERLINE = '\033[4m'
 	INVISIBLE = '\033[08m'
 	REVERCE   = '\033[07m'
-def SqlPost():
-	con = sqlite3.connect(SQLFILE)
-	cur = con.cursor()
-	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_name,network_node))')
 
 
 def QueuStatus():
@@ -145,14 +141,7 @@ def LibvirtNetworkStop(NODE_IP,NET_NAME):
 	else:
 		LogSuccess("OK",NET_NAME + " stop")
 
-
-########### Ansible ########### 
-
-
-########### XML ###########
-
-
-########### Virty ########### 
+ 
 def VirtyInit():
 	inputvalue = input("Do you want to initialize the database?(y or other):")
 	if inputvalue == "y":
@@ -466,14 +455,6 @@ def VirtyDomainListInit():
 	vsql.SqlAddDomain(domlist)
 	VirtyDomainList()
 
-def VirtyDomainList():
-	datas = vsql.SqlGetDomain()
-	print('POWER {0:16} {1:8} {2:4} {3:5} {4:36} {5:8} {6:8}'.format("NAME","NODE","CORE","MEMORY","UUID","TYPE","OS"))
-	for data in datas:
-		if data[1] == "SHT":
-			LogError("SHT",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3],int(data[4])/1024,data[5], data[6], data[7]))
-		elif data[1] == "RUN":
-			LogSuccess("RUN",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3], int(data[4])/1024,data[5], data[6], data[7]))
 def VirtyStorageList():
 	datas = vsql.SqlGetAll("kvm_storage")
 	print('          {0:12} {1:8} {2:8} {3:8} {4:8}'.format("NAME","NODE","DEVICE","TYPE","PATH"))
@@ -541,12 +522,7 @@ def VirtyDomMakeImg(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
 	LogInfo("OK","Img added")
 	
 
-def VirtyDomXmldump(DOM_NAME):
-	NODE_NAME = vsql.SqlGetData("DOM_NAME","NODE_NAME",DOM_NAME)
-	NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
-	conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
-	con = conn.lookupByName(DOM_NAME)
-	print(con.XMLDesc())
+
 
 def VirtyDomXmlSummry(DOM_NAME):
 	import xml.etree.ElementTree as ET 
@@ -779,30 +755,6 @@ def VirshCommandList():
 	for item in clist:
 		print(item)
 
-def VirshStatus(DOM_NAMES):
-	conn = libvirt.open('qemu:///system')
-	for domname in DOM_NAMES:
-		con = conn.lookupByName(domname)
-		state, reason = con.state()
-		if state == libvirt.VIR_DOMAIN_NOSTATE:
-			print('The state is VIR_DOMAIN_NOSTATE')
-		elif state == libvirt.VIR_DOMAIN_RUNNING:
-			LogInfo(domname + " is Running reason code is " + str(reason))
-		elif state == libvirt.VIR_DOMAIN_BLOCKED:
-			print('The state is VIR_DOMAIN_BLOCKED')
-		elif state == libvirt.VIR_DOMAIN_PAUSED:
-			print('The state is VIR_DOMAIN_PAUSED')
-		elif state == libvirt.VIR_DOMAIN_SHUTDOWN:
-			print('The state is VIR_DOMAIN_SHUTDOWN')
-		elif state == libvirt.VIR_DOMAIN_SHUTOFF:
-			LogInfo(domname + " is Shutoff reason code is " + str(reason))
-		elif state == libvirt.VIR_DOMAIN_CRASHED:
-			print('The state is VIR_DOMAIN_CRASHED')
-		elif state == libvirt.VIR_DOMAIN_PMSUSPENDED:
-			print('The state is VIR_DOMAIN_PMSUSPENDED')
-		else:
-			print(' The state is unknown.')
-	conn.close
 
 def VirshDefine(DOM_NAME,NODE_IP):
 	with open(SPATH + '/define/' + DOM_NAME + '.xml') as f:
@@ -862,81 +814,64 @@ def VirtyStorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAG
 	vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])
 
 
-################ HELP ####################
-def VirtyStorageAddHelp():
-	print("\
-	virty storage add archive NODE01 ssd dir /kvm/archive\n")
+def VirtyDomXmldump(DOM_NAME):
+	print(vvirt.DomXmldump(DOM_NAME))
 	
 
-def VirtyDomMakeHelp():
-	print("\
-	virty dom make base vm010 1024 2 auto pass \n \
-	virty dom make nic bridge vm010 virbr1 \n \
-	virty dom make img vm010 storage_vm CentOS7-1810 \n \
-	virty dom define static vm010 Chinon \n")
-	
+def VirtyDomNameEdit():
+	uuid = "727ddc2c-6b5f-4d59-a4b5-b9882d2f659e"
 
-def VirtyDomMakeBaseHelp():
-	print("\nHOW.")
-	print("   virty dom make base (DomainNAME) (MEMORY) (CORE) (VNC_PORT) (VNCPassword)")
-	print("\nEX.")
-	print("   virty dom make base vm001 1024 2 auto Password\n‬")	
-	
 
-def VirtyDomMakeNicHelp():
-	print("\nHOW.")
-	print("   virty dom make nic bridge (DomainNAME) (SOURCE)")
-	print("\nEX.")
-	print("   virty dom make nic bridge vm001 virbr0\n‬")	
-	
+	editor = vvirt.Libvirtc("192.168.10.5")
+	editor.DomainXmlOpen(uuid)
 
-def VirtyNodeAddHelp():
-	print("\n It is necessary to be able to connect with SSH in order to get memory and CPU information.")
-	print("\nHOW.")
-	print("   virty node add (NAME) (IP/DOMAIN)")
-	print("\nEX.")
-	print("   virty node add node01 192.168.0.1\n‬")
-	
+	editor.DomainNameEdit("CentOS_ntp_up")
+	print(editor.DomainXmlDump())
+	print(editor.DomainPowerGet())
+	print(editor.DomainXmlUpdate())
+	# print(editor.DomainDestroy())
+	# print(editor.DomainShutdown())
+	# print(editor.DomainPoweron())
 
-def VirtyDomainMakeNomalHelp():
-	print("\nHOW.")
-	print("   virty dom make nomal (ArchiveNAME) (DomainNAME) (BridgeAddr) (VNCPASS) (MEMORY) (CORE) (POOL)")
-	print("\nEX.")
-	print("   virty dom make nomal CentOS chinon vm001 virbr0 5900 1024 2 none\n‬")	
-	
 
-def VirtyHelp():
-	print("\
-	virty archive\n\
-	virty storage\n\
-	virty dom\n\
-	virty develop \n\
-	virty dom autostart CentOS_Virty \n\
-	virty network \n\
-	virty node \n\
- 	")
+def VirtyDomainList():
+	datas = vsql.SqlGetDomain()
+	print('POWER {0:16} {1:8} {2:4} {3:5} {4:36} {5:8} {6:8}'.format("NAME","NODE","CORE","MEMORY","UUID","TYPE","OS"))
+	for data in datas:
+		if data[1] == "SHT":
+			LogError("SHT",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3],int(data[4])/1024,data[5], data[6], data[7]))
+		elif data[1] == "RUN":
+			LogSuccess("RUN",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3], int(data[4])/1024,data[5], data[6], data[7]))
 
+
+def VirtyNetwork2lDefine(NODE_IP,XML_PATH,NAME,GW):
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.NetworkXmlTemplate(XML_PATH)
+	print(editor.NetworkXmlDump())
+	editor.NetworkXmlL2lEdit(NAME,GW)
+	print(editor.NetworkXmlDump())
+	editor.NetworkXmlDefine(NODE_IP)
+	editor.NetworkStart()
 
 
 
 if __name__ == "__main__":
 
+
 	args = sys.argv
 	argnum = len(args)
 
 
-
 	if argnum == 1:
-		VirtyHelp()
+		vhelp.VirtyHelp()
 	elif argnum == 3:
-		if args[1] == "dom" and args[2] == "make":VirtyDomMakeHelp()
-		if args[1] == "node" and args[2] == "add":VirtyNodeAddHelp()
-		if args[1] == "storage" and args[2] == "add":VirtyStorageAddHelp()
+		if args[1] == "dom" and args[2] == "make":vhelp.VirtyDomMakeHelp()
+		if args[1] == "node" and args[2] == "add":vhelp.VirtyNodeAddHelp()
+		if args[1] == "storage" and args[2] == "add":vhelp.VirtyStorageAddHelp()
 	elif argnum == 4:
-		if args[1] == "dom" and args[2] == "make" and args[3] == "nomal":VirtyDomainMakeNomalHelp()
-		if args[1] == "dom" and args[2] == "make" and args[3] == "base":VirtyDomMakeBaseHelp()
-		if args[1] == "dom" and args[2] == "make" and args[3] == "nic":VirtyDomMakeNicHelp()
-	
+		if args[1] == "dom" and args[2] == "make" and args[3] == "nomal":vhelp.VirtyDomainMakeNomalHelp()
+		if args[1] == "dom" and args[2] == "make" and args[3] == "base":vhelp.VirtyDomMakeBaseHelp()
+		if args[1] == "dom" and args[2] == "make" and args[3] == "nic":vhelp.VirtyDomMakeNicHelp()	
 
 
 	if argnum == 2:
@@ -958,7 +893,6 @@ if __name__ == "__main__":
 		if args[1] == "dom" and args[2] == "start": VirtyDomainStart(args[3])
 		if args[1] == "dom" and args[2] == "autostart": VirtyDomainAutostart(args[3])
 		if args[1] == "net" and args[2] == "start": VirtyNetStart(args[3])
-		if args[1] == "que" and args[2] == "delete": vsql.SqlDequeDomain(args[3])
 		if args[1] == "net" and args[2] == "delete": VirtyNetDelete(args[3])
 		if args[1] == "nic" and args[2] == "add": VirtyNicAdd(args[3])
 		if args[1] == "node" and args[2] == "delete": VirtyNodeDelete([args[3]])
