@@ -1,4 +1,4 @@
-import sqlite3, vansible
+import sqlite3, vansible, os
 
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
@@ -81,9 +81,13 @@ def SqlSumNode():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
 	sql = 'select sum(node_memory) from kvm_node'
-	RAM = cur.execute(sql).fetchall()
+	RAM = cur.execute(sql).fetchone()
 	sql = 'select sum(node_core) from kvm_node'
-	CORE = cur.execute(sql).fetchall()
+	CORE = cur.execute(sql).fetchone()
+	if CORE[0] == None:CORE = 0
+	else:CORE = CORE[0]
+	if RAM[0] == None:RAM = 0
+	else:RAM = RAM[0]	
 	return [RAM,CORE]
 	
 	
@@ -92,11 +96,15 @@ def SqlSumDomain():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
 	sql = 'select sum(domain_memory) from kvm_domain'
-	RAM = cur.execute(sql).fetchall()
+	RAM = cur.execute(sql).fetchone()
 	sql = 'select sum(domain_core) from kvm_domain'
-	CORE = cur.execute(sql).fetchall()
-	return [RAM[0][0],CORE[0][0]]
-	
+	CORE = cur.execute(sql).fetchone()
+	if CORE[0] == None:CORE = 0
+	else:CORE = CORE[0]
+	if RAM[0] == None:RAM = 0
+	else:RAM = RAM[0]
+	return [RAM,CORE]
+
 	
 
 def SqlGetL2less():
@@ -335,3 +343,23 @@ def SqlHitImg(DOM_NAME):
 	return cur.execute(sql).fetchall()
 	
 	
+def SqlInit():
+	try:
+		os.remove(SQLFILE)
+	except:
+		pass
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen)')
+	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_progress,que_type, que_json)')
+	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_name,network_node))')
+	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
+	cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
+	cur.execute('create table if not exists kvm_vncpool (vncpool_port, vncpool_domain_name, vncpool_passwd, vncpool_node_name, primary key (vncpool_port,vncpool_node_name))')
+	cur.execute('create table if not exists kvm_domainpool (domainpool_name, domainpool_node_name, domainpool_setram)')
+	cur.execute('create table if not exists kvm_archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
+	cur.execute('create table if not exists kvm_img (img_name, img_archive_name, img_domain_name,img_node_name,primary key (img_name,img_domain_name))')
+	cur.execute('create table if not exists kvm_l2lesspool (l2lesspool_name primary key, l2lesspool_ip, l2lesspool_gw, l2lesspool_domain_name, l2lesspool_node_name)')
+	con.commit()
+	cur.close()
+	con.close()

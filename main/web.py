@@ -5,6 +5,18 @@ import virty
 
 app = Flask(__name__)
 
+@app.route('/setup',methods=["POST","GET"])
+def setup():
+    if request.method == 'POST':
+        if request.form["status"] == "dbinit":
+            virty.vsql.SqlInit()
+            return "database init"
+    elif request.method == 'GET':
+        html = render_template('Setup.html')
+        return html
+
+
+
 @app.route('/')
 def route():
     DATA = virty.vsql.SqlSumDomain()
@@ -43,10 +55,10 @@ def domain_add():
     html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
-@app.route('/network/define')
+@app.route('/network/2ldefine')
 def net_define():
     virty.Pooler()
-    html = render_template('NetDefine.html')
+    html = render_template('NetworkDefine2l.html')
     return html
 
 @app.route('/domain/power')
@@ -67,6 +79,19 @@ def domain_listinit():
     virty.Pooler()
     html = render_template('DomainListReload.html')
     return html
+
+@app.route('/node/add')
+def node_add():
+    virty.Pooler()
+    html = render_template('NodeAdd.html')
+    return html
+
+@app.route('/storage/add')
+def storage_add():
+    virty.Pooler()
+    html = render_template('StorageAdd.html')
+    return html
+
 
 @app.route('/api/sql/<TABLE_NAME>.json')
 def api_sql(TABLE_NAME):
@@ -110,11 +135,25 @@ def api_add(POST_TASK):
         virty.vsql.SqlQueuing("listinit",task)
         return task
 
-    elif POST_TASK == "network":
+    elif POST_TASK == "network2l":
         task = {}
         for key, value in request.form.items():
             task[key]=value
         virty.vsql.SqlQueuing("2ldefine",task)
+        return task
+
+    elif POST_TASK == "node":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("nodeadd",task)
+        return task
+
+    elif POST_TASK == "storage":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("storage",task)
         return task
 
 

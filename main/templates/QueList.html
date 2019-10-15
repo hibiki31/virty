@@ -61,7 +61,13 @@
                                         </td>
                                         <td class=" ">{{dom[0]}}</td>
                                         <td class=" ">{{dom[1]}}</td>
-                                        <td class=" ">{{dom[2]}}</td>
+                                        {% if dom[2] == "init" %}
+                                        <td class=" "><i class="fa fa-square dark"></i> Init</td>
+                                        {% elif dom[2] == "finish" %}
+                                        <td class=" "><i class="fa fa-square green"></i> Finish</td>
+                                        {% else %}
+                                        <td class=" "><i class="fa fa-square danger"></i> Error</td>
+                                        {% endif %}
                                         <td class=" ">{{dom[3]}}</td>
                                         <td class=" ">{{dom[4]}}</td>
                                         <td class=" ">{{dom[5]}}</td>

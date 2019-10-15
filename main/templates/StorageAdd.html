@@ -7,7 +7,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h2>Net Define <small>beta</small></h2>
+            <h2>Domain Define <small>beta</small></h2>
             <ul class="nav navbar-right panel_toolbox">
               <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
               </li>
@@ -27,7 +27,7 @@
           </div>
           <div class="x_content">
             <br />
-            <form action="/api/add/network" method="post" data-parsley-validate class="form-horizontal form-label-left">
+            <form action="/api/add/storage" method="post" data-parsley-validate class="form-horizontal form-label-left">
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span class="required">*</span>
                 </label>
@@ -38,25 +38,60 @@
                 </div>
               </div>
 
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">For <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select class="form-control" name="system" required="required">
+                    <option value="archive">archive</option>
+                    <option value="data">data</option>
+                  </select>
+                </div>
+              </div>
 
 
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" id="net-name" name="net-name" required="required" class="form-control col-md-7 col-xs-12">
+                  <input type="text" name="name" required="required" class="form-control col-md-7 col-xs-12">
                 </div>
               </div>
 
-   
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">GW <span class="required">*</span>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Device <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" id="net-gw" name="net-gw" required="required" class="form-control col-md-7 col-xs-12">
+                  <select class="form-control" name="device" required="required">
+                    <option value="HDD">HDD</option>
+                    <option value="SSD">SSD</option>
+                    <option value="NVMe">NVMe</option>
+                  </select>
                 </div>
               </div>
- 
+
+
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Type <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select class="form-control" name="type" required="required">
+                    <option value="JBOD">JBOD</option>
+                    <option value="LVM-RAID10">LVM-RAID10</option>
+                    <option value="LVM-RAID0">LVM-RAID0</option>
+                    <option value="GFS-Mirror">GFS-Mirror</option>
+                  </select>
+                </div>
+              </div>
+
+
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Path <span class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input type="text" name="path" required="required" class="form-control col-md-7 col-xs-12">
+                </div>
+              </div>
 
 
 

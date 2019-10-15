@@ -64,8 +64,22 @@ while True:
             dic = ast.literal_eval(que[5])
             NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",dic['node-list'])
             XML_PATH = SPATH + '/xml/net_l2less.xml'
-            NAME = dic['net-name']
+            NAME = "2l-" + dic['net-gw']
             GW = dic['net-gw']
             virty.VirtyNetwork2lDefine(NODE_IP,XML_PATH,NAME,GW)
             virty.vsql.SqlAddNetwork([("l2l",NAME,dic['node-list'])])
+            virty.vsql.SqlDequeuing(que[0],"finish",100)
+        
+        elif que[4] == "nodeadd":
+            print("nodeadd")
+            dic = ast.literal_eval(que[5])
+            virty.VirtyNodeAdd(dic['name'],dic['user'] +'@'+ dic['ip'])
+            virty.vsql.SqlDequeuing(que[0],"finish",100)
+
+        elif que[4] == "storage":
+            print("storage")
+            dic = ast.literal_eval(que[5])
+            if dic['system'] == "archive":NAME = "archive"
+            elif dic['system'] == "data":  NAME = dic['name']
+            virty.VirtyStorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)

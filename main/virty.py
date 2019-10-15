@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/bin/python3
 import libvirt, sys, sqlite3, subprocess, os
 import vsql, vxml, vansible, vhelp, vvirt
 
@@ -145,26 +145,7 @@ def LibvirtNetworkStop(NODE_IP,NET_NAME):
 def VirtyInit():
 	inputvalue = input("Do you want to initialize the database?(y or other):")
 	if inputvalue == "y":
-		try:
-			os.remove(SQLFILE)
-		except:
-			LogInfo("Info","Database file dose not exist")
-		con = sqlite3.connect(SQLFILE)
-		cur = con.cursor()
-		cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen)')
-		cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_progress,que_type, que_json)')
-		cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_name,network_node))')
-		cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
-		cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
-		cur.execute('create table if not exists kvm_vncpool (vncpool_port, vncpool_domain_name, vncpool_passwd, vncpool_node_name, primary key (vncpool_port,vncpool_node_name))')
-		cur.execute('create table if not exists kvm_domainpool (domainpool_name, domainpool_node_name, domainpool_setram)')
-		cur.execute('create table if not exists kvm_archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
-		cur.execute('create table if not exists kvm_img (img_name, img_archive_name, img_domain_name,img_node_name,primary key (img_name,img_domain_name))')
-		cur.execute('create table if not exists kvm_l2lesspool (l2lesspool_name primary key, l2lesspool_ip, l2lesspool_gw, l2lesspool_domain_name, l2lesspool_node_name)')
-		LogInfo("OK","Successfully")
-		con.commit()
-		cur.close()
-		con.close()
+		vsql.SqlInit()
 	inputvalue = input("Do you want to add node now?(y or other):")
 	if inputvalue == "y":
 		inputvalue = int(input("How many nodes do you want to add(int):"))
