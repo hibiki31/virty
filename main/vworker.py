@@ -83,3 +83,16 @@ while True:
             elif dic['system'] == "data":  NAME = dic['name']
             virty.VirtyStorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
+
+        elif que[4] == "domnameedit":
+            print("domnameedit")
+            dic = ast.literal_eval(que[5])
+            virty.DomNameEdit(dic['uuid'],dic['newname'])
+            virty.vsql.SqlDequeuing(que[0],"finish",100)     
+
+        elif que[4] == "dom_nic":
+            print("dom_nic")
+            dic = ast.literal_eval(que[5])
+            virty.DomNicEdit(dic['uuid'],dic['mac'],dic['network'])
+            virty.vsql.SqlDequeuing(que[0],"finish",100)     
+            

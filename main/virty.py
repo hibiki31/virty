@@ -555,7 +555,8 @@ def VirtyDomXmlSummryGet(DOM_NAME):
 	RAM = root.find('memory').text
 	UNIT = root.find('memory').get("unit")
 	vCPU = root.find('vcpu').text
-	
+	UUID = root.find('uuid').text
+
 	vnc = root.find('devices').find('graphics')
 	
 	PORT = vnc.get("port")
@@ -563,7 +564,7 @@ def VirtyDomXmlSummryGet(DOM_NAME):
 	LISTEN = vnc.get("listen")
 	PASSWD = vnc.get("passwd", "none")
 
-	infodata = [NAME,RAM,vCPU,PORT,AUTO,PASSWD,[],[],NODE_NAME,NODE_IP]
+	infodata = [NAME,RAM,vCPU,PORT,AUTO,PASSWD,[],[],NODE_NAME,NODE_IP,UUID]
 
 
 	for disk in root.find('devices').findall('disk'):
@@ -799,20 +800,26 @@ def VirtyDomXmldump(DOM_NAME):
 	print(vvirt.DomXmldump(DOM_NAME))
 	
 
-def VirtyDomNameEdit():
-	uuid = "727ddc2c-6b5f-4d59-a4b5-b9882d2f659e"
+def DomNameEdit(DOM_UUID,NEW_NAME):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainNameEdit(NEW_NAME)
 
-	editor = vvirt.Libvirtc("192.168.10.5")
-	editor.DomainXmlOpen(uuid)
-
-	editor.DomainNameEdit("CentOS_ntp_up")
-	print(editor.DomainXmlDump())
-	print(editor.DomainPowerGet())
 	print(editor.DomainXmlUpdate())
-	# print(editor.DomainDestroy())
-	# print(editor.DomainShutdown())
-	# print(editor.DomainPoweron())
+	print(editor.DomainXmlDump())
+
+
+def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainNicEdit(NOW_MAC,NEW_NIC)
+
 
 
 def VirtyDomainList():
@@ -834,6 +841,14 @@ def VirtyNetwork2lDefine(NODE_IP,XML_PATH,NAME,GW):
 	editor.NetworkXmlDefine(NODE_IP)
 	editor.NetworkStart()
 
+def GetNicData(DOM_UUID):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.DomainXmlOpen(DOM_UUID)
+
+	return editor.DomainNicShow()
 
 
 if __name__ == "__main__":

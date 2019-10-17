@@ -7,11 +7,13 @@ SQLFILE = SPATH + '/data.sqlite'
 
 
 def AnsibleFiledeleteInnode(NODEIP,FILE):
+	AnsibleNodelistInit()
 	exvar = ' "file=' + FILE  + ' host=' + NODEIP + '"'
 	cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_deleteinnode.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + exvar
 	subprocess.check_call(cmd, shell=True)
 
 def AnsibleFilecpInnode(NODEIP,CP,TO):
+	AnsibleNodelistInit()
 	print(NODEIP + CP + TO)
 	exvar = ' "cp=' + CP  + ' host=' + NODEIP + ' to=' + os.path.basename(TO) + ' dir=' + os.path.dirname(TO) + '/"'
 	print(exvar)
@@ -19,6 +21,7 @@ def AnsibleFilecpInnode(NODEIP,CP,TO):
 	subprocess.check_call(cmd, shell=True)
 
 def AnsibleFilecpTonode(NODEIP,CP,TO):
+	AnsibleNodelistInit()
 	exvar = ' "cp=' + CP  + ' host=' + NODEIP + ' to=' + os.path.basename(TO) + ' dir=' + os.path.dirname(TO) + '/"'
 	cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_cptonode.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + exvar
 	subprocess.check_call(cmd, shell=True)

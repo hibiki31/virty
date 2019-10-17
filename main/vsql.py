@@ -302,6 +302,21 @@ def SqlGetData(SRC,DST,HINT):
 			if GET == []:	return 1
 			return GET[0][4].rstrip("/") + "/"
 
+def Convert(SRC,DST,HINT):
+	if SRC == "DOM_UUID" and DST == "NODE_NAME":
+		for data in SqlGetAll("kvm_domain"):
+			if data[5] == HINT:
+				return data[2]
+	if SRC == "NODE_NAME" and DST == "NODE_IP":
+		for data in SqlGetAll("kvm_node"):
+			if data[0] == HINT:
+				return data[1]
+	if SRC == "NODE_NAME" and DST == "NETWORK_DATAS":
+		return  SqlPush("select * from kvm_network where network_node='" + HINT + "'")
+
+
+
+
 
 def SqlPush(SQL):
 	con = sqlite3.connect(SQLFILE)

@@ -30,6 +30,15 @@ def info_domain(DOM_NAME):
     html = render_template('DomainInfo.html',domain=virty.VirtyDomXmlSummryGet(DOM_NAME))
     return html
 
+@app.route('/domain/nic/edit/<DOM_UUID>/<DOM_MAC>')
+def domain_nic(DOM_UUID,DOM_MAC):
+    
+    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
+    html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
+    return html
+
+
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
     if GET_DATA == "node":
@@ -86,12 +95,23 @@ def node_add():
     html = render_template('NodeAdd.html')
     return html
 
+@app.route('/domain/nameedit')
+def domainname_edit():
+    virty.Pooler()
+    html = render_template('DomainNameEdit.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
+    return html
+
 @app.route('/storage/add')
 def storage_add():
     virty.Pooler()
     html = render_template('StorageAdd.html')
     return html
 
+@app.route('/network/add')
+def network_add():
+    virty.Pooler()
+    html = render_template('NetworkAdd.html')
+    return html
 
 @app.route('/api/sql/<TABLE_NAME>.json')
 def api_sql(TABLE_NAME):
@@ -156,7 +176,27 @@ def api_add(POST_TASK):
         virty.vsql.SqlQueuing("storage",task)
         return task
 
+    elif POST_TASK == "network":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlAddNetwork([(task['name'],task['node-list'],task['source'])])
+        return task
 
+@app.route("/api/edit/<POST_TASK>",methods=["POST"])
+def api_edit(POST_TASK):
+    if POST_TASK == "dom_name":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("domnameedit",task)
+        return task
+    elif POST_TASK == "dom_nic":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        virty.vsql.SqlQueuing("dom_nic",task)
+        return task
 
 if __name__ == "__main__":
     virty.Pooler()    
