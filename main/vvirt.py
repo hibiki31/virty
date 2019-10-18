@@ -20,28 +20,29 @@ def DomainDefine(XML_DATA,NODE_IP):
 
 
 class Libvirtc():
+
     def __init__(self,NODE_DOMAIN):
         self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
 
-    def DomainXmlOpen(self,DOMAIN_UUID):
+    def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
-        self.dxml = ET.fromstring(self.con.XMLDesc())
+        self.domxml = ET.fromstring(self.con.XMLDesc())
         self.dpower = self.con.state()[0]
         #5:OFF
-    
-    def DomainXmlDump(self):
-        self.dxmldump = ET.tostring(self.dxml).decode()
-        return self.dxmldump
+
+        return self.con.XMLDesc()
+
+    def DomainXmlDump(self): 
+        return ET.tostring(self.domxml).decode()
 
     def DomainNameEdit(self,NEW_NAME):
-        self.dxml.findall('name')[0].text = NEW_NAME
+        self.domxml.findall('name')[0].text = NEW_NAME
         
-
     def DomainXmlUpdate(self):
-        self.dxmldump = ET.tostring(self.dxml).decode()
+        ET.tostring(self.domxml).decode()
         if self.dpower == 5:
             self.con.undefine()
-            self.node.defineXML(self.dxmldump)
+            self.node.defineXML(ET.tostring(self.domxml).decode())
             return [0,"domain","define",""]
         else:
             return [1,"domain","define",""]
@@ -94,24 +95,22 @@ class Libvirtc():
         bridge.set('name',NAME)
 
     def NetworkXmlDefine(self,NODEIP):
-        self.nobj = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
+        self.network = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
 
     def NetworkXmlDump(self):
-        self.nxmldump = ET.tostring(self.nxml).decode()
-        return self.nxmldump
+        return ET.tostring(self.nxml).decode()
 
     def NetworkStart(self):
-        self.nobj.create()
+        self.network.create()
 
     def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
         source = NEW_BRIDGE
-        devices = self.dxml.find('devices')
+        devices = self.domxml.find('devices')
         for interface in devices.iter('interface'):
             if interface.find('mac').get('address') == NOW_MAC:
                 interface.find('source').set('bridge', source)
                 self.con.updateDeviceFlags(ET.tostring(interface).decode())
  
-
     def DomainNicShow(self):
         root = ET.fromstring(self.con.XMLDesc())
         self.nicdata = []
@@ -128,7 +127,7 @@ class Libvirtc():
 
     def ShowSelinux(self):
         flag = 0
-        for seclabel in self.dxml.findall('seclabel'):
+        for seclabel in self.domxml.findall('seclabel'):
             if seclabel.get('model','None') == 'selinux':
                 print("selinuxis arrrr")
                 flag = 1
@@ -139,9 +138,64 @@ class Libvirtc():
             return "off"
 
     def DeleteSelinux(self):
-        for seclabel in self.dxml.findall('seclabel'):
+        for seclabel in self.domxml.findall('seclabel'):
             if seclabel.get('model','None') == 'selinux':
-                self.dxml.remove(seclabel)
+                self.domxml.remove(seclabel)
+
+
+
+class Xmlc():
+    def __init__(self,XML_STRING):
+        self.xml = ET.fromstring(XML_STRING)
+
+    def DomainData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+        DATA['memory'] = self.xml.find('memory').text
+        DATA['memory-unit'] = self.xml.find('memory').get("unit")
+        DATA['vcpu'] = self.xml.find('vcpu').text
+        DATA['uuid'] = self.xml.find('uuid').text
+        DATA['vnc'] = []
+        DATA['disk'] = []
+        DATA['interface'] = []
+
+        vnc = self.xml.find('devices').find('graphics')        
+    
+        DATA['vnc'].append(vnc.get("port"))
+        DATA['vnc'].append(vnc.get("autoport"))
+        DATA['vnc'].append(vnc.get("listen"))
+        DATA['vnc'].append(vnc.get("passwd", "none"))
+
+        for disk in self.xml.find('devices').findall('disk'):
+            if disk.find("source") is not None:
+                DEVICE = disk.get("device")
+                TYPE = disk.get("type")
+                FILE = disk.find("source").get("file","none")
+                TARGET =  disk.find("target").get("dev")
+                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+            else:
+                DEVICE = disk.get("device")
+                TYPE = disk.get("type")
+                FILE = "Not Connect"
+                TARGET = disk.find("target").get("dev")
+                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+        for nic in self.xml.find('devices').findall('interface'):
+            TYPE = nic.get("type")
+            MAC = nic.find("mac").get("address")
+            TO = nic.find("source").get("bridge")
+
+            if nic.find("target") == None:TARGET = "none"
+            else:TARGET = nic.find("target").get("dev","none")
+    
+            DATA['interface'].append([TYPE,MAC,TARGET,TO])
+
+        DATA['selinux'] = "off"
+        for seclabel in self.xml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                DATA['selinux']
+
+        return DATA
+
 
 
 

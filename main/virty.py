@@ -853,7 +853,7 @@ def DomNameEdit(DOM_UUID,NEW_NAME):
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 	editor = vvirt.Libvirtc(NODE_IP)
-	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainOpen(DOM_UUID)
 	editor.DomainNameEdit(NEW_NAME)
 
 	print(editor.DomainXmlUpdate())
@@ -865,7 +865,7 @@ def DomSelinux(DOM_UUID):
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 	editor = vvirt.Libvirtc(NODE_IP)
-	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainOpen(DOM_UUID)
 
 	return editor.ShowSelinux()
 
@@ -874,7 +874,7 @@ def DomSelinuxDisable(DOM_UUID):
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 	editor = vvirt.Libvirtc(NODE_IP)
-	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainOpen(DOM_UUID)
 
 	editor.DeleteSelinux()
 	print(editor.DomainXmlUpdate())
@@ -887,7 +887,7 @@ def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 	editor = vvirt.Libvirtc(NODE_IP)
-	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainOpen(DOM_UUID)
 	editor.DomainNicEdit(NOW_MAC,NEW_NIC)
 
 
@@ -916,9 +916,22 @@ def GetNicData(DOM_UUID):
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 	editor = vvirt.Libvirtc(NODE_IP)
-	editor.DomainXmlOpen(DOM_UUID)
+	editor.DomainOpen(DOM_UUID)
 
 	return editor.DomainNicShow()
+
+def DomainData(DOM_UUID):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+	manager = vvirt.Libvirtc(NODE_IP)
+	editor = vvirt.Xmlc(manager.DomainOpen(DOM_UUID))
+
+	data = editor.DomainData()
+	data['node-name'] = NODE_NAME
+	data['node-ip'] = NODE_IP
+
+	return data
 
 
 if __name__ == "__main__":

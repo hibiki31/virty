@@ -49,3 +49,28 @@ $('#node-list').on('change', function() {
         }
     });
 });
+
+$(function(){
+    setInterval(function(){
+        $('#que-status').children().remove();
+        $.getJSON('/api/getque.json', function(data) {
+            for (var i in data.ResultSet){
+                var add_contents = '<li><a><span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>'
+                add_contents += '<span><span>'+data.ResultSet[i][4]+'</span><span class="time">'+data.ResultSet[i][1]+'</span></span><span class="message"></span></a></li>'
+                $('#que-status').append(add_contents);
+            }
+            $('#que-status').append('<li><div class="text-center"><a><strong>See All Alerts</strong><i class="fa fa-angle-right"></i></a></div></li>')
+            $('#que-badge').html(data.ResultSet.length)
+            if (data.ResultSet.length == 0){
+                $('#que-badge').hide();
+            }else{
+                $('#que-badge').show();
+            }
+        });
+    },500);
+});
+
+
+
+
+

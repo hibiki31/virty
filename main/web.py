@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request,redirect
 from time import  sleep
 import subprocess
 import virty
@@ -32,7 +32,7 @@ def info_domain(DOM_NAME):
 
 @app.route('/domain/<DOM_UUID>/info')
 def domain_info(DOM_UUID):
-    html = render_template('DomainInfo.html',domain=virty.DomainXmlSummary(DOM_UUID),selinux=virty.DomSelinux(DOM_UUID))
+    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_UUID))
     return html
 
 @app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
@@ -122,6 +122,10 @@ def api_sql(TABLE_NAME):
     result=virty.vsql.SqlGetAll(TABLE_NAME)
     return jsonify(ResultSet=result)
 
+@app.route('/api/getque.json')
+def api_getque():
+    result=virty.vsql.SqlQueuget()
+    return jsonify(ResultSet=result)
 
 @app.route("/api/add/<POST_TASK>",methods=["POST"])
 def api_add(POST_TASK):
@@ -151,13 +155,13 @@ def api_add(POST_TASK):
         for key, value in request.form.items():
             task[key]=value
         virty.vsql.SqlQueuing("power",task)
-        return task  
+        return redirect("/domain/power", code=302)
     elif POST_TASK == "dom_reload":
         task = {}
         for key, value in request.form.items():
             task[key]=value
         virty.vsql.SqlQueuing("listinit",task)
-        return task
+        return redirect("/", code=302)
 
     elif POST_TASK == "network2l":
         task = {}

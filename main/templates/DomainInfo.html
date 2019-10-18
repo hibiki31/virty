@@ -7,43 +7,43 @@
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-at"></i></div>
-                <div class="count">{{domain[0]}}</div>
+                <div class="count">{{domain['name']}}</div>
                 <h3>NAME</h3></div>
             </div>  
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-rocket"></i></div>
-                <div class="count">{{domain[4]}}</div>
+                <div class="count">{{domain['vnc'][1]}}</div>
                 <h3>VNC-AUTO</h3></div>
             </div> 
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-flash"></i></div>
-                <div class="count">{{domain[3]}}</div>
+                <div class="count">{{domain['vnc'][0]}}</div>
                 <h3>VNC</h3></div>
             </div>        
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-anchor"></i></div>
-                <div class="count">{{domain[5]}}</div>
+                <div class="count">{{domain['vnc'][3]}}</div>
                 <h3>VNC-PASS</h3></div>
             </div>
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{domain[8]}}</div>
+                <div class="count">{{domain['node-name']}}</div>
                 <h3>NODE_NAME</h3></div>
             </div>
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{domain[9]}}</div>
+                <div class="count">{{domain['node-ip']}}</div>
                 <h3>NODE_IP</h3></div>
             </div>
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
                 <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{selinux}}</div>
+                <div class="count">{{domain['selinux']}}</div>
                 <h3>SElinux</h3></div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dom in domain[6] %}
+                                    {% for dom in domain['disk'] %}
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
@@ -147,7 +147,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dom in domain[7] %}
+                                    {% for dom in domain['interface'] %}
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
@@ -156,7 +156,7 @@
                                         <td class=" ">{{dom[1]}}</td>
                                         <td class=" ">{{dom[2]}}</td>
                                         <td class=" ">{{dom[3]}}</td>
-                                        <td class=" last"><a href="/domain/{{domain[10]}}/nic/{{dom[1]}}">Edit</a>
+                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/nic/{{dom[1]}}">Edit</a>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -170,7 +170,7 @@
                 <div class="x_panel">
 
                     <form method="post" action="/api/selinux">
-                        <input type="hidden" name="_method" value="DELETE"> <!-- この1行を追加！ -->
+                        <input type="hidden" name="_method" value="DELETE">
                         <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
                             <button name="uuid" value="{{domain[10]}}" class="btn btn-success">disable selinux</button>
                         </div>
