@@ -30,9 +30,13 @@ def info_domain(DOM_NAME):
     html = render_template('DomainInfo.html',domain=virty.VirtyDomXmlSummryGet(DOM_NAME))
     return html
 
-@app.route('/domain/nic/edit/<DOM_UUID>/<DOM_MAC>')
+@app.route('/domain/<DOM_UUID>/info')
+def domain_info(DOM_UUID):
+    html = render_template('DomainInfo.html',domain=virty.DomainXmlSummary(DOM_UUID))
+    return html
+
+@app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
 def domain_nic(DOM_UUID,DOM_MAC):
-    
     NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
     html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])

@@ -594,6 +594,54 @@ def VirtyDomXmlSummryGet(DOM_NAME):
 	return infodata
 	
 
+def DomainXmlSummary(DOM_UUID):
+	import xml.etree.ElementTree as ET 
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+	conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
+	con = conn.lookupByUUIDString(DOM_UUID)
+	root = ET.fromstring(con.XMLDesc())
+	NAME = root.find('name').text
+	RAM = root.find('memory').text
+	UNIT = root.find('memory').get("unit")
+	vCPU = root.find('vcpu').text
+	UUID = root.find('uuid').text
+
+	vnc = root.find('devices').find('graphics')
+	
+	PORT = vnc.get("port")
+	AUTO = vnc.get("autoport")
+	LISTEN = vnc.get("listen")
+	PASSWD = vnc.get("passwd", "none")
+
+	infodata = [NAME,RAM,vCPU,PORT,AUTO,PASSWD,[],[],NODE_NAME,NODE_IP,UUID]
+
+
+	for disk in root.find('devices').findall('disk'):
+		if disk.find("source") is not None:
+			DEVICE = disk.get("device")
+			TYPE = disk.get("type")
+			FILE = disk.find("source").get("file","none")
+			TARGET =  disk.find("target").get("dev")
+			infodata[6].append([DEVICE,TYPE,FILE,TARGET])
+		else:
+			DEVICE = disk.get("device")
+			TYPE = disk.get("type")
+			FILE = "Not Connect"
+			TARGET = disk.find("target").get("dev")
+			infodata[6].append([DEVICE,TYPE,FILE,TARGET])
+	for nic in root.find('devices').findall('interface'):
+		TYPE = nic.get("type")
+		MAC = nic.find("mac").get("address")
+		if nic.find("target") == None:
+			TARGET = "none"
+		else:
+			TARGET = nic.find("target").get("dev","none")
+		
+		TO = nic.find("source").get("bridge")
+		infodata[7].append([TYPE,MAC,TARGET,TO])
+
+	return infodata
 
 
 def VirtyDomDefineStatic(DOM_NAME,NODE_NAME):
