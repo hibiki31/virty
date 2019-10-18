@@ -126,6 +126,22 @@ class Libvirtc():
             self.nicdata.append([TYPE,MAC,TARGET,TO])
         return self.nicdata
 
+    def ShowSelinux(self):
+        flag = 0
+        for seclabel in self.dxml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                print("selinuxis arrrr")
+                flag = 1
+            
+        if flag == 1:
+            return "on"
+        else :
+            return "off"
+
+    def DeleteSelinux(self):
+        for seclabel in self.dxml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                self.dxml.remove(seclabel)
 
 
 

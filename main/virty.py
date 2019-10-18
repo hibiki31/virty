@@ -860,6 +860,28 @@ def DomNameEdit(DOM_UUID,NEW_NAME):
 	print(editor.DomainXmlDump())
 
 
+def DomSelinux(DOM_UUID):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.DomainXmlOpen(DOM_UUID)
+
+	return editor.ShowSelinux()
+
+def DomSelinuxDisable(DOM_UUID):
+	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+	editor = vvirt.Libvirtc(NODE_IP)
+	editor.DomainXmlOpen(DOM_UUID)
+
+	editor.DeleteSelinux()
+	print(editor.DomainXmlUpdate())
+	print(editor.DomainXmlDump())
+
+
+
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
 	NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
 	NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)

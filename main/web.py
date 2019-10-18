@@ -32,7 +32,7 @@ def info_domain(DOM_NAME):
 
 @app.route('/domain/<DOM_UUID>/info')
 def domain_info(DOM_UUID):
-    html = render_template('DomainInfo.html',domain=virty.DomainXmlSummary(DOM_UUID))
+    html = render_template('DomainInfo.html',domain=virty.DomainXmlSummary(DOM_UUID),selinux=virty.DomSelinux(DOM_UUID))
     return html
 
 @app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
@@ -201,6 +201,16 @@ def api_edit(POST_TASK):
             task[key]=value
         virty.vsql.SqlQueuing("dom_nic",task)
         return task
+
+
+@app.route("/api/selinux",methods=["POST","DELETE"])
+def api_selinux():
+    task = {}
+    for key, value in request.form.items():
+        task[key]=value
+    virty.DomSelinuxDisable(task['uuid'])
+    return task
+
 
 if __name__ == "__main__":
     virty.Pooler()    
