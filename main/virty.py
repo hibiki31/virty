@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/local/bin/python3
 import libvirt, sys, sqlite3, subprocess, os
 import vsql, vxml, vansible, vhelp, vvirt
 
@@ -649,6 +649,8 @@ def VirtyDomDefineStatic(DOM_NAME,NODE_NAME):
 
 	NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
 
+	
+
 	try:
 		tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
 		root = tree.getroot()
@@ -672,7 +674,8 @@ def VirtyDomDefineStatic(DOM_NAME,NODE_NAME):
 		vxml.XmlImgAdd(DOM_NAME,STORAGE_PATH,IMG_NAME,STORAGE_NAME,ARCHIVE_NAME)
 		
 		vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
-		VirshDefine(DOM_NAME,NODE_IP)
+	return VirshDefine(DOM_NAME,NODE_IP)
+	
 
 
 def VirtyDomCheckStatic(DOM_NAME,NODE_NAME):
@@ -790,7 +793,11 @@ def VirshDefine(DOM_NAME,NODE_IP):
 	with open(SPATH + '/define/' + DOM_NAME + '.xml') as f:
 		s = f.read()
 		conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
-		conn.defineXML(s)
+		try:
+			conn.defineXML(s)
+		except Exception as e:
+			return e
+		return 0
 
 ############## GET INFO WITH SSH ################
 

@@ -30,12 +30,14 @@ while True:
             print(dic['domain-name'],'image',dic['archive-list'])
             print(dic['domain-name'],dic['node-list'])
 
-            virty.VirtyDomDefineStatic(dic['domain-name'],dic['node-list'])
+            if not virty.VirtyDomDefineStatic(dic['domain-name'],dic['node-list']) == 0:
+                virty.vsql.SqlDequeuing(que[0],"fail",100)
+                break
+
+            #virty.VirtyDomainAutostart(dic['domain-name'])
             virty.VirtyDomainListInit()
-            virty.VirtyDomainAutostart(dic['domain-name'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
-            print(dic)
             print("complete")
         elif que[4] == "power":
             print("power")
@@ -48,6 +50,7 @@ while True:
             virty.VirtyDomainListInit()
         elif que[4] == "listinit":
             print("init")
+            sleep(10)
             virty.vsql.SqlDeleteAll("kvm_domain")
             virty.VirtyDomainListInit()
             virty.vsql.SqlDequeuing(que[0],"finish",100)

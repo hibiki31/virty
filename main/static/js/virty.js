@@ -50,27 +50,33 @@ $('#node-list').on('change', function() {
     });
 });
 
-$(function(){
-    setInterval(function(){
-        $('#que-status').children().remove();
-        $.getJSON('/api/getque.json', function(data) {
-            for (var i in data.ResultSet){
-                var add_contents = '<li><a><span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>'
-                add_contents += '<span><span>'+data.ResultSet[i][4]+'</span><span class="time">'+data.ResultSet[i][1]+'</span></span><span class="message"></span></a></li>'
-                $('#que-status').append(add_contents);
-            }
-            $('#que-status').append('<li><div class="text-center"><a><strong>See All Alerts</strong><i class="fa fa-angle-right"></i></a></div></li>')
-            $('#que-badge').html(data.ResultSet.length)
-            if (data.ResultSet.length == 0){
-                $('#que-badge').hide();
-            }else{
-                $('#que-badge').show();
-            }
-        });
+$(function() {
+  
+    setInterval(function() {
+      $.getJSON('/api/getque.json', function(data) {
+        let p = 0;
+        for (let i in data.ResultSet) {
+          if ($('#que-status li > a').length <= p) {
+            let add_contents = '<li><a><span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>'
+            add_contents += '<span><span class="quename">'+data.ResultSet[i][4]+'</span><span class="time">'+data.ResultSet[i][1]+'</span></span><span class="message"></span></a></li>'
+            $('#que-status').prepend(add_contents);
+          } else {
+            $('#que-status .quename').eq(p).text(data.ResultSet[i][4]);
+            $('#que-status .time').eq(p).text(data.ResultSet[i][1]);
+          }
+          p++;
+        }
+        $('#que-status').children(':not(:last-child):nth-child(n + '+(p+1)+')').remove();
+  
+        $('#que-badge').html(data.ResultSet.length)
+        if (data.ResultSet.length == 0){
+          $('#que-badge').hide();
+        }else{
+          $('#que-badge').show();
+        }
+      });
     },500);
-});
-
-
-
+  });
+  
 
 

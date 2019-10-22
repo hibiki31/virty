@@ -28,9 +28,45 @@ class Libvirtc():
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
         self.domxml = ET.fromstring(self.con.XMLDesc())
         self.dpower = self.con.state()[0]
+        print(self.con.autostart())
+        print(self.con.info())
         #5:OFF
 
         return self.con.XMLDesc()
+
+    def StorageList(self):
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+
+        for pool in pools:
+            print('Pool: '+pool.name())
+    
+
+
+    def StorageInfo(self):
+        pool = self.node.storagePoolLookupByName('default')
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        info = pool.info()
+
+        print('Pool: '+pool.name())
+        print('  UUID: '+pool.UUIDString())
+        print('  Autostart: '+str(pool.autostart()))
+        print('  Is active: '+str(pool.isActive()))
+        print('  Is persistent: '+str(pool.isPersistent()))
+        print('  Num volumes: '+str(pool.numOfVolumes()))
+        print('  Pool state: '+str(info[0]))
+        print('  Capacity: '+str(info[1]))
+        print('  Allocation: '+str(info[2]))
+        print('  Available: '+str(info[3]))
+
+        print(pool.XMLDesc(0))
+
+
+
 
     def DomainXmlDump(self): 
         return ET.tostring(self.domxml).decode()
