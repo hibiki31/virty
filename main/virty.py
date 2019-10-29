@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/bin/python3
 import libvirt, sys, sqlite3, subprocess, os, time, concurrent.futures, pprint
 import vsql, vansible, vhelp, vvirt,vsh
 
