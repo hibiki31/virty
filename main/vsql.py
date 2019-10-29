@@ -29,7 +29,14 @@ def SqlDeleteDomain(DOM_NAMES):
 		sql = 'delete from kvm_domain where domain_name = "' + dom + '"'
 		cur.execute(sql)
 	con.commit()
-	
+
+def NetworkDelete(NODE,SOURCE):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'delete from kvm_network where network_node = "' + NODE + '" and network_bridge = "' + SOURCE + '"'
+	cur.execute(sql)
+	con.commit()
+
 def SqlGetVncport():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()

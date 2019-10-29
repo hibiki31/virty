@@ -122,6 +122,7 @@ class Libvirtc():
         if pool == None:
             print('Failed to locate any StoragePool objects.', file=sys.stderr)
             exit(1)
+        pool.refresh()
 
         xmllist = []
         for imagename in pool.listVolumes():
@@ -466,7 +467,7 @@ def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
 def XmlImgAdd(DOM_NAME,STORAGE_PATH,IMG_NAME,STORAGE_NAME,ARCHIVE_NAME):
     os.chdir = SPATH
 
-    IMG_PATH = STORAGE_PATH + DOM_NAME + IMG_NAME + '.img'
+    IMG_PATH = STORAGE_PATH + DOM_NAME + "_" + IMG_NAME + '.img'
 
     tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
     root = tree.getroot()

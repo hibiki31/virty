@@ -50,6 +50,11 @@ def image_delete(NODE,POOL,IMAGE):
     virty.ImageDelete(NODE,POOL,IMAGE)
     return redirect("/image/list", code=302)
 
+@app.route('/network/delete/<NODE>/<SOURCE>')
+def network_delete(NODE,SOURCE):
+    virty.vsql.NetworkDelete(NODE,SOURCE)
+    return redirect("/list/network", code=302)
+
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
     if GET_DATA == "node":
@@ -144,7 +149,7 @@ def api_add(POST_TASK):
             else:
                 task[key]=value
         virty.vsql.SqlQueuing("domain",task)
-        return task
+        return redirect("/", code=302)
     elif POST_TASK == "que_clear":
         if request.form["status"] == "que_clear":
             virty.vsql.SqlDeleteAll("kvm_que")
@@ -218,6 +223,16 @@ def api_selinux():
         task[key]=value
     virty.DomSelinuxDisable(task['uuid'])
     return task
+
+@app.route("/api/add/network/bridge",methods=["POST"])
+def api_network_bridge_add():
+    task = {}
+    for key, value in request.form.items():
+        task[key]=value
+    virty.vsql.SqlAddNetwork([(task['name'],task['source'],task['node-list'])])  
+
+    return redirect("/list/network", code=302)
+
 
 if __name__ == "__main__":
     virty.WorkerUp()    
