@@ -57,9 +57,9 @@ def DomainList():
     print('POWER {0:16} {1:8} {2:4} {3:5} {4:36} {5:8} {6:8}'.format("NAME","NODE","CORE","MEMORY","UUID","TYPE","OS"))
     for data in datas:
         if data[1] == "SHT":
-            LogError("SHT",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3],int(data[4])/1024,data[5], data[6], data[7]))
+            LogError("SHT",'{0:16} {1:8} {2:4} {3:5} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3],data[4],data[5], data[6], data[7]))
         elif data[1] == "RUN":
-            LogSuccess("RUN",'{0:16} {1:8} {2:4} {3:5.0f} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3], int(data[4])/1024,data[5], data[6], data[7]))
+            LogSuccess("RUN",'{0:16} {1:8} {2:4} {3:5} {4:36} {5:8} {6:8}'.format(data[0], data[2], data[3], data[4],data[5], data[6], data[7]))
 
 def DomainStart(DOM_NAME):
     result = virty.DomainStart(DOM_NAME)

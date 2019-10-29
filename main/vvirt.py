@@ -303,6 +303,10 @@ class Xmlc():
         DATA['disk'] = []
         DATA['interface'] = []
 
+        DATA['memory'] = UnitConvertor(DATA['memory-unit'],"M",DATA['memory'])
+        DATA['memory-unit'] = "G"
+
+
         vnc = self.xml.find('devices').find('graphics')        
     
         DATA['vnc'].append(vnc.get("port"))
@@ -389,6 +393,10 @@ def UnitConvertor(EC,DC,DATA):
         if DC == "G":
             DATA = float(DATA)/1024
             DATA = float(DATA)/1024
+            DATA = float(DATA)/1024
+            return round(DATA,1)
+    if EC == "KiB":
+        if DC == "M":
             DATA = float(DATA)/1024
             return round(DATA,1)
 

@@ -218,11 +218,12 @@ def ImageListXml(NODE_NAME,STORAGEP_NAME):
 
 def AllImageXml():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    pool = []
+    image = []
     for NODE in NODE_DATAS:
         nodepoint = vvirt.Libvirtc(NODE[1])
         storages = nodepoint.AllStorageXml()
-        pool = []
-        image = []
+        
         for storage in storages:
             xmledit = vvirt.Xmlc(storage)
             get = xmledit.StorageData()
@@ -413,7 +414,7 @@ if __name__ == "__main__":
     # elapsed_time = time.time() - start
     # print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
-    #ImageDelete("ruri","image","testvda.img")
+    
 
     args = sys.argv
     argnum = len(args)

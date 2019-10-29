@@ -78,4 +78,6 @@ $(function() {
 });
   
 
-
+$(document).ready(function() {
+  $('[id$=table]').tablesorter();
+});
