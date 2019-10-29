@@ -15,8 +15,6 @@ def setup():
         html = render_template('Setup.html')
         return html
 
-
-
 @app.route('/')
 def route():
     DATA = virty.vsql.SqlSumDomain()
@@ -27,7 +25,7 @@ def route():
 
 @app.route('/domain/info/<DOM_NAME>')
 def info_domain(DOM_NAME):
-    html = render_template('DomainInfo.html',domain=virty.VirtyDomXmlSummryGet(DOM_NAME))
+    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_NAME))
     return html
 
 @app.route('/domain/<DOM_UUID>/info')
@@ -41,7 +39,6 @@ def domain_nic(DOM_UUID,DOM_MAC):
     NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
     html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
     return html
-
 
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
@@ -58,62 +55,60 @@ def node_list(GET_DATA):
         html = render_template('NetworkList.html',domain=virty.vsql.SqlGetAll("kvm_network"))
         return html
     elif GET_DATA == "que":
-        html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.QueuStatus())
+        html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())
         return html
-
 
 @app.route('/domain/define')
 def domain_add():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
 @app.route('/network/2ldefine')
 def net_define():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('NetworkDefine2l.html')
     return html
 
 @app.route('/domain/power')
 def domain_power():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('DomainPower.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
 
 @app.route('/domain/undefine')
 def domain_undefine():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('DomainUndefine.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
- 
 
 @app.route('/domain/listreload')
 def domain_listinit():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('DomainListReload.html')
     return html
 
 @app.route('/node/add')
 def node_add():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('NodeAdd.html')
     return html
 
 @app.route('/domain/nameedit')
 def domainname_edit():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('DomainNameEdit.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
 
 @app.route('/storage/add')
 def storage_add():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('StorageAdd.html')
     return html
 
 @app.route('/network/add')
 def network_add():
-    virty.Pooler()
+    virty.WorkerUp()
     html = render_template('NetworkAdd.html')
     return html
 
@@ -206,7 +201,6 @@ def api_edit(POST_TASK):
         virty.vsql.SqlQueuing("dom_nic",task)
         return task
 
-
 @app.route("/api/selinux",methods=["POST","DELETE"])
 def api_selinux():
     task = {}
@@ -215,7 +209,6 @@ def api_selinux():
     virty.DomSelinuxDisable(task['uuid'])
     return task
 
-
 if __name__ == "__main__":
-    virty.Pooler()    
+    virty.WorkerUp()    
     app.run(debug=True, host='0.0.0.0', port=80)

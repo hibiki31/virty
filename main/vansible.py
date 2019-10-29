@@ -1,10 +1,8 @@
 import subprocess, os
-import vsql, vxml
+import vsql
 
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
-
-
 
 def AnsibleFiledeleteInnode(NODEIP,FILE):
 	AnsibleNodelistInit()

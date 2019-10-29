@@ -30,8 +30,6 @@ def SqlDeleteDomain(DOM_NAMES):
 		cur.execute(sql)
 	con.commit()
 	
-	
-
 def SqlGetVncport():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
@@ -307,6 +305,10 @@ def Convert(SRC,DST,HINT):
 		for data in SqlGetAll("kvm_domain"):
 			if data[5] == HINT:
 				return data[2]
+	if SRC == "DOM_NAME" and DST == "DOM_UUID":
+		for data in SqlGetAll("kvm_domain"):
+			if data[0] == HINT:
+				return data[5]
 	if SRC == "NODE_NAME" and DST == "NODE_IP":
 		for data in SqlGetAll("kvm_node"):
 			if data[0] == HINT:

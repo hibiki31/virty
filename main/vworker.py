@@ -17,49 +17,52 @@ while True:
     else:
         print("exist task")
         que = virty.vsql.SqlQueuget()[0]
+        
         if que[4] == "domain":
             print("domain")
             dic = ast.literal_eval(que[5])
 
-            virty.vxml.XmlDomainBaseMake(dic['domain-name'],dic['domain-memory'],dic['domain-cpu'],"auto","pass")
+            virty.vvirt.XmlDomainBaseMake(dic['domain-name'],dic['domain-memory'],dic['domain-cpu'],"auto","pass")
             for nic in dic['nic']:
                 print(dic['domain-name'],nic[1])
-                virty.vxml.XmlBridgeNicAdd(dic['domain-name'],nic[1])
-            virty.vxml.XmlMetaSetStorage(dic['domain-name'],'image',dic['archive-list'])
+                virty.vvirt.XmlBridgeNicAdd(dic['domain-name'],nic[1])
+            virty.vvirt.XmlMetaSetStorage(dic['domain-name'],'image',dic['archive-list'])
 
             print(dic['domain-name'],'image',dic['archive-list'])
             print(dic['domain-name'],dic['node-list'])
 
-            if not virty.VirtyDomDefineStatic(dic['domain-name'],dic['node-list']) == 0:
+            if not virty.DomainDefineStatic(dic['domain-name'],dic['node-list']) == 0:
                 virty.vsql.SqlDequeuing(que[0],"fail",100)
                 break
 
             #virty.VirtyDomainAutostart(dic['domain-name'])
-            virty.VirtyDomainListInit()
+            virty.DomainListInit()
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
             print("complete")
+
         elif que[4] == "power":
             print("power")
             dic = ast.literal_eval(que[5])
             if dic['status'] == "poweron":
-                virty.VirtyDomainStart(dic['domain-list'])
+                virty.DomainStart(dic['domain-list'])
             elif dic['status'] == "poweroff":
-                virty.VirtyDomainDestroy(dic['domain-list'])   
+                virty.DomainDestroy(dic['domain-list'])   
             virty.vsql.SqlDequeuing(que[0],"finish",100)
-            virty.VirtyDomainListInit()
+            virty.DomainListInit()
+
         elif que[4] == "listinit":
             print("init")
             sleep(10)
-            virty.vsql.SqlDeleteAll("kvm_domain")
-            virty.VirtyDomainListInit()
+            virty.DomainListInit()
             virty.vsql.SqlDequeuing(que[0],"finish",100)
+
         elif que[4] == "undefine":
             print("undefine")
             dic = ast.literal_eval(que[5])
-            virty.VirtyDomUndefine(dic['domain-list'])
+            virty.DomainUndefine(dic['domain-list'])
             virty.vsql.SqlDeleteAll("kvm_domain")
-            virty.VirtyDomainListInit()
+            virty.DomainListInit()
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
         elif que[4] == "2ldefine":
@@ -69,14 +72,14 @@ while True:
             XML_PATH = SPATH + '/xml/net_l2less.xml'
             NAME = "2l-" + dic['net-gw']
             GW = dic['net-gw']
-            virty.VirtyNetwork2lDefine(NODE_IP,XML_PATH,NAME,GW)
+            virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)
             virty.vsql.SqlAddNetwork([("l2l",NAME,dic['node-list'])])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
         
         elif que[4] == "nodeadd":
             print("nodeadd")
             dic = ast.literal_eval(que[5])
-            virty.VirtyNodeAdd(dic['name'],dic['user'] +'@'+ dic['ip'])
+            virty.NodeAdd(dic['name'],dic['user'] +'@'+ dic['ip'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
         elif que[4] == "storage":
@@ -84,7 +87,7 @@ while True:
             dic = ast.literal_eval(que[5])
             if dic['system'] == "archive":NAME = "archive"
             elif dic['system'] == "data":  NAME = dic['name']
-            virty.VirtyStorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
+            virty.StorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 
         elif que[4] == "domnameedit":
