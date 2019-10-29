@@ -76,6 +76,17 @@ class Libvirtc():
             print('  Allocation: '+str(round(int(info[2])/1000000000,1))+' GB')
             print('  Available: '+str(round(int(info[3])/1000000000,1))+' GB')
 
+    def AllStorageXml(self):
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+        data = []
+        for pool in pools:
+            data.append(pool.XMLDesc())
+        return data
+
+
+    #Image
     def ImageList(self,STORAGEP_NAME):
         pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
         if pool == None:
@@ -85,6 +96,38 @@ class Libvirtc():
         for image in pool.listVolumes():
             print(image)
 
+    def ImageInfo(self,STORAGEP_NAME,IMG_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        image = pool.storageVolLookupByName(IMG_NAME)
+        info = image.info()
+        print('    Type: '+str(info[0]))
+        print('    Capacity: '+str(info[1]))
+        print('    Allocation: '+str(info[2]))
+
+    def ImageDelete(self,STORAGEP_NAME,IMG_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        image = pool.storageVolLookupByName(IMG_NAME)
+        image.delete()
+
+    def AllImageXml(self,STORAGEP_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        xmllist = []
+        for imagename in pool.listVolumes():
+            image = pool.storageVolLookupByName(imagename)
+            xmllist.append(image.XMLDesc())
+        return xmllist
 
     #Domain
     def DomainXmlDump(self): 
@@ -295,6 +338,58 @@ class Xmlc():
                 DATA['selinux']
 
         return DATA
+
+    def ImageData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+
+        DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
+        DATA['capacity'] = self.xml.find('capacity').text
+        DATA['allocation-unit'] = self.xml.find('allocation').get("unit")
+        DATA['allocation'] = self.xml.find('allocation').text
+        DATA['physical-unit'] = self.xml.find('physical').get("unit")
+        DATA['physical'] = self.xml.find('physical').text
+
+        DATA['capacity'] = UnitConvertor(DATA['capacity-unit'],"G",DATA['capacity'])
+        DATA['capacity-unit'] = "G"
+        DATA['allocation'] = UnitConvertor(DATA['allocation-unit'],"G",DATA['allocation'])
+        DATA['allocation-unit'] = "G"
+        DATA['physical'] = UnitConvertor(DATA['physical-unit'],"G",DATA['physical'])
+        DATA['physical-unit'] = "G"
+        
+        DATA['path'] = self.xml.find('target').find('path').text
+
+        return DATA
+
+    def StorageData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+
+        DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
+        DATA['capacity'] = self.xml.find('capacity').text
+        DATA['allocation-unit'] = self.xml.find('allocation').get("unit")
+        DATA['allocation'] = self.xml.find('allocation').text
+        DATA['available-unit'] = self.xml.find('available').get("unit")
+        DATA['available'] = self.xml.find('available').text
+
+        DATA['capacity'] = UnitConvertor(DATA['capacity-unit'],"G",DATA['capacity'])
+        DATA['capacity-unit'] = "G"
+        DATA['allocation'] = UnitConvertor(DATA['allocation-unit'],"G",DATA['allocation'])
+        DATA['allocation-unit'] = "G"
+        DATA['available'] = UnitConvertor(DATA['available-unit'],"G",DATA['available'])
+        DATA['available-unit'] = "G"
+        
+        DATA['path'] = self.xml.find('target').find('path').text
+
+        return DATA
+
+def UnitConvertor(EC,DC,DATA):
+    if EC == "bytes":
+        if DC == "G":
+            DATA = float(DATA)/1024
+            DATA = float(DATA)/1024
+            DATA = float(DATA)/1024
+            return round(DATA,1)
 
 
 def XmlGenMac():

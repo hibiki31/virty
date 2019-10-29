@@ -28,6 +28,11 @@ def info_domain(DOM_NAME):
     html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_NAME))
     return html
 
+@app.route('/image/list')
+def storage_list():
+    html = render_template('ImageList.html',datas=virty.AllImageXml())
+    return html
+
 @app.route('/domain/<DOM_UUID>/info')
 def domain_info(DOM_UUID):
     html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_UUID))
@@ -39,6 +44,11 @@ def domain_nic(DOM_UUID,DOM_MAC):
     NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
     html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
     return html
+
+@app.route('/image/delete/<NODE>/<POOL>/<IMAGE>')
+def image_delete(NODE,POOL,IMAGE):
+    virty.ImageDelete(NODE,POOL,IMAGE)
+    return redirect("/image/list", code=302)
 
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):

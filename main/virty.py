@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-import libvirt, sys, sqlite3, subprocess, os
+import libvirt, sys, sqlite3, subprocess, os, time, concurrent.futures, pprint
 import vsql, vansible, vhelp, vvirt,vsh
 
 SPATH = '/root/virty/main'
@@ -177,11 +177,18 @@ def DomainData(DOM_UUID):
 def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
     vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])    
 
-def StoragePoolList(NODE_NAME):
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.StorageList()
+def StoragePoolList():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        editor = vvirt.Libvirtc(NODE[1])
+        xmls = editor.AllStorageXml()
+        data = []
+        for xml in xmls:
+            xmledit = vvirt.Xmlc(xml)
+            get = xmledit.StorageData()
+            get['node'] = NODE[0]
+            data.append(get)
+        return data
 
 
 
@@ -192,12 +199,58 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageList(STORAGEP_NAME)
 
-
-def ImageInfo(NODE_NAME,STORAGE_NAME,IMG_NAME):
+def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
-    editor.ImageList(STORAGEP_NAME)    
+    editor.ImageInfo(STORAGEP_NAME,IMG_NAME)    
+
+def ImageListXml(NODE_NAME,STORAGEP_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    xmls = editor.AllImageXml(STORAGEP_NAME)
+    data = []
+    for xml in xmls:
+        xmledit = vvirt.Xmlc(xml)
+        data.append(xmledit.ImageData())
+    return data
+
+def AllImageXml():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        nodepoint = vvirt.Libvirtc(NODE[1])
+        storages = nodepoint.AllStorageXml()
+        pool = []
+        image = []
+        for storage in storages:
+            xmledit = vvirt.Xmlc(storage)
+            get = xmledit.StorageData()
+            get['node'] = NODE[0]
+            pool.append(get)
+            images = nodepoint.AllImageXml(get['name'])
+            for xml in images:
+                temp = {}
+                imageedit = vvirt.Xmlc(xml)
+                temp['node'] = NODE[0]
+                temp['pool'] = get['name']
+
+                temp['data']= imageedit.ImageData()
+                
+                image.append(temp)
+
+    data = {}
+    data['pool'] = pool
+    data['image'] = image
+    return data
+  
+def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.ImageDelete(STORAGEP_NAME,IMG_NAME)    
+
+    
 
 
 #Node
@@ -246,8 +299,6 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
 
     NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
 
-    
-
     try:
         tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
         root = tree.getroot()
@@ -263,7 +314,7 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
         STORAGE_NAME = storage.get('storage')
 
         STORAGE_PATH = vsql.SqlGetData("STORAGE_DATA","STORAGE_PATH",(NODE_NAME,STORAGE_NAME))
-        IMG_PATH = STORAGE_PATH + DOM_NAME + IMG_NAME + '.img'
+        IMG_PATH = STORAGE_PATH + DOM_NAME + "_" + IMG_NAME + '.img'
 
         ARCHIVE_NAME = storage.get('archive')
         ARCHIVE_PATH = vsql.SqlHitData("ARCHIVE_NAMEtoARCHIVE_PATH",ARCHIVE_NAME)
@@ -355,9 +406,14 @@ def SshInfoDir(NODE_IP,NODE_DIR):
 
 
 if __name__ == "__main__":
-    StoragePoolList("ruri")
-    ImageList("ruri","image")
+    # start = time.time()
+    # executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+    # for i in range(10000):
+    #     executor.submit(vsql.SqlGetAll("kvm_domain"))
+    # elapsed_time = time.time() - start
+    # print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
+    #ImageDelete("ruri","image","testvda.img")
 
     args = sys.argv
     argnum = len(args)
