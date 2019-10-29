@@ -233,12 +233,12 @@ def AllImageXml():
             for xml in images:
                 temp = {}
                 imageedit = vvirt.Xmlc(xml)
+             
+                temp['data']= imageedit.ImageData()
                 temp['node'] = NODE[0]
                 temp['pool'] = get['name']
-
-                temp['data']= imageedit.ImageData()
-                
-                image.append(temp)
+                if not temp['data'] == "dir":
+                    image.append(temp)
 
     data = {}
     data['pool'] = pool

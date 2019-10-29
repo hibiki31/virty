@@ -346,6 +346,8 @@ class Xmlc():
 
     def ImageData(self):
         DATA = {}
+        if not self.xml.get("type") == "file":
+            return "dir"
         DATA['name'] = self.xml.find('name').text
 
         DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
