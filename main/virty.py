@@ -140,7 +140,7 @@ def DomainListInit():
         manager = vvirt.Libvirtc(NODE[1])
         xmls = manager.AllDomainXmlPerth()
         for xml in xmls:
-            editor = vvirt.Xmlc(xml[2])
+            editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
             data = editor.DomainData()
             data['node-name'] = NODE[0]
             data['node-ip'] = NODE[1]
@@ -163,7 +163,8 @@ def DomainData(DOM_UUID):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     manager = vvirt.Libvirtc(NODE_IP)
-    editor = vvirt.Xmlc(manager.DomainOpen(DOM_UUID))
+    root = vvirt.XmlStringRoot(manager.DomainOpen(DOM_UUID))
+    editor = vvirt.Xmlc(root)
 
     data = editor.DomainData()
     data['node-name'] = NODE_NAME
@@ -189,6 +190,23 @@ def StoragePoolList():
             get['node'] = NODE[0]
             data.append(get)
         return data
+
+def StoragepoolXmlDump(NODE_NAME,STORAGE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+    return editor.StorageXml(STORAGE_NAME)
+
+def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    root = vvirt.XmlFileRoot("storage_dir")
+    editor = vvirt.Xmlc(root)
+    editor.StorageMake(STORAGE_NAME,STORAGE_PATH)
+
+    server = vvirt.Libvirtc(NODE_IP)
+    print(editor.Dump())
+    server.StorageDefine(editor.Dump())
+
 
 
 
@@ -216,6 +234,7 @@ def ImageListXml(NODE_NAME,STORAGEP_NAME):
         data.append(xmledit.ImageData())
     return data
 
+
 def AllImageXml():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     pool = []
@@ -225,15 +244,14 @@ def AllImageXml():
         storages = nodepoint.AllStorageXml()
         
         for storage in storages:
-            xmledit = vvirt.Xmlc(storage)
+            xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(storage))
             get = xmledit.StorageData()
             get['node'] = NODE[0]
             pool.append(get)
             images = nodepoint.AllImageXml(get['name'])
-            for xml in images:
+            for xml in images:  
                 temp = {}
-                imageedit = vvirt.Xmlc(xml)
-             
+                imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
                 temp['data']= imageedit.ImageData()
                 temp['node'] = NODE[0]
                 temp['pool'] = get['name']
@@ -251,7 +269,19 @@ def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageDelete(STORAGEP_NAME,IMG_NAME)    
 
-    
+
+def ImageIsoList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    image = []
+    nodepoint = vvirt.Libvirtc(NODE_IP)
+    images = nodepoint.AllImageXml("iso")
+
+    for xml in images:
+        imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+        image.append(imageedit.ImageData())
+    return image
+
 
 
 #Node
@@ -376,8 +406,21 @@ def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
     editor.DomainOpen(DOM_UUID)
     editor.DomainNicEdit(NOW_MAC,NEW_NIC)
 
+def DomCdromExit(DOM_UUID,TARGET):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainCdromExit(TARGET)
 
+def DomCdromEdit(DOM_UUID,TARGET,ISO_PATH):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainCdromEdit(TARGET,ISO_PATH)
 
 #SSH
 def SshInfoMem(NODE_IP):
@@ -414,13 +457,12 @@ if __name__ == "__main__":
     # elapsed_time = time.time() - start
     # print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
-    
-
     args = sys.argv
     argnum = len(args)
     if argnum == 1:argobj = "none"
     else: argobj = args[1]
 
+    ImageIsoList("ruri")
 
     #Help
     if argnum == 1:
@@ -484,6 +526,8 @@ if __name__ == "__main__":
             if args[2] == "list":vsh.StorageList()
         elif argnum == 4:
             if args[2] == "info":vsh.StorageInfo(args[3])
+        elif argnum == 6:
+            if args[2] == "xml" and args[3] == "dump":vsh.StorageXmlDump(args[4],args[5])
         elif argnum == 8:
             if args[2] == "add":vsh.StorageAdd(args[3],args[4],args[5],args[6],args[7])	
 

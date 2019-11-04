@@ -81,6 +81,7 @@
                                         <th class="column-title">Type </th>
                                         <th class="column-title">Source </th>
                                         <th class="column-title">Target </th>
+                                        <th class="column-title">Edit </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -97,6 +98,7 @@
                                         <td class=" ">{{dom[1]}}</td>
                                         <td class=" ">{{dom[2]}}</td>
                                         <td class=" ">{{dom[3]}}</td>
+                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
                                         </td>
                                     </tr>
                                     {% endfor %}

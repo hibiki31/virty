@@ -84,6 +84,15 @@ class Libvirtc():
         for pool in pools:
             data.append(pool.XMLDesc())
         return data
+    
+    def StorageXml(self,STORAGE_NAME):
+        return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
+
+    def StorageDefine(self,XML_DUMP):
+        self.node.storagePoolDefineXML(XML_DUMP,0)
+        
+        
+
 
 
     #Image
@@ -255,6 +264,28 @@ class Libvirtc():
             if interface.find('mac').get('address') == NOW_MAC:
                 interface.find('source').set('bridge', source)
                 self.con.updateDeviceFlags(ET.tostring(interface).decode())
+
+    def DomainCdromEdit(self,TARGET,ISO_PATH):
+        devices = self.domxml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == TARGET:
+                    if disk.find('source') == None:
+                        ET.SubElement(disk, 'source') 
+                    disk.find('source').set('file', ISO_PATH)
+                    self.con.updateDeviceFlags(ET.tostring(disk).decode())
+
+    def DomainCdromExit(self,TARGET):
+        devices = self.domxml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == TARGET:
+                    cdrom = disk.find('source')
+                    if cdrom == None:
+                        ET.SubElement(disk, 'source')
+                    disk.remove(cdrom)
+                    self.con.updateDeviceFlags(ET.tostring(disk).decode())                    
+
  
     def DomainNicShow(self):
         root = ET.fromstring(self.con.XMLDesc())
@@ -289,8 +320,8 @@ class Libvirtc():
 
 
 class Xmlc():
-    def __init__(self,XML_STRING):
-        self.xml = ET.fromstring(XML_STRING)
+    def __init__(self,XML_ROOT):
+        self.xml = XML_ROOT
 
     def DomainData(self):
         DATA = {}
@@ -389,6 +420,29 @@ class Xmlc():
         DATA['path'] = self.xml.find('target').find('path').text
 
         return DATA
+
+    def StorageMake(self,STORAGE_NAME,STORAGE_PATH):
+        self.xml.find('name').text = STORAGE_NAME
+        self.xml.find('target').find('path').text = STORAGE_PATH
+
+    def Dump(self):
+        return ET.dump(self.xml)
+
+
+
+
+
+def XmlFileRoot(XML_FILE):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/xml/'+ XML_FILE +'.xml') 
+    root = tree.getroot()
+    return root
+
+def XmlStringRoot(XML_STRING):
+    root = ET.fromstring(XML_STRING)
+    return root
+
+
 
 def UnitConvertor(EC,DC,DATA):
     if EC == "bytes":

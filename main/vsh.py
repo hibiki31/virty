@@ -296,7 +296,11 @@ def StorageInfo(STORAGE_NAME):
         print('{0:12} {1:8} {2:8} {3:8} {4:8} {5:12} {6:4.0f} {7:4.0f} {8:4.0f} {9:4} {10:4}'
         .format(data[0], data[1], data[2], data[3], data[4], DF[0], int(DF[1])/1000000, int(DF[2])/1000000, int(DF[3])/1000000, DF[4], DF[5]))
     
+def StorageXmlDump(NODE_NAME,STORAGE_NAME):
+    print(virty.StoragepoolXmlDump(NODE_NAME,STORAGE_NAME))
 
+def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
+    virty.StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH)
 
 #Archive
 def ArchiveInit(NAME):

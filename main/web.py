@@ -45,6 +45,13 @@ def domain_nic(DOM_UUID,DOM_MAC):
     html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
     return html
 
+@app.route('/domain/<DOM_UUID>/disk/<TARGET>')
+def domain_cdrom(DOM_UUID,TARGET):
+    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    IMAGE_DATAS = virty.ImageIsoList(NODE_NAME)
+    html = render_template('DomainCdromEdit.html',IMG=IMAGE_DATAS,DOM=[DOM_UUID,TARGET])
+    return html
+
 @app.route('/image/delete/<NODE>/<POOL>/<IMAGE>')
 def image_delete(NODE,POOL,IMAGE):
     virty.ImageDelete(NODE,POOL,IMAGE)
@@ -214,6 +221,16 @@ def api_edit(POST_TASK):
         for key, value in request.form.items():
             task[key]=value
         virty.vsql.SqlQueuing("dom_nic",task)
+        return task
+
+    elif POST_TASK == "cdrom":
+        task = {}
+        for key, value in request.form.items():
+            task[key]=value
+        if task['status'] == "edit":
+            virty.DomCdromEdit(task['uuid'],task['target'],task['path'])
+        elif task['status'] == "unmount":
+            virty.DomCdromExit(task['uuid'],task['target'])
         return task
 
 @app.route("/api/selinux",methods=["POST","DELETE"])
