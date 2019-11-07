@@ -1,31 +1,31 @@
-def VirtyStorageAddHelp():
+def StorageAddHelp():
 	print("\
 	virty storage add archive NODE01 ssd dir /kvm/archive\n")
 	
 
-def VirtyDomMakeHelp():
+def DomMakeHelp():
 	print("\
-	virty dom make base vm010 1024 2 auto pass \n \
-	virty dom make nic bridge vm010 virbr1 \n \
-	virty dom make img vm010 storage_vm CentOS7-1810 \n \
-	virty dom define static vm010 Chinon \n")
+	virty dom make base DOMAIN_NAME 1024 2 auto pass \n \
+	virty dom make nic bridge DOMAIN_NAME virbr1 \n \
+	virty dom make img DOMAIN_NAME STORAGE_NAME ARCHOVE_NAME  \n \
+	virty dom define static DOMAIN_NAME NODE_NAME \n")
 	
 
-def VirtyDomMakeBaseHelp():
+def DomMakeBaseHelp():
 	print("\nHOW.")
 	print("   virty dom make base (DomainNAME) (MEMORY) (CORE) (VNC_PORT) (VNCPassword)")
 	print("\nEX.")
 	print("   virty dom make base vm001 1024 2 auto Password\n‬")	
 	
 
-def VirtyDomMakeNicHelp():
+def DomMakeNicHelp():
 	print("\nHOW.")
 	print("   virty dom make nic bridge (DomainNAME) (SOURCE)")
 	print("\nEX.")
 	print("   virty dom make nic bridge vm001 virbr0\n‬")	
 	
 
-def VirtyNodeAddHelp():
+def NodeAddHelp():
 	print("\n It is necessary to be able to connect with SSH in order to get memory and CPU information.")
 	print("\nHOW.")
 	print("   virty node add (NAME) (IP/DOMAIN)")
@@ -33,14 +33,14 @@ def VirtyNodeAddHelp():
 	print("   virty node add node01 192.168.0.1\n‬")
 	
 
-def VirtyDomainMakeNomalHelp():
+def DomainMakeNomalHelp():
 	print("\nHOW.")
 	print("   virty dom make nomal (ArchiveNAME) (DomainNAME) (BridgeAddr) (VNCPASS) (MEMORY) (CORE) (POOL)")
 	print("\nEX.")
 	print("   virty dom make nomal CentOS chinon vm001 virbr0 5900 1024 2 none\n‬")	
 	
 
-def VirtyHelp():
+def Help():
 	print("\
 	virty archive\n\
 	virty storage\n\

@@ -67,13 +67,21 @@
                       <li><a href="/domain/define">Domain Define</a></li>
                       <li><a href="/domain/undefine">Domain Undefinle</a></li>
                       <li><a href="/domain/power">Domain Power Panel</a></li>
+                      <li><a href="/domain/nameedit">Domain Edit Name</a></li>
                     </ul>
                   </li>
                 </ul>
                 <ul class="nav side-menu">
-                  <li><a><i class="fa fa-database"></i> Archive <span class="fa fa-chevron-down"></span></a>
+                  <li><a><i class="fa fa-institution"></i> Archive <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="/list/archive">Archive List</a></li>
+                    </ul>
+                  </li>
+                </ul>
+                <ul class="nav side-menu">
+                  <li><a><i class="fa fa-database"></i> Image <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="/image/list">Image List</a></li>
                     </ul>
                   </li>
                 </ul>
@@ -157,49 +165,12 @@
                 <li role="presentation" class="dropdown">
                   <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
                     <i class="fa fa-bell"></i>
-                    <span class="badge bg-green">3</span>
+                    <span id="que-badge" class="badge bg-green" style="display: none;">0</span>
                   </a>
-                  <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
-                    <li>
-                      <a>
-                        <span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>Coming soon</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Sono uchi Jissou simasu
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                        <a>
-                            <span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>
-                            <span>
-                            <span>Coming soon</span>
-                            <span class="time">3 mins ago</span>
-                            </span>
-                            <span class="message">
-                            Sono uchi Jissou simasu
-                            </span>
-                        </a>
-                    </li>
-                    <li>
-                      <a>
-                        <span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>
-                        <span>
-                          <span>Coming soon</span>
-                          <span class="time">3 mins ago</span>
-                        </span>
-                        <span class="message">
-                          Sono uchi Jissou simasu
-                        </span>
-                      </a>
-                    </li>
-
+                  <ul id="que-status" class="dropdown-menu list-unstyled msg_list" role="menu">
                     <li>
                       <div class="text-center">
-                        <a>
+                        <a href="/que/list">
                           <strong>See All Alerts</strong>
                           <i class="fa fa-angle-right"></i>
                         </a>
@@ -272,6 +243,8 @@
     <script src="/static/build/js/custom.min.js"></script>
   
     <!-- Virty Scripts -->
-    <script src="/static/js/virty.js"></script>    
+    <script src="/static/js/virty.js"></script>
+    <!-- tablesorter -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
   </body>
 </html>
