@@ -29,8 +29,13 @@ def SqlDeleteDomain(DOM_NAMES):
 		sql = 'delete from kvm_domain where domain_name = "' + dom + '"'
 		cur.execute(sql)
 	con.commit()
-	
-	
+
+def NetworkDelete(NODE,SOURCE):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'delete from kvm_network where network_node = "' + NODE + '" and network_bridge = "' + SOURCE + '"'
+	cur.execute(sql)
+	con.commit()
 
 def SqlGetVncport():
 	con = sqlite3.connect(SQLFILE)
@@ -52,6 +57,11 @@ def SqlGetVncportFree(NODENAME):
 	sql = 'select min(vncpool_port) from kvm_vncpool where vncpool_domain_name="none" and vncpool_node_name ="' + NODENAME +'"'
 	return cur.execute(sql).fetchall()
 
+def GetNodeData(NODE_NAME):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'select * from kvm_node where node_name ="' + NODE_NAME +'"'
+	return cur.execute(sql).fetchall()[0]
 
 def SqlGetDomainpool():
 	con = sqlite3.connect(SQLFILE)
@@ -125,7 +135,7 @@ def SqlGetL2lessFree():
 def SqlAddNode(NODE_DATAS):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'replace into kvm_node (node_name, node_ip, node_core, node_memory, node_cpugen) values (?,?,?,?,?)'
+	sql = 'replace into kvm_node (node_name, node_ip, node_core, node_memory, node_cpugen, os_name, os_version, os_like) values (?,?,?,?,?,?,?,?)'
 	cur.executemany(sql, NODE_DATAS)
 	con.commit()
 	
@@ -302,6 +312,25 @@ def SqlGetData(SRC,DST,HINT):
 			if GET == []:	return 1
 			return GET[0][4].rstrip("/") + "/"
 
+def Convert(SRC,DST,HINT):
+	if SRC == "DOM_UUID" and DST == "NODE_NAME":
+		for data in SqlGetAll("kvm_domain"):
+			if data[5] == HINT:
+				return data[2]
+	if SRC == "DOM_NAME" and DST == "DOM_UUID":
+		for data in SqlGetAll("kvm_domain"):
+			if data[0] == HINT:
+				return data[5]
+	if SRC == "NODE_NAME" and DST == "NODE_IP":
+		for data in SqlGetAll("kvm_node"):
+			if data[0] == HINT:
+				return data[1]
+	if SRC == "NODE_NAME" and DST == "NETWORK_DATAS":
+		return  SqlPush("select * from kvm_network where network_node='" + HINT + "'")
+
+
+
+
 
 def SqlPush(SQL):
 	con = sqlite3.connect(SQLFILE)
@@ -350,9 +379,9 @@ def SqlInit():
 		pass
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen)')
+	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen, os_like, os_name, os_version)')
 	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_progress,que_type, que_json)')
-	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_name,network_node))')
+	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_bridge,network_node))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
 	cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
 	cur.execute('create table if not exists kvm_vncpool (vncpool_port, vncpool_domain_name, vncpool_passwd, vncpool_node_name, primary key (vncpool_port,vncpool_node_name))')

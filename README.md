@@ -23,9 +23,15 @@ make build
 make up
 ```
 
-Container login
+Container login & Use public key authentication to allow SSH without input
 
 ```
 make login
+```
+
+DB Initialization
+
+```
+http://VIRTY/setup
 ```
 

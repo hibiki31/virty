@@ -7,7 +7,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h2>Domain Define <small>beta</small></h2>
+            <h2>Domain Power Panel <small>beta</small></h2>
             <ul class="nav navbar-right panel_toolbox">
               <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
               </li>
@@ -27,40 +27,26 @@
           </div>
           <div class="x_content">
             <br />
-            <form action="/api/add/storage" method="post" data-parsley-validate class="form-horizontal form-label-left">
+            <form action="/api/edit/dom_nic" method="post" data-parsley-validate class="form-horizontal form-label-left">
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span class="required">*</span>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="node-list" name="node-list" class="form-control" required="">
-                    <option value=""></option> 
+                  <select id="domain-list" name="network" class="form-control" required="">
+                    {% for data in NET %}
+                    <option value={{data[1]}}>{{data[0]}} src {{data[1]}}</option>
+                    {% endfor %}
                   </select>
+                  <input type="hidden" name="uuid" value="{{DOM[0]}}">
+                  <input type="hidden" name="mac" value="{{DOM[1]}}">
                 </div>
               </div>
-
-              <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" name="name" required="required" class="form-control col-md-7 col-xs-12">
-                </div>
-              </div>
-
-
-              <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Path <span class="required">*</span>
-                </label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" name="path" required="required" class="form-control col-md-7 col-xs-12">
-                </div>
-              </div>
-
-
-
+              
               <div class="ln_solid"></div>
               <div class="form-group">
+                
                 <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                  <button class="btn btn-success">Submit</button>
+                  <button class="btn btn-success">Commit</button>
                 </div>
               </div>
 
