@@ -325,8 +325,9 @@ def NodeAdd(NODE_NAME,NODE_IP):
     NODE_MEM = SshInfoMem(NODE_IP)
     NODE_CORE = SshInfocpu(NODE_IP)
     NODE_CPU = SshInfocpuname(NODE_IP)
+    NODE_OS = SshOsinfo(NODE_IP)
     NODE_DATAS_NEW = []
-    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU])
+    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE']])
     vsql.SqlAddNode(NODE_DATAS_NEW)
 
     print(
@@ -337,9 +338,23 @@ def NodeAdd(NODE_NAME,NODE_IP):
         "\nCPU: " + str(NODE_CPU)	
     )
 
-
+    print(NODE_OS)
 
 #Network
+
+def NetworkInternalDefine(NODE_NAME,NET_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.NetworkXmlTemplate(XML_PATH)
+    print(editor.NetworkXmlDump())
+    editor.NetworkXmlL2lEdit(NAME,GW)
+    print(editor.NetworkXmlDump())
+    editor.NetworkXmlDefine(NODE_IP)
+    editor.NetworkStart()
+
 def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.NetworkXmlTemplate(XML_PATH)
@@ -406,6 +421,18 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
         root = tree.getroot()
     except:
         exit(2)
+    
+    NODE_DATA = vsql.GetNodeData(NODE_NAME)
+
+    if NODE_DATA[5] == "debian":
+        print("DEBIAN")
+        root.find('devices').find('emulator').text = "/usr/bin/kvm"
+        root.find('os').find('type').set('machine', "pc-i440fx-2.8")
+    elif NODE_DATA[5] == "rhel fedora":
+        root.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
+        root.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
+        
+    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
 
     IMG_DEVICE_NAME = ["vda","vdb","vdc"]
     COUNTER = 0
@@ -428,7 +455,6 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
 
         vvirt.XmlImgAdd(DOM_NAME,IMG_PATH)
         vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
-    
 
     with open(SPATH + '/define/' + DOM_NAME + '.xml') as f:
         s = f.read()
@@ -522,6 +548,17 @@ def SshInfoDir(NODE_IP,NODE_DIR):
     get = subprocess.check_output(cmd)
     storage = str(get).rstrip("\\n'").lstrip("b'").split()
     return storage
+
+
+def SshOsinfo(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "cat" ,"/etc/os-release"]
+    get = subprocess.check_output(cmd)
+    result = {}
+    for data in str(get).rstrip("\\n'").lstrip("b'").split("\\n"):
+        if not data == "":
+            result[data.split("=")[0]] = data.split("=")[1].strip("\"")
+    return result
+
 
 
 

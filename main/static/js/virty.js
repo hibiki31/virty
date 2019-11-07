@@ -47,8 +47,9 @@ $(function() {
 
 $('#node-list').on('change', function() {
   var node = $('#node-list option:selected').val();
+
     $('#network-list').children().remove();  
-    $.getJSON('/api/json/network/'+node, function(data) {
+    $.getJSON('/api/json/network/?node='+node, function(data) {
       for (var domain in data.ResultSet[0]){
         $('#network-list').append('<option value="'+data.ResultSet[0][domain]+'">Interface '+data.ResultSet[0][domain]+'</option>');
       }
@@ -64,14 +65,8 @@ $('#node-list').on('change', function() {
         }
     }
     });
-});
-
-
-
-$('#node-list').on('change', function() {
     $('#archive-list').children().remove();
-        var node = $('#node-list option:selected').val();
-        $.getJSON('/api/json/archive/'+node, function(data) {
+        $.getJSON('/api/json/archive/?node='+node, function(data) {
         for (var domain in data.ResultSet){
             
           $('#archive-list').append('<option value="'+data.ResultSet[domain]['name']+'">'+data.ResultSet[domain]['name']+'</option>');
@@ -79,8 +74,7 @@ $('#node-list').on('change', function() {
         }
     });
     $('#storage-list').children().remove();
-        var node = $('#node-list option:selected').val();
-        $.getJSON('/api/json/storage/'+node, function(data) {
+        $.getJSON('/api/json/storage/?node='+node, function(data) {
         for (var domain in data.ResultSet){
             
           $('#storage-list').append('<option value="'+data.ResultSet[domain]['name']+'">'+data.ResultSet[domain]['name']+'</option>');
@@ -89,9 +83,11 @@ $('#node-list').on('change', function() {
     });
 });
 
+
+
 $(function() {
   setInterval(function() {
-    $.getJSON('/api/getque.json', function(data) {
+    $.getJSON('/api/json/stack-que', function(data) {
       let p = 0;
       for (let i in data.ResultSet) {
         if ($('#que-status li > a').length <= p) {

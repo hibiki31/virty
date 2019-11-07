@@ -23,10 +23,6 @@ def route():
     html = render_template('DomainList.html',domain=virty.vsql.SqlGetAll("kvm_domain"),sumdata= DATA)
     return html
 
-@app.route('/domain/info/<DOM_NAME>')
-def info_domain(DOM_NAME):
-    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_NAME))
-    return html
 
 @app.route('/storage/<NODE>/<NAME>')
 def info_storage(NODE,NAME):
@@ -43,25 +39,6 @@ def storage_listall():
     html = render_template('ArchiveImageList.html',datas=virty.ImageArchiveListAll())
     return html
 
-@app.route('/domain/<DOM_UUID>/info')
-def domain_info(DOM_UUID):
-    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_UUID))
-    return html
-
-@app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
-def domain_nic(DOM_UUID,DOM_MAC):
-    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
-    html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
-    return html
-
-@app.route('/domain/<DOM_UUID>/disk/<TARGET>')
-def domain_cdrom(DOM_UUID,TARGET):
-    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    IMAGE_DATAS = virty.ImageIsoList(NODE_NAME)
-    html = render_template('DomainCdromEdit.html',IMG=IMAGE_DATAS,DOM=[DOM_UUID,TARGET])
-    return html
-
 @app.route('/image/delete/<NODE>/<POOL>/<IMAGE>')
 def image_delete(NODE,POOL,IMAGE):
     virty.ImageDelete(NODE,POOL,IMAGE)
@@ -72,6 +49,11 @@ def network_delete(NODE,SOURCE):
     virty.vsql.NetworkDelete(NODE,SOURCE)
     return redirect("/list/network", code=302)
 
+
+
+############################
+# WEB                      #
+############################
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
     if GET_DATA == "node":
@@ -150,41 +132,64 @@ def network_add():
     html = render_template('NetworkAdd.html')
     return html
 
+
+
+############################
+# DOMAIN                   #
+############################
+@app.route('/domain/<DOM_UUID>/info')
+def domain_info(DOM_UUID):
+    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_UUID))
+    return html
+
+@app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
+def domain_nic(DOM_UUID,DOM_MAC):
+    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
+    html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
+    return html
+
+@app.route('/domain/<DOM_UUID>/disk/<TARGET>')
+def domain_cdrom(DOM_UUID,TARGET):
+    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    IMAGE_DATAS = virty.ImageIsoList(NODE_NAME)
+    html = render_template('DomainCdromEdit.html',IMG=IMAGE_DATAS,DOM=[DOM_UUID,TARGET])
+    return html
+
+
+
+############################
+# JSON                     #
+############################
 @app.route('/api/sql/<TABLE_NAME>.json')
 def api_sql(TABLE_NAME):
     result=virty.vsql.SqlGetAll(TABLE_NAME)
     return jsonify(ResultSet=result)
 
-@app.route('/api/json/network/<NODE_NAME>')
-def api_json_network(NODE_NAME):
-    result=virty.NodeNetworkList(NODE_NAME)
+@app.route('/api/json/<OBJECT>/')
+def api_json_object(OBJECT):
+    NODE_NAME = request.args.get('node')
+    if OBJECT == "network":
+        if NODE_NAME == None:result = []
+        else:result=virty.NodeNetworkList(NODE_NAME)
+    elif OBJECT == "interface":
+        if NODE_NAME == None:result=virty.AllInterfaceList()
+        else:result=virty.InterfaceList(NODE_NAME)
+    elif OBJECT == "storage":
+        if NODE_NAME == None:result = []
+        else:result=virty.StorageList(NODE_NAME)
+    elif OBJECT == "archive":
+        if NODE_NAME == None:result = []
+        else:result=virty.ImageArchiveList(NODE_NAME)   
+    elif OBJECT == "stack-que":
+        result=virty.vsql.SqlQueuget()
     return jsonify(ResultSet=result)
 
-@app.route('/api/json/interface/<NODE_NAME>')
-def api_json_interface_node(NODE_NAME):
-    result=virty.InterfaceList(NODE_NAME)
-    return jsonify(ResultSet=result)
 
-@app.route('/api/json/interface/')
-def api_json_interface():
-    result=virty.AllInterfaceList()
-    return jsonify(ResultSet=result)
 
-@app.route('/api/json/archive/<NODE_NAME>')
-def api_json_archive_node(NODE_NAME):
-    result=virty.ImageArchiveList(NODE_NAME)
-    return jsonify(ResultSet=result)
-
-@app.route('/api/json/storage/<NODE_NAME>')
-def api_json_storage_node(NODE_NAME):
-    result=virty.StorageList(NODE_NAME)
-    return jsonify(ResultSet=result)
-
-@app.route('/api/getque.json')
-def api_getque():
-    result=virty.vsql.SqlQueuget()
-    return jsonify(ResultSet=result)
-
+############################
+# POST                     #
+############################
 @app.route("/api/add/<POST_TASK>",methods=["POST"])
 def api_add(POST_TASK):
     if POST_TASK == "domain":
@@ -274,7 +279,7 @@ def api_edit(POST_TASK):
             virty.DomCdromExit(task['uuid'],task['target'])
         return task
 
-@app.route("/api/selinux",methods=["POST","DELETE"])
+@app.route("/api/selinux",methods=["POST"])
 def api_selinux():
     task = {}
     for key, value in request.form.items():
@@ -290,7 +295,6 @@ def api_network_bridge_add():
     virty.vsql.SqlAddNetwork([(task['name'],task['source'],task['node-list'])])  
 
     return redirect("/list/network", code=302)
-
 
 if __name__ == "__main__":
     virty.WorkerUp()    

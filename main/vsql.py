@@ -57,6 +57,11 @@ def SqlGetVncportFree(NODENAME):
 	sql = 'select min(vncpool_port) from kvm_vncpool where vncpool_domain_name="none" and vncpool_node_name ="' + NODENAME +'"'
 	return cur.execute(sql).fetchall()
 
+def GetNodeData(NODE_NAME):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'select * from kvm_node where node_name ="' + NODE_NAME +'"'
+	return cur.execute(sql).fetchall()[0]
 
 def SqlGetDomainpool():
 	con = sqlite3.connect(SQLFILE)
@@ -130,7 +135,7 @@ def SqlGetL2lessFree():
 def SqlAddNode(NODE_DATAS):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'replace into kvm_node (node_name, node_ip, node_core, node_memory, node_cpugen) values (?,?,?,?,?)'
+	sql = 'replace into kvm_node (node_name, node_ip, node_core, node_memory, node_cpugen, os_name, os_version, os_like) values (?,?,?,?,?,?,?,?)'
 	cur.executemany(sql, NODE_DATAS)
 	con.commit()
 	
@@ -374,7 +379,7 @@ def SqlInit():
 		pass
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen)')
+	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen, os_like, os_name, os_version)')
 	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_progress,que_type, que_json)')
 	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_bridge,network_node))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
