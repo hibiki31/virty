@@ -259,6 +259,9 @@ class Libvirtc():
     def NetworkXmlDefine(self,NODEIP):
         self.network = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
 
+    def NetworkDefine(self,XML):
+        self.network = self.node.networkDefineXML(XML)
+
     def NetworkXmlDump(self):
         return ET.tostring(self.nxml).decode()
 
@@ -448,7 +451,9 @@ class Xmlc():
     def Dump(self):
         return ET.tostring(self.xml).decode()
 
-
+    def NetworkInternal(self,NAME):
+        self.xml.find('name').text= NAME
+        self.xml.find('bridge').set("name",NAME)
 
 
 

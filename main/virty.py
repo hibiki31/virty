@@ -318,7 +318,7 @@ def ImageArchiveListAll():
             data = imageedit.ImageData()
             data['node'] = NODE[0]
             image.append(data)
-        return image
+    return image
 
 #Node
 def NodeAdd(NODE_NAME,NODE_IP):
@@ -345,15 +345,15 @@ def NodeAdd(NODE_NAME,NODE_IP):
 def NetworkInternalDefine(NODE_NAME,NET_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    root = vvirt.XmlFileRoot("net_internal")
 
+    editor = vvirt.Xmlc(root)
+    editor.NetworkInternal(NET_NAME)
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.NetworkXmlTemplate(XML_PATH)
-    print(editor.NetworkXmlDump())
-    editor.NetworkXmlL2lEdit(NAME,GW)
-    print(editor.NetworkXmlDump())
-    editor.NetworkXmlDefine(NODE_IP)
-    editor.NetworkStart()
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.NetworkDefine(editor.Dump())
+    manager.NetworkStart()
+
 
 def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     editor = vvirt.Libvirtc(NODE_IP)
@@ -399,7 +399,17 @@ def NodeNetworkList(NODE_NAME):
     data.append(editor.NetworkList())
     return data
 
-
+def NodeNetworkAllList():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    data = []
+    for NODE in NODE_DATAS:
+        temp = {}
+        editor = vvirt.Libvirtc(NODE[1])
+        temp['int'] = editor.InterfaceList()
+        temp['net'] = editor.NetworkList()
+        temp['node'] = NODE[0]
+        data.append(temp)
+    return data
 
 #DomainMake
 def DomainMakeBase(DOM_NAME,MEMORY,CORE,VNC_PORT,VNC_PASS):
@@ -569,6 +579,8 @@ if __name__ == "__main__":
     #     executor.submit(vsql.SqlGetAll("kvm_domain"))
     # elapsed_time = time.time() - start
     # print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+
+    #NetworkInternalDefine("ruri","test-net")
 
     args = sys.argv
     argnum = len(args)

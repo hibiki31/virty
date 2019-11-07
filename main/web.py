@@ -60,13 +60,13 @@ def node_list(GET_DATA):
         html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("kvm_node"),sumdata=virty.vsql.SqlSumNode())
         return html
     elif GET_DATA == "archive":
-        html = render_template('ArchiveList.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
+        html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
         return html
     elif GET_DATA == "storage":
         html = render_template('StorageList.html',domain=virty.StoragePoolList())
         return html
     elif GET_DATA == "network":
-        html = render_template('NetworkList.html',domain=virty.vsql.SqlGetAll("kvm_network"))
+        html = render_template('NetworkList.html',nodes=virty.NodeNetworkAllList())
         return html
     elif GET_DATA == "que":
         html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())
@@ -145,7 +145,7 @@ def domain_info(DOM_UUID):
 @app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
 def domain_nic(DOM_UUID,DOM_MAC):
     NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NETWORK_DATAS = virty.vsql.Convert("NODE_NAME","NETWORK_DATAS",NODE_NAME)
+    NETWORK_DATAS = virty.NodeNetworkList(NODE_NAME)
     html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
     return html
 
@@ -170,7 +170,7 @@ def api_sql(TABLE_NAME):
 def api_json_object(OBJECT):
     NODE_NAME = request.args.get('node')
     if OBJECT == "network":
-        if NODE_NAME == None:result = []
+        if NODE_NAME == None:result = virty.NodeNetworkAllList()
         else:result=virty.NodeNetworkList(NODE_NAME)
     elif OBJECT == "interface":
         if NODE_NAME == None:result=virty.AllInterfaceList()
