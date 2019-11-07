@@ -1,0 +1,55 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: install libvirt
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages: 
+          - libvirt
+          - libguestfs
+          - libvirt-client
+          - libvirt-devel
+          - qemu-kvm
+          - virt-manager
+          - virt-top
+          - virt-viewer
+          - virt-who
+          - virt-install
+          - bridge-utils 
+        state: latest
+    - name: install python3 rpm
+      yum:
+        name: https://centos7.iuscommunity.org/ius-release.rpm
+    - name: install python3.5
+      yum:
+        name: "{{ pypackages }}"
+      vars:
+        pypackages:
+          - python35u 
+          - python35u-libs 
+          - python35u-devel 
+          - python35u-pip
+    - name: upgrade all packages
+      yum: name=* state=latest
+    - name: install-gcc
+      yum:
+        name: gcc
+    - name: upgrade-pip
+      pip:
+        name: pip
+        executable: pip3.5
+        state: latest
+    - name: libvirt-python
+      pip:
+        name: libvirt-python
+        executable: pip3.5
+        state: latest
+    - name: restart libvirtd
+      systemd:
+        name: libvirtd
+        state: restarted
+        daemon_reload: yes
+        enabled: yes

@@ -37,6 +37,8 @@ def WorkerUp():
 
 
 
+
+
 #Domain Power
 def DomainStart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -180,16 +182,28 @@ def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PAT
 
 def StoragePoolList():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    data = []
     for NODE in NODE_DATAS:
         editor = vvirt.Libvirtc(NODE[1])
         xmls = editor.AllStorageXml()
-        data = []
         for xml in xmls:
-            xmledit = vvirt.Xmlc(xml)
+            xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
             get = xmledit.StorageData()
             get['node'] = NODE[0]
             data.append(get)
-        return data
+    return data
+
+def StorageList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+    xmls = editor.AllStorageXml()
+    data = []
+    for xml in xmls:
+        xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+        get = xmledit.StorageData()
+        get['node'] = NODE_NAME
+        data.append(get)
+    return data
 
 def StoragepoolXmlDump(NODE_NAME,STORAGE_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -204,7 +218,6 @@ def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
     editor.StorageMake(STORAGE_NAME,STORAGE_PATH)
 
     server = vvirt.Libvirtc(NODE_IP)
-    print(editor.Dump())
     server.StorageDefine(editor.Dump())
 
 
@@ -282,7 +295,30 @@ def ImageIsoList(NODE_NAME):
         image.append(imageedit.ImageData())
     return image
 
+def ImageArchiveList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    image = []
+    nodepoint = vvirt.Libvirtc(NODE_IP)
+    images = nodepoint.AllImageXml("archive")
+
+    for xml in images:
+        imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+        image.append(imageedit.ImageData())
+    return image
+
+def ImageArchiveListAll():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    image = []
+    for NODE in NODE_DATAS:
+        nodepoint = vvirt.Libvirtc(NODE[1])
+        images = nodepoint.AllImageXml("archive")
+        for xml in images:
+            imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+            data = imageedit.ImageData()
+            data['node'] = NODE[0]
+            image.append(data)
+        return image
 
 #Node
 def NodeAdd(NODE_NAME,NODE_IP):
@@ -312,6 +348,41 @@ def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     print(editor.NetworkXmlDump())
     editor.NetworkXmlDefine(NODE_IP)
     editor.NetworkStart()
+
+def NetworkList():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    data = []
+    for NODE in NODE_DATAS:
+        editor = vvirt.Libvirtc(NODE[1])
+        temp = {}
+        temp['node'] = NODE[0]
+        temp['network'] = editor.NetworkList()
+        data.append(temp)
+    return data
+
+def InterfaceList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+
+    return editor.InterfaceList()
+
+def AllInterfaceList():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    data = []
+    for NODE in NODE_DATAS:
+        editor = vvirt.Libvirtc(NODE[1])
+        temp = {}
+        temp['node'] = NODE[0]
+        temp['network'] = editor.InterfaceList()
+        data.append(temp)
+    return data
+
+def NodeNetworkList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+    data = [editor.InterfaceList()]
+    data.append(editor.NetworkList())
+    return data
 
 
 
@@ -344,13 +415,18 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
         COUNTER = COUNTER + 1
         STORAGE_NAME = storage.get('storage')
 
-        STORAGE_PATH = vsql.SqlGetData("STORAGE_DATA","STORAGE_PATH",(NODE_NAME,STORAGE_NAME))
-        IMG_PATH = STORAGE_PATH + DOM_NAME + "_" + IMG_NAME + '.img'
-
-        ARCHIVE_NAME = storage.get('archive')
-        ARCHIVE_PATH = vsql.SqlHitData("ARCHIVE_NAMEtoARCHIVE_PATH",ARCHIVE_NAME)
-        vvirt.XmlImgAdd(DOM_NAME,STORAGE_PATH,IMG_NAME,STORAGE_NAME,ARCHIVE_NAME)
+        for data in StorageList(NODE_NAME):
+            if data['name'] == STORAGE_NAME:
+                STORAGE_PATH = data['path']
+            
         
+        ARCHIVE_NAME = storage.get('archive')
+        ARCHIVE_PATH = "/kvm/archive/"+ARCHIVE_NAME
+
+        IMG_PATH = STORAGE_PATH +"/"+ DOM_NAME + "_" + IMG_NAME + '.img'
+
+
+        vvirt.XmlImgAdd(DOM_NAME,IMG_PATH)
         vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
     
 
@@ -461,8 +537,6 @@ if __name__ == "__main__":
     argnum = len(args)
     if argnum == 1:argobj = "none"
     else: argobj = args[1]
-
-    ImageIsoList("ruri")
 
     #Help
     if argnum == 1:

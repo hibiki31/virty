@@ -26,9 +26,9 @@ while True:
             for nic in dic['nic']:
                 print(dic['domain-name'],nic[1])
                 virty.vvirt.XmlBridgeNicAdd(dic['domain-name'],nic[1])
-            virty.vvirt.XmlMetaSetStorage(dic['domain-name'],'image',dic['archive-list'])
+            virty.vvirt.XmlMetaSetStorage(dic['domain-name'],dic['storage-list'],dic['archive-list'])
 
-            print(dic['domain-name'],'image',dic['archive-list'])
+            print(dic['domain-name'],dic['storage-list'],dic['archive-list'])
             print(dic['domain-name'],dic['node-list'])
 
             if not virty.DomainDefineStatic(dic['domain-name'],dic['node-list']) == 0:
@@ -87,6 +87,7 @@ while True:
             dic = ast.literal_eval(que[5])
             if dic['system'] == "archive":NAME = "archive"
             elif dic['system'] == "data":  NAME = dic['name']
+            virty.StorageMake(dic['node-list'],NAME,dic['path'])
             virty.StorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)
 

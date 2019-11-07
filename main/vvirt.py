@@ -89,8 +89,16 @@ class Libvirtc():
         return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
 
     def StorageDefine(self,XML_DUMP):
-        self.node.storagePoolDefineXML(XML_DUMP,0)
-        
+        try:
+            sp = self.node.storagePoolDefineXML(XML_DUMP,0)
+        except:
+            pass
+        else:
+            if sp.autostart() == True:
+                sp.setAutostart(0)
+            else:
+                sp.setAutostart(1)
+                
         
 
 
@@ -256,6 +264,18 @@ class Libvirtc():
 
     def NetworkStart(self):
         self.network.create()
+
+    def NetworkList(self):
+        test = []
+        for net in self.node.listNetworks():
+            temp = self.node.networkLookupByName(net)
+            test.append({'name':temp.name(),'uuid':temp.UUIDString(),'bridge':temp.bridgeName()})
+        return test
+    
+    def InterfaceList(self):
+        return self.node.listInterfaces()
+        
+
 
     def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
         source = NEW_BRIDGE
@@ -426,7 +446,7 @@ class Xmlc():
         self.xml.find('target').find('path').text = STORAGE_PATH
 
     def Dump(self):
-        return ET.dump(self.xml)
+        return ET.tostring(self.xml).decode()
 
 
 
@@ -528,10 +548,8 @@ def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
 
     tree.write(SPATH + '/define/' + l2l_NAME + '.xml')
 
-def XmlImgAdd(DOM_NAME,STORAGE_PATH,IMG_NAME,STORAGE_NAME,ARCHIVE_NAME):
+def XmlImgAdd(DOM_NAME,IMG_PATH):
     os.chdir = SPATH
-
-    IMG_PATH = STORAGE_PATH + DOM_NAME + "_" + IMG_NAME + '.img'
 
     tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
     root = tree.getroot()
@@ -556,7 +574,7 @@ def XmlImgAdd(DOM_NAME,STORAGE_PATH,IMG_NAME,STORAGE_NAME,ARCHIVE_NAME):
     
     tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
 
-    vsql.SqlAddImg([(IMG_NAME,ARCHIVE_NAME,DOM_NAME,"none")])
+    
 
 def XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
     os.chdir = SPATH

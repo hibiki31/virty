@@ -28,9 +28,19 @@ def info_domain(DOM_NAME):
     html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_NAME))
     return html
 
+@app.route('/storage/<NODE>/<NAME>')
+def info_storage(NODE,NAME):
+    html = render_template('StorageUndefine.html',domain=[NODE,NAME])
+    return html
+
 @app.route('/image/list')
 def storage_list():
     html = render_template('ImageList.html',datas=virty.AllImageXml())
+    return html
+
+@app.route('/archive/list')
+def storage_listall():
+    html = render_template('ArchiveImageList.html',datas=virty.ImageArchiveListAll())
     return html
 
 @app.route('/domain/<DOM_UUID>/info')
@@ -71,7 +81,7 @@ def node_list(GET_DATA):
         html = render_template('ArchiveList.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
         return html
     elif GET_DATA == "storage":
-        html = render_template('StorageList.html',domain=virty.vsql.SqlGetAll("kvm_storage"))
+        html = render_template('StorageList.html',domain=virty.StoragePoolList())
         return html
     elif GET_DATA == "network":
         html = render_template('NetworkList.html',domain=virty.vsql.SqlGetAll("kvm_network"))
@@ -84,6 +94,12 @@ def node_list(GET_DATA):
 def domain_add():
     virty.WorkerUp()
     html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
+    return html
+
+@app.route('/domain/define/normal')
+def domain_define():
+    virty.WorkerUp()
+    html = render_template('DomainDefineNormal.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
 @app.route('/network/2ldefine')
@@ -137,6 +153,31 @@ def network_add():
 @app.route('/api/sql/<TABLE_NAME>.json')
 def api_sql(TABLE_NAME):
     result=virty.vsql.SqlGetAll(TABLE_NAME)
+    return jsonify(ResultSet=result)
+
+@app.route('/api/json/network/<NODE_NAME>')
+def api_json_network(NODE_NAME):
+    result=virty.NodeNetworkList(NODE_NAME)
+    return jsonify(ResultSet=result)
+
+@app.route('/api/json/interface/<NODE_NAME>')
+def api_json_interface_node(NODE_NAME):
+    result=virty.InterfaceList(NODE_NAME)
+    return jsonify(ResultSet=result)
+
+@app.route('/api/json/interface/')
+def api_json_interface():
+    result=virty.AllInterfaceList()
+    return jsonify(ResultSet=result)
+
+@app.route('/api/json/archive/<NODE_NAME>')
+def api_json_archive_node(NODE_NAME):
+    result=virty.ImageArchiveList(NODE_NAME)
+    return jsonify(ResultSet=result)
+
+@app.route('/api/json/storage/<NODE_NAME>')
+def api_json_storage_node(NODE_NAME):
+    result=virty.StorageList(NODE_NAME)
     return jsonify(ResultSet=result)
 
 @app.route('/api/getque.json')

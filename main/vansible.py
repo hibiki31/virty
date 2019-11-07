@@ -4,6 +4,17 @@ import vsql
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
+def NodeInit(PBNAME,EXVALUE):
+    if PBNAME == "gluster":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_gluster.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + EXVALUE
+        subprocess.check_call(cmd, shell=True)
+    elif PBNAME == "libvirt":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_libvirt.yml -i  ' + SPATH + '/ansible/host_node.ini'
+        subprocess.check_call(cmd, shell=True)	
+    elif PBNAME == "frr":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_frr.yml -i  ' + SPATH + '/ansible/host_node.ini'
+        subprocess.check_call(cmd, shell=True)
+
 def AnsibleFiledeleteInnode(NODEIP,FILE):
 	AnsibleNodelistInit()
 	exvar = ' "file=' + FILE  + ' host=' + NODEIP + '"'

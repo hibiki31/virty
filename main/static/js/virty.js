@@ -18,6 +18,25 @@ $('.demo-minus').on('click', function(){
 });
 });
 
+$(function(){
+  $('#image-plus').on('click', function(){
+      var inputCount = $('#image-list .unit').length;
+      if (inputCount < maxCount){
+          var element = $('#image-list .unit:last-child').clone(true);
+          $('#image-list .unit').parent().append(element);
+      }
+  });
+  
+  $('.image-minus').on('click', function(){
+      var inputCount = $('#image-list .unit').length;
+      if (inputCount > minCount){
+      $(this).parents('.unit').remove();
+      }
+  });
+});
+
+
+
 $(function() {
     $.getJSON('/api/sql/kvm_node.json', function(data) {
         for (var domain in data.ResultSet){
@@ -27,25 +46,45 @@ $(function() {
 });
 
 $('#node-list').on('change', function() {
-    $('#network-list').children().remove();
-        var node = $('#node-list option:selected').val();
-        $.getJSON('/api/sql/kvm_network.json', function(data) {
-        for (var domain in data.ResultSet){
-            if (data.ResultSet[domain][2] == node){
-                $('#network-list').append('<option value="'+data.ResultSet[domain][1]+'">'+data.ResultSet[domain][0]+' src '+data.ResultSet[domain][1]+'</option>');
-            }
+  var node = $('#node-list option:selected').val();
+    $('#network-list').children().remove();  
+    $.getJSON('/api/json/network/'+node, function(data) {
+      for (var domain in data.ResultSet[0]){
+        $('#network-list').append('<option value="'+data.ResultSet[0][domain]+'">Interface '+data.ResultSet[0][domain]+'</option>');
+      }
+      for (var domain in data.ResultSet[1]){
+        $('#network-list').append('<option value="'+data.ResultSet[1][domain]['bridge']+'">Network '+data.ResultSet[1][domain]['name']+' @'+data.ResultSet[1][domain]['bridge']+'</option>');
+      }
+    });
+    $('#image-json').children().remove();
+      $.getJSON('/image/list', function(data) {
+      for (var domain in data.ResultSet){
+        if (data.ResultSet[domain][2] == node){
+            $('#image-json').append('<option value="'+data.ResultSet[domain][1]+'">'+data.ResultSet[domain][0]+' src '+data.ResultSet[domain][1]+'</option>');
         }
+    }
     });
 });
+
+
 
 $('#node-list').on('change', function() {
     $('#archive-list').children().remove();
         var node = $('#node-list option:selected').val();
-        $.getJSON('/api/sql/kvm_archive.json', function(data) {
+        $.getJSON('/api/json/archive/'+node, function(data) {
         for (var domain in data.ResultSet){
-            if (data.ResultSet[domain][2] == node){
-                $('#archive-list').append('<option value="'+data.ResultSet[domain][0]+'">'+data.ResultSet[domain][0]+'</option>');
-            }
+            
+          $('#archive-list').append('<option value="'+data.ResultSet[domain]['name']+'">'+data.ResultSet[domain]['name']+'</option>');
+            
+        }
+    });
+    $('#storage-list').children().remove();
+        var node = $('#node-list option:selected').val();
+        $.getJSON('/api/json/storage/'+node, function(data) {
+        for (var domain in data.ResultSet){
+            
+          $('#storage-list').append('<option value="'+data.ResultSet[domain]['name']+'">'+data.ResultSet[domain]['name']+'</option>');
+            
         }
     });
 });
