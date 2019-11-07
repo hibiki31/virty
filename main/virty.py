@@ -36,6 +36,9 @@ def WorkerUp():
         subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
 
 
+def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
+    vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+
 
 
 
@@ -375,6 +378,18 @@ def NetworkList():
         data.append(temp)
     return data
 
+def NetworkUndefine(NET_UUID):
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        editor = vvirt.Libvirtc(NODE[1])
+        editor.NetworkOpen(NET_UUID)
+        editor.NetworkStop()
+        editor.NetworkUndefine()
+
+
+
+
+
 def InterfaceList(NODE_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
     editor = vvirt.Libvirtc(NODE_IP)
@@ -486,9 +501,7 @@ def DomNameEdit(DOM_UUID,NEW_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
     editor.DomainNameEdit(NEW_NAME)
-
-    print(editor.DomainXmlUpdate())
-    print(editor.DomainXmlDump())
+    return editor.DomainXmlUpdate()
 
 def DomSelinux(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)

@@ -211,31 +211,27 @@ def SqlAddDomain(DOMAIN_DATAS):
 	con.close()
 
 ### QUE ###
-def SqlQueuing(QUE_TYPE,DOMAIN_DATAS):
+def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = "insert into kvm_que (que_time, que_status, que_progress, que_type, que_json) values (datetime('now', 'localtime'),?,?,?,?)"
-	values = 'values ("'+QUE_TYPE+'","'+str(DOMAIN_DATAS)+'");'
-
+	sql = "insert into kvm_que (que_time, que_status, que_object, que_method, que_json, que_mesg) values (datetime('now', 'localtime'),?,?,?,?,?)"
+	
 	quedata = [[]]
-	#quedata[0].append(str("now"))
 	quedata[0].append(str("init"))
-	quedata[0].append(str("0"))
-	quedata[0].append(str(QUE_TYPE))
-	quedata[0].append(str(DOMAIN_DATAS))
+	quedata[0].append(str(QUE_OBJECT))
+	quedata[0].append(str(QUE_METHOD))
+	quedata[0].append(str(QUE_JSON))
+	quedata[0].append(str("Not started"))
 
-
-
-	print(quedata)
 	cur.executemany(sql, quedata)
 	con.commit()
 	con.close()
 
-def SqlDequeuing(QUE_ID,QUE_STATUS,QUE_PROGRESS):
+def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'UPDATE kvm_que SET que_status=?, que_progress=? WHERE que_id=?'
-	cur.executemany(sql, [(QUE_STATUS,QUE_PROGRESS,QUE_ID)])
+	sql = 'UPDATE kvm_que SET que_status=?, que_mesg=? WHERE que_id=?'
+	cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
 	con.commit()
 	
 def SqlQueuget():
@@ -380,7 +376,7 @@ def SqlInit():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
 	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen, os_like, os_name, os_version)')
-	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_progress,que_type, que_json)')
+	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg)')
 	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_bridge,network_node))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
 	cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')

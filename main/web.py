@@ -5,6 +5,10 @@ import virty
 
 app = Flask(__name__)
 
+
+############################
+# SETUP                    #
+############################
 @app.route('/setup',methods=["POST","GET"])
 def setup():
     if request.method == 'POST':
@@ -15,6 +19,11 @@ def setup():
         html = render_template('Setup.html')
         return html
 
+
+
+############################
+# WEB                      #
+############################
 @app.route('/')
 def route():
     DATA = virty.vsql.SqlSumDomain()
@@ -22,7 +31,6 @@ def route():
         DATA[0] = str(int(DATA[0])/1000) + "GB"
     html = render_template('DomainList.html',domain=virty.vsql.SqlGetAll("kvm_domain"),sumdata= DATA)
     return html
-
 
 @app.route('/storage/<NODE>/<NAME>')
 def info_storage(NODE,NAME):
@@ -49,11 +57,6 @@ def network_delete(NODE,SOURCE):
     virty.vsql.NetworkDelete(NODE,SOURCE)
     return redirect("/list/network", code=302)
 
-
-
-############################
-# WEB                      #
-############################
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
     if GET_DATA == "node":
@@ -295,6 +298,25 @@ def api_network_bridge_add():
     virty.vsql.SqlAddNetwork([(task['name'],task['source'],task['node-list'])])  
 
     return redirect("/list/network", code=302)
+
+@app.route("/api/que/<OBJECT>/<METHOD>/",methods=["POST"])
+def api_que(OBJECT,METHOD):
+    task = {}
+    if OBJECT == "domain" and METHOD == "define":
+        task["nic"] = []
+        for key, value in request.form.items():
+            if key == "bridge":
+                for nic in request.form.getlist('bridge'):
+                    task['nic'].append(["bridge",nic])
+            else:
+                task[key]=value
+    else:
+        for key, value in request.form.items():
+            task[key]=value
+
+    virty.Queuing(OBJECT,METHOD,task)
+    
+    return task
 
 if __name__ == "__main__":
     virty.WorkerUp()    

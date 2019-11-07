@@ -159,9 +159,9 @@ class Libvirtc():
         if self.dpower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return [0,"domain","define",""]
+            return [0,""]
         else:
-            return [1,"domain","define",""]
+            return [1,"Domain is Poweron"]
 
     def DomainPowerGet(self):
         if self.dpower == 5:
@@ -221,7 +221,7 @@ class Libvirtc():
 
     def DomainUndefine(self):
         if self.dpower == 1:
-            return [2,"domain","poweron","Fail Undefine. because status is poweron",""]
+            return [1,"domain","poweron","Fail Undefine. because status is poweron",""]
         try:
             self.con.undefine()
         except:
@@ -245,6 +245,12 @@ class Libvirtc():
 
 
     #Network
+    def NetworkOpen(self,NET_UUID):
+        self.network = self.node.networkLookupByUUIDString(NET_UUID)
+
+    def NetworkUndefine(self):
+        self.network.undefine()
+
     def NetworkXmlTemplate(self,NETWORK_TEMPLATE):
         tree = ET.parse(NETWORK_TEMPLATE) 
         self.nxml = tree.getroot()
@@ -267,6 +273,9 @@ class Libvirtc():
 
     def NetworkStart(self):
         self.network.create()
+
+    def NetworkStop(self):
+        self.network.destroy()
 
     def NetworkList(self):
         test = []
