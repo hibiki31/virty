@@ -3,55 +3,11 @@
 
 <div class="right_col" role="main">
     <div class="">
-        <div class="row top_tiles">
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-at"></i></div>
-                <div class="count">{{domain['name']}}</div>
-                <h3>NAME</h3></div>
-            </div>  
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-rocket"></i></div>
-                <div class="count">{{domain['vnc'][1]}}</div>
-                <h3>VNC-AUTO</h3></div>
-            </div> 
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-flash"></i></div>
-                <div class="count">{{domain['vnc'][0]}}</div>
-                <h3>VNC</h3></div>
-            </div>        
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-anchor"></i></div>
-                <div class="count">{{domain['vnc'][3]}}</div>
-                <h3>VNC-PASS</h3></div>
-            </div>
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{domain['node-name']}}</div>
-                <h3>NODE_NAME</h3></div>
-            </div>
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{domain['node-ip']}}</div>
-                <h3>NODE_IP</h3></div>
-            </div>
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-cubes"></i></div>
-                <div class="count">{{domain['selinux']}}</div>
-                <h3>SElinux</h3></div>
-            </div>
-        </div>
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2>Device_List <small>beta</small></h2>
+                        <h2>Image List <small>beta</small></h2>
                         <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -71,17 +27,20 @@
                     </div>
                     <div class="x_content">
                         <div class="table-responsive">
-                            <table class="table table-striped jambo_table bulk_action">
+                            <table id=image-table class="table table-striped jambo_table bulk_action">
                                 <thead>
                                     <tr class="headings">
                                         <th>
                                         <input type="checkbox" id="check-all" class="flat">
                                         </th>
-                                        <th class="column-title">Device </th>
-                                        <th class="column-title">Type </th>
-                                        <th class="column-title">Source </th>
-                                        <th class="column-title">Target </th>
-                                        <th class="column-title">Edit </th>
+                                        <th class="column-title">Node <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Pool <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Name <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Capa <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Allocation <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Physical <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Path <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Delete </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -89,18 +48,23 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dom in domain['disk'] %}
+                                    {% for image in datas['image'] %}
+                                    
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" ">{{dom[0]}}</td>
-                                        <td class=" ">{{dom[1]}}</td>
-                                        <td class=" ">{{dom[2]}}</td>
-                                        <td class=" ">{{dom[3]}}</td>
-                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
+                                        <td class=" ">{{image['node']}}</td>
+                                        <td class=" ">{{image['pool']}}</td>
+                                        <td class=" ">{{image['data']['name']}}</td>
+                                        <td class=" ">{{image['data']['capacity']}}{{image['data']['capacity-unit']}}</td>
+                                        <td class=" ">{{image['data']['allocation']}}{{image['data']['allocation-unit']}}</td>
+                                        <td class=" ">{{image['data']['physical']}}{{image['data']['physical-unit']}}</td>
+                                        <td class=" ">{{image['data']['path']}}</td>
+                                        <td class=" "><a href="/image/delete/{{image['node']}}/{{image['pool']}}/{{image['data']['name']}}">Delete</a></td>
                                         </td>
                                     </tr>
+                                    
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -108,10 +72,11 @@
                     </div>
                 </div>
             </div>
+            
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2>Nic_List <small>beta</small></h2>
+                        <h2>Pool Lsit <small>beta</small></h2>
                         <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -137,11 +102,11 @@
                                         <th>
                                         <input type="checkbox" id="check-all" class="flat">
                                         </th>
-                                        <th class="column-title">Type </th>
-                                        <th class="column-title">Mac </th>
-                                        <th class="column-title">Target </th>
-                                        <th class="column-title">Source </th>
-                                        <th class="column-title">Edit </th>
+                                        <th class="column-title">Node </th>
+                                        <th class="column-title">Name </th>
+                                        <th class="column-title">Capa </th>
+                                        <th class="column-title">Available </th>
+                                        <th class="column-title">Path </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -149,18 +114,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dom in domain['interface'] %}
+                                    {% for image in datas['pool'] %}
+                                    
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" ">{{dom[0]}}</td>
-                                        <td class=" ">{{dom[1]}}</td>
-                                        <td class=" ">{{dom[2]}}</td>
-                                        <td class=" ">{{dom[3]}}</td>
-                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/nic/{{dom[1]}}">Edit</a>
+                                        <td class=" ">{{image['node']}}</td>
+                                        <td class=" ">{{image['name']}}</td>
+                                        <td class=" ">{{image['capacity']}}{{image['capacity-unit']}}</td>
+                                        <td class=" ">{{image['available']}}{{image['available-unit']}}</td>
+                                        <td class=" ">{{image['path']}}</td>
                                         </td>
                                     </tr>
+                                    
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -168,19 +135,6 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="x_panel">
-
-                    <form method="post" action="/api/selinux">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                            <button name="uuid" value="{{domain[10]}}" class="btn btn-success">disable selinux</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-
 
         </div>
     </div>

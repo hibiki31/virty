@@ -1,17 +1,28 @@
 import subprocess, os
-import vsql, vxml
+import vsql
 
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
-
+def NodeInit(PBNAME,EXVALUE):
+    if PBNAME == "gluster":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_gluster.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + EXVALUE
+        subprocess.check_call(cmd, shell=True)
+    elif PBNAME == "libvirt":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_libvirt.yml -i  ' + SPATH + '/ansible/host_node.ini'
+        subprocess.check_call(cmd, shell=True)	
+    elif PBNAME == "frr":
+        cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_init_frr.yml -i  ' + SPATH + '/ansible/host_node.ini'
+        subprocess.check_call(cmd, shell=True)
 
 def AnsibleFiledeleteInnode(NODEIP,FILE):
+	AnsibleNodelistInit()
 	exvar = ' "file=' + FILE  + ' host=' + NODEIP + '"'
 	cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_deleteinnode.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + exvar
 	subprocess.check_call(cmd, shell=True)
 
 def AnsibleFilecpInnode(NODEIP,CP,TO):
+	AnsibleNodelistInit()
 	print(NODEIP + CP + TO)
 	exvar = ' "cp=' + CP  + ' host=' + NODEIP + ' to=' + os.path.basename(TO) + ' dir=' + os.path.dirname(TO) + '/"'
 	print(exvar)
@@ -19,6 +30,7 @@ def AnsibleFilecpInnode(NODEIP,CP,TO):
 	subprocess.check_call(cmd, shell=True)
 
 def AnsibleFilecpTonode(NODEIP,CP,TO):
+	AnsibleNodelistInit()
 	exvar = ' "cp=' + CP  + ' host=' + NODEIP + ' to=' + os.path.basename(TO) + ' dir=' + os.path.dirname(TO) + '/"'
 	cmd = 'ansible-playbook ' + SPATH + '/ansible/pb_cptonode.yml -i  ' + SPATH + '/ansible/host_node.ini --extra-vars ' + exvar
 	subprocess.check_call(cmd, shell=True)

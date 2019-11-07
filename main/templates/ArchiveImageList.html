@@ -1,26 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
+
 <div class="right_col" role="main">
     <div class="">
-        <div class="row top_tiles">
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-at"></i></div>
-                <div class="count">{{'%0.0f' % sumdata[1]|float}}</div>
-                <h3>Total CPU</h3></div>
-            </div>  
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                <div class="icon"><i class="fa fa-rocket"></i></div>
-                <div class="count">{{sumdata[0]}}</div>
-                <h3>Total Memory</h3></div>
-            </div> 
-        </div>
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2>Domain List <small>beta</small></h2>
+                        <h2>Image List <small>beta</small></h2>
                         <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -38,22 +25,21 @@
                         </ul>
                         <div class="clearfix"></div>
                     </div>
-
                     <div class="x_content">
                         <div class="table-responsive">
-                            <table id=domain-table class="table table-striped jambo_table bulk_action">
+                            <table id=image-table class="table table-striped jambo_table bulk_action">
                                 <thead>
                                     <tr class="headings">
                                         <th>
                                         <input type="checkbox" id="check-all" class="flat">
                                         </th>
-                                        <th class="column-title">Name <i class="fa fa-unsorted"></i></th> 
-                                        <th class="column-title">Status <i class="fa fa-unsorted"></i></th>
                                         <th class="column-title">Node <i class="fa fa-unsorted"></i></th>
-                                        <th class="column-title">vCPU <i class="fa fa-unsorted"></i></th>
-                                        <th class="column-title">Memory <i class="fa fa-unsorted"></i></th>
-                                        <th class="column-title">UUID <i class="fa fa-unsorted"></i></th>
-                                        <th class="column-title no-link last"><span class="nobr">Info </span>
+                                        <th class="column-title">Pool <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Name <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Capa <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Physical <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Path <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Delete </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -61,26 +47,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for dom in domain %}
+                                    {% for data in datas %}
+                                    
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" "><a href="/domain/{{dom[5]}}/info">{{dom[0]}}</a></td>
-
-                                        {% if dom[1] == "RUN" %}
-                                        <td class=" "><i class="fa fa-square green"></i> RUN</td>
-                                        {% else %}
-                                        <td class=" "><i class="fa fa-square dark"></i> SHT</td>
-                                        {% endif %}
-
-                                        <td class=" ">{{dom[2]}}</td>
-                                        <td class=" ">{{dom[3]}}</td>
-                                        <td class=" ">{{'%0.0f' % dom[4]|float}}</td>
-                                        <td class="a-right a-right ">{{dom[5]}}</td>
-                                        <td class=" last"><a href="/domain/{{dom[5]}}/info">View</a>
+                                        <td class=" ">{{data['name']}}</td>
+                                        <td class=" ">{{data['capacity']}}{{data['capacity-unit']}}</td>
+                                        <td class=" ">{{data['allocation']}}{{data['allocation-unit']}}</td>
+                                        <td class=" ">{{data['physical']}}{{data['physical-unit']}}</td>
+                                        <td class=" ">{{data['path']}}</td>
+                                        <td class=" ">{{data['node']}}</td>
+                                      
                                         </td>
                                     </tr>
+                                    
                                     {% endfor %}
                                 </tbody>
                             </table>
