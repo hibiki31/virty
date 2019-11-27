@@ -35,6 +35,7 @@ class Libvirtc():
 
         return self.con.XMLDesc()
 
+<<<<<<< HEAD
     
     #Storage
     def StorageInfo(self,STORAGEP_NAME):
@@ -85,6 +86,58 @@ class Libvirtc():
             data.append(pool.XMLDesc())
         return data
     
+=======
+    
+    #Storage
+    def StorageInfo(self,STORAGEP_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        info = pool.info()
+
+        print('Pool: '+pool.name())
+        print('  UUID: '+pool.UUIDString())
+        print('  Autostart: '+str(pool.autostart()))
+        print('  Is active: '+str(pool.isActive()))
+        print('  Is persistent: '+str(pool.isPersistent()))
+        print('  Num volumes: '+str(pool.numOfVolumes()))
+        print('  Pool state: '+str(info[0]))
+        print('  Capacity: '+str(info[1]))
+        print('  Allocation: '+str(info[2]))
+        print('  Available: '+str(info[3]))
+
+        print(pool.XMLDesc(0))
+
+    def StorageList(self):
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+
+        for pool in pools:
+            info = pool.info()
+            print('Pool: '+pool.name())
+            print('  UUID: '+pool.UUIDString())
+            print('  Autostart: '+str(pool.autostart()))
+            print('  Is active: '+str(pool.isActive()))
+            print('  Is persistent: '+str(pool.isPersistent()))
+            print('  Num volumes: '+str(pool.numOfVolumes()))
+            print('  Pool state: '+str(info[0]))
+            print('  Capacity: '+str(round(int(info[1])/1000000000,1))+' GB')
+            print('  Allocation: '+str(round(int(info[2])/1000000000,1))+' GB')
+            print('  Available: '+str(round(int(info[3])/1000000000,1))+' GB')
+
+    def AllStorageXml(self):
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+        data = []
+        for pool in pools:
+            data.append(pool.XMLDesc())
+        return data
+    
+>>>>>>> develop
     def StorageXml(self,STORAGE_NAME):
         return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
 
@@ -159,9 +212,13 @@ class Libvirtc():
         if self.dpower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
+<<<<<<< HEAD
             return [0,"domain","define",""]
+=======
+            return [0,""]
+>>>>>>> develop
         else:
-            return [1,"domain","define",""]
+            return [1,"Domain is Poweron"]
 
     def DomainPowerGet(self):
         if self.dpower == 5:
@@ -221,7 +278,11 @@ class Libvirtc():
 
     def DomainUndefine(self):
         if self.dpower == 1:
+<<<<<<< HEAD
             return [2,"domain","poweron","Fail Undefine. because status is poweron",""]
+=======
+            return [1,"domain","poweron","Fail Undefine. because status is poweron",""]
+>>>>>>> develop
         try:
             self.con.undefine()
         except:
@@ -245,6 +306,15 @@ class Libvirtc():
 
 
     #Network
+<<<<<<< HEAD
+=======
+    def NetworkOpen(self,NET_UUID):
+        self.network = self.node.networkLookupByUUIDString(NET_UUID)
+
+    def NetworkUndefine(self):
+        self.network.undefine()
+
+>>>>>>> develop
     def NetworkXmlTemplate(self,NETWORK_TEMPLATE):
         tree = ET.parse(NETWORK_TEMPLATE) 
         self.nxml = tree.getroot()
@@ -258,12 +328,19 @@ class Libvirtc():
 
     def NetworkXmlDefine(self,NODEIP):
         self.network = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
+<<<<<<< HEAD
+=======
+
+    def NetworkDefine(self,XML):
+        self.network = self.node.networkDefineXML(XML)
+>>>>>>> develop
 
     def NetworkXmlDump(self):
         return ET.tostring(self.nxml).decode()
 
     def NetworkStart(self):
         self.network.create()
+<<<<<<< HEAD
 
     def NetworkList(self):
         test = []
@@ -356,8 +433,81 @@ class Xmlc():
 
         DATA['memory'] = UnitConvertor(DATA['memory-unit'],"M",DATA['memory'])
         DATA['memory-unit'] = "G"
+=======
+
+    def NetworkStop(self):
+        self.network.destroy()
+>>>>>>> develop
+
+    def NetworkList(self):
+        test = []
+        for net in self.node.listNetworks():
+            temp = self.node.networkLookupByName(net)
+            test.append({'name':temp.name(),'uuid':temp.UUIDString(),'bridge':temp.bridgeName()})
+        return test
+    
+    def InterfaceList(self):
+        return self.node.listInterfaces()
+        
 
 
+    def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
+        source = NEW_BRIDGE
+        devices = self.domxml.find('devices')
+        for interface in devices.iter('interface'):
+            if interface.find('mac').get('address') == NOW_MAC:
+                interface.find('source').set('bridge', source)
+                self.con.updateDeviceFlags(ET.tostring(interface).decode())
+
+    def DomainCdromEdit(self,TARGET,ISO_PATH):
+        devices = self.domxml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == TARGET:
+                    if disk.find('source') == None:
+                        ET.SubElement(disk, 'source') 
+                    disk.find('source').set('file', ISO_PATH)
+                    self.con.updateDeviceFlags(ET.tostring(disk).decode())
+
+    def DomainCdromExit(self,TARGET):
+        devices = self.domxml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == TARGET:
+                    cdrom = disk.find('source')
+                    if cdrom == None:
+                        ET.SubElement(disk, 'source')
+                    disk.remove(cdrom)
+                    self.con.updateDeviceFlags(ET.tostring(disk).decode())                    
+
+ 
+    def DomainNicShow(self):
+        root = ET.fromstring(self.con.XMLDesc())
+        self.nicdata = []
+        for nic in root.find('devices').findall('interface'):
+            TYPE = nic.get("type")
+            MAC = nic.find("mac").get("address")
+            if nic.find("target") == None:
+                TARGET = "none"
+            else:
+                TARGET = nic.find("target").get("dev","none") 
+            TO = nic.find("source").get("bridge")
+            self.nicdata.append([TYPE,MAC,TARGET,TO])
+        return self.nicdata
+
+    def ShowSelinux(self):
+        flag = 0
+        for seclabel in self.domxml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                print("selinuxis arrrr")
+                flag = 1
+            
+        if flag == 1:
+            return "on"
+        else :
+            return "off"
+
+<<<<<<< HEAD
         vnc = self.xml.find('devices').find('graphics')        
     
         DATA['vnc'].append(vnc.get("port"))
@@ -449,6 +599,133 @@ class Xmlc():
         return ET.tostring(self.xml).decode()
 
 
+=======
+    def DeleteSelinux(self):
+        for seclabel in self.domxml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                self.domxml.remove(seclabel)
+
+
+class Xmlc():
+    def __init__(self,XML_ROOT):
+        self.xml = XML_ROOT
+>>>>>>> develop
+
+    def DomainData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+        DATA['memory'] = self.xml.find('memory').text
+        DATA['memory-unit'] = self.xml.find('memory').get("unit")
+        DATA['vcpu'] = self.xml.find('vcpu').text
+        DATA['uuid'] = self.xml.find('uuid').text
+        DATA['vnc'] = []
+        DATA['disk'] = []
+        DATA['interface'] = []
+
+        DATA['memory'] = UnitConvertor(DATA['memory-unit'],"M",DATA['memory'])
+        DATA['memory-unit'] = "G"
+
+def XmlFileRoot(XML_FILE):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/xml/'+ XML_FILE +'.xml') 
+    root = tree.getroot()
+    return root
+
+<<<<<<< HEAD
+=======
+        vnc = self.xml.find('devices').find('graphics')        
+    
+        DATA['vnc'].append(vnc.get("port"))
+        DATA['vnc'].append(vnc.get("autoport"))
+        DATA['vnc'].append(vnc.get("listen"))
+        DATA['vnc'].append(vnc.get("passwd", "none"))
+
+        for disk in self.xml.find('devices').findall('disk'):
+            if disk.find("source") is not None:
+                DEVICE = disk.get("device")
+                TYPE = disk.get("type")
+                FILE = disk.find("source").get("file","none")
+                TARGET =  disk.find("target").get("dev")
+                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+            else:
+                DEVICE = disk.get("device")
+                TYPE = disk.get("type")
+                FILE = "Not Connect"
+                TARGET = disk.find("target").get("dev")
+                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+        for nic in self.xml.find('devices').findall('interface'):
+            TYPE = nic.get("type")
+            MAC = nic.find("mac").get("address")
+            TO = nic.find("source").get("bridge")
+
+            if nic.find("target") == None:TARGET = "none"
+            else:TARGET = nic.find("target").get("dev","none")
+    
+            DATA['interface'].append([TYPE,MAC,TARGET,TO])
+
+        DATA['selinux'] = "off"
+        for seclabel in self.xml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                DATA['selinux']
+
+        return DATA
+
+    def ImageData(self):
+        DATA = {}
+        if not self.xml.get("type") == "file":
+            return "dir"
+        DATA['name'] = self.xml.find('name').text
+
+        DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
+        DATA['capacity'] = self.xml.find('capacity').text
+        DATA['allocation-unit'] = self.xml.find('allocation').get("unit")
+        DATA['allocation'] = self.xml.find('allocation').text
+        DATA['physical-unit'] = self.xml.find('physical').get("unit")
+        DATA['physical'] = self.xml.find('physical').text
+
+        DATA['capacity'] = UnitConvertor(DATA['capacity-unit'],"G",DATA['capacity'])
+        DATA['capacity-unit'] = "G"
+        DATA['allocation'] = UnitConvertor(DATA['allocation-unit'],"G",DATA['allocation'])
+        DATA['allocation-unit'] = "G"
+        DATA['physical'] = UnitConvertor(DATA['physical-unit'],"G",DATA['physical'])
+        DATA['physical-unit'] = "G"
+        
+        DATA['path'] = self.xml.find('target').find('path').text
+
+        return DATA
+
+    def StorageData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+
+        DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
+        DATA['capacity'] = self.xml.find('capacity').text
+        DATA['allocation-unit'] = self.xml.find('allocation').get("unit")
+        DATA['allocation'] = self.xml.find('allocation').text
+        DATA['available-unit'] = self.xml.find('available').get("unit")
+        DATA['available'] = self.xml.find('available').text
+
+        DATA['capacity'] = UnitConvertor(DATA['capacity-unit'],"G",DATA['capacity'])
+        DATA['capacity-unit'] = "G"
+        DATA['allocation'] = UnitConvertor(DATA['allocation-unit'],"G",DATA['allocation'])
+        DATA['allocation-unit'] = "G"
+        DATA['available'] = UnitConvertor(DATA['available-unit'],"G",DATA['available'])
+        DATA['available-unit'] = "G"
+        
+        DATA['path'] = self.xml.find('target').find('path').text
+
+        return DATA
+
+    def StorageMake(self,STORAGE_NAME,STORAGE_PATH):
+        self.xml.find('name').text = STORAGE_NAME
+        self.xml.find('target').find('path').text = STORAGE_PATH
+
+    def Dump(self):
+        return ET.tostring(self.xml).decode()
+
+    def NetworkInternal(self,NAME):
+        self.xml.find('name').text= NAME
+        self.xml.find('bridge').set("name",NAME)
 
 
 
@@ -458,6 +735,7 @@ def XmlFileRoot(XML_FILE):
     root = tree.getroot()
     return root
 
+>>>>>>> develop
 def XmlStringRoot(XML_STRING):
     root = ET.fromstring(XML_STRING)
     return root

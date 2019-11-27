@@ -27,12 +27,12 @@
           </div>
           <div class="x_content">
             <br />
-            <form action="/api/add/domain" method="post" data-parsley-validate class="form-horizontal form-label-left">
+            <form action="/api/que/domain/define/" method="post" data-parsley-validate class="form-horizontal form-label-left">
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="node-list" name="node-list" class="form-control" required="">
+                  <select id="node-list" name="node" class="form-control" required="">
                     <option value=""></option> 
                   </select>
                 </div>
@@ -42,7 +42,7 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Archive <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="archive-list" name="archive-list" class="form-control" required=""></select>
+                  <select id="archive-list" name="archive" class="form-control" required=""></select>
                 </div>
               </div>
 
@@ -50,7 +50,11 @@
                   <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Storage <span class="required">*</span>
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12">
+<<<<<<< HEAD
                     <select id="storage-list" name="storage-list" class="form-control" required=""></select>
+=======
+                    <select id="storage-list" name="storage" class="form-control" required=""></select>
+>>>>>>> develop
                   </div>
               </div>
 
@@ -58,7 +62,7 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input type="text" id="domain-name" name="domain-name" required="required" class="form-control col-md-7 col-xs-12">
+                  <input type="text" id="domain-name" name="name" required="required" class="form-control col-md-7 col-xs-12">
                 </div>
               </div>
 
@@ -66,7 +70,7 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">vCPU <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="node_list" class="form-control" name="domain-cpu" required="required">
+                  <select id="node_list" class="form-control" name="cpu" required="required">
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="4">4</option>
@@ -82,7 +86,7 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Memory <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="node_list" class="form-control" name="domain-memory" required="required">
+                  <select id="node_list" class="form-control" name="memory" required="required">
                     <option value="512">512MB</option>
                     <option value="1024">1024MB</option>
                     <option value="2048">2048MB</option>
