@@ -102,6 +102,7 @@ while True:
             dic = ast.literal_eval(que[5])
             virty.DomNicEdit(dic['uuid'],dic['mac'],dic['network'])
             virty.vsql.SqlDequeuing(que[0],"finish",100)     
+<<<<<<< HEAD
             
 =======
         continue
@@ -217,3 +218,6 @@ while True:
     else:
         print("Found unkown Que")
 >>>>>>> develop
+=======
+            
+>>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
