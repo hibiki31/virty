@@ -1,9 +1,58 @@
 from flask import Flask, render_template, jsonify, request,redirect
+from flask_jwt import JWT, jwt_required, current_identity
+from werkzeug.security import safe_str_cmp
 from time import  sleep
 import subprocess
 import virty
 
+############################
+# flask                    #
+############################
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'super-secret'
+app.config['JWT_AUTH_URL_RULE'] = '/auth'
+
+
+
+############################
+# JWT                      #
+############################
+class User(object):
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    def __str__(self):
+        data = {}
+        data['name'] = self.username
+        data['id'] = self.id
+        return str(self.id)
+
+users = [
+    User(1, 'user1', 'abcxyz'),
+    User(2, 'user2', 'abcxyz'),
+]
+
+username_table = {u.username: u for u in users}
+userid_table = {u.id: u for u in users}
+
+def authenticate(username, password):
+    user = username_table.get(username, None)
+    if user and safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8')):
+        return user
+
+def identity(payload):
+    user_id = payload['identity']
+    return userid_table.get(user_id, None)
+
+@app.route('/protected')
+@jwt_required()
+def protected():
+    return '%s' % current_identity
+
+jwt = JWT(app, authenticate, identity)
+
 
 
 ############################
