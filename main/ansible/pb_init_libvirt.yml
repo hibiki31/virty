@@ -68,6 +68,7 @@
     - name: upgrade all packages
       yum: name=* state=latest
       when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+<<<<<<< HEAD
     - name: upgrade-pip
       pip:
         name: pip
@@ -80,6 +81,8 @@
         executable: pip3.5
         state: latest
       when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+=======
+>>>>>>> develop
     - name: restart libvirtd
       systemd:
         name: libvirtd

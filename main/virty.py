@@ -38,6 +38,7 @@ def WorkerUp():
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
@@ -45,6 +46,11 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
+    vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+
+>>>>>>> develop
 
 
 
@@ -144,8 +150,11 @@ def DomainXmlDump(DOM_NAME):
     return editor.DomainXmlDump()
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
 
 def DomainListInit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
@@ -233,6 +242,7 @@ def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
     server = vvirt.Libvirtc(NODE_IP)
     server.StorageDefine(editor.Dump())
 
+<<<<<<< HEAD
 
 
 
@@ -574,6 +584,14 @@ def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
 
     server = vvirt.Libvirtc(NODE_IP)
     server.StorageDefine(editor.Dump())
+=======
+def StorageUndefine(NODE_NAME,STORAGE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    server = vvirt.Libvirtc(NODE_IP)
+    server.StorageUndefine(STORAGE_NAME)
+    return [0,0,0]
+>>>>>>> develop
 
 
 
@@ -876,6 +894,7 @@ def DomSelinuxDisable(DOM_UUID):
     print(editor.DomainXmlDump())
 
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
+<<<<<<< HEAD
 >>>>>>> develop
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -1047,6 +1066,8 @@ def DomSelinuxDisable(DOM_UUID):
     print(editor.DomainXmlDump())
 
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
+=======
+>>>>>>> develop
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
@@ -1077,6 +1098,7 @@ def SshInfoMem(NODE_IP):
     words = float(str(mem).split()[1])
     memory = words/1024000
     return memory
+<<<<<<< HEAD
 
 def SshInfocpu(NODE_IP):
     cmd = ["ssh" , NODE_IP, "grep processor /proc/cpuinfo | wc -l"]
@@ -1106,9 +1128,43 @@ def SshOsinfo(NODE_IP):
     return result
 
 
+=======
+>>>>>>> develop
 
+def SshInfocpu(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "grep processor /proc/cpuinfo | wc -l"]
+    words = str(subprocess.check_output(cmd)).rstrip("\\n'").lstrip("'b")
+    return words
 
+<<<<<<< HEAD
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+def SshInfocpuname(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "grep 'model name' /proc/cpuinfo|uniq"]
+    mem = subprocess.check_output(cmd)
+    words = str(mem).split(":")[1].rstrip("\\n'")
+    return words
+
+def SshInfoDir(NODE_IP,NODE_DIR):
+    cmd = ["ssh" , NODE_IP, "df" ,NODE_DIR,"|sed -e '1d'"]
+    get = subprocess.check_output(cmd)
+    storage = str(get).rstrip("\\n'").lstrip("b'").split()
+    return storage
+
+
+def SshOsinfo(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "cat" ,"/etc/os-release"]
+    get = subprocess.check_output(cmd)
+    result = {}
+    for data in str(get).rstrip("\\n'").lstrip("b'").split("\\n"):
+        if not data == "":
+            result[data.split("=")[0]] = data.split("=")[1].strip("\"")
+    return result
+
+
+
+
+>>>>>>> develop
 if __name__ == "__main__":
     # start = time.time()
     # executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
@@ -1119,12 +1175,17 @@ if __name__ == "__main__":
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     #NetworkInternalDefine("ruri","test-net")
 
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+    #NetworkInternalDefine("ruri","test-net")
+
+>>>>>>> develop
     args = sys.argv
     argnum = len(args)
     if argnum == 1:argobj = "none"

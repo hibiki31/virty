@@ -29,6 +29,7 @@
             <br />
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             <form action="/api/edit/dom_nic" method="post" data-parsley-validate class="form-horizontal form-label-left">
 =======
             <form action="/api/que/domain/nic-edit/" method="post" data-parsley-validate class="form-horizontal form-label-left">
@@ -36,6 +37,9 @@
 =======
             <form action="/api/edit/dom_nic" method="post" data-parsley-validate class="form-horizontal form-label-left">
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+            <form action="/api/que/domain/nic-edit/" method="post" data-parsley-validate class="form-horizontal form-label-left">
+>>>>>>> develop
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span class="required">*</span>
                 </label>
@@ -43,19 +47,25 @@
                   <select id="domain-list" name="network" class="form-control" required="">
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                     {% for data in NET %}
                     <option value={{data[1]}}>{{data[0]}} src {{data[1]}}</option>
 =======
+=======
+>>>>>>> develop
                     {% for interface in NET[0] %}
                     <option value={{interface}}>Interface Bridge @{{interface}}</option>
                     {% endfor %}
                     {% for network in NET[1] %}
                     <option value={{network['bridge']}}>Network {{network['name']}} @{{network['bridge']}}</option>
+<<<<<<< HEAD
 >>>>>>> develop
 =======
                     {% for data in NET %}
                     <option value={{data[1]}}>{{data[0]}} src {{data[1]}}</option>
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
                     {% endfor %}
                   </select>
                   <input type="hidden" name="uuid" value="{{DOM[0]}}">

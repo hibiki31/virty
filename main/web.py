@@ -1,12 +1,17 @@
 from flask import Flask, render_template, jsonify, request,redirect
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 from flask_jwt import JWT, jwt_required, current_identity
 from werkzeug.security import safe_str_cmp
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+from flask_jwt import JWT, jwt_required, current_identity
+from werkzeug.security import safe_str_cmp
+>>>>>>> develop
 from time import  sleep
 import subprocess
 import virty
@@ -60,6 +65,15 @@ def protected():
 jwt = JWT(app, authenticate, identity)
 
 
+<<<<<<< HEAD
+=======
+@app.route('/login')
+def login():
+    html = render_template('login.html')
+    return html
+
+
+>>>>>>> develop
 
 ############################
 # SETUP                    #
@@ -82,9 +96,12 @@ def setup():
 ############################
 # WEB                      #
 ############################
+<<<<<<< HEAD
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
 @app.route('/')
 def route():
     DATA = virty.vsql.SqlSumDomain()
@@ -95,12 +112,15 @@ def route():
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> develop
 =======
 
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
 @app.route('/storage/<NODE>/<NAME>')
 def info_storage(NODE,NAME):
     html = render_template('StorageUndefine.html',domain=[NODE,NAME])
@@ -111,8 +131,11 @@ def storage_list():
     html = render_template('ImageList.html',datas=virty.AllImageXml())
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
     return html
 
 @app.route('/archive/list')
@@ -120,6 +143,7 @@ def storage_listall():
     html = render_template('ArchiveImageList.html',datas=virty.ImageArchiveListAll())
     return html
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
     return html
@@ -132,6 +156,8 @@ def storage_listall():
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
 @app.route('/image/delete/<NODE>/<POOL>/<IMAGE>')
 def image_delete(NODE,POOL,IMAGE):
     virty.ImageDelete(NODE,POOL,IMAGE)
@@ -142,6 +168,7 @@ def network_delete(NODE,SOURCE):
     virty.vsql.NetworkDelete(NODE,SOURCE)
     return redirect("/list/network", code=302)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -156,6 +183,8 @@ def network_delete(NODE,SOURCE):
 >>>>>>> develop
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+>>>>>>> develop
 @app.route('/list/<GET_DATA>')
 def node_list(GET_DATA):
     if GET_DATA == "node":
@@ -236,6 +265,7 @@ def network_add():
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
 
@@ -267,6 +297,8 @@ def domain_cdrom(DOM_UUID,TARGET):
 
 ############################
 =======
+=======
+>>>>>>> develop
 
 
 ############################
@@ -292,6 +324,7 @@ def domain_cdrom(DOM_UUID,TARGET):
     return html
 
 
+<<<<<<< HEAD
 
 ############################
 >>>>>>> develop
@@ -300,6 +333,10 @@ def domain_cdrom(DOM_UUID,TARGET):
 
 ############################
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+
+############################
+>>>>>>> develop
 # JSON                     #
 ############################
 @app.route('/api/sql/<TABLE_NAME>.json')
@@ -313,6 +350,7 @@ def api_json_object(OBJECT):
     if OBJECT == "network":
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if NODE_NAME == None:result = []
 =======
         if NODE_NAME == None:result = virty.NodeNetworkAllList()
@@ -320,6 +358,9 @@ def api_json_object(OBJECT):
 =======
         if NODE_NAME == None:result = []
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+        if NODE_NAME == None:result = virty.NodeNetworkAllList()
+>>>>>>> develop
         else:result=virty.NodeNetworkList(NODE_NAME)
     elif OBJECT == "interface":
         if NODE_NAME == None:result=virty.AllInterfaceList()
@@ -335,12 +376,17 @@ def api_json_object(OBJECT):
     return jsonify(ResultSet=result)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 =======
 
 
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+
+
+>>>>>>> develop
 ############################
 # POST                     #
 ############################
@@ -449,9 +495,12 @@ def api_network_bridge_add():
     virty.vsql.SqlAddNetwork([(task['name'],task['source'],task['node-list'])])  
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     return redirect("/list/network", code=302)
 =======
+=======
+>>>>>>> develop
 
     return redirect("/list/network", code=302)
 
@@ -469,6 +518,7 @@ def api_que(OBJECT,METHOD):
     else:
         for key, value in request.form.items():
             task[key]=value
+<<<<<<< HEAD
 
     virty.Queuing(OBJECT,METHOD,task)
     
@@ -478,6 +528,12 @@ def api_que(OBJECT,METHOD):
 
     return redirect("/list/network", code=302)
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+
+    virty.Queuing(OBJECT,METHOD,task)
+    
+    return task
+>>>>>>> develop
 
 if __name__ == "__main__":
     virty.WorkerUp()    

@@ -11,6 +11,7 @@ while True:
     if que == None or que == []:
         sleep(3)
 <<<<<<< HEAD
+<<<<<<< HEAD
     elif que == []:
         print("no job")
         sleep(3)
@@ -136,6 +137,39 @@ while True:
         virty.DomainListInit()
         virty.vsql.Dequeuing(que[0],"finish","Succses")
         
+=======
+        continue
+    
+    que = que[0]
+
+    print("Found "+que[3]+" "+que[4])
+
+    if que[3] == "domain" and que[4] == "define":
+        dic = ast.literal_eval(que[5])
+
+        virty.vvirt.XmlDomainBaseMake(dic['name'],dic['memory'],dic['cpu'],"auto","pass")
+        for nic in dic['nic']:
+            virty.vvirt.XmlBridgeNicAdd(dic['name'],nic[1])
+        virty.vvirt.XmlMetaSetStorage(dic['name'],dic['storage'],dic['archive'])
+
+        if not virty.DomainDefineStatic(dic['name'],dic['node']) == 0:
+            virty.vsql.Dequeuing(que[0],"fail","Can't define")
+            break
+        virty.DomainListInit()
+        virty.vsql.Dequeuing(que[0],"finish","Succses")
+
+
+
+    elif que[3] == "domain" and que[4] == "power":
+        dic = ast.literal_eval(que[5])
+        if dic['status'] == "poweron":
+            virty.DomainStart(dic['domain-list'])
+        elif dic['status'] == "poweroff":
+            virty.DomainDestroy(dic['domain-list'])
+        virty.DomainListInit()
+        virty.vsql.Dequeuing(que[0],"finish","Succses")
+        
+>>>>>>> develop
 
 
     elif que[3] == "domain" and que[4] == "list-reload":
@@ -177,14 +211,33 @@ while True:
 
     elif que[3] == "storage" and que[4] == "add":
         dic = ast.literal_eval(que[5])
+<<<<<<< HEAD
         if dic['system'] == "archive":NAME = "archive"
         elif dic['system'] == "data":  NAME = dic['name']
         virty.StorageMake(dic['node-list'],NAME,dic['path'])
         virty.StorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
+=======
+        
+        virty.StorageMake(dic['node-list'],dic['name'],dic['path'])
+
+>>>>>>> develop
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
 
 
+<<<<<<< HEAD
+=======
+    elif que[3] == "storage" and que[4] == "undefine":
+        dic = ast.literal_eval(que[5])
+        result = virty.StorageUndefine(dic['node'],dic['storagename'])
+        if result[0] == 0:
+            virty.vsql.Dequeuing(que[0],"finish","Succses")
+        if result[0] == 1:
+            virty.vsql.Dequeuing(que[0],"skip",result[3])
+
+
+
+>>>>>>> develop
     elif que[3] == "domain" and que[4] == "name-edit":
         dic = ast.literal_eval(que[5])
         result = virty.DomNameEdit(dic['uuid'],dic['newname'])
@@ -216,8 +269,12 @@ while True:
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
     else:
+<<<<<<< HEAD
         print("Found unkown Que")
 >>>>>>> develop
 =======
             
 >>>>>>> 56babd9828bb8d157f524dc38631ca32e0778780
+=======
+        print("Found unkown Que")
+>>>>>>> develop
