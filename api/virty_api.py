@@ -34,6 +34,15 @@ def domain_define(DOMAIN_DATA):
     else:
         LogError("ER","Domain define " + DOMAIN_DATA["name"])
 
+def domain_undefine(DOMAIN_NAME):
+    DOMAIN_DATA = {}
+    DOMAIN_DATA["domain-list"] = DOMAIN_NAME
+    response = requests.post(API_URL+"/api/que/domain/undefine/", data=DOMAIN_DATA)
+    if response.status_code == 200:
+        LogSuccess("OK","Domain undefine " + DOMAIN_DATA["domain-list"])
+    else:
+        LogError("ER","Domain undefine " + DOMAIN_DATA["domain-list"])
+
 def domain_data():
     return requests.get(API_URL+"/api/sql/kvm_domain.json").json()['ResultSet']
 

@@ -223,6 +223,13 @@ def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
     server = vvirt.Libvirtc(NODE_IP)
     server.StorageDefine(editor.Dump())
 
+def StorageUndefine(NODE_NAME,STORAGE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    server = vvirt.Libvirtc(NODE_IP)
+    server.StorageUndefine(STORAGE_NAME)
+    return [0,0,0]
+
 
 
 

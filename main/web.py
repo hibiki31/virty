@@ -54,6 +54,12 @@ def protected():
 jwt = JWT(app, authenticate, identity)
 
 
+@app.route('/login')
+def login():
+    html = render_template('login.html')
+    return html
+
+
 
 ############################
 # SETUP                    #

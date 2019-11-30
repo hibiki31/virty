@@ -82,11 +82,20 @@ while True:
 
     elif que[3] == "storage" and que[4] == "add":
         dic = ast.literal_eval(que[5])
-        if dic['system'] == "archive":NAME = "archive"
-        elif dic['system'] == "data":  NAME = dic['name']
-        virty.StorageMake(dic['node-list'],NAME,dic['path'])
-        virty.StorageAdd(NAME,dic['node-list'],dic['device'],dic['type'],dic['path'])
+        
+        virty.StorageMake(dic['node-list'],dic['name'],dic['path'])
+
         virty.vsql.Dequeuing(que[0],"finish","Succses")
+
+
+
+    elif que[3] == "storage" and que[4] == "undefine":
+        dic = ast.literal_eval(que[5])
+        result = virty.StorageUndefine(dic['node'],dic['storagename'])
+        if result[0] == 0:
+            virty.vsql.Dequeuing(que[0],"finish","Succses")
+        if result[0] == 1:
+            virty.vsql.Dequeuing(que[0],"skip",result[3])
 
 
 

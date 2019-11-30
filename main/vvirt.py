@@ -20,7 +20,6 @@ def DomainDefine(XML_DATA,NODE_IP):
 
 
 class Libvirtc():
-
     def __init__(self,NODE_DOMAIN):
         self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
 
@@ -94,12 +93,21 @@ class Libvirtc():
         except:
             pass
         else:
+            sp.create()
             if sp.autostart() == True:
                 sp.setAutostart(0)
             else:
                 sp.setAutostart(1)
                 
-        
+    def StorageUndefine(self,STORAGE_NAME):
+        try:
+            sp = self.node.storagePoolLookupByName(STORAGE_NAME)
+        except:
+            pass
+        else:
+            sp.destroy()
+            sp.undefine()
+            
 
 
 
