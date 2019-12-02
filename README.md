@@ -23,11 +23,7 @@ make build
 make up
 ```
 
-<<<<<<< HEAD
-Container login & Use public key authentication to allow SSH without input
-=======
 DB Initialization
->>>>>>> develop
 
 ```
 http://IP/setup
@@ -44,12 +40,6 @@ cd virty
 make login
 ```
 
-<<<<<<< HEAD
-DB Initialization
-
-```
-http://VIRTY/setup
-=======
 Add node data on web interface
 
 ```
@@ -62,6 +52,5 @@ Each node must have archive and iso. The directory must exist.
 
 ```
 http://192.168.203.88/node/add
->>>>>>> develop
 ```
 
