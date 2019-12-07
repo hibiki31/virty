@@ -137,6 +137,29 @@ def DomainXmlDump(DOM_NAME):
     
     return editor.DomainXmlDump()
 
+def AllDomainXmlSave():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.AllDomainXmlPerth()
+        for xml in xmls:
+            editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+            editor.Save()
+
+def DomainXmlSave(NODE_NAME,DOM_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+DOM_UUID)
+        return 1
+    xml = manager.DomainXmlPerth(DOM_UUID)
+    editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+    editor.Save()
+
+
 def DomainListInit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     vsql.SqlDeleteAll("kvm_domain")
@@ -152,6 +175,7 @@ def DomainListInit():
             data['power'] = xml[0]
             data['autostart'] = xml[1]
             DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
+            editor.Save()
     vsql.SqlAddDomain(DOMLIST)
 
 def GetNicData(DOM_UUID):
@@ -167,6 +191,18 @@ def DomainData(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    editor = vvirt.Xmlc(vvirt.XmlDomainXml(DOM_UUID))
+
+    data = editor.DomainData()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    return data
+
+def DomainDataNC(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
     manager = vvirt.Libvirtc(NODE_IP)
     root = vvirt.XmlStringRoot(manager.DomainOpen(DOM_UUID))
     editor = vvirt.Xmlc(root)
@@ -176,8 +212,6 @@ def DomainData(DOM_UUID):
     data['node-ip'] = NODE_IP
 
     return data
-
-
 
 #Storage
 def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
@@ -537,6 +571,7 @@ def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
     editor.DomainNicEdit(NOW_MAC,NEW_NIC)
+    DomainXmlSave(NODE_NAME,DOM_UUID)
 
 def DomCdromExit(DOM_UUID,TARGET):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)

@@ -1,6 +1,8 @@
-import libvirt, sys, sqlite3, subprocess, os
-import vsql, vansible, vhelp,os, uuid
+import sys, sqlite3, subprocess, os
 import xml.etree.ElementTree as ET
+import libvirt, pings
+import vsql, vansible, vhelp,os, uuid
+
 
 
 SPATH = '/root/virty/main'
@@ -21,7 +23,10 @@ def DomainDefine(XML_DATA,NODE_IP):
 
 class Libvirtc():
     def __init__(self,NODE_DOMAIN):
-        self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+        try:
+            self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+        except:
+            self.node = None
 
     def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
@@ -29,8 +34,6 @@ class Libvirtc():
         self.dpower = []
         self.dpower = self.con.state()[0]
         self.dautos = self.con.autostart()
-        print(self.con.autostart())
-        print(self.con.info())
 
         return self.con.XMLDesc()
 
@@ -238,6 +241,8 @@ class Libvirtc():
             return [0,"domain","poweron","Success Undefine",""]
 
     def AllDomainXmlPerth(self):
+        if self.node == None:
+            return
         DOMAINS = self.node.listAllDomains()
         PERTHDATA = []
         for domain in DOMAINS:
@@ -250,6 +255,19 @@ class Libvirtc():
             DATA[1] = domain.autostart()
             PERTHDATA.append((DATA))
         return PERTHDATA
+
+    def DomainXmlPerth(self,DOM_UUID):
+        if self.node == None:
+            return
+        domain = self.node.lookupByUUIDString(DOM_UUID)
+        DATA = ["","",""]
+        DATA[2] = domain.XMLDesc()
+        if domain.state()[0]==5:
+            DATA[0]="SHT"
+        else:
+            DATA[0]="RUN"
+        DATA[1] = domain.autostart()
+        return DATA
 
 
     #Network
@@ -357,6 +375,7 @@ class Libvirtc():
         for seclabel in self.domxml.findall('seclabel'):
             if seclabel.get('model','None') == 'selinux':
                 self.domxml.remove(seclabel)
+
 
 
 class Xmlc():
@@ -473,10 +492,28 @@ class Xmlc():
         self.xml.find('bridge').set("name",NAME)
 
 
+    def Save(self):
+        os.chdir = SPATH
+        DOM_UUID = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(SPATH + '/dump/' + DOM_UUID + '.xml')
+
+
+def ping(IP):
+    p = pings.Ping().ping(IP).is_reached()
+    print(p)
+
+
+
 
 def XmlFileRoot(XML_FILE):
     os.chdir = SPATH
     tree = ET.parse(SPATH + '/xml/'+ XML_FILE +'.xml') 
+    root = tree.getroot()
+    return root
+
+def XmlDomainXml(UUID):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/dump/'+ UUID +'.xml') 
     root = tree.getroot()
     return root
 
@@ -596,7 +633,7 @@ def XmlImgAdd(DOM_NAME,IMG_PATH):
     
     tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
 
-    
+
 
 def XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
     os.chdir = SPATH
