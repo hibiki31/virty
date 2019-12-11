@@ -35,13 +35,19 @@ while True:
     elif que[3] == "domain" and que[4] == "power":
         dic = ast.literal_eval(que[5])
         if dic['status'] == "poweron":
-            virty.DomainStart(dic['domain-list'])
+            result = virty.DomainStart(dic['domain-list'])
+            virty.vsql.Dequeuing(que[0],"finish",result[3])
         elif dic['status'] == "poweroff":
-            virty.DomainDestroy(dic['domain-list'])
-        virty.DomainListInit()
-        virty.vsql.Dequeuing(que[0],"finish","Succses")
+            result = virty.DomainDestroy(dic['domain-list'])
+            virty.vsql.Dequeuing(que[0],"finish",result[3])
         
 
+    elif que[3] == "domain" and que[4] == "selinux":
+        dic = ast.literal_eval(que[5])
+        if dic['state'] == "disable":
+            result = virty.DomSelinuxDisable(dic['uuid'])
+            virty.vsql.Dequeuing(que[0],"finish",result[3])
+        
 
     elif que[3] == "domain" and que[4] == "list-reload":
         virty.DomainListInit()
@@ -114,7 +120,7 @@ while True:
         dic = ast.literal_eval(que[5])
         virty.DomNicEdit(dic['uuid'],dic['mac'],dic['network'])
         virty.vsql.Dequeuing(que[0],"finish","Succses")    
-        
+        virty.DomainListInit()
 
 
     elif que[3] == "network" and que[4] == "undefine":

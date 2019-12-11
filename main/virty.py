@@ -51,10 +51,21 @@ def DomainStart(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
-    
-    return editor.DomainPoweron()
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainPoweron()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+
 
 def DomainShutdown(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -64,10 +75,20 @@ def DomainShutdown(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainShutdown()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainShutdown()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
     
 def DomainDestroy(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -77,10 +98,20 @@ def DomainDestroy(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainDestroy()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainDestroy()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
 
 def DomainAutostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -90,10 +121,20 @@ def DomainAutostart(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainAutostart()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainAutostart()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
 
 def DomainNotautostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -176,6 +217,7 @@ def DomainListInit():
             data['autostart'] = xml[1]
             DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
             editor.Save()
+    print(DOMLIST)
     vsql.SqlAddDomain(DOMLIST)
 
 def GetNicData(DOM_UUID):
@@ -561,8 +603,8 @@ def DomSelinuxDisable(DOM_UUID):
     editor.DomainOpen(DOM_UUID)
 
     editor.DeleteSelinux()
-    print(editor.DomainXmlUpdate())
-    print(editor.DomainXmlDump())
+    return editor.DomainXmlUpdate()
+
 
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)

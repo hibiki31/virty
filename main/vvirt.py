@@ -23,6 +23,7 @@ def DomainDefine(XML_DATA,NODE_IP):
 
 class Libvirtc():
     def __init__(self,NODE_DOMAIN):
+        self.nodeip = NODE_DOMAIN
         try:
             self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
         except:
@@ -31,11 +32,10 @@ class Libvirtc():
     def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
         self.domxml = ET.fromstring(self.con.XMLDesc())
-        self.dpower = []
-        self.dpower = self.con.state()[0]
-        self.dautos = self.con.autostart()
+        self.dompower = self.con.state()[0]
+        self.domauto = self.con.autostart()
+        self.domuuid = DOMAIN_UUID
 
-        return self.con.XMLDesc()
 
     
     #Storage
@@ -111,7 +111,13 @@ class Libvirtc():
             sp.destroy()
             sp.undefine()
             
-
+    def DomainInfo(self):
+        editor = Xmlc(self.domxml)
+        editor.Save()
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
 
 
     #Image
@@ -167,71 +173,76 @@ class Libvirtc():
         
     def DomainXmlUpdate(self):
         ET.tostring(self.domxml).decode()
-        if self.dpower == 5:
+        if self.dompower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return [0,""]
+            return [0,"domain","selinux","Success disable selinux",""]
         else:
-            return [1,"Domain is Poweron"]
+            return [0,"domain","selinux","domain started",""]
 
     def DomainPowerGet(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return "SHT"
         else :
             return "RUN"
     
     def DomainDestroy(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return [1,"domain","stop","Already stop domain",""]
         try:
             self.con.destroy()
         except:
             return [2,"domain","stop","Libvirt error",""]
         else:
+            self.dompower = self.con.state()[0]
             return [0,"domain","stop","Success destroy",""]
 
     def DomainShutdown(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return [1,"domain","shutdown","Already shutdown domain",""]
         try:
             self.con.shutdown()
+            self.dompower = self.con.state()[0]
         except:
             return [2,"domain","shutdown","Libvirt error",""]
         else:
             return [0,"domain","shutdown","Success shutdown",""]
 
     def DomainPoweron(self):
-        if self.dpower == 1:
+        if self.dompower == 1:
             return [1,"domain","poweron","Already poweron domain",""]
         try:
             self.con.create()
+            self.dompower = self.con.state()[0]
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success poweron",""]
 
     def DomainAutostart(self):
-        if self.dautos == 1:
+        if self.domauto == 1:
             return [1,"domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(1)
+            self.domauto = self.con.autostart()
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success autostart",""]
 
     def DomainNotautostart(self):
-        if self.dautos == 0:
+        if self.domauto == 0:
             return [1,"domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(0)
+            self.domauto = self.con.autostart()
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success autostart",""]
 
     def DomainUndefine(self):
-        if self.dpower == 1:
+        if self.dompower == 1:
             return [1,"domain","poweron","Fail Undefine. because status is poweron",""]
         try:
             self.con.undefine()
@@ -248,10 +259,7 @@ class Libvirtc():
         for domain in DOMAINS:
             DATA = ["","",""]
             DATA[2] = domain.XMLDesc()
-            if domain.state()[0]==5:
-                DATA[0]="SHT"
-            else:
-                DATA[0]="RUN"
+            DATA[0] = domain.state()[0]
             DATA[1] = domain.autostart()
             PERTHDATA.append((DATA))
         return PERTHDATA
@@ -262,10 +270,7 @@ class Libvirtc():
         domain = self.node.lookupByUUIDString(DOM_UUID)
         DATA = ["","",""]
         DATA[2] = domain.XMLDesc()
-        if domain.state()[0]==5:
-            DATA[0]="SHT"
-        else:
-            DATA[0]="RUN"
+        DATA[0]= domain.state()[0]
         DATA[1] = domain.autostart()
         return DATA
 

@@ -50,6 +50,11 @@ def SqlGetAll(TABLE):
 	sql = 'select * from ' + TABLE
 	return cur.execute(sql).fetchall()
 
+def SqlGetAllSort(TABLE,COLUMN):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'select * from ' + TABLE + ' order by ' + COLUMN + ' asc'
+	return cur.execute(sql).fetchall()
 
 def SqlGetVncportFree(NODENAME):
 	con = sqlite3.connect(SQLFILE)
@@ -208,6 +213,25 @@ def SqlAddDomain(DOMAIN_DATAS):
 	cur.executemany(sql, DOMAIN_DATAS)
 	con.commit()
 	
+	con.close()
+
+def SqlUpdateDomain(DOM_DIC):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'replace into kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os) values (?,?,?,?,?,?,?,?)'
+	
+	DOM_DATA = [(
+		DOM_DIC['name'],
+		DOM_DIC['power'],
+		DOM_DIC['node-name'],
+		DOM_DIC['vcpu'],
+		DOM_DIC['memory'],
+		DOM_DIC['uuid'],
+		"unknown",
+		"test"
+	)]
+	cur.executemany(sql, DOM_DATA)
+	con.commit()
 	con.close()
 
 ### QUE ###
