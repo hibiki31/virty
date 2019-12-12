@@ -84,7 +84,7 @@ def route():
     DATA = virty.vsql.SqlSumDomain()
     if DATA[0] > 1000:
         DATA[0] = str(int(DATA[0])/1000) + "GB"
-    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAll("kvm_domain"),sumdata= DATA)
+    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"),sumdata=DATA)
     return html
 
 @app.route('/storage/<NODE>/<NAME>')
@@ -124,7 +124,8 @@ def node_list(GET_DATA):
         html = render_template('StorageList.html',domain=virty.StoragePoolList())
         return html
     elif GET_DATA == "network":
-        html = render_template('NetworkList.html',nodes=virty.NodeNetworkAllList())
+        virty.NetworkListinit()
+        html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("kvm_network"))
         return html
     elif GET_DATA == "que":
         html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())
@@ -154,28 +155,16 @@ def domain_power():
     html = render_template('DomainPower.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
 
-@app.route('/domain/undefine')
-def domain_undefine():
-    virty.WorkerUp()
-    html = render_template('DomainUndefine.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
-    return html
-
-@app.route('/domain/listreload')
+@app.route('/domain/tools')
 def domain_listinit():
     virty.WorkerUp()
-    html = render_template('DomainListReload.html')
+    html = render_template('DomainTools.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"))
     return html
 
 @app.route('/node/add')
 def node_add():
     virty.WorkerUp()
     html = render_template('NodeAdd.html')
-    return html
-
-@app.route('/domain/nameedit')
-def domainname_edit():
-    virty.WorkerUp()
-    html = render_template('DomainNameEdit.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
     return html
 
 @app.route('/storage/add')
@@ -335,6 +324,7 @@ def api_edit(POST_TASK):
             virty.DomCdromEdit(task['uuid'],task['target'],task['path'])
         elif task['status'] == "unmount":
             virty.DomCdromExit(task['uuid'],task['target'])
+        virty.DomainListInit()
         return task
 
 @app.route("/api/selinux",methods=["POST"])
@@ -371,7 +361,7 @@ def api_que(OBJECT,METHOD):
 
     virty.Queuing(OBJECT,METHOD,task)
     
-    return task
+    return redirect("/", code=302)
 
 if __name__ == "__main__":
     virty.WorkerUp()    

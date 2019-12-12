@@ -51,10 +51,21 @@ def DomainStart(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
-    
-    return editor.DomainPoweron()
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainPoweron()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+
 
 def DomainShutdown(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -64,10 +75,20 @@ def DomainShutdown(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainShutdown()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainShutdown()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
     
 def DomainDestroy(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -77,10 +98,20 @@ def DomainDestroy(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainDestroy()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainDestroy()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
 
 def DomainAutostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -90,10 +121,20 @@ def DomainAutostart(DOM_NAME):
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
-    editor = vvirt.Libvirtc(NODE_IP)
-    editor.DomainOpen(DOM_UUID)
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainAutostart()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
     
-    return editor.DomainAutostart()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
 
 def DomainNotautostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -137,6 +178,30 @@ def DomainXmlDump(DOM_NAME):
     
     return editor.DomainXmlDump()
 
+def AllDomainXmlSave():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.AllDomainXmlPerth()
+        for xml in xmls:
+            editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+            editor.Save("dom")
+
+
+def DomainXmlSave(NODE_NAME,DOM_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+DOM_UUID)
+        return 1
+    xml = manager.DomainXmlPerth(DOM_UUID)
+    editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+    editor.Save("dom")
+
+
 def DomainListInit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     vsql.SqlDeleteAll("kvm_domain")
@@ -152,6 +217,8 @@ def DomainListInit():
             data['power'] = xml[0]
             data['autostart'] = xml[1]
             DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
+            editor.Save("dom")
+    print(DOMLIST)
     vsql.SqlAddDomain(DOMLIST)
 
 def GetNicData(DOM_UUID):
@@ -167,6 +234,18 @@ def DomainData(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    editor = vvirt.Xmlc(vvirt.XmlDomainXml(DOM_UUID))
+
+    data = editor.DomainData()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    return data
+
+def DomainDataNC(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
     manager = vvirt.Libvirtc(NODE_IP)
     root = vvirt.XmlStringRoot(manager.DomainOpen(DOM_UUID))
     editor = vvirt.Xmlc(root)
@@ -176,8 +255,6 @@ def DomainData(DOM_UUID):
     data['node-ip'] = NODE_IP
 
     return data
-
-
 
 #Storage
 def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
@@ -351,6 +428,42 @@ def NodeAdd(NODE_NAME,NODE_IP):
     print(NODE_OS)
 
 #Network
+def NetworkXmlSave(NODE_NAME,NET_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+NET_UUID)
+        return 1
+    manager.NetworkOpen(NET_UUID)
+
+    editor = vvirt.Xmlc(manager.netxml)
+    editor.Save("net")
+
+
+def NetworkXmlSaveAll():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.NetworkXmlRootAll()
+        for xml in xmls:
+            editor = vvirt.Xmlc(xml)
+            editor.Save("net")
+
+
+
+def NetworkDHCP(NODE_NAME,NET_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+NET_UUID)
+        return 1
+    manager.NetworkOpen(NET_UUID)
+    editor = vvirt.Xmlc(manager.netxml)
+    return editor.NetworkData()
+    
 
 def NetworkInternalDefine(NODE_NAME,NET_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -368,22 +481,33 @@ def NetworkInternalDefine(NODE_NAME,NET_NAME):
 def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.NetworkXmlTemplate(XML_PATH)
+
     print(editor.NetworkXmlDump())
     editor.NetworkXmlL2lEdit(NAME,GW)
     print(editor.NetworkXmlDump())
     editor.NetworkXmlDefine(NODE_IP)
     editor.NetworkStart()
 
-def NetworkList():
+def NetworkListinit():
+    vsql.SqlDeleteAll("kvm_network")
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
-        editor = vvirt.Libvirtc(NODE[1])
-        temp = {}
-        temp['node'] = NODE[0]
-        temp['network'] = editor.NetworkList()
-        data.append(temp)
-    return data
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.NetworkXmlRootAll()
+        for xml in xmls:
+            editor = vvirt.Xmlc(xml)
+            editor.Save("net")
+            temp = editor.NetworkData()
+            temp['node'] = NODE[0]
+            data.append(temp)
+    vsql.NetworkListUpdate(data)
+
+
+    
 
 def NetworkUndefine(NET_UUID):
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
@@ -527,8 +651,8 @@ def DomSelinuxDisable(DOM_UUID):
     editor.DomainOpen(DOM_UUID)
 
     editor.DeleteSelinux()
-    print(editor.DomainXmlUpdate())
-    print(editor.DomainXmlDump())
+    return editor.DomainXmlUpdate()
+
 
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
@@ -537,6 +661,7 @@ def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
     editor.DomainNicEdit(NOW_MAC,NEW_NIC)
+    DomainXmlSave(NODE_NAME,DOM_UUID)
 
 def DomCdromExit(DOM_UUID,TARGET):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)

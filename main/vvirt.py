@@ -1,6 +1,7 @@
-import libvirt, sys, sqlite3, subprocess, os
-import vsql, vansible, vhelp,os, uuid
+import sys, sqlite3, subprocess, os
 import xml.etree.ElementTree as ET
+import libvirt, pings
+import vsql, vansible, vhelp,os, uuid
 
 
 SPATH = '/root/virty/main'
@@ -21,18 +22,19 @@ def DomainDefine(XML_DATA,NODE_IP):
 
 class Libvirtc():
     def __init__(self,NODE_DOMAIN):
-        self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+        self.nodeip = NODE_DOMAIN
+        try:
+            self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+        except:
+            self.node = None
 
     def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
         self.domxml = ET.fromstring(self.con.XMLDesc())
-        self.dpower = []
-        self.dpower = self.con.state()[0]
-        self.dautos = self.con.autostart()
-        print(self.con.autostart())
-        print(self.con.info())
+        self.dompower = self.con.state()[0]
+        self.domauto = self.con.autostart()
+        self.domuuid = DOMAIN_UUID
 
-        return self.con.XMLDesc()
 
     
     #Storage
@@ -108,8 +110,21 @@ class Libvirtc():
             sp.destroy()
             sp.undefine()
             
+    def DomainInfo(self):
+        editor = Xmlc(self.domxml)
+        editor.Save("dom")
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
 
-
+    def NetInfo(self):
+        editor = Xmlc(self.netxml)
+        editor.Save("net")
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
 
     #Image
     def ImageList(self,STORAGEP_NAME):
@@ -164,71 +179,76 @@ class Libvirtc():
         
     def DomainXmlUpdate(self):
         ET.tostring(self.domxml).decode()
-        if self.dpower == 5:
+        if self.dompower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return [0,""]
+            return [0,"domain","selinux","Success disable selinux",""]
         else:
-            return [1,"Domain is Poweron"]
+            return [0,"domain","selinux","domain started",""]
 
     def DomainPowerGet(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return "SHT"
         else :
             return "RUN"
     
     def DomainDestroy(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return [1,"domain","stop","Already stop domain",""]
         try:
             self.con.destroy()
         except:
             return [2,"domain","stop","Libvirt error",""]
         else:
+            self.dompower = self.con.state()[0]
             return [0,"domain","stop","Success destroy",""]
 
     def DomainShutdown(self):
-        if self.dpower == 5:
+        if self.dompower == 5:
             return [1,"domain","shutdown","Already shutdown domain",""]
         try:
             self.con.shutdown()
+            self.dompower = self.con.state()[0]
         except:
             return [2,"domain","shutdown","Libvirt error",""]
         else:
             return [0,"domain","shutdown","Success shutdown",""]
 
     def DomainPoweron(self):
-        if self.dpower == 1:
+        if self.dompower == 1:
             return [1,"domain","poweron","Already poweron domain",""]
         try:
             self.con.create()
+            self.dompower = self.con.state()[0]
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success poweron",""]
 
     def DomainAutostart(self):
-        if self.dautos == 1:
+        if self.domauto == 1:
             return [1,"domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(1)
+            self.domauto = self.con.autostart()
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success autostart",""]
 
     def DomainNotautostart(self):
-        if self.dautos == 0:
+        if self.domauto == 0:
             return [1,"domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(0)
+            self.domauto = self.con.autostart()
         except:
             return [2,"domain","poweron","Libvirt error",""]
         else:
             return [0,"domain","poweron","Success autostart",""]
 
     def DomainUndefine(self):
-        if self.dpower == 1:
+        if self.dompower == 1:
             return [1,"domain","poweron","Fail Undefine. because status is poweron",""]
         try:
             self.con.undefine()
@@ -238,23 +258,33 @@ class Libvirtc():
             return [0,"domain","poweron","Success Undefine",""]
 
     def AllDomainXmlPerth(self):
+        if self.node == None:
+            return
         DOMAINS = self.node.listAllDomains()
         PERTHDATA = []
         for domain in DOMAINS:
             DATA = ["","",""]
             DATA[2] = domain.XMLDesc()
-            if domain.state()[0]==5:
-                DATA[0]="SHT"
-            else:
-                DATA[0]="RUN"
+            DATA[0] = domain.state()[0]
             DATA[1] = domain.autostart()
             PERTHDATA.append((DATA))
         return PERTHDATA
+
+    def DomainXmlPerth(self,DOM_UUID):
+        if self.node == None:
+            return
+        domain = self.node.lookupByUUIDString(DOM_UUID)
+        DATA = ["","",""]
+        DATA[2] = domain.XMLDesc()
+        DATA[0]= domain.state()[0]
+        DATA[1] = domain.autostart()
+        return DATA
 
 
     #Network
     def NetworkOpen(self,NET_UUID):
         self.network = self.node.networkLookupByUUIDString(NET_UUID)
+        self.netxml = ET.fromstring(self.network.XMLDesc())
 
     def NetworkUndefine(self):
         self.network.undefine()
@@ -263,12 +293,13 @@ class Libvirtc():
         tree = ET.parse(NETWORK_TEMPLATE) 
         self.nxml = tree.getroot()
 
+    def NetworkDHCP(self):
+        return self.network.DHCPLeases()
+
     def NetworkXmlL2lEdit(self,NAME,GW):
-        self.nxml.findall('name')[0].text= NAME
-        bridge = self.nxml.findall('bridge')[0]
-        ip = self.nxml.findall('ip')[0]
-        ip.set('address',GW)
-        bridge.set('name',NAME)
+        self.nxml.find('name').text= NAME
+        ip = self.nxml.find('ip').set('address',GW)
+    
 
     def NetworkXmlDefine(self,NODEIP):
         self.network = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
@@ -295,6 +326,12 @@ class Libvirtc():
     def InterfaceList(self):
         return self.node.listInterfaces()
         
+    def NetworkXmlRootAll(self):
+        test = []
+        for net in self.node.listNetworks():
+            temp = self.node.networkLookupByName(net)
+            test.append(ET.fromstring(temp.XMLDesc()))
+        return test
 
 
     def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
@@ -359,6 +396,7 @@ class Libvirtc():
                 self.domxml.remove(seclabel)
 
 
+
 class Xmlc():
     def __init__(self,XML_ROOT):
         self.xml = XML_ROOT
@@ -373,11 +411,15 @@ class Xmlc():
         DATA['vnc'] = []
         DATA['disk'] = []
         DATA['interface'] = []
+        DATA['boot'] = []
 
         DATA['memory'] = UnitConvertor(DATA['memory-unit'],"M",DATA['memory'])
         DATA['memory-unit'] = "G"
 
-
+        Count = 1
+        for boot in self.xml.find('os').findall('boot'):
+            DATA['boot'].append([Count,boot.get('dev')])
+            Count = Count + 1
         vnc = self.xml.find('devices').find('graphics')        
     
         DATA['vnc'].append(vnc.get("port"))
@@ -414,6 +456,43 @@ class Xmlc():
                 DATA['selinux']
 
         return DATA
+
+    def NetworkData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+        DATA['uuid'] = self.xml.find('uuid').text
+       
+        DATA['ip'] = []
+        DATA['dhcp'] = []
+
+        if self.xml.find('ip') is not None:
+            DATA['ip'].append(self.xml.find('ip').get("address",None))
+            DATA['ip'].append(self.xml.find('ip').get("netmask",None))
+            if self.xml.find('ip').find('dhcp') is not None:
+                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
+                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
+                DATA['dhcp'].append([DHCP_START,DHCP_END])
+        
+        DATA['mac'] = self.xml.find('mac').get("address")
+        DATA['bridge'] = self.xml.find('bridge').get("name")
+
+        if self.xml.find('forward') is not None:
+            DATA['forward'] = self.xml.find('forward').get("mode")
+        else:
+            DATA['forward'] = None
+
+
+
+        if DATA['forward'] == "nat":
+            DATA['type'] = "NAT"
+        elif DATA['forward'] == None:
+            DATA['type'] = "internal"
+        else:
+            DATA['type'] = "unknown"
+        return DATA
+
+
+
 
     def ImageData(self):
         DATA = {}
@@ -470,13 +549,36 @@ class Xmlc():
 
     def NetworkInternal(self,NAME):
         self.xml.find('name').text= NAME
-        self.xml.find('bridge').set("name",NAME)
+
+
+    def Save(self,TYPE):
+        os.chdir = SPATH
+        DOM_UUID = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
+
+
+def ping(IP):
+    p = pings.Ping().ping(IP).is_reached()
+    print(p)
+
 
 
 
 def XmlFileRoot(XML_FILE):
     os.chdir = SPATH
     tree = ET.parse(SPATH + '/xml/'+ XML_FILE +'.xml') 
+    root = tree.getroot()
+    return root
+
+def XmlDomainXml(UUID):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/dump/dom/'+ UUID +'.xml') 
+    root = tree.getroot()
+    return root
+
+def XmlNetworkXml(UUID):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/dump/net/'+ UUID +'.xml') 
     root = tree.getroot()
     return root
 
@@ -554,19 +656,11 @@ def XmlBridgeNicAdd(DOM_NAME,SOURCE):
 def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
     tree = ET.parse(SPATH + '/xml/net_l2less.xml') 
     root = tree.getroot()
-    ## L1
-    root.findall('name')[0].text= l2l_NAME
-    bridge = root.findall('bridge')[0]
-    ip = root.findall('ip')[0]
-    ## L2
-    ip.set('address',l2l_GW)
-    bridge.set('name',l2l_NAME)
-    # ## L3
-    # dhcp = ip.findall('dhcp')[0]
-    # ## L4
-    # rangex = dhcp.findall('range')[0]
-    # rangex.set('start',l2l_IP)
-    # rangex.set('end',l2l_IP)
+
+
+    root.find('name').text= l2l_NAME
+    root.find('ip').set('address',l2l_GW)
+
 
     tree.write(SPATH + '/define/' + l2l_NAME + '.xml')
 
@@ -596,7 +690,7 @@ def XmlImgAdd(DOM_NAME,IMG_PATH):
     
     tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
 
-    
+
 
 def XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
     os.chdir = SPATH

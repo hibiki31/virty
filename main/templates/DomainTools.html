@@ -1,0 +1,210 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- page content -->
+<div class="right_col" role="main">
+  <div class="">
+    <div class="row">
+      <div class="col-md-6 col-sm-6 col-xs-6">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>Domain List Super Reload <small></small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                    class="fa fa-wrench"></i></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Settings 1</a>
+                  </li>
+                  <li><a href="#">Settings 2</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            <form action="/api/que/domain/list-reload/" method="post" data-parsley-validate
+              class="form-horizontal form-label-left">
+
+
+              <div class="form-group">
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                  <button name="select" value="all" class="btn btn-success">Refresh</button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>Domain Name Edit <small></small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                    class="fa fa-wrench"></i></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Settings 1</a>
+                  </li>
+                  <li><a href="#">Settings 2</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            <form action="/api/que/domain/name-edit/" method="post" data-parsley-validate
+              class="form-horizontal form-label-left">
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span
+                    class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="domain-list" name="uuid" class="form-control" required="">
+                    {% for dom in domain %}
+                    <option value={{dom[5]}}>{{dom[0]}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+
+
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">New Name <span
+                    class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input type="text" id="domain-name" name="newname" required="required"
+                    class="form-control col-md-7 col-xs-12">
+                </div>
+              </div>
+
+              <div class="ln_solid"></div>
+              <div class="form-group">
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                  <button class="btn btn-success">Edit</button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-sm-6 col-xs-6">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>Domain Undefine <small></small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                    class="fa fa-wrench"></i></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Settings 1</a>
+                  </li>
+                  <li><a href="#">Settings 2</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            <form action="/api/que/domain/undefine/" method="post" data-parsley-validate
+              class="form-horizontal form-label-left">
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span
+                    class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="domain-list" name="domain-list" class="form-control" required="">
+                    {% for dom in domain %}
+                    <option value={{dom[0]}}>{{dom[0]}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="ln_solid"></div>
+              <div class="form-group">
+               
+                  <button name="status" value="undefine" class="btn btn-danger">Undefine</button>
+ 
+              </div>
+
+            </form>
+          </div>
+        </div>
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>Domain Power Panel <small></small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                    class="fa fa-wrench"></i></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Settings 1</a>
+                  </li>
+                  <li><a href="#">Settings 2</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            <form action="/api/que/domain/power/" method="post" data-parsley-validate
+              class="form-horizontal form-label-left">
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-6" for="first-name">Domain <span
+                    class="required">*</span>
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <select id="domain-list" name="domain-list" class="form-control" required="">
+                    {% for dom in domain %}
+                    <option value={{dom[0]}}>{{dom[0]}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="ln_solid"></div>
+              <div class="form-group">
+      
+                  <button name="status" value="poweron" class="btn btn-success">PowerON</button>
+                  <button name="status" value="poweroff" class="btn btn-danger">PowerOFF</button>
+              
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </div>>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

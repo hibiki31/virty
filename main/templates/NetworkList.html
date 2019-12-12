@@ -7,21 +7,22 @@
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2>Network List <small>beta</small></h2>
+                        <h2>Network List <small></small></h2>
                         <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                            <li><a href="#">Settings 1</a>
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
-                            <li><a href="#">Settings 2</a>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                    <li><a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
                             </li>
-                            </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
                         </ul>
                         <div class="clearfix"></div>
                     </div>
@@ -31,208 +32,155 @@
                                 <thead>
                                     <tr class="headings">
                                         <th>
-                                        <input type="checkbox" id="check-all" class="flat">
+                                            <input type="checkbox" id="check-all" class="flat">
                                         </th>
                                         <th class="column-title">Name </th>
                                         <th class="column-title">Node </th>
                                         <th class="column-title">Source </th>
                                         <th class="column-title">UUID </th>
+                                        <th class="column-title">Type </th>
+                                        <th class="column-title">DHCP </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
-                                        <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
+                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
+                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                   
-                                    {% for node in nodes %}
-                                      {% for net in node['net'] %}
-                                      <tr class="even pointer">
-                                          <td class="a-center ">
-                                          <input type="checkbox" class="flat" name="table_records">
-                                          </td>
-                                          
-                                          
-                                          <td class=" ">{{net['name']}}</td>
-                                          <td class=" ">{{node['node']}}</td>
-                                          <td class=" ">{{net['bridge']}}</td>
-                                          <td class=" ">{{net['uuid']}}</td>
-                                          
-                                          </td>
-                                      </tr>
-                                      {% endfor %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>    
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2>Interface List <small>beta</small></h2>
-                        <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                            <li><a href="#">Settings 1</a>
-                            </li>
-                            <li><a href="#">Settings 2</a>
-                            </li>
-                            </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <div class="table-responsive">
-                            <table class="table table-striped jambo_table bulk_action">
-                                <thead>
-                                    <tr class="headings">
-                                        <th>
-                                        <input type="checkbox" id="check-all" class="flat">
-                                        </th>
-                                        <th class="column-title">Name </th>
-                                        <th class="column-title">Node </th>
-                                        </th>
-                                        <th class="bulk-actions" colspan="7">
-                                        <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
-                                        </th>
+                                    {% for network in networks %}
+                                    <tr class="even pointer">
+                                        <td class="a-center ">
+                                            <input type="checkbox" class="flat" name="table_records">
+                                        </td>
+                                        <td class=" ">{{network[0]}}</td>
+                                        <td class=" ">{{network[3]}}</td>
+                                        <td class=" ">{{network[1]}}</td>
+                                        <td class=" ">{{network[2]}}</td>
+                                        <td class=" ">{{network[4]}}</td>
+                                        <td class=" ">{{network[5]}}</td>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                   
-                                    {% for node in nodes %}
-                              
-                                      {% for int in node['int'] %}
-                                      <tr class="even pointer">
-                                          <td class="a-center ">
-                                          <input type="checkbox" class="flat" name="table_records">
-                                          </td>
-                                          <td class=" ">{{int}}</td>
-                                          <td class=" ">{{node['node']}}</td>
-                                          </td>
-                                      </tr>
-                                      {% endfor %}
                                     {% endfor %}
                                 </tbody>
                             </table>
-                        </div>    
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-sm-6 col-xs-6">
-                    <div class="x_panel">
-                      <div class="x_title">
-                        <h2>Domain Undefine <small>beta</small></h2>
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2>Network Undefine <small></small></h2>
                         <ul class="nav navbar-right panel_toolbox">
-                          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                          </li>
-                          <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                              <li><a href="#">Settings 1</a>
-                              </li>
-                              <li><a href="#">Settings 2</a>
-                              </li>
-                            </ul>
-                          </li>
-                          <li><a class="close-link"><i class="fa fa-close"></i></a>
-                          </li>
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                    <li><a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
                         </ul>
                         <div class="clearfix"></div>
-                      </div>
-                      <div class="x_content">
+                    </div>
+                    <div class="x_content">
                         <br />
-                        <form action="/api/que/network/undefine/" method="post" data-parsley-validate class="form-horizontal form-label-left">
-                          <div class="form-group">
-                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span class="required">*</span>
-                            </label>
-                            <div class="col-md-6 col-sm-6 col-xs-12">
-                              <select id="domain-list" name="uuid" class="form-control" required="">
-                                {% for node in nodes %}
-                                {% for net in node['net'] %}
-                                <option value={{net['uuid']}}>{{net['name']}} @{{node['node']}}</option>
-                                {% endfor %}
-                              {% endfor %}
-                              </select>
+                        <form action="/api/que/network/undefine/" method="post" data-parsley-validate
+                            class="form-horizontal form-label-left">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Domain <span
+                                        class="required">*</span>
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <select id="domain-list" name="uuid" class="form-control" required="">
+                                        {% for network in networks %}
+                                        <option value={{network[2]}}>{{network[0]}} @{{network[1]}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
-                          </div>
-                          
-                          <div class="ln_solid"></div>
-                          <div class="form-group">
-                            <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                              <button name="status" value="undefine" class="btn btn-danger">Undefine</button>
+
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                    <button name="status" value="undefine" class="btn btn-danger">Undefine</button>
+                                </div>
                             </div>
-                          </div>
-            
+
                         </form>
-                      </div>
                     </div>
-                  </div>
+                </div>
+            </div>
             <div class="col-md-6 col-sm-6 col-xs-6">
                 <div class="x_panel">
                     <div class="x_title">
-                    <h2>Network Internal<small>beta</small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                        <ul class="dropdown-menu" role="menu">
-                            <li><a href="#">Settings 1</a>
+                        <h2>Network Internal<small></small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
-                            <li><a href="#">Settings 2</a>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                    <li><a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
                             </li>
                         </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
-                    </ul>
-                    <div class="clearfix"></div>
+                        <div class="clearfix"></div>
                     </div>
                     <div class="x_content">
-                    <br />
-                    <form action="/api/que/network/internal-define/" method="post" data-parsley-validate class="form-horizontal form-label-left">
-                        <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span class="required">*</span>
-                        </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <select id="node-list" name="node" class="form-control" required="">
-                            <option value=""></option> 
-                            </select>
-                        </div>
-                        </div>
-        
-        
-            
-                        <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span class="required">*</span>
-                        </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="text" id="net-name" name="net-name" required="required" class="form-control col-md-7 col-xs-12">
-                        </div>
-                        </div>
-            
-        
-        
-        
-                        <div class="ln_solid"></div>
-                        <div class="form-group">
-                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-                            <button class="btn btn-success">Submit</button>
-                        </div>
-                        </div>
-        
-                    </form>
+                        <br />
+                        <form action="/api/que/network/internal-define/" method="post" data-parsley-validate
+                            class="form-horizontal form-label-left">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span
+                                        class="required">*</span>
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <select id="node-list" name="node" class="form-control" required="">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span
+                                        class="required">*</span>
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <input type="text" id="net-name" name="net-name" required="required"
+                                        class="form-control col-md-7 col-xs-12">
+                                </div>
+                            </div>
+
+
+
+
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                    <button class="btn btn-success">Submit</button>
+                                </div>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 </div>

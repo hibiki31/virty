@@ -80,7 +80,8 @@ def auth_login(USER,PASSWORD):
 def auth_token(TOKEN):
     global API_TOKEN
     API_TOKEN = TOKEN
-    
+
+
 
 def auth_test():
     response = requests.get(API_URL+"/protected",headers={'Authorization': 'JWT '+API_TOKEN})
