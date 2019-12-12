@@ -124,6 +124,14 @@
                                         <td class=" ">{{domain['selinux']}}</td>
                                         </td>
                                     </tr>
+                                    <tr class="even pointer">
+                                        <td class="a-center ">
+                                            <input type="checkbox" class="flat" name="table_records">
+                                        </td>
+                                        <td class=" ">Boot device</td>
+                                        <td class=" ">{{domain['boot']}}</td>
+                                        </td>
+                                    </tr>
                                 </tbody>
 
                             </table>
@@ -193,6 +201,7 @@
                 </div>
             </div>
             <div class="col-md-7 col-sm-7 col-xs-7">
+
                 <div class="x_panel">
                     <div class="x_title">
                         <h2>Nic_List <small>beta</small></h2>
@@ -306,9 +315,9 @@
                                         <td class=" ">{{dom[3]}}</td>
                                         {% if dom[0] == "cdrom" %}
                                         <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
-                                        {% else %}
+                                            {% else %}
                                         <td class=" last">-</a>
-                                        {% endif %}
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -317,6 +326,7 @@
                         </div>
                     </div>
                 </div>
+                {{domain}}
             </div>
         </div>
     </div>

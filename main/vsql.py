@@ -234,6 +234,31 @@ def SqlUpdateDomain(DOM_DIC):
 	con.commit()
 	con.close()
 
+def NetworkListUpdate(NET_DIC_LIST):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'replace into kvm_network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp) values (?,?,?,?,?,?)'
+	
+	NET_DATA = []
+
+	for NET_DIC in NET_DIC_LIST:
+		if NET_DIC['dhcp'] == []:
+			NET_DIC['dhcp'] = "disable"
+		else:
+			NET_DIC['dhcp'] = "enable"
+		TEMP = [
+			NET_DIC['name'],
+			NET_DIC['bridge'],
+			NET_DIC['uuid'],
+			NET_DIC['node'],
+			NET_DIC['type'],
+			NET_DIC['dhcp']
+		]
+		NET_DATA.append(TEMP)
+	cur.executemany(sql, NET_DATA)
+	con.commit()
+	con.close()
+
 ### QUE ###
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 	con = sqlite3.connect(SQLFILE)
@@ -401,7 +426,7 @@ def SqlInit():
 	cur = con.cursor()
 	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen, os_like, os_name, os_version)')
 	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg)')
-	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_node,primary key (network_bridge,network_node))')
+	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp,primary key (network_name))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
 	cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
 	cur.execute('create table if not exists kvm_vncpool (vncpool_port, vncpool_domain_name, vncpool_passwd, vncpool_node_name, primary key (vncpool_port,vncpool_node_name))')

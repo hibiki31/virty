@@ -1,6 +1,6 @@
 <network>
   <name></name>
-  <bridge name="" />
+  <bridge/>
   <forward mode='route'/>
   <ip address="" netmask="255.255.255.254">
   </ip>

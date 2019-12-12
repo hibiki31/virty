@@ -133,6 +133,7 @@ while True:
     elif que[3] == "network" and que[4] == "internal-define":
         dic = ast.literal_eval(que[5])
         virty.NetworkInternalDefine(dic['node'],dic['net-name'])
+        virty.NetworkListinit()
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
     else:

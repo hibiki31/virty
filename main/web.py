@@ -124,7 +124,8 @@ def node_list(GET_DATA):
         html = render_template('StorageList.html',domain=virty.StoragePoolList())
         return html
     elif GET_DATA == "network":
-        html = render_template('NetworkList.html',nodes=virty.NodeNetworkAllList())
+        virty.NetworkListinit()
+        html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("kvm_network"))
         return html
     elif GET_DATA == "que":
         html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())

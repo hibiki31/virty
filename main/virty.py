@@ -188,7 +188,8 @@ def AllDomainXmlSave():
         xmls = manager.AllDomainXmlPerth()
         for xml in xmls:
             editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
-            editor.Save()
+            editor.Save("dom")
+
 
 def DomainXmlSave(NODE_NAME,DOM_UUID):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -198,7 +199,7 @@ def DomainXmlSave(NODE_NAME,DOM_UUID):
         return 1
     xml = manager.DomainXmlPerth(DOM_UUID)
     editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
-    editor.Save()
+    editor.Save("dom")
 
 
 def DomainListInit():
@@ -216,7 +217,7 @@ def DomainListInit():
             data['power'] = xml[0]
             data['autostart'] = xml[1]
             DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
-            editor.Save()
+            editor.Save("dom")
     print(DOMLIST)
     vsql.SqlAddDomain(DOMLIST)
 
@@ -427,6 +428,42 @@ def NodeAdd(NODE_NAME,NODE_IP):
     print(NODE_OS)
 
 #Network
+def NetworkXmlSave(NODE_NAME,NET_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+NET_UUID)
+        return 1
+    manager.NetworkOpen(NET_UUID)
+
+    editor = vvirt.Xmlc(manager.netxml)
+    editor.Save("net")
+
+
+def NetworkXmlSaveAll():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.NetworkXmlRootAll()
+        for xml in xmls:
+            editor = vvirt.Xmlc(xml)
+            editor.Save("net")
+
+
+
+def NetworkDHCP(NODE_NAME,NET_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+NET_UUID)
+        return 1
+    manager.NetworkOpen(NET_UUID)
+    editor = vvirt.Xmlc(manager.netxml)
+    return editor.NetworkData()
+    
 
 def NetworkInternalDefine(NODE_NAME,NET_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -444,22 +481,33 @@ def NetworkInternalDefine(NODE_NAME,NET_NAME):
 def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.NetworkXmlTemplate(XML_PATH)
+
     print(editor.NetworkXmlDump())
     editor.NetworkXmlL2lEdit(NAME,GW)
     print(editor.NetworkXmlDump())
     editor.NetworkXmlDefine(NODE_IP)
     editor.NetworkStart()
 
-def NetworkList():
+def NetworkListinit():
+    vsql.SqlDeleteAll("kvm_network")
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
-        editor = vvirt.Libvirtc(NODE[1])
-        temp = {}
-        temp['node'] = NODE[0]
-        temp['network'] = editor.NetworkList()
-        data.append(temp)
-    return data
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.NetworkXmlRootAll()
+        for xml in xmls:
+            editor = vvirt.Xmlc(xml)
+            editor.Save("net")
+            temp = editor.NetworkData()
+            temp['node'] = NODE[0]
+            data.append(temp)
+    vsql.NetworkListUpdate(data)
+
+
+    
 
 def NetworkUndefine(NET_UUID):
     NODE_DATAS = vsql.SqlGetAll("kvm_node")

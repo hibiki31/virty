@@ -4,7 +4,6 @@ import libvirt, pings
 import vsql, vansible, vhelp,os, uuid
 
 
-
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
@@ -113,12 +112,19 @@ class Libvirtc():
             
     def DomainInfo(self):
         editor = Xmlc(self.domxml)
-        editor.Save()
+        editor.Save("dom")
         data = editor.DomainData()
         data['power'] = self.dompower
         data['autostart'] = self.domauto
         return data
 
+    def NetInfo(self):
+        editor = Xmlc(self.netxml)
+        editor.Save("net")
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
 
     #Image
     def ImageList(self,STORAGEP_NAME):
@@ -278,6 +284,7 @@ class Libvirtc():
     #Network
     def NetworkOpen(self,NET_UUID):
         self.network = self.node.networkLookupByUUIDString(NET_UUID)
+        self.netxml = ET.fromstring(self.network.XMLDesc())
 
     def NetworkUndefine(self):
         self.network.undefine()
@@ -286,12 +293,13 @@ class Libvirtc():
         tree = ET.parse(NETWORK_TEMPLATE) 
         self.nxml = tree.getroot()
 
+    def NetworkDHCP(self):
+        return self.network.DHCPLeases()
+
     def NetworkXmlL2lEdit(self,NAME,GW):
-        self.nxml.findall('name')[0].text= NAME
-        bridge = self.nxml.findall('bridge')[0]
-        ip = self.nxml.findall('ip')[0]
-        ip.set('address',GW)
-        bridge.set('name',NAME)
+        self.nxml.find('name').text= NAME
+        ip = self.nxml.find('ip').set('address',GW)
+    
 
     def NetworkXmlDefine(self,NODEIP):
         self.network = self.node.networkDefineXML(ET.tostring(self.nxml).decode())
@@ -318,6 +326,12 @@ class Libvirtc():
     def InterfaceList(self):
         return self.node.listInterfaces()
         
+    def NetworkXmlRootAll(self):
+        test = []
+        for net in self.node.listNetworks():
+            temp = self.node.networkLookupByName(net)
+            test.append(ET.fromstring(temp.XMLDesc()))
+        return test
 
 
     def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
@@ -397,11 +411,15 @@ class Xmlc():
         DATA['vnc'] = []
         DATA['disk'] = []
         DATA['interface'] = []
+        DATA['boot'] = []
 
         DATA['memory'] = UnitConvertor(DATA['memory-unit'],"M",DATA['memory'])
         DATA['memory-unit'] = "G"
 
-
+        Count = 1
+        for boot in self.xml.find('os').findall('boot'):
+            DATA['boot'].append([Count,boot.get('dev')])
+            Count = Count + 1
         vnc = self.xml.find('devices').find('graphics')        
     
         DATA['vnc'].append(vnc.get("port"))
@@ -438,6 +456,43 @@ class Xmlc():
                 DATA['selinux']
 
         return DATA
+
+    def NetworkData(self):
+        DATA = {}
+        DATA['name'] = self.xml.find('name').text
+        DATA['uuid'] = self.xml.find('uuid').text
+       
+        DATA['ip'] = []
+        DATA['dhcp'] = []
+
+        if self.xml.find('ip') is not None:
+            DATA['ip'].append(self.xml.find('ip').get("address",None))
+            DATA['ip'].append(self.xml.find('ip').get("netmask",None))
+            if self.xml.find('ip').find('dhcp') is not None:
+                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
+                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
+                DATA['dhcp'].append([DHCP_START,DHCP_END])
+        
+        DATA['mac'] = self.xml.find('mac').get("address")
+        DATA['bridge'] = self.xml.find('bridge').get("name")
+
+        if self.xml.find('forward') is not None:
+            DATA['forward'] = self.xml.find('forward').get("mode")
+        else:
+            DATA['forward'] = None
+
+
+
+        if DATA['forward'] == "nat":
+            DATA['type'] = "NAT"
+        elif DATA['forward'] == None:
+            DATA['type'] = "internal"
+        else:
+            DATA['type'] = "unknown"
+        return DATA
+
+
+
 
     def ImageData(self):
         DATA = {}
@@ -494,13 +549,12 @@ class Xmlc():
 
     def NetworkInternal(self,NAME):
         self.xml.find('name').text= NAME
-        self.xml.find('bridge').set("name",NAME)
 
 
-    def Save(self):
+    def Save(self,TYPE):
         os.chdir = SPATH
         DOM_UUID = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(SPATH + '/dump/' + DOM_UUID + '.xml')
+        ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
 
 
 def ping(IP):
@@ -518,7 +572,13 @@ def XmlFileRoot(XML_FILE):
 
 def XmlDomainXml(UUID):
     os.chdir = SPATH
-    tree = ET.parse(SPATH + '/dump/'+ UUID +'.xml') 
+    tree = ET.parse(SPATH + '/dump/dom/'+ UUID +'.xml') 
+    root = tree.getroot()
+    return root
+
+def XmlNetworkXml(UUID):
+    os.chdir = SPATH
+    tree = ET.parse(SPATH + '/dump/net/'+ UUID +'.xml') 
     root = tree.getroot()
     return root
 
@@ -596,19 +656,11 @@ def XmlBridgeNicAdd(DOM_NAME,SOURCE):
 def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
     tree = ET.parse(SPATH + '/xml/net_l2less.xml') 
     root = tree.getroot()
-    ## L1
-    root.findall('name')[0].text= l2l_NAME
-    bridge = root.findall('bridge')[0]
-    ip = root.findall('ip')[0]
-    ## L2
-    ip.set('address',l2l_GW)
-    bridge.set('name',l2l_NAME)
-    # ## L3
-    # dhcp = ip.findall('dhcp')[0]
-    # ## L4
-    # rangex = dhcp.findall('range')[0]
-    # rangex.set('start',l2l_IP)
-    # rangex.set('end',l2l_IP)
+
+
+    root.find('name').text= l2l_NAME
+    root.find('ip').set('address',l2l_GW)
+
 
     tree.write(SPATH + '/define/' + l2l_NAME + '.xml')
 

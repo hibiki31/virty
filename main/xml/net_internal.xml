@@ -1,4 +1,4 @@
 <network>
   <name></name>
-  <bridge name=""/>
+  <bridge/>
 </network>
