@@ -136,6 +136,7 @@ def DomainAutostart(DOM_NAME):
 
     return result
 
+
 def DomainNotautostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
@@ -256,11 +257,13 @@ def DomainDataNC(DOM_UUID):
 
     return data
 
-#Storage
+############################
+# Storage                  #
+############################
 def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
     vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])    
 
-def StoragePoolList():
+def StorageListAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
@@ -270,8 +273,13 @@ def StoragePoolList():
             xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
             get = xmledit.StorageData()
             get['node'] = NODE[0]
+            get['device'] = "none"
+            get['type'] = "none"
             data.append(get)
+    vsql.UpdateStorage(data)
     return data
+
+
 
 def StorageList(NODE_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -316,6 +324,8 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageList(STORAGEP_NAME)
+
+
 
 def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -362,7 +372,9 @@ def AllImageXml():
     data['pool'] = pool
     data['image'] = image
     return data
-  
+
+
+
 def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
@@ -567,32 +579,27 @@ def DomainMakeNicBridge(DOM_NAME,SOURCE):
 def DomainMakeImg(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
     vvirt.XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME)
 
-def DomainDefineStatic(DOM_NAME,NODE_NAME):
-    import xml.etree.ElementTree as ET
-
+def DomainDefineStatic(DOM_DIC):
+    NODE_NAME = DOM_DIC['node']
+    DOM_NAME = DOM_DIC['name']
     NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
+    NODE_DATA = vsql.SqlGetData("NODE_NAME","NODE_DATA",NODE_NAME)
 
-    try:
-        tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
-        root = tree.getroot()
-    except:
-        exit(2)
-    
-    NODE_DATA = vsql.GetNodeData(NODE_NAME)
+    editor = vvirt.Xmlc(vvirt.XmlFileRoot("dom_base"))
 
-    if NODE_DATA[5] == "debian":
-        print("DEBIAN")
-        root.find('devices').find('emulator').text = "/usr/bin/kvm"
-        root.find('os').find('type').set('machine', "pc-i440fx-2.8")
-    elif NODE_DATA[5] == "rhel fedora":
-        root.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
-        root.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
-        
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
+    editor.DomainEmulator(NODE_DATA[5])
+    editor.DomainBaseEdit(DOM_DIC['name'],DOM_DIC['memory'],DOM_DIC['cpu'],"auto","pass")
+    editor.DomainImageMeta(DOM_DIC['storage'],DOM_DIC['archive'])
+    print(DOM_DIC['nic'])
+
+    for network in DOM_DIC['nic']:
+        editor.DomainNetworkAdd(network[1])
+        print(network[1])
 
     IMG_DEVICE_NAME = ["vda","vdb","vdc"]
     COUNTER = 0
-    storages = root.find('metadata').findall('storage')
+    storages = editor.xml.find('metadata').findall('storage')
+
     for storage in storages:
         IMG_NAME = IMG_DEVICE_NAME[COUNTER]
         COUNTER = COUNTER + 1
@@ -602,24 +609,19 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
             if data['name'] == STORAGE_NAME:
                 STORAGE_PATH = data['path']
             
-        
+
         ARCHIVE_NAME = storage.get('archive')
         ARCHIVE_PATH = "/kvm/archive/"+ARCHIVE_NAME
 
         IMG_PATH = STORAGE_PATH +"/"+ DOM_NAME + "_" + IMG_NAME + '.img'
 
 
-        vvirt.XmlImgAdd(DOM_NAME,IMG_PATH)
+        editor.DomainImageSet(IMG_PATH)
         vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
 
-    with open(SPATH + '/define/' + DOM_NAME + '.xml') as f:
-        s = f.read()
-        conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
-        try:
-            conn.defineXML(s)
-        except Exception as e:
-            return e
-        return 0
+    conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
+    conn.defineXML(editor.Dump())
+
 
 
 

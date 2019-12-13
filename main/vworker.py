@@ -19,15 +19,9 @@ while True:
     if que[3] == "domain" and que[4] == "define":
         dic = ast.literal_eval(que[5])
 
-        virty.vvirt.XmlDomainBaseMake(dic['name'],dic['memory'],dic['cpu'],"auto","pass")
-        for nic in dic['nic']:
-            virty.vvirt.XmlBridgeNicAdd(dic['name'],nic[1])
-        virty.vvirt.XmlMetaSetStorage(dic['name'],dic['storage'],dic['archive'])
-
-        if not virty.DomainDefineStatic(dic['name'],dic['node']) == 0:
-            virty.vsql.Dequeuing(que[0],"fail","Can't define")
-            break
+        virty.DomainDefineStatic(dic)
         virty.DomainListInit()
+        
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
 

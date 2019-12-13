@@ -50,11 +50,8 @@ $('#node-list').on('change', function () {
 
   $('#network-list').children().remove();
   $.getJSON('/api/json/network/?node=' + node, function (data) {
-    for (var domain in data.ResultSet[0]) {
-      $('#network-list').append('<option value="' + data.ResultSet[0][domain] + '">Interface ' + data.ResultSet[0][domain] + '</option>');
-    }
     for (var domain in data.ResultSet[1]) {
-      $('#network-list').append('<option value="' + data.ResultSet[1][domain]['bridge'] + '">Network ' + data.ResultSet[1][domain]['name'] + ' @' + data.ResultSet[1][domain]['bridge'] + '</option>');
+      $('#network-list').append('<option value="' + data.ResultSet[1][domain]['name'] + '">' + data.ResultSet[1][domain]['name']+ '</option>');
     }
   });
   $('#image-json').children().remove();

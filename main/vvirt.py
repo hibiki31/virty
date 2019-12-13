@@ -339,7 +339,7 @@ class Libvirtc():
         devices = self.domxml.find('devices')
         for interface in devices.iter('interface'):
             if interface.find('mac').get('address') == NOW_MAC:
-                interface.find('source').set('bridge', source)
+                interface.find('source').set('network', source)
                 self.con.updateDeviceFlags(ET.tostring(interface).decode())
 
     def DomainCdromEdit(self,TARGET,ISO_PATH):
@@ -443,12 +443,18 @@ class Xmlc():
         for nic in self.xml.find('devices').findall('interface'):
             TYPE = nic.get("type")
             MAC = nic.find("mac").get("address")
-            TO = nic.find("source").get("bridge")
+
+            if TYPE == "bridge":
+                TO = nic.find("source").get("bridge")
+            else:
+                TO = nic.find("source").get("network")
 
             if nic.find("target") == None:TARGET = "none"
             else:TARGET = nic.find("target").get("dev","none")
     
             DATA['interface'].append([TYPE,MAC,TARGET,TO])
+
+
 
         DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):
@@ -473,20 +479,24 @@ class Xmlc():
                 DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
                 DATA['dhcp'].append([DHCP_START,DHCP_END])
         
-        DATA['mac'] = self.xml.find('mac').get("address")
         DATA['bridge'] = self.xml.find('bridge').get("name")
+
+        if self.xml.find('mac') is not None:
+            DATA['mac'] = self.xml.find('mac').get("address",None)
+        else:
+            DATA['mac'] = None
 
         if self.xml.find('forward') is not None:
             DATA['forward'] = self.xml.find('forward').get("mode")
         else:
             DATA['forward'] = None
 
-
-
         if DATA['forward'] == "nat":
             DATA['type'] = "NAT"
         elif DATA['forward'] == None:
             DATA['type'] = "internal"
+        elif DATA['forward'] == "bridge":
+            DATA['type'] = "Bridge"
         else:
             DATA['type'] = "unknown"
         return DATA
@@ -521,6 +531,7 @@ class Xmlc():
     def StorageData(self):
         DATA = {}
         DATA['name'] = self.xml.find('name').text
+        DATA['uuid'] = self.xml.find('uuid').text
 
         DATA['capacity-unit'] = self.xml.find('capacity').get("unit")
         DATA['capacity'] = self.xml.find('capacity').text
@@ -550,12 +561,70 @@ class Xmlc():
     def NetworkInternal(self,NAME):
         self.xml.find('name').text= NAME
 
+    def EditNetworkBridge(self,NAME,Bridge):
+        self.xml.find('name').text= NAME
+        self.xml.find('forward').set('mode','bridge')
+        self.xml.find('bridge').set('name',Bridge)
+
 
     def Save(self,TYPE):
         os.chdir = SPATH
         DOM_UUID = self.xml.find('uuid').text
         ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
 
+    def DomainBaseEdit(self,DOM_NAME,MEMORY,CORE,VNC_PORT,VNC_PASS):
+        self.xml.findall('name')[0].text = DOM_NAME
+        self.xml.find('memory').text = MEMORY
+        self.xml.find('currentMemory').text = MEMORY
+        self.xml.find('vcpu').text = CORE
+
+        if VNC_PORT == "auto":
+            self.xml.find('devices').find('graphics').set('autoport', "yes")
+            self.xml.find('devices').find('graphics').set('port', "0")	
+            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)	
+        else:
+            self.xml.find('devices').find('graphics').set('autoport', "no")
+            self.xml.find('devices').find('graphics').set('port', VNC_PORT)
+            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)    
+
+    def DomainNetworkAdd(self,NET_NAME):
+        MAC_ADDRESS = XmlGenMac()
+        ET.SubElement(self.xml.find('devices'), "interface").set('type', 'network')
+        ET.SubElement(self.xml.find('devices').find('interface'), 'mac').set('address', MAC_ADDRESS)
+        ET.SubElement(self.xml.find('devices').find('interface'), 'source').set('network', NET_NAME)
+        ET.SubElement(self.xml.find('devices').find('interface'), 'model').set('type', 'virtio')
+
+    def DomainEmulator(self,DOM_EMU):
+        if DOM_EMU == "debian":
+            self.xml.find('devices').find('emulator').text = "/usr/bin/kvm"
+            self.xml.find('os').find('type').set('machine', "pc-i440fx-2.8")
+        elif DOM_EMU == "rhel fedora":
+            self.xml.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
+            self.xml.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
+
+    def DomainImageMeta(self,STORAGE_NAME,ARCHIVE_NAME):
+        ET.SubElement(self.xml.find('metadata'), "storage")
+        self.xml.find('metadata').find('storage').set('storage',STORAGE_NAME)
+        self.xml.find('metadata').find('storage').set('archive',ARCHIVE_NAME)
+
+    def DomainImageSet(self,IMG_PATH):
+        disk = ET.SubElement(self.xml.find('devices'), "disk")
+        disk.set('type', 'file')
+        disk.set('device', 'disk')
+        driver = ET.SubElement(disk, 'driver')
+        source = ET.SubElement(disk, 'source')
+        target = ET.SubElement(disk, 'target')
+        address = ET.SubElement(disk, 'address')
+        driver.set('name','qemu')
+        driver.set('type','qcow2')
+        source.set('file',IMG_PATH)
+        target.set('dev','vda')
+        target.set('bus','virtio')
+        address.set('bus', '0x00')
+        address.set('domain', '0x0000')
+        address.set('function', '0x0')
+        address.set('slot', '0x04')
+        address.set('type', 'pci')
 
 def ping(IP):
     p = pings.Ping().ping(IP).is_reached()
@@ -652,6 +721,30 @@ def XmlBridgeNicAdd(DOM_NAME,SOURCE):
     # address.set('type', 'pci')
 
     tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
+
+def XmlNetworkNicAdd(DOM_NAME,SOURCE):
+    os.chdir = SPATH
+
+    MAC_ADDRESS = XmlGenMac()
+
+    tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
+    root = tree.getroot()
+
+    interface = ET.SubElement(root.find('devices'), "interface")
+    interface.set('type', 'bridge')
+    ET.SubElement(interface, 'mac').set('address', MAC_ADDRESS)
+    ET.SubElement(interface, 'source').set('bridge', SOURCE)
+    ET.SubElement(interface, 'model').set('type', 'virtio')
+    
+    # address = ET.SubElement(interface, 'address')
+    # address.set('bus', '0x00')
+    # address.set('domain', '0x0000')
+    # address.set('function', '0x0')
+    # address.set('slot', '0x03')
+    # address.set('type', 'pci')
+
+    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
+
 
 def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
     tree = ET.parse(SPATH + '/xml/net_l2less.xml') 

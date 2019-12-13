@@ -121,7 +121,7 @@ def node_list(GET_DATA):
         html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
         return html
     elif GET_DATA == "storage":
-        html = render_template('StorageList.html',domain=virty.StoragePoolList())
+        html = render_template('StorageList.html',domain=virty.StorageListAll())
         return html
     elif GET_DATA == "network":
         virty.NetworkListinit()
@@ -239,84 +239,15 @@ def api_json_object(OBJECT):
 ############################
 @app.route("/api/add/<POST_TASK>",methods=["POST"])
 def api_add(POST_TASK):
-    if POST_TASK == "domain":
-        task = {}
-        task["nic"] = []
-        for key, value in request.form.items():
-            if key == "bridge":
-                for nic in request.form.getlist('bridge'):
-                    task['nic'].append(["bridge",nic])
-            else:
-                task[key]=value
-        virty.vsql.SqlQueuing("domain",task)
-        return redirect("/", code=302)
-    elif POST_TASK == "que_clear":
+    if POST_TASK == "que_clear":
         if request.form["status"] == "que_clear":
             virty.vsql.SqlDeleteAll("kvm_que")
             return "que_list_clear"
-    elif POST_TASK == "undefine":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("undefine",task)
-        return task
-    elif POST_TASK == "power":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("power",task)
-        return redirect("/domain/power", code=302)
-    elif POST_TASK == "dom_reload":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("listinit",task)
-        return redirect("/", code=302)
 
-    elif POST_TASK == "network2l":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("2ldefine",task)
-        return task
-
-    elif POST_TASK == "node":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("nodeadd",task)
-        return task
-
-    elif POST_TASK == "storage":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("storage",task)
-        return task
-
-    elif POST_TASK == "network":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlAddNetwork([(task['name'],task['node-list'],task['source'])])
-        return task
 
 @app.route("/api/edit/<POST_TASK>",methods=["POST"])
 def api_edit(POST_TASK):
-    if POST_TASK == "dom_name":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("domnameedit",task)
-        return task
-    elif POST_TASK == "dom_nic":
-        task = {}
-        for key, value in request.form.items():
-            task[key]=value
-        virty.vsql.SqlQueuing("dom_nic",task)
-        return task
-
-    elif POST_TASK == "cdrom":
+    if POST_TASK == "cdrom":
         task = {}
         for key, value in request.form.items():
             task[key]=value
@@ -335,14 +266,6 @@ def api_selinux():
     virty.DomSelinuxDisable(task['uuid'])
     return task
 
-@app.route("/api/add/network/bridge",methods=["POST"])
-def api_network_bridge_add():
-    task = {}
-    for key, value in request.form.items():
-        task[key]=value
-    virty.vsql.SqlAddNetwork([(task['name'],task['source'],task['node-list'])])  
-
-    return redirect("/list/network", code=302)
 
 @app.route("/api/que/<OBJECT>/<METHOD>/",methods=["POST"])
 def api_que(OBJECT,METHOD):
