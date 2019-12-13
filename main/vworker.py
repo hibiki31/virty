@@ -11,47 +11,35 @@ while True:
     if que == None or que == []:
         sleep(3)
         continue
-    
     que = que[0]
-
+    POST = ast.literal_eval(que[5])
     print("Found "+que[3]+" "+que[4])
+    
 
     if que[3] == "domain" and que[4] == "define":
-        dic = ast.literal_eval(que[5])
-
-        virty.DomainDefineStatic(dic)
+        virty.DomainDefineStatic(POST)
         virty.DomainListInit()
-        
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
-
-
     elif que[3] == "domain" and que[4] == "power":
-        dic = ast.literal_eval(que[5])
-        if dic['status'] == "poweron":
-            result = virty.DomainStart(dic['domain-list'])
+        if POST['status'] == "poweron":
+            result = virty.DomainStart(POST['domain-list'])
             virty.vsql.Dequeuing(que[0],"finish",result[3])
-        elif dic['status'] == "poweroff":
-            result = virty.DomainDestroy(dic['domain-list'])
+        elif POST['status'] == "poweroff":
+            result = virty.DomainDestroy(POST['domain-list'])
             virty.vsql.Dequeuing(que[0],"finish",result[3])
         
-
     elif que[3] == "domain" and que[4] == "selinux":
-        dic = ast.literal_eval(que[5])
-        if dic['state'] == "disable":
-            result = virty.DomSelinuxDisable(dic['uuid'])
+        if POST['state'] == "disable":
+            result = virty.DomSelinuxDisable(POST['uuid'])
             virty.vsql.Dequeuing(que[0],"finish",result[3])
         
-
     elif que[3] == "domain" and que[4] == "list-reload":
         virty.DomainListInit()
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
-
-
     elif que[3] == "domain" and que[4] == "undefine":
-        dic = ast.literal_eval(que[5])
-        result = virty.DomainUndefine(dic['domain-list'])
+        result = virty.DomainUndefine(POST['domain-list'])
         virty.vsql.SqlDeleteAll("kvm_domain")
         virty.DomainListInit()
         if result[0] == 0:
@@ -59,76 +47,61 @@ while True:
         if result[0] == 1:
             virty.vsql.Dequeuing(que[0],"skip",result[3])
 
-
-
-    elif que[3] == "network" and que[4] == "2l-define":
-        dic = ast.literal_eval(que[5])
-        NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",dic['node-list'])
+    elif que[3] == "network" and que[4] == "2l-define":  
+        NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",POST['node-list'])
         XML_PATH = SPATH + '/xml/net_2less.xml'
-        NAME = "2l-" + dic['net-gw']
-        GW = dic['net-gw']
+        NAME = "2l-" + POST['net-gw']
+        GW = POST['net-gw']
         virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)
-        virty.vsql.SqlAddNetwork([("l2l",NAME,dic['node-list'])])
+        virty.vsql.SqlAddNetwork([("l2l",NAME,POST['node-list'])])
         virty.vsql.Dequeuing(que[0],"finish","Succses")
     
-
-
     elif que[3] == "node" and que[4] == "add":
-        dic = ast.literal_eval(que[5])
-        virty.NodeAdd(dic['name'],dic['user'] +'@'+ dic['ip'])
+        virty.NodeAdd(POST['name'],POST['user'] +'@'+ POST['ip'])
         virty.vsql.Dequeuing(que[0],"finish","Succses")
-
-
 
     elif que[3] == "storage" and que[4] == "add":
-        dic = ast.literal_eval(que[5])
-        
-        virty.StorageMake(dic['node-list'],dic['name'],dic['path'])
-
+        virty.StorageMake(POST['node-list'],POST['name'],POST['path'])
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
-
-
     elif que[3] == "storage" and que[4] == "undefine":
-        dic = ast.literal_eval(que[5])
-        result = virty.StorageUndefine(dic['node'],dic['storagename'])
+        result = virty.StorageUndefine(POST['node'],POST['storagename'])
         if result[0] == 0:
             virty.vsql.Dequeuing(que[0],"finish","Succses")
         if result[0] == 1:
             virty.vsql.Dequeuing(que[0],"skip",result[3])
 
-
-
     elif que[3] == "domain" and que[4] == "name-edit":
-        dic = ast.literal_eval(que[5])
-        result = virty.DomNameEdit(dic['uuid'],dic['newname'])
+        result = virty.DomNameEdit(POST['uuid'],POST['newname'])
         if result[0] == 0:
             virty.vsql.Dequeuing(que[0],"finish","Succses")
         if result[0] == 1:
             virty.vsql.Dequeuing(que[0],"skip",result[1])
         virty.DomainListInit()
 
-
-
     elif que[3] == "domain" and que[4] == "nic-edit":
-        dic = ast.literal_eval(que[5])
-        virty.DomNicEdit(dic['uuid'],dic['mac'],dic['network'])
+        virty.DomainEditNicNetwork(POST['uuid'],POST['mac'],POST['network'])
         virty.vsql.Dequeuing(que[0],"finish","Succses")    
         virty.DomainListInit()
 
-
     elif que[3] == "network" and que[4] == "undefine":
-        dic = ast.literal_eval(que[5])
-        virty.NetworkUndefine(dic['uuid'])
+        virty.NetworkUndefine(POST['uuid'])
         virty.vsql.Dequeuing(que[0],"finish","Succses")
-        
-
 
     elif que[3] == "network" and que[4] == "internal-define":
-        dic = ast.literal_eval(que[5])
-        virty.NetworkInternalDefine(dic['node'],dic['net-name'])
+        virty.NetworkInternalDefine(POST['node'],POST['net-name'])
         virty.NetworkListinit()
         virty.vsql.Dequeuing(que[0],"finish","Succses")
 
+    elif que[3] == "domain" and que[4] == "memory-edit":
+        virty.DomainEditMemory(POST['uuid'],POST['memory'])
+        virty.DomainListInit()
+        virty.vsql.Dequeuing(que[0],"finish","Succses")
+        
+    elif que[3] == "domain" and que[4] == "cpu-edit":
+        virty.DomainEditCpu(POST['uuid'],POST['cpu'])
+        virty.DomainListInit()
+        virty.vsql.Dequeuing(que[0],"finish","Succses")
     else:
         print("Found unkown Que")
+        virty.vsql.Dequeuing(que[0],"error","Found unkown Que")

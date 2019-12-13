@@ -177,6 +177,15 @@ class Libvirtc():
     def DomainNameEdit(self,NEW_NAME):
         self.domxml.findall('name')[0].text = NEW_NAME
         
+    def DomainEditMemory(self,NEW_MEM):
+        self.domxml.find('memory').text = NEW_MEM
+        self.domxml.find('memory').set('unit',"MiB")
+        self.domxml.find('currentMemory').text = NEW_MEM
+        self.domxml.find('currentMemory').set('unit',"MiB")
+        
+    def DomainEditCpu(self,NEW_CPU):
+        self.domxml.find('vcpu').text = NEW_CPU
+
     def DomainXmlUpdate(self):
         ET.tostring(self.domxml).decode()
         if self.dompower == 5:
@@ -334,11 +343,12 @@ class Libvirtc():
         return test
 
 
-    def DomainNicEdit(self,NOW_MAC,NEW_BRIDGE):
+    def DomainEditNicNetwork(self,NOW_MAC,NEW_BRIDGE):
         source = NEW_BRIDGE
         devices = self.domxml.find('devices')
         for interface in devices.iter('interface'):
             if interface.find('mac').get('address') == NOW_MAC:
+                interface.set('type','network')
                 interface.find('source').set('network', source)
                 self.con.updateDeviceFlags(ET.tostring(interface).decode())
 

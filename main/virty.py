@@ -219,8 +219,8 @@ def DomainListInit():
             data['autostart'] = xml[1]
             DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
             editor.Save("dom")
-    print(DOMLIST)
     vsql.SqlAddDomain(DOMLIST)
+
 
 def GetNicData(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
@@ -626,7 +626,9 @@ def DomainDefineStatic(DOM_DIC):
 
 
 
-#DomainEdit
+############################
+# Domain-Edit              #
+############################
 def DomNameEdit(DOM_UUID,NEW_NAME):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -655,14 +657,13 @@ def DomSelinuxDisable(DOM_UUID):
     editor.DeleteSelinux()
     return editor.DomainXmlUpdate()
 
-
-def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
+def DomainEditNicNetwork(DOM_UUID,NOW_MAC,NEW_NIC):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
-    editor.DomainNicEdit(NOW_MAC,NEW_NIC)
+    editor.DomainEditNicNetwork(NOW_MAC,NEW_NIC)
     DomainXmlSave(NODE_NAME,DOM_UUID)
 
 def DomCdromExit(DOM_UUID,TARGET):
@@ -681,7 +682,27 @@ def DomCdromEdit(DOM_UUID,TARGET,ISO_PATH):
     editor.DomainOpen(DOM_UUID)
     editor.DomainCdromEdit(TARGET,ISO_PATH)
 
-#SSH
+def DomainEditMemory(DOM_UUID,NEW_MEMORY):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainEditMemory(NEW_MEMORY)
+    return editor.DomainXmlUpdate()
+
+def DomainEditCpu(DOM_UUID,NEW_CPU):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainEditCpu(NEW_CPU)
+    return editor.DomainXmlUpdate()
+
+############################
+# SSH                      #
+############################
 def SshInfoMem(NODE_IP):
     cmd = ["ssh" , NODE_IP, "cat /proc/meminfo |grep MemTotal"]
     mem = subprocess.check_output(cmd)

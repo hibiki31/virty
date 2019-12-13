@@ -13,12 +13,3 @@ POST_DATA['bridge'] = ["virbr0"]
 for i in range(1,10):
     POST_DATA['name'] = "ubuntu_"+str(i)
     api.domain_define(POST_DATA)
-
-domains = api.domain_data()
-
-for domain in domains:
-    api.domain_stop(domain[0])
-    api.domain_undefine(domain[0])
-
-api.auth_login("user2","abcxyz")
-api.auth_test()
