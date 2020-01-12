@@ -62,14 +62,16 @@
                                         </td>
                                         <td class=" ">{{dom[0]}}</td>
                                         <td class=" ">{{dom[1]}}</td>
-                                        {% if dom[2] == "init" %}
-                                        <td class=" "><i class="fa fa-square dark"></i> Init</td>
+                                        {% if dom[2] == "running" %}
+                                        <td class=" "><i class="fa fa-square blue"></i> running</td>
+                                        {% elif dom[2] == "init" %}
+                                        <td class=" "><i class="fa fa-square dark"></i> init</td>
                                         {% elif dom[2] == "finish" %}
-                                        <td class=" "><i class="fa fa-square green"></i> Finish</td>
+                                        <td class=" "><i class="fa fa-square green"></i> finish</td>
                                         {% elif dom[2] == "skip" %}
-                                        <td class=" "><i class="fa fa-square blue"></i> skip</td>
+                                        <td class=" "><i class="fa fa-square yellow"></i> skip</td>
                                         {% else %}
-                                        <td class=" "><i class="fa fa-square danger"></i> Error</td>
+                                        <td class=" "><i class="fa fa-square danger"></i> error</td>
                                         {% endif %}
                                         <td class=" ">{{dom[3]}}</td>
                                         <td class=" ">{{dom[4]}}</td>

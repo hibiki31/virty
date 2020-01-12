@@ -2,12 +2,16 @@ from flask import Flask, render_template, jsonify, request,redirect
 from flask_jwt import JWT, jwt_required, current_identity
 from werkzeug.security import safe_str_cmp
 from time import  sleep
-import subprocess
+import subprocess, logging 
 import virty
+
 
 ############################
 # flask                    #
 ############################
+l = logging.getLogger()
+l.addHandler(logging.FileHandler("/dev/null"))
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret'
 app.config['JWT_AUTH_URL_RULE'] = '/auth'
@@ -229,7 +233,7 @@ def api_json_object(OBJECT):
         if NODE_NAME == None:result = []
         else:result=virty.ImageArchiveList(NODE_NAME)   
     elif OBJECT == "stack-que":
-        result=virty.vsql.SqlQueuget()
+        result=virty.vsql.SqlQueuget("running")
     return jsonify(ResultSet=result)
 
 

@@ -107,8 +107,12 @@ class Libvirtc():
         except:
             pass
         else:
-            sp.destroy()
-            sp.undefine()
+            if sp.info() == 0:
+                sp.destroy()
+            else:
+                sp.undefine()
+                
+                
             
     def DomainInfo(self):
         editor = Xmlc(self.domxml)

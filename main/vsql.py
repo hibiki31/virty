@@ -234,7 +234,24 @@ def NetworkListUpdate(NET_DIC_LIST):
 	con.commit()
 	con.close()
 
+def UpdateImage(DIC_LIST):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'replace into kvm_img (img_name, img_archive_name, img_domain_name,img_node_name) values (?,?,?,?)'
+	
+	DATA = []
 
+	for DIC in DIC_LIST:
+		TEMP = [
+			DIC['name'],
+			DIC['archive'],
+			DIC['domain'],
+			DIC['node']
+		]
+		DATA.append(TEMP)
+	cur.executemany(sql, DATA)
+	con.commit()
+	con.close()
 
 def UpdateStorage(DIC_LIST):
 	con = sqlite3.connect(SQLFILE)
@@ -262,6 +279,9 @@ def UpdateStorage(DIC_LIST):
 ############################
 # QUE                      #
 ############################
+
+#26|2020-01-13 01:31:52|finish|domain|power|{'domain-list': 'nfs_2306', 'status': 'poweron'}|Success poweron
+
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
@@ -285,11 +305,18 @@ def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
 	cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
 	con.commit()
 	
-def SqlQueuget():
+def SqlQueuget(QUE_STATUS):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'select * from kvm_que where que_status = "init"'
+	sql = 'select * from kvm_que where que_status ="'+QUE_STATUS+'"'
 	return cur.execute(sql).fetchall()
+
+def QueueUpdate(QUE_ID,QUE_STATUS,QUE_MESG):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	sql = 'UPDATE kvm_que SET que_status=?, que_mesg=? WHERE que_id=?'
+	cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
+	con.commit()
 	
 def SqlDeleteAll(TABLE_NAME):
 	con = sqlite3.connect(SQLFILE)

@@ -45,6 +45,7 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 #Domain Power
 def DomainStart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:return [2,"sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
@@ -69,11 +70,10 @@ def DomainStart(DOM_NAME):
 
 def DomainShutdown(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:return [2,"sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
-    if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+    
 
     manager = vvirt.Libvirtc(NODE_IP)
     manager.DomainOpen(DOM_UUID)
@@ -313,7 +313,7 @@ def StorageUndefine(NODE_NAME,STORAGE_NAME):
 
     server = vvirt.Libvirtc(NODE_IP)
     server.StorageUndefine(STORAGE_NAME)
-    return [0,0,0]
+    return [0,"storage","undefine","Success",""]
 
 
 
@@ -371,6 +371,7 @@ def AllImageXml():
     data = {}
     data['pool'] = pool
     data['image'] = image
+
     return data
 
 
