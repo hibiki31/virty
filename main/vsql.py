@@ -4,7 +4,7 @@ SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
 ############################
-# GET                      #
+# Select                   #
 ############################
 def SqlGetAll(TABLE):
 	con = sqlite3.connect(SQLFILE)
@@ -34,7 +34,7 @@ def SqlGetData(SRC,DST,HINT):
 			if GET == []:	return
 			return GET[0][4].rstrip("/") + "/"
 		elif DST == "NODE_DATA":
-			GET = ExFetchall("select * from kvm_node where node_name='" + HINT + "'")
+			GET = ExFetchall("select * from kvm_node where name='" + HINT + "'")
 			if GET == []:	return
 			return GET[0]
 
@@ -65,6 +65,9 @@ def Convert(SRC,DST,HINT):
 				return data[1]
 	if SRC == "NODE_NAME" and DST == "NETWORK_DATAS":
 		return  ExFetchall("select * from kvm_network where network_node='" + HINT + "'")
+	if SRC == "NODE_NAME" and DST == "NODE_STATUS":
+		return int(SqlFetchall("select * from kvm_node where name=?",[(HINT)])[0][8])
+
 
 
 ############################
@@ -103,9 +106,9 @@ def NetworkDelete(NODE,SOURCE):
 def SqlSumNode():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'select sum(node_memory) from kvm_node'
+	sql = 'select sum(memory) from kvm_node'
 	RAM = cur.execute(sql).fetchone()
-	sql = 'select sum(node_core) from kvm_node'
+	sql = 'select sum(core) from kvm_node'
 	CORE = cur.execute(sql).fetchone()
 	if CORE[0] == None:CORE = 0
 	else:CORE = CORE[0]
@@ -133,7 +136,7 @@ def SqlSumDomain():
 def SqlAddNode(NODE_DATAS):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	sql = 'replace into kvm_node (node_name, node_ip, node_core, node_memory, node_cpugen, os_name, os_version, os_like) values (?,?,?,?,?,?,?,?)'
+	sql = 'replace into kvm_node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status) values (?,?,?,?,?,?,?,?,?)'
 	cur.executemany(sql, NODE_DATAS)
 	con.commit()
 	
@@ -276,6 +279,25 @@ def UpdateStorage(DIC_LIST):
 	con.commit()
 	con.close()
 
+def UpdateDomainStatus(NODES,DOMAINS,CODE):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	for NODE in NODES:
+		sql = 'UPDATE kvm_domain SET domain_status=? WHERE domain_node_name=?'
+		cur.executemany(sql, [(int(CODE),NODE)])
+	for UUID in DOMAINS:
+		sql = 'UPDATE kvm_domain SET domain_status=? WHERE domain_uuid=?'
+		cur.executemany(sql, [(int(CODE),UUID)])
+	con.commit()
+
+def UpdateNodeStatus(NODES,CODE):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	for NODE in NODES:
+		sql = 'UPDATE kvm_node SET status=? WHERE name=?'
+		cur.executemany(sql, [(int(CODE),NODE)])
+	con.commit()
+
 ############################
 # QUE                      #
 ############################
@@ -326,10 +348,22 @@ def SqlDeleteAll(TABLE_NAME):
 	con.commit()	
 	return 0
 
+def QueueUpdateTime(QUE_ID,QUE_TIME):
+	SqlCommit("UPDATE kvm_que SET run=? WHERE que_id=?",[(QUE_TIME,QUE_ID)])
 
 ############################
 # RAW                      #
 ############################
+def SqlFetchall(SQL,DATA):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	return cur.execute(SQL, DATA).fetchall()
+def SqlCommit(SQL,DATA):
+	con = sqlite3.connect(SQLFILE)
+	cur = con.cursor()
+	cur.executemany(SQL,DATA)
+	con.commit()
+
 def ExFetchall(SQL):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
@@ -343,8 +377,8 @@ def SqlInit():
 		pass
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
-	cur.execute('create table if not exists kvm_node (node_name primary key, node_ip, node_core, node_memory, node_cpugen, os_like, os_name, os_version)')
-	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg)')
+	cur.execute('create table if not exists kvm_node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, primary key (name))')
+	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
 	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp,primary key (network_name))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_uuid, storage_capacity, storage_available,storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
 	cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')

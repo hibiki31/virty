@@ -69,9 +69,13 @@
                                         <td class=" "><a href="/domain/{{dom[5]}}/info">{{dom[0]}}</a></td>
 
                                         {% if dom[1] == 1 %}
-                                        <td class=" "><i class="fa fa-square green"></i> RUN</td>
+                                        <td class=" "><i class="fa fa-square green"></i> Run</td>
+                                        {% elif dom[1] == 5 %}
+                                        <td class=" "><i class="fa fa-square dark"></i> Stop</td>
+                                        {% elif dom[1] == 7 %}
+                                        <td class=" "><i class="fa fa-square purple"></i> Maintenance</td>
                                         {% else %}
-                                        <td class=" "><i class="fa fa-square dark"></i> SHT</td>
+                                        <td class=" "><i class="fa fa-square red"></i> Lost</td>
                                         {% endif %}
 
                                         <td class=" ">{{dom[2]}}</td>

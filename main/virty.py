@@ -45,12 +45,18 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 #Domain Power
 def DomainStart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    if DOM_UUID == None:return [2,"sql","get","Domain name not found",""]
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
-    if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+
+
+    
+
 
     manager = vvirt.Libvirtc(NODE_IP)
     manager.DomainOpen(DOM_UUID)
@@ -70,8 +76,12 @@ def DomainStart(DOM_NAME):
 
 def DomainShutdown(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    if DOM_UUID == None:return [2,"sql","get","Domain name not found",""]
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
     
 
@@ -92,11 +102,14 @@ def DomainShutdown(DOM_NAME):
     
 def DomainDestroy(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
-    if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
 
     manager = vvirt.Libvirtc(NODE_IP)
     manager.DomainOpen(DOM_UUID)
@@ -115,11 +128,13 @@ def DomainDestroy(DOM_NAME):
 
 def DomainAutostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
     if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     manager = vvirt.Libvirtc(NODE_IP)
     manager.DomainOpen(DOM_UUID)
@@ -139,11 +154,13 @@ def DomainAutostart(DOM_NAME):
 
 def DomainNotautostart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
     if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
@@ -152,11 +169,13 @@ def DomainNotautostart(DOM_NAME):
 
 def DomainUndefine(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
     if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
@@ -168,11 +187,13 @@ def DomainUndefine(DOM_NAME):
 #Domain Info
 def DomainXmlDump(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
     if DOM_UUID == None:
-        return [2,"sql","get","Domain name not found",""]
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
@@ -205,10 +226,20 @@ def DomainXmlSave(NODE_NAME,DOM_UUID):
 
 def DomainListInit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
-    vsql.SqlDeleteAll("kvm_domain")
     DOMLIST = []
     for NODE in NODE_DATAS:
-        manager = vvirt.Libvirtc(NODE[1])
+        if int(NODE[8]) == 20:
+            vsql.UpdateDomainStatus([NODE[0]],[],7)
+            continue
+        elif int(NODE[8]) > 20:
+            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            continue
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            vsql.UpdateNodeStatus([NODE[0]],50)
+            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            continue
         xmls = manager.AllDomainXmlPerth()
         for xml in xmls:
             editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
@@ -427,7 +458,7 @@ def NodeAdd(NODE_NAME,NODE_IP):
     NODE_CPU = SshInfocpuname(NODE_IP)
     NODE_OS = SshOsinfo(NODE_IP)
     NODE_DATAS_NEW = []
-    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE']])
+    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE'],10])
     vsql.SqlAddNode(NODE_DATAS_NEW)
 
     print(

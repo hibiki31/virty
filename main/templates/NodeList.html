@@ -6,16 +6,18 @@
         <div class="row top_tiles">
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
-                <div class="icon"><i class="fa fa-at"></i></div>
-                <div class="count">{{sumdata[0]}} core</div>
-                <h3>Total CPU</h3></div>
-            </div>  
+                    <div class="icon"><i class="fa fa-at"></i></div>
+                    <div class="count">{{sumdata[0]}} core</div>
+                    <h3>Total CPU</h3>
+                </div>
+            </div>
             <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                 <div class="tile-stats">
-                <div class="icon"><i class="fa fa-rocket"></i></div>
-                <div class="count">{{'%0.1f' % sumdata[1]|float}} GB</div>
-                <h3>Total Memory</h3></div>
-            </div> 
+                    <div class="icon"><i class="fa fa-rocket"></i></div>
+                    <div class="count">{{'%0.1f' % sumdata[1]|float}} GB</div>
+                    <h3>Total Memory</h3>
+                </div>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
@@ -23,19 +25,20 @@
                     <div class="x_title">
                         <h2>Node List <small>beta</small></h2>
                         <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                            <li><a href="#">Settings 1</a>
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
-                            <li><a href="#">Settings 2</a>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                    <li><a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
                             </li>
-                            </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
                         </ul>
                         <div class="clearfix"></div>
                     </div>
@@ -45,10 +48,11 @@
                                 <thead>
                                     <tr class="headings">
                                         <th>
-                                        <input type="checkbox" id="check-all" class="flat">
+                                            <input type="checkbox" id="check-all" class="flat">
                                         </th>
                                         <th class="column-title">Name </th>
                                         <th class="column-title">Host </th>
+                                        <th class="column-title">Status </th>
                                         <th class="column-title">Memory </th>
                                         <th class="column-title">vCPU </th>
                                         <th class="column-title">Model </th>
@@ -57,7 +61,8 @@
                                         <th class="column-title">Version </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
-                                        <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
+                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
+                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
                                         </th>
                                     </tr>
                                 </thead>
@@ -65,10 +70,25 @@
                                     {% for dom in domain %}
                                     <tr class="even pointer">
                                         <td class="a-center ">
-                                        <input type="checkbox" class="flat" name="table_records">
+                                            <input type="checkbox" class="flat" name="table_records">
                                         </td>
                                         <td class=" ">{{dom[0]}}</td>
                                         <td class=" ">{{dom[1]}}</td>
+
+                                        {% if dom[8] == 10 %}
+                                        <td class=" "><i class="fa fa-square green"></i> Up</td>
+                                        {% elif dom[8] == 20 %}
+                                        <td class=" "><i class="fa fa-square purple"></i> Maintenance</td>
+                                        {% elif dom[8] == 30 %}
+                                        <td class=" "><i class="fa fa-square dark"></i> Down</td>
+                                        {% elif dom[8] == 40 %}
+                                        <td class=" "><i class="fa fa-square red"></i> Error</td>
+                                        {% elif dom[8] == 50 %}
+                                        <td class=" "><i class="fa fa-square red"></i> Lost</td>
+                                        {% else %}
+                                        <td class=" "><i class="fa fa-square red"></i> {{dom[8]}}</td>
+                                        {% endif %}
+
                                         <td class=" ">{{'%0.1f' % dom[2]|float}}</td>
                                         <td class=" ">{{dom[3]}}</td>
                                         <td class=" ">{{dom[4]}}</td>
@@ -80,7 +100,66 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
-                        </div>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-6">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2>Node Status <small></small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+    
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <br />
+                        <form action="/api/que/node/status-update/" method="post" data-parsley-validate
+                            class="form-horizontal form-label-left">
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Node <span
+                                        class="required">*</span>
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <select name="name" class="form-control" required="">
+                                        {% for dom in domain %}
+                                        <option value={{dom[0]}}>{{dom[0]}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Status <span
+                                        class="required">*</span>
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <select name="status" class="form-control" required="">
+                                        <option value="10">Up</option>
+                                        <option value="20">Maintenance</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                    <button class="btn btn-success">Update</button>
+                                </div>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
             </div>

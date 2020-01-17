@@ -48,6 +48,7 @@
                                         <th class="column-title">Method </th>
                                         <th class="column-title">Json </th>
                                         <th class="column-title">Mesg </th>
+                                        <th class="column-title">Run </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -66,17 +67,18 @@
                                         <td class=" "><i class="fa fa-square blue"></i> running</td>
                                         {% elif dom[2] == "init" %}
                                         <td class=" "><i class="fa fa-square dark"></i> init</td>
-                                        {% elif dom[2] == "finish" %}
-                                        <td class=" "><i class="fa fa-square green"></i> finish</td>
+                                        {% elif dom[2] == "success" %}
+                                        <td class=" "><i class="fa fa-square green"></i> success</td>
                                         {% elif dom[2] == "skip" %}
-                                        <td class=" "><i class="fa fa-square yellow"></i> skip</td>
+                                        <td class=" "><i class="fa fa-square aero"></i> skip</td>
                                         {% else %}
-                                        <td class=" "><i class="fa fa-square danger"></i> error</td>
+                                        <td class=" "><i class="fa fa-square red"></i> error</td>
                                         {% endif %}
                                         <td class=" ">{{dom[3]}}</td>
                                         <td class=" ">{{dom[4]}}</td>
                                         <td class=" ">{{dom[5]}}</td>
                                         <td class=" ">{{dom[6]}}</td>
+                                        <td class=" ">{{'%0.1f' % dom[7]|float}} s</td>
                                         </td>
                                     </tr>
                                     {% endfor %}

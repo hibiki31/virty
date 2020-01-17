@@ -23,10 +23,8 @@ def DomainDefine(XML_DATA,NODE_IP):
 class Libvirtc():
     def __init__(self,NODE_DOMAIN):
         self.nodeip = NODE_DOMAIN
-        try:
-            self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
-        except:
-            self.node = None
+        self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+
 
     def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
@@ -195,9 +193,9 @@ class Libvirtc():
         if self.dompower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return [0,"domain","selinux","Success disable selinux",""]
+            return ["success","domain","selinux","Success disable selinux",""]
         else:
-            return [0,"domain","selinux","domain started",""]
+            return ["success","domain","selinux","domain started",""]
 
     def DomainPowerGet(self):
         if self.dompower == 5:
@@ -207,68 +205,68 @@ class Libvirtc():
     
     def DomainDestroy(self):
         if self.dompower == 5:
-            return [1,"domain","stop","Already stop domain",""]
+            return ["error","domain","stop","Already stop domain",""]
         try:
             self.con.destroy()
         except:
-            return [2,"domain","stop","Libvirt error",""]
+            return ["skip","domain","stop","Libvirt error",""]
         else:
             self.dompower = self.con.state()[0]
-            return [0,"domain","stop","Success destroy",""]
+            return ["success","domain","stop","Success destroy",""]
 
     def DomainShutdown(self):
         if self.dompower == 5:
-            return [1,"domain","shutdown","Already shutdown domain",""]
+            return ["error","domain","shutdown","Already shutdown domain",""]
         try:
             self.con.shutdown()
             self.dompower = self.con.state()[0]
         except:
-            return [2,"domain","shutdown","Libvirt error",""]
+            return ["skip","domain","shutdown","Libvirt error",""]
         else:
-            return [0,"domain","shutdown","Success shutdown",""]
+            return ["success","domain","shutdown","Success shutdown",""]
 
     def DomainPoweron(self):
         if self.dompower == 1:
-            return [1,"domain","poweron","Already poweron domain",""]
+            return ["error","domain","poweron","Already poweron domain",""]
         try:
             self.con.create()
             self.dompower = self.con.state()[0]
         except:
-            return [2,"domain","poweron","Libvirt error",""]
+            return ["skip","domain","poweron","Libvirt error",""]
         else:
-            return [0,"domain","poweron","Success poweron",""]
+            return ["success","domain","poweron","Success poweron",""]
 
     def DomainAutostart(self):
         if self.domauto == 1:
-            return [1,"domain","poweron","Already autostart domain",""]
+            return ["error","domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(1)
             self.domauto = self.con.autostart()
         except:
-            return [2,"domain","poweron","Libvirt error",""]
+            return ["skip","domain","poweron","Libvirt error",""]
         else:
-            return [0,"domain","poweron","Success autostart",""]
+            return ["success","domain","poweron","Success autostart",""]
 
     def DomainNotautostart(self):
         if self.domauto == 0:
-            return [1,"domain","poweron","Already autostart domain",""]
+            return ["error","domain","poweron","Already autostart domain",""]
         try:
             self.con.setAutostart(0)
             self.domauto = self.con.autostart()
         except:
-            return [2,"domain","poweron","Libvirt error",""]
+            return ["skip","domain","poweron","Libvirt error",""]
         else:
-            return [0,"domain","poweron","Success autostart",""]
+            return ["success","domain","poweron","Success autostart",""]
 
     def DomainUndefine(self):
         if self.dompower == 1:
-            return [1,"domain","poweron","Fail Undefine. because status is poweron",""]
+            return ["error","domain","poweron","Fail Undefine. because status is poweron",""]
         try:
             self.con.undefine()
         except:
-            return [2,"domain","poweron","Libvirt error",""]
+            return ["skip","domain","poweron","Libvirt error",""]
         else:
-            return [0,"domain","poweron","Success Undefine",""]
+            return ["success","domain","poweron","Success Undefine",""]
 
     def AllDomainXmlPerth(self):
         if self.node == None:
