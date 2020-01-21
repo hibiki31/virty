@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "Layout.html" %}
 {% block content %}
 
 <div class="right_col" role="main">
@@ -191,7 +191,59 @@
                                         <input type="hidden" name="uuid" value="{{domain['uuid']}}">
                                         <input type="text" id="domain-name" name="newname" class="form-control">
                                         <span class="input-group-btn">
+<<<<<<< HEAD
                                             <button type="button" class="btn btn-primary">Edit</button>
+=======
+                                            <button class="btn btn-primary">Edit</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="divider-dashed"></div>
+                        <form action="/api/que/domain/memory-edit/" method="post">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Memory</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+                                        <select class="form-control" name="memory" required="required">
+                                            <option value="512">512MB</option>
+                                            <option value="1024">1024MB</option>
+                                            <option value="2048">2048MB</option>
+                                            <option value="4096">4096MB</option>
+                                            <option value="8192">8192MB</option>
+                                            <option value="16384">16GB</option>
+                                            <option value="32768">32GB</option>
+                                            <option value="65536">64GB</option>
+                                            <option value="13072">128GB</option>
+                                        </select>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary">Edit</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="divider-dashed"></div>
+                        <form action="/api/que/domain/cpu-edit/" method="post">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">CPU</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+                                        <select class="form-control" name="cpu" required="required">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="4">4</option>
+                                            <option value="8">8</option>
+                                            <option value="16">16</option>
+                                            <option value="32">32</option>
+                                            <option value="48">48</option>
+                                        </select>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary">Edit</button>
+>>>>>>> develop
                                         </span>
                                     </div>
                                 </div>

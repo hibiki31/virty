@@ -1,7 +1,24 @@
-var minCount = 1;
-var maxCount = 6;
+function Jsonget(URL) {
+  return $.ajax({
+    type: 'GET',
+    timeout: 10000,
+    url: URL,
+    dataType: 'json',
+    contentType: "application/json",
+  }).fail(function (XMLHttpRequest) {
+    if (XMLHttpRequest.status == 401) {
+      location.href = '/login';
+    }
+  }).always(function (e) {
+  });
+}
 
 $(function () {
+<<<<<<< HEAD
+=======
+  var minCount = 1;
+  var maxCount = 6;
+>>>>>>> develop
   $('#demo-plus').on('click', function () {
     var inputCount = $('#demo-area .unit').length;
     if (inputCount < maxCount) {
@@ -16,9 +33,13 @@ $(function () {
       $(this).parents('.unit').remove();
     }
   });
+<<<<<<< HEAD
 });
 
 $(function () {
+=======
+
+>>>>>>> develop
   $('#image-plus').on('click', function () {
     var inputCount = $('#image-list .unit').length;
     if (inputCount < maxCount) {
@@ -35,6 +56,7 @@ $(function () {
   });
 });
 
+<<<<<<< HEAD
 
 
 $(function () {
@@ -45,10 +67,24 @@ $(function () {
   });
 });
 
+=======
+// Node list
+$(function () {
+  Jsonget('/api/sql/kvm_node.json').done(function (result) {
+    data = result.ResultSet
+    for (var i in data) {
+      $('#node-list').append('<option value="' + data[i][0] + '">' + data[i][0] + '</option>');
+    }
+  })
+});
+
+// Define Option
+>>>>>>> develop
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
   $('#network-list').children().remove();
+<<<<<<< HEAD
   $.getJSON('/api/json/network/?node=' + node, function (data) {
     for (var domain in data.ResultSet[0]) {
       $('#network-list').append('<option value="' + data.ResultSet[0][domain] + '">Interface ' + data.ResultSet[0][domain] + '</option>');
@@ -81,11 +117,45 @@ $('#node-list').on('change', function () {
 
     }
   });
+=======
+  Jsonget('/api/json/network/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data[1]) {
+      $('#network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
+    }
+  })
+
+  $('#archive-list').children().remove();
+  Jsonget('/api/json/archive/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data) {
+      $('#archive-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
+    }
+  })
+
+  $('#storage-list').children().remove();
+  Jsonget('/api/json/storage/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data) {
+      $('#storage-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
+    }
+  })
+>>>>>>> develop
 });
 
 
 
+<<<<<<< HEAD
 $(function () {
+=======
+
+// Queue
+$(function () {
+  Jsonget('/ui/get/info').done(function (result) {
+    $('.user_id').text(result.user_id);
+  })
+
+>>>>>>> develop
   setInterval(function () {
     $.getJSON('/api/json/stack-que', function (data) {
       let p = 0;
@@ -112,6 +182,7 @@ $(function () {
   }, 500);
 });
 
+<<<<<<< HEAD
 
 $(document).ready(function () {
   $('[id$=table]').tablesorter();
@@ -122,3 +193,9 @@ $.ajaxSetup({
     'Authorization': 'JWT' + $.cookie('access_token')
   }
 })
+=======
+// Table sort
+$(document).ready(function () {
+  $('[id$=table]').tablesorter();
+});
+>>>>>>> develop

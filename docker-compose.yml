@@ -6,8 +6,6 @@ services:
       - ./key:/root/.ssh
       - ./main:/root/virty/main
       - ./docker/volume/uwsgi_log:/var/log/uwsgi/
-    ports:
-      - "3031:3031"
     environment:
       TZ: "Asia/Tokyo"
     restart: always

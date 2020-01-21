@@ -34,6 +34,12 @@ def WorkerUp():
     print(output)
     if int(output) == 0:
         subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
+<<<<<<< HEAD
+
+
+def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
+    vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+=======
 
 
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
@@ -45,9 +51,322 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 #Domain Power
 def DomainStart(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+
+>>>>>>> develop
+
+    
+
+
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainPoweron()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+
+
+def DomainShutdown(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    
+
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainShutdown()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+    
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+    
+def DomainDestroy(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainDestroy()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+    
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+
+def DomainAutostart(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    manager = vvirt.Libvirtc(NODE_IP)
+    manager.DomainOpen(DOM_UUID)
+    result = manager.DomainAutostart()
+
+    manager.DomainOpen(DOM_UUID)
+    data = manager.DomainInfo()
+    
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    vsql.SqlUpdateDomain(data)
+    print(data)
+
+    return result
+
+
+def DomainNotautostart(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    
+    return editor.DomainNotautostart()
+
+def DomainUndefine(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    
+    return editor.DomainUndefine()
+
+
+
+#Domain Info
+def DomainXmlDump(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    if DOM_UUID == None:
+        return ["error","sql","get","Domain name not found",""]
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
+    if not NODE_STATUS == 10:
+        return ["skip","node","status","Node is not active",""]
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    
+    return editor.DomainXmlDump()
+
+def AllDomainXmlSave():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    for NODE in NODE_DATAS:
+        manager = vvirt.Libvirtc(NODE[1])
+        if manager.node == None:
+            print("cont "+NODE[0])
+            continue
+        xmls = manager.AllDomainXmlPerth()
+        for xml in xmls:
+            editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+            editor.Save("dom")
+
+
+def DomainXmlSave(NODE_NAME,DOM_UUID):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    manager = vvirt.Libvirtc(NODE_IP)
+    if manager.node == None:
+        print("cont "+DOM_UUID)
+        return 1
+    xml = manager.DomainXmlPerth(DOM_UUID)
+    editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+    editor.Save("dom")
+
+
+def DomainListInit():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    DOMLIST = []
+    for NODE in NODE_DATAS:
+        if int(NODE[8]) == 20:
+            vsql.UpdateDomainStatus([NODE[0]],[],7)
+            continue
+        elif int(NODE[8]) > 20:
+            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            continue
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            vsql.UpdateNodeStatus([NODE[0]],50)
+            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            continue
+        xmls = manager.AllDomainXmlPerth()
+        for xml in xmls:
+            editor = vvirt.Xmlc(vvirt.XmlStringRoot(xml[2]))
+            data = editor.DomainData()
+            data['node-name'] = NODE[0]
+            data['node-ip'] = NODE[1]
+            data['power'] = xml[0]
+            data['autostart'] = xml[1]
+            DOMLIST.append((data['name'], data['power'],data['node-name'],data['vcpu'],data['memory'],data['uuid'],"unknown","unknown"))
+            editor.Save("dom")
+    vsql.SqlAddDomain(DOMLIST)
+
+
+def GetNicData(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+
+    return editor.DomainNicShow()
+
+def DomainData(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Xmlc(vvirt.XmlDomainXml(DOM_UUID))
+
+    data = editor.DomainData()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    return data
+
+def DomainDataNC(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    manager = vvirt.Libvirtc(NODE_IP)
+    root = vvirt.XmlStringRoot(manager.DomainOpen(DOM_UUID))
+    editor = vvirt.Xmlc(root)
+
+    data = editor.DomainData()
+    data['node-name'] = NODE_NAME
+    data['node-ip'] = NODE_IP
+
+    return data
+
+############################
+# Storage                  #
+############################
+def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
+    vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])    
+
+def StorageListAll():
+    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    data = []
+    for NODE in NODE_DATAS:
+        try:
+            editor = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
+        xmls = editor.AllStorageXml()
+        for xml in xmls:
+            xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+            get = xmledit.StorageData()
+            get['node'] = NODE[0]
+            get['device'] = "none"
+            get['type'] = "none"
+            data.append(get)
+    vsql.UpdateStorage(data)
+    return data
+
+
+
+def StorageList(NODE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+    xmls = editor.AllStorageXml()
+    data = []
+    for xml in xmls:
+        xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
+        get = xmledit.StorageData()
+        get['node'] = NODE_NAME
+        data.append(get)
+    return data
+
+def StoragepoolXmlDump(NODE_NAME,STORAGE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+    editor = vvirt.Libvirtc(NODE_IP)
+    return editor.StorageXml(STORAGE_NAME)
+
+def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    root = vvirt.XmlFileRoot("storage_dir")
+    editor = vvirt.Xmlc(root)
+    editor.StorageMake(STORAGE_NAME,STORAGE_PATH)
+
+    server = vvirt.Libvirtc(NODE_IP)
+    server.StorageDefine(editor.Dump())
+
+def StorageUndefine(NODE_NAME,STORAGE_NAME):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+<<<<<<< HEAD
+=======
+    server = vvirt.Libvirtc(NODE_IP)
+    server.StorageUndefine(STORAGE_NAME)
+    return [0,"storage","undefine","Success",""]
+>>>>>>> develop
+
+
+#Domain Power
+def DomainStart(DOM_NAME):
+    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+<<<<<<< HEAD
     if DOM_UUID == None:
         return [2,"sql","get","Domain name not found",""]
 
@@ -310,6 +629,9 @@ def StorageUndefine(NODE_NAME,STORAGE_NAME):
 
 
 
+=======
+
+>>>>>>> develop
 #Image
 def ImageList(NODE_NAME,STORAGEP_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -317,6 +639,11 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageList(STORAGEP_NAME)
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> develop
 def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
@@ -340,7 +667,14 @@ def AllImageXml():
     pool = []
     image = []
     for NODE in NODE_DATAS:
+<<<<<<< HEAD
         nodepoint = vvirt.Libvirtc(NODE[1])
+=======
+        try:
+            nodepoint = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
+>>>>>>> develop
         storages = nodepoint.AllStorageXml()
         
         for storage in storages:
@@ -361,8 +695,16 @@ def AllImageXml():
     data = {}
     data['pool'] = pool
     data['image'] = image
+<<<<<<< HEAD
     return data
   
+=======
+
+    return data
+
+
+
+>>>>>>> develop
 def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
@@ -398,7 +740,14 @@ def ImageArchiveListAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     image = []
     for NODE in NODE_DATAS:
+<<<<<<< HEAD
         nodepoint = vvirt.Libvirtc(NODE[1])
+=======
+        try:
+            nodepoint = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
+>>>>>>> develop
         images = nodepoint.AllImageXml("archive")
         for xml in images:
             imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
@@ -409,12 +758,25 @@ def ImageArchiveListAll():
 
 #Node
 def NodeAdd(NODE_NAME,NODE_IP):
+<<<<<<< HEAD
     NODE_MEM = SshInfoMem(NODE_IP)
     NODE_CORE = SshInfocpu(NODE_IP)
     NODE_CPU = SshInfocpuname(NODE_IP)
     NODE_OS = SshOsinfo(NODE_IP)
     NODE_DATAS_NEW = []
     NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE']])
+=======
+    try:
+        NODE_MEM = SshInfoMem(NODE_IP)
+        NODE_CORE = SshInfocpu(NODE_IP)
+        NODE_CPU = SshInfocpuname(NODE_IP)
+        NODE_OS = SshOsinfo(NODE_IP)
+    except Exception as e:
+        return ["error","node","add",str(e)]
+
+    NODE_DATAS_NEW = []
+    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE'],10])
+>>>>>>> develop
     vsql.SqlAddNode(NODE_DATAS_NEW)
 
     print(
@@ -426,6 +788,10 @@ def NodeAdd(NODE_NAME,NODE_IP):
     )
 
     print(NODE_OS)
+<<<<<<< HEAD
+=======
+    return ["success","","","Succes"]
+>>>>>>> develop
 
 #Network
 def NetworkXmlSave(NODE_NAME,NET_UUID):
@@ -443,7 +809,14 @@ def NetworkXmlSave(NODE_NAME,NET_UUID):
 def NetworkXmlSaveAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     for NODE in NODE_DATAS:
+<<<<<<< HEAD
         manager = vvirt.Libvirtc(NODE[1])
+=======
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
+>>>>>>> develop
         if manager.node == None:
             print("cont "+NODE[0])
             continue
@@ -493,7 +866,14 @@ def NetworkListinit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
+<<<<<<< HEAD
         manager = vvirt.Libvirtc(NODE[1])
+=======
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
+>>>>>>> develop
         if manager.node == None:
             print("cont "+NODE[0])
             continue
@@ -567,6 +947,7 @@ def DomainMakeNicBridge(DOM_NAME,SOURCE):
 def DomainMakeImg(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
     vvirt.XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME)
 
+<<<<<<< HEAD
 def DomainDefineStatic(DOM_NAME,NODE_NAME):
     import xml.etree.ElementTree as ET
 
@@ -593,6 +974,29 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
     IMG_DEVICE_NAME = ["vda","vdb","vdc"]
     COUNTER = 0
     storages = root.find('metadata').findall('storage')
+=======
+def DomainDefineStatic(DOM_DIC):
+    NODE_NAME = DOM_DIC['node']
+    DOM_NAME = DOM_DIC['name']
+    NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
+    NODE_DATA = vsql.SqlGetData("NODE_NAME","NODE_DATA",NODE_NAME)
+
+    editor = vvirt.Xmlc(vvirt.XmlFileRoot("dom_base"))
+
+    editor.DomainEmulator(NODE_DATA[5])
+    editor.DomainBaseEdit(DOM_DIC['name'],DOM_DIC['memory'],DOM_DIC['cpu'],"auto","pass")
+    editor.DomainImageMeta(DOM_DIC['storage'],DOM_DIC['archive'])
+    print(DOM_DIC['nic'])
+
+    for network in DOM_DIC['nic']:
+        editor.DomainNetworkAdd(network[1])
+        print(network[1])
+
+    IMG_DEVICE_NAME = ["vda","vdb","vdc"]
+    COUNTER = 0
+    storages = editor.xml.find('metadata').findall('storage')
+
+>>>>>>> develop
     for storage in storages:
         IMG_NAME = IMG_DEVICE_NAME[COUNTER]
         COUNTER = COUNTER + 1
@@ -602,6 +1006,7 @@ def DomainDefineStatic(DOM_NAME,NODE_NAME):
             if data['name'] == STORAGE_NAME:
                 STORAGE_PATH = data['path']
             
+<<<<<<< HEAD
         
         ARCHIVE_NAME = storage.get('archive')
         ARCHIVE_PATH = "/kvm/archive/"+ARCHIVE_NAME
@@ -655,12 +1060,67 @@ def DomSelinuxDisable(DOM_UUID):
 
 
 def DomNicEdit(DOM_UUID,NOW_MAC,NEW_NIC):
+=======
+
+        ARCHIVE_NAME = storage.get('archive')
+        ARCHIVE_PATH = "/kvm/archive/"+ARCHIVE_NAME
+
+        IMG_PATH = STORAGE_PATH +"/"+ DOM_NAME + "_" + IMG_NAME + '.img'
+
+
+        editor.DomainImageSet(IMG_PATH)
+        vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
+
+    conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
+    conn.defineXML(editor.Dump())
+
+
+
+
+
+############################
+# Domain-Edit              #
+############################
+def DomNameEdit(DOM_UUID,NEW_NAME):
+>>>>>>> develop
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.Libvirtc(NODE_IP)
     editor.DomainOpen(DOM_UUID)
+<<<<<<< HEAD
     editor.DomainNicEdit(NOW_MAC,NEW_NIC)
+=======
+    editor.DomainNameEdit(NEW_NAME)
+    return editor.DomainXmlUpdate()
+
+def DomSelinux(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+
+    return editor.ShowSelinux()
+
+def DomSelinuxDisable(DOM_UUID):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+
+    editor.DeleteSelinux()
+    return editor.DomainXmlUpdate()
+
+def DomainEditNicNetwork(DOM_UUID,NOW_MAC,NEW_NIC):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainEditNicNetwork(NOW_MAC,NEW_NIC)
+>>>>>>> develop
     DomainXmlSave(NODE_NAME,DOM_UUID)
 
 def DomCdromExit(DOM_UUID,TARGET):
@@ -679,10 +1139,40 @@ def DomCdromEdit(DOM_UUID,TARGET,ISO_PATH):
     editor.DomainOpen(DOM_UUID)
     editor.DomainCdromEdit(TARGET,ISO_PATH)
 
+<<<<<<< HEAD
 #SSH
 def SshInfoMem(NODE_IP):
     cmd = ["ssh" , NODE_IP, "cat /proc/meminfo |grep MemTotal"]
     mem = subprocess.check_output(cmd)
+=======
+def DomainEditMemory(DOM_UUID,NEW_MEMORY):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainEditMemory(NEW_MEMORY)
+    return editor.DomainXmlUpdate()
+
+def DomainEditCpu(DOM_UUID,NEW_CPU):
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.Libvirtc(NODE_IP)
+    editor.DomainOpen(DOM_UUID)
+    editor.DomainEditCpu(NEW_CPU)
+    return editor.DomainXmlUpdate()
+
+############################
+# SSH                      #
+############################
+def SshInfoMem(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "cat /proc/meminfo |grep MemTotal"]
+    try:
+        mem = subprocess.check_output(cmd)
+    except Exception as e:
+        raise Exception(e)
+>>>>>>> develop
     words = float(str(mem).split()[1])
     memory = words/1024000
     return memory
@@ -714,6 +1204,38 @@ def SshOsinfo(NODE_IP):
             result[data.split("=")[0]] = data.split("=")[1].strip("\"")
     return result
 
+<<<<<<< HEAD
+=======
+def SshScript(NODE_IP,SCRIPT):
+    with open(SPATH + "/script/" + SCRIPT) as f:
+        s = f.read().splitlines()
+        send = ""
+        for a in s:
+            if not a == "":
+                send = send +  a + ";"
+        
+    cmd = ["ssh" , NODE_IP, send]
+    get = subprocess.check_output(cmd)
+    print(get.decode("UTF-8"))
+    
+        
+def SshQemuCreate(NODE_IP,PATH,SIZE):
+    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    get = subprocess.check_output(cmd)
+    if get.decode("UTF-8").splitlines()[0] == "1":
+        cmd = ["ssh" , NODE_IP, "qemu-img create " ,PATH, SIZE+"G"]
+        try:
+            create = subprocess.check_output(cmd)
+        except Exception as e:
+            return ["error","img","create","fail", str(e)]
+        if create.decode("UTF-8").splitlines()[0].split(" ")[0] == "Formatting":
+            return ["success","img","create","Success",""]
+        else:
+            return ["error","img","create","fail",create.decode("UTF-8")]
+    else:
+        return ["skip","img","create","allready",""]
+    
+>>>>>>> develop
 
 
 

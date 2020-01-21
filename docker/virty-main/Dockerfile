@@ -10,12 +10,18 @@ WORKDIR /root/virty/main
 
 RUN dnf update -y
 RUN dnf upgrade -y
+RUN rm -rf /var/lib/rpm/__db.001 /var/lib/rpm/__db.002 /var/lib/rpm/__db.003
 RUN dnf install -y python36 python3-libs python36-devel python3-pip
 RUN dnf install -y make gcc openssh-clients openssh-server
 RUN dnf install -y libvirt-client libvirt-devel
 RUN dnf clean all
 RUN pip3 install --upgrade pip
+<<<<<<< HEAD
 RUN pip3 install flask Flask-JWT uwsgi libvirt-python jsonify ansible pings
+=======
+RUN pip3 install flask Flask-JWT uwsgi libvirt-python jsonify ansible flask_login
+RUN pip3 install pings bcrypt
+>>>>>>> develop
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
 
