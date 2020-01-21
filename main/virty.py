@@ -298,7 +298,10 @@ def StorageListAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
-        editor = vvirt.Libvirtc(NODE[1])
+        try:
+            editor = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
         xmls = editor.AllStorageXml()
         for xml in xmls:
             xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
@@ -381,7 +384,10 @@ def AllImageXml():
     pool = []
     image = []
     for NODE in NODE_DATAS:
-        nodepoint = vvirt.Libvirtc(NODE[1])
+        try:
+            nodepoint = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
         storages = nodepoint.AllStorageXml()
         
         for storage in storages:
@@ -442,7 +448,10 @@ def ImageArchiveListAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     image = []
     for NODE in NODE_DATAS:
-        nodepoint = vvirt.Libvirtc(NODE[1])
+        try:
+            nodepoint = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
         images = nodepoint.AllImageXml("archive")
         for xml in images:
             imageedit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
@@ -453,10 +462,14 @@ def ImageArchiveListAll():
 
 #Node
 def NodeAdd(NODE_NAME,NODE_IP):
-    NODE_MEM = SshInfoMem(NODE_IP)
-    NODE_CORE = SshInfocpu(NODE_IP)
-    NODE_CPU = SshInfocpuname(NODE_IP)
-    NODE_OS = SshOsinfo(NODE_IP)
+    try:
+        NODE_MEM = SshInfoMem(NODE_IP)
+        NODE_CORE = SshInfocpu(NODE_IP)
+        NODE_CPU = SshInfocpuname(NODE_IP)
+        NODE_OS = SshOsinfo(NODE_IP)
+    except Exception as e:
+        return ["error","node","add",str(e)]
+
     NODE_DATAS_NEW = []
     NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE'],10])
     vsql.SqlAddNode(NODE_DATAS_NEW)
@@ -470,6 +483,7 @@ def NodeAdd(NODE_NAME,NODE_IP):
     )
 
     print(NODE_OS)
+    return ["success","","","Succes"]
 
 #Network
 def NetworkXmlSave(NODE_NAME,NET_UUID):
@@ -487,7 +501,10 @@ def NetworkXmlSave(NODE_NAME,NET_UUID):
 def NetworkXmlSaveAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     for NODE in NODE_DATAS:
-        manager = vvirt.Libvirtc(NODE[1])
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
         if manager.node == None:
             print("cont "+NODE[0])
             continue
@@ -537,7 +554,10 @@ def NetworkListinit():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
     data = []
     for NODE in NODE_DATAS:
-        manager = vvirt.Libvirtc(NODE[1])
+        try:
+            manager = vvirt.Libvirtc(NODE[1])
+        except:
+            continue
         if manager.node == None:
             print("cont "+NODE[0])
             continue
@@ -737,7 +757,10 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
 ############################
 def SshInfoMem(NODE_IP):
     cmd = ["ssh" , NODE_IP, "cat /proc/meminfo |grep MemTotal"]
-    mem = subprocess.check_output(cmd)
+    try:
+        mem = subprocess.check_output(cmd)
+    except Exception as e:
+        raise Exception(e)
     words = float(str(mem).split()[1])
     memory = words/1024000
     return memory
@@ -769,6 +792,35 @@ def SshOsinfo(NODE_IP):
             result[data.split("=")[0]] = data.split("=")[1].strip("\"")
     return result
 
+def SshScript(NODE_IP,SCRIPT):
+    with open(SPATH + "/script/" + SCRIPT) as f:
+        s = f.read().splitlines()
+        send = ""
+        for a in s:
+            if not a == "":
+                send = send +  a + ";"
+        
+    cmd = ["ssh" , NODE_IP, send]
+    get = subprocess.check_output(cmd)
+    print(get.decode("UTF-8"))
+    
+        
+def SshQemuCreate(NODE_IP,PATH,SIZE):
+    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    get = subprocess.check_output(cmd)
+    if get.decode("UTF-8").splitlines()[0] == "1":
+        cmd = ["ssh" , NODE_IP, "qemu-img create " ,PATH, SIZE+"G"]
+        try:
+            create = subprocess.check_output(cmd)
+        except Exception as e:
+            return ["error","img","create","fail", str(e)]
+        if create.decode("UTF-8").splitlines()[0].split(" ")[0] == "Formatting":
+            return ["success","img","create","Success",""]
+        else:
+            return ["error","img","create","fail",create.decode("UTF-8")]
+    else:
+        return ["skip","img","create","allready",""]
+    
 
 
 

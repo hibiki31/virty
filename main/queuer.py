@@ -50,8 +50,7 @@ elif que[3] == "network" and que[4] == "2l-define":
     result = ["success","","","Succes"]
 
 elif que[3] == "node" and que[4] == "add":
-    virty.NodeAdd(POST['name'],POST['user'] +'@'+ POST['ip'])
-    result = ["success","","","Succes"]
+    result = virty.NodeAdd(POST['name'],POST['user'] +'@'+ POST['ip'])
 
 elif que[3] == "storage" and que[4] == "add":
     virty.StorageMake(POST['node-list'],POST['name'],POST['path'])

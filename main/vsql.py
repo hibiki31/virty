@@ -1,5 +1,9 @@
 import sqlite3, vansible, os
 
+from flask_login import UserMixin
+
+
+
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
@@ -331,7 +335,8 @@ def SqlQueuget(QUE_STATUS):
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
 	sql = 'select * from kvm_que where que_status ="'+QUE_STATUS+'"'
-	return cur.execute(sql).fetchall()
+	data = cur.execute(sql).fetchall()
+	return data
 
 def QueueUpdate(QUE_ID,QUE_STATUS,QUE_MESG):
 	con = sqlite3.connect(SQLFILE)
@@ -350,6 +355,37 @@ def SqlDeleteAll(TABLE_NAME):
 
 def QueueUpdateTime(QUE_ID,QUE_TIME):
 	SqlCommit("UPDATE kvm_que SET run=? WHERE que_id=?",[(QUE_TIME,QUE_ID)])
+
+
+
+############################
+# USER                     #
+############################
+class User(UserMixin):
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    def __str__(self):
+        data = {}
+        data['name'] = self.username
+        data['id'] = self.id
+        return str(self.id)
+
+    def get_id(self):
+        return self.id
+
+def UserGet(username):
+	user = SqlFetchall("select * from kvm_user where userid=?",[(username)])
+	if len(user) == 0:
+		return None
+	elif len(user) >1:
+		return None
+	else:
+		user = user[0]
+		return User(user[0],user[1],user[2])
+
 
 ############################
 # RAW                      #
@@ -378,6 +414,8 @@ def SqlInit():
 	con = sqlite3.connect(SQLFILE)
 	cur = con.cursor()
 	cur.execute('create table if not exists kvm_node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, primary key (name))')
+	cur.execute('create table if not exists kvm_user (userid, name, password, primary key (userid))')
+	cur.execute('create table if not exists kvm_group (groupid, name, owner, primary key (groupid))')
 	cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
 	cur.execute('create table if not exists kvm_network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp,primary key (network_name))')
 	cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_uuid, storage_capacity, storage_available,storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
@@ -385,6 +423,8 @@ def SqlInit():
 	cur.execute('create table if not exists kvm_domainpool (domainpool_name, domainpool_node_name, domainpool_setram)')
 	cur.execute('create table if not exists kvm_archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
 	cur.execute('create table if not exists kvm_img (img_name, img_archive_name, img_domain_name,img_node_name,primary key (img_name,img_domain_name))')
+	cur.execute("insert into kvm_group VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
+	cur.execute("insert into kvm_user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
 	con.commit()
 	cur.close()
 	con.close()

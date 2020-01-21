@@ -1,7 +1,21 @@
-var minCount = 1;
-var maxCount = 6;
+function Jsonget(URL) {
+  return $.ajax({
+    type: 'GET',
+    timeout: 10000,
+    url: URL,
+    dataType: 'json',
+    contentType: "application/json",
+  }).fail(function (XMLHttpRequest) {
+    if (XMLHttpRequest.status == 401) {
+      location.href = '/login';
+    }
+  }).always(function (e) {
+  });
+}
 
 $(function () {
+  var minCount = 1;
+  var maxCount = 6;
   $('#demo-plus').on('click', function () {
     var inputCount = $('#demo-area .unit').length;
     if (inputCount < maxCount) {
@@ -16,9 +30,7 @@ $(function () {
       $(this).parents('.unit').remove();
     }
   });
-});
 
-$(function () {
   $('#image-plus').on('click', function () {
     var inputCount = $('#image-list .unit').length;
     if (inputCount < maxCount) {
@@ -35,54 +47,54 @@ $(function () {
   });
 });
 
-
-
+// Node list
 $(function () {
-  $.getJSON('/api/sql/kvm_node.json', function (data) {
-    for (var domain in data.ResultSet) {
-      $('#node-list').append('<option value="' + data.ResultSet[domain][0] + '">' + data.ResultSet[domain][0] + '</option>');
+  Jsonget('/api/sql/kvm_node.json').done(function (result) {
+    data = result.ResultSet
+    for (var i in data) {
+      $('#node-list').append('<option value="' + data[i][0] + '">' + data[i][0] + '</option>');
     }
-  });
+  })
 });
 
+// Define Option
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
   $('#network-list').children().remove();
-  $.getJSON('/api/json/network/?node=' + node, function (data) {
-    for (var domain in data.ResultSet[1]) {
-      $('#network-list').append('<option value="' + data.ResultSet[1][domain]['name'] + '">' + data.ResultSet[1][domain]['name']+ '</option>');
+  Jsonget('/api/json/network/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data[1]) {
+      $('#network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
     }
-  });
-  $('#image-json').children().remove();
-  $.getJSON('/image/list', function (data) {
-    for (var domain in data.ResultSet) {
-      if (data.ResultSet[domain][2] == node) {
-        $('#image-json').append('<option value="' + data.ResultSet[domain][1] + '">' + data.ResultSet[domain][0] + ' src ' + data.ResultSet[domain][1] + '</option>');
-      }
-    }
-  });
+  })
+
   $('#archive-list').children().remove();
-  $.getJSON('/api/json/archive/?node=' + node, function (data) {
-    for (var domain in data.ResultSet) {
-
-      $('#archive-list').append('<option value="' + data.ResultSet[domain]['name'] + '">' + data.ResultSet[domain]['name'] + '</option>');
-
+  Jsonget('/api/json/archive/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data) {
+      $('#archive-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
     }
-  });
+  })
+
   $('#storage-list').children().remove();
-  $.getJSON('/api/json/storage/?node=' + node, function (data) {
-    for (var domain in data.ResultSet) {
-
-      $('#storage-list').append('<option value="' + data.ResultSet[domain]['name'] + '">' + data.ResultSet[domain]['name'] + '</option>');
-
+  Jsonget('/api/json/storage/?node=' + node).done(function (result) {
+    data = result.ResultSet;
+    for (var i in data) {
+      $('#storage-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
     }
-  });
+  })
 });
 
 
 
+
+// Queue
 $(function () {
+  Jsonget('/ui/get/info').done(function (result) {
+    $('.user_id').text(result.user_id);
+  })
+
   setInterval(function () {
     $.getJSON('/api/json/stack-que', function (data) {
       let p = 0;
@@ -106,16 +118,10 @@ $(function () {
         $('#que-badge').show();
       }
     });
-  }, 3000);
+  }, 500);
 });
 
-
+// Table sort
 $(document).ready(function () {
   $('[id$=table]').tablesorter();
 });
-
-$.ajaxSetup({
-  headers: {
-    'Authorization': 'JWT' + $.cookie('access_token')
-  }
-})

@@ -41,7 +41,7 @@ class Libvirtc():
         if pool == None:
             print('Failed to locate any StoragePool objects.', file=sys.stderr)
             exit(1)
-
+        pool.refresh()
         info = pool.info()
 
         print('Pool: '+pool.name())
@@ -63,6 +63,7 @@ class Libvirtc():
             print('Failed to locate any StoragePool objects.', file=sys.stderr)
 
         for pool in pools:
+            pool.refresh()
             info = pool.info()
             print('Pool: '+pool.name())
             print('  UUID: '+pool.UUIDString())
@@ -81,6 +82,7 @@ class Libvirtc():
             print('Failed to locate any StoragePool objects.', file=sys.stderr)
         data = []
         for pool in pools:
+            pool.refresh()
             data.append(pool.XMLDesc())
         return data
     

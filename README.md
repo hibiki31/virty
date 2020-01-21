@@ -1,13 +1,13 @@
 # Virty
 
+## Overview
+
+1. This system is vulnerable, use only locally
+2. Authentication function is prototype
+
 ## Install
 
 ### Docker
-
-Package
-
-- git
-- docker-compose
 
 Git clone
 
@@ -27,11 +27,19 @@ DB Initialization
 
 ```
 http://IP/setup
+user=admin,password=admin
 ```
 
 ## Start up
 
 ### Add node
+
+The following packages are installed on the host
+
+```
+libvirt *and start daemon
+qemu-img
+```
 
 Container login & SSH to node with Use public key authentication to allow SSH without input
 
@@ -51,6 +59,6 @@ http://IP/node/add
 Each node must have archive and iso. The directory must exist.
 
 ```
-http://192.168.203.88/node/add
+http://IP/storage/add
 ```
 
