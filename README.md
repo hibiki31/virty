@@ -24,20 +24,12 @@ make up
 ```
 
 DB Initialization
-<<<<<<< HEAD
-
-```
-http://IP/setup
-```
 
 ## Start up
 
 ### Add node
 
 Container login & SSH to node with Use public key authentication to allow SSH without input
-
-```
-=======
 
 ```
 http://IP/setup
@@ -58,7 +50,6 @@ qemu-img
 Container login & SSH to node with Use public key authentication to allow SSH without input
 
 ```
->>>>>>> develop
 cd virty
 make login
 ```
@@ -74,10 +65,6 @@ http://IP/node/add
 Each node must have archive and iso. The directory must exist.
 
 ```
-<<<<<<< HEAD
-http://192.168.203.88/node/add
-=======
 http://IP/storage/add
->>>>>>> develop
 ```
 

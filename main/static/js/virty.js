@@ -14,11 +14,8 @@ function Jsonget(URL) {
 }
 
 $(function () {
-<<<<<<< HEAD
-=======
   var minCount = 1;
   var maxCount = 6;
->>>>>>> develop
   $('#demo-plus').on('click', function () {
     var inputCount = $('#demo-area .unit').length;
     if (inputCount < maxCount) {
@@ -33,13 +30,7 @@ $(function () {
       $(this).parents('.unit').remove();
     }
   });
-<<<<<<< HEAD
-});
 
-$(function () {
-=======
-
->>>>>>> develop
   $('#image-plus').on('click', function () {
     var inputCount = $('#image-list .unit').length;
     if (inputCount < maxCount) {
@@ -56,18 +47,6 @@ $(function () {
   });
 });
 
-<<<<<<< HEAD
-
-
-$(function () {
-  $.getJSON('/api/sql/kvm_node.json', function (data) {
-    for (var domain in data.ResultSet) {
-      $('#node-list').append('<option value="' + data.ResultSet[domain][0] + '">' + data.ResultSet[domain][0] + '</option>');
-    }
-  });
-});
-
-=======
 // Node list
 $(function () {
   Jsonget('/api/sql/kvm_node.json').done(function (result) {
@@ -79,45 +58,10 @@ $(function () {
 });
 
 // Define Option
->>>>>>> develop
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
   $('#network-list').children().remove();
-<<<<<<< HEAD
-  $.getJSON('/api/json/network/?node=' + node, function (data) {
-    for (var domain in data.ResultSet[0]) {
-      $('#network-list').append('<option value="' + data.ResultSet[0][domain] + '">Interface ' + data.ResultSet[0][domain] + '</option>');
-    }
-    for (var domain in data.ResultSet[1]) {
-      $('#network-list').append('<option value="' + data.ResultSet[1][domain]['bridge'] + '">Network ' + data.ResultSet[1][domain]['name'] + ' @' + data.ResultSet[1][domain]['bridge'] + '</option>');
-    }
-  });
-  $('#image-json').children().remove();
-  $.getJSON('/image/list', function (data) {
-    for (var domain in data.ResultSet) {
-      if (data.ResultSet[domain][2] == node) {
-        $('#image-json').append('<option value="' + data.ResultSet[domain][1] + '">' + data.ResultSet[domain][0] + ' src ' + data.ResultSet[domain][1] + '</option>');
-      }
-    }
-  });
-  $('#archive-list').children().remove();
-  $.getJSON('/api/json/archive/?node=' + node, function (data) {
-    for (var domain in data.ResultSet) {
-
-      $('#archive-list').append('<option value="' + data.ResultSet[domain]['name'] + '">' + data.ResultSet[domain]['name'] + '</option>');
-
-    }
-  });
-  $('#storage-list').children().remove();
-  $.getJSON('/api/json/storage/?node=' + node, function (data) {
-    for (var domain in data.ResultSet) {
-
-      $('#storage-list').append('<option value="' + data.ResultSet[domain]['name'] + '">' + data.ResultSet[domain]['name'] + '</option>');
-
-    }
-  });
-=======
   Jsonget('/api/json/network/?node=' + node).done(function (result) {
     data = result.ResultSet;
     for (var i in data[1]) {
@@ -140,14 +84,10 @@ $('#node-list').on('change', function () {
       $('#storage-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
     }
   })
->>>>>>> develop
 });
 
 
 
-<<<<<<< HEAD
-$(function () {
-=======
 
 // Queue
 $(function () {
@@ -155,7 +95,6 @@ $(function () {
     $('.user_id').text(result.user_id);
   })
 
->>>>>>> develop
   setInterval(function () {
     $.getJSON('/api/json/stack-que', function (data) {
       let p = 0;
@@ -182,20 +121,7 @@ $(function () {
   }, 500);
 });
 
-<<<<<<< HEAD
-
-$(document).ready(function () {
-  $('[id$=table]').tablesorter();
-});
-
-$.ajaxSetup({
-  headers: {
-    'Authorization': 'JWT' + $.cookie('access_token')
-  }
-})
-=======
 // Table sort
 $(document).ready(function () {
   $('[id$=table]').tablesorter();
 });
->>>>>>> develop

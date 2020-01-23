@@ -16,12 +16,8 @@ RUN dnf install -y make gcc openssh-clients openssh-server
 RUN dnf install -y libvirt-client libvirt-devel
 RUN dnf clean all
 RUN pip3 install --upgrade pip
-<<<<<<< HEAD
-RUN pip3 install flask Flask-JWT uwsgi libvirt-python jsonify ansible pings
-=======
 RUN pip3 install flask Flask-JWT uwsgi libvirt-python jsonify ansible flask_login
 RUN pip3 install pings bcrypt
->>>>>>> develop
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
 

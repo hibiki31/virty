@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "Layout.html" %}
 {% block content %}
 <!-- page content -->
 <div class="right_col" role="main">
@@ -37,7 +37,7 @@
                     <option value={{interface}}>Interface Bridge @{{interface}}</option>
                     {% endfor %}
                     {% for network in NET[1] %}
-                    <option value={{network['bridge']}}>Network {{network['name']}} @{{network['bridge']}}</option>
+                    <option value={{network['name']}}>{{network['name']}}</option>
                     {% endfor %}
                   </select>
                   <input type="hidden" name="uuid" value="{{DOM[0]}}">

@@ -48,10 +48,7 @@
                                         <th class="column-title">Method </th>
                                         <th class="column-title">Json </th>
                                         <th class="column-title">Mesg </th>
-<<<<<<< HEAD
-=======
                                         <th class="column-title">Run </th>
->>>>>>> develop
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -66,14 +63,6 @@
                                         </td>
                                         <td class=" ">{{dom[0]}}</td>
                                         <td class=" ">{{dom[1]}}</td>
-<<<<<<< HEAD
-                                        {% if dom[2] == "init" %}
-                                        <td class=" "><i class="fa fa-square dark"></i> Init</td>
-                                        {% elif dom[2] == "finish" %}
-                                        <td class=" "><i class="fa fa-square green"></i> Finish</td>
-                                        {% elif dom[2] == "skip" %}
-                                        <td class=" "><i class="fa fa-square blue"></i> skip</td>
-=======
                                         {% if dom[2] == "running" %}
                                         <td class=" "><i class="fa fa-square blue"></i> running</td>
                                         {% elif dom[2] == "init" %}
@@ -82,7 +71,6 @@
                                         <td class=" "><i class="fa fa-square green"></i> success</td>
                                         {% elif dom[2] == "skip" %}
                                         <td class=" "><i class="fa fa-square aero"></i> skip</td>
->>>>>>> develop
                                         {% else %}
                                         <td class=" "><i class="fa fa-square red"></i> error</td>
                                         {% endif %}
@@ -90,10 +78,7 @@
                                         <td class=" ">{{dom[4]}}</td>
                                         <td class=" ">{{dom[5]}}</td>
                                         <td class=" ">{{dom[6]}}</td>
-<<<<<<< HEAD
-=======
                                         <td class=" ">{{'%0.1f' % dom[7]|float}} s</td>
->>>>>>> develop
                                         </td>
                                     </tr>
                                     {% endfor %}
