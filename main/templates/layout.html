@@ -11,23 +11,23 @@
     <title>Virty Console | </title>
 
     <!-- Bootstrap -->
-    <link href="/static/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="/static/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <!-- NProgress -->
-    <link href="/static/vendors/nprogress/nprogress.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/nprogress/nprogress.css" rel="stylesheet">
     <!-- iCheck -->
-    <link href="/static/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
 	
     <!-- bootstrap-progressbar -->
-    <link href="/static/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
     <!-- JQVMap -->
-    <link href="/static/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet"/>
+    <link href="/npm/gentelella/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet"/>
     <!-- bootstrap-daterangepicker -->
-    <link href="/static/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+    <link href="/npm/gentelella/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
 
     <!-- Custom Theme Style -->
-    <link href="/static/build/css/custom.min.css" rel="stylesheet">
+    <link href="/npm/gentelella/build/css/custom.min.css" rel="stylesheet">
   </head>
 
   <body class="nav-md">
@@ -48,7 +48,7 @@
               </div>
               <div class="profile_info">
                 <span>Welcome,</span>
-                <h2>Admiral</h2>
+                <h2 class="user_id"></h2>
               </div>
             </div>
             <!-- /menu profile quick info -->
@@ -151,11 +151,11 @@
               <ul class="nav navbar-nav navbar-right">
                 <li class="">
                   <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                    <img src="/static/images/admiral.jpg" alt="">Admiral
+                    <img src="/static/images/admiral.jpg" alt=""><span class="user_id"></span>
                     <span class=" fa fa-angle-down"></span>
                   </a>
                   <ul class="dropdown-menu dropdown-usermenu pull-right">
-                    <li><a href="/">Coming soon</a></li>
+                    <li><a href="/logout">Logout</a></li>
                   </ul>
                 </li>
 
@@ -199,49 +199,47 @@
     </div>
 
     <!-- jQuery -->
-    <script src="/static/vendors/jquery/dist/jquery.min.js"></script>
+    <script src="/npm/gentelella/vendors/jquery/dist/jquery.min.js"></script>
+    <script src="/npm/jquery.cookie/jquery.cookie.js"></script>
+    <script src="/npm/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
     <!-- Bootstrap -->
-    <script src="/static/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/npm/gentelella/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- FastClick -->
-    <script src="/static/vendors/fastclick/lib/fastclick.js"></script>
+    <script src="/npm/gentelella/vendors/fastclick/lib/fastclick.js"></script>
     <!-- NProgress -->
-    <script src="/static/vendors/nprogress/nprogress.js"></script>
+    <script src="/npm/gentelella/vendors/nprogress/nprogress.js"></script>
     <!-- Chart.js -->
-    <script src="/static/vendors/Chart.js/dist/Chart.min.js"></script>
+    <script src="/npm/gentelella/vendors/Chart.js/dist/Chart.min.js"></script>
     <!-- gauge.js -->
-    <script src="/static/vendors/gauge.js/dist/gauge.min.js"></script>
+    <script src="/npm/gentelella/vendors/gauge.js/dist/gauge.min.js"></script>
     <!-- bootstrap-progressbar -->
-    <script src="/static/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+    <script src="/npm/gentelella/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
     <!-- iCheck -->
-    <script src="/static/vendors/iCheck/icheck.min.js"></script>
+    <script src="/npm/gentelella/vendors/iCheck/icheck.min.js"></script>
     <!-- Skycons -->
-    <script src="/static/vendors/skycons/skycons.js"></script>
+    <script src="/npm/gentelella/vendors/skycons/skycons.js"></script>
     <!-- Flot -->
-    <script src="/static/vendors/Flot/jquery.flot.js"></script>
-    <script src="/static/vendors/Flot/jquery.flot.pie.js"></script>
-    <script src="/static/vendors/Flot/jquery.flot.time.js"></script>
-    <script src="/static/vendors/Flot/jquery.flot.stack.js"></script>
-    <script src="/static/vendors/Flot/jquery.flot.resize.js"></script>
+    <script src="/npm/gentelella/vendors/Flot/jquery.flot.js"></script>
+    <script src="/npm/gentelella/vendors/Flot/jquery.flot.pie.js"></script>
+    <script src="/npm/gentelella/vendors/Flot/jquery.flot.time.js"></script>
+    <script src="/npm/gentelella/vendors/Flot/jquery.flot.stack.js"></script>
+    <script src="/npm/gentelella/vendors/Flot/jquery.flot.resize.js"></script>
     <!-- Flot plugins -->
-    <script src="/static/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
-    <script src="/static/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
-    <script src="/static/vendors/flot.curvedlines/curvedLines.js"></script>
+    <script src="/npm/gentelella/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+    <script src="/npm/gentelella/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+    <script src="/npm/gentelella/vendors/flot.curvedlines/curvedLines.js"></script>
     <!-- DateJS -->
-    <script src="/static/vendors/DateJS/build/date.js"></script>
+    <script src="/npm/gentelella/vendors/DateJS/build/date.js"></script>
     <!-- JQVMap -->
-    <script src="/static/vendors/jqvmap/dist/jquery.vmap.js"></script>
-    <script src="/static/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
-    <script src="/static/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+    <script src="/npm/gentelella/vendors/jqvmap/dist/jquery.vmap.js"></script>
+    <script src="/npm/gentelella/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+    <script src="/npm/gentelella/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
     <!-- bootstrap-daterangepicker -->
-    <script src="/static/vendors/moment/min/moment.min.js"></script>
-    <script src="/static/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-
+    <script src="/npm/gentelella/vendors/moment/min/moment.min.js"></script>
+    <script src="/npm/gentelella/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
     <!-- Custom Theme Scripts -->
-    <script src="/static/build/js/custom.min.js"></script>
-  
+    <script src="/npm/gentelella/build/js/custom.min.js"></script>
     <!-- Virty Scripts -->
     <script src="/static/js/virty.js"></script>
-    <!-- tablesorter -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
   </body>
 </html>
