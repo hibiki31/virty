@@ -152,6 +152,15 @@ def node_list(GET_DATA):
         html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())
         return html
 
+#GETでやろう
+@app.route('/ui/edit/image/<NODE>/<POOL>/<FILE>')
+@login_required
+def ui_edit(NODE,POOL,FILE):
+    data = [NODE,POOL,FILE]
+    html = render_template('ImageEdit.html',data=data)
+    return html
+
+
 @app.route('/domain/define')
 @login_required
 def domain_add():

@@ -96,6 +96,9 @@ elif que[3] == "domain" and que[4] == "cpu-edit":
     virty.DomainEditCpu(POST['uuid'],POST['cpu'])
     virty.DomainListInit()
     result = ["success","","","Succes"]
+
+elif que[3] == "image" and que[4] == "resize":
+    result = virty.ImageResize(POST['node'],POST['pool'],POST['file'],POST['size'])
     
 else:
     print("Found unkown Que")

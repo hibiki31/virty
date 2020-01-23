@@ -25,12 +25,6 @@ make up
 
 DB Initialization
 
-## Start up
-
-### Add node
-
-Container login & SSH to node with Use public key authentication to allow SSH without input
-
 ```
 http://IP/setup
 user=admin,password=admin

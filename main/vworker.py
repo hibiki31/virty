@@ -17,11 +17,10 @@ while True:
     POST = ast.literal_eval(que[5])
     print("Found "+que[3]+" "+que[4])
     virty.vsql.QueueUpdate(que[0],"running","")
-    quer = subprocess.Popen(["python3", "/root/virty/main/queuer.py"],stdout=subprocess.PIPE)
+    quer = subprocess.Popen(["python3", "/root/virty/main/queuer.py"])
 
     if not quer.wait() == 0:
         virty.vsql.QueueUpdate(que[0],"error","Queue error")
-        #print(quer.communicate()[0])
     
     time_end = time()
     time_run = time_end - time_start

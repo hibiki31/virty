@@ -313,11 +313,6 @@ def StorageListAll():
     vsql.UpdateStorage(data)
     return data
 
-############################
-# Storage                  #
-############################
-def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH):
-    vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])    
 
 
 def StorageList(NODE_NAME):
@@ -364,12 +359,7 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageList(STORAGEP_NAME)
 
-    manager = vvirt.Libvirtc(NODE_IP)
-    manager.DomainOpen(DOM_UUID)
-    result = manager.DomainPoweron()
 
-    manager.DomainOpen(DOM_UUID)
-    data = manager.DomainInfo()
 
 def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -379,12 +369,11 @@ def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
 
 def ImageListXml(NODE_NAME,STORAGEP_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
-
     editor = vvirt.Libvirtc(NODE_IP)
     xmls = editor.AllImageXml(STORAGEP_NAME)
     data = []
     for xml in xmls:
-        xmledit = vvirt.Xmlc(xml)
+        xmledit = vvirt.Xmlc(vvirt.XmlStringRoot(xml))
         data.append(xmledit.ImageData())
     return data
 
@@ -429,11 +418,6 @@ def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     editor = vvirt.Libvirtc(NODE_IP)
     editor.ImageDelete(STORAGEP_NAME,IMG_NAME)    
 
-    manager.DomainOpen(DOM_UUID)
-    data = manager.DomainInfo()
-    
-    data['node-name'] = NODE_NAME
-    data['node-ip'] = NODE_IP
 
 def ImageIsoList(NODE_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -585,7 +569,6 @@ def NetworkListinit():
             data.append(temp)
     vsql.NetworkListUpdate(data)
 
-    return editor.DomainNicShow()
 
     
 
@@ -599,9 +582,6 @@ def NetworkUndefine(NET_UUID):
 
 
 
-def DomainDataNC(DOM_UUID):
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
 
 def InterfaceList(NODE_NAME):
@@ -839,8 +819,29 @@ def SshQemuCreate(NODE_IP,PATH,SIZE):
             return ["error","img","create","fail",create.decode("UTF-8")]
     else:
         return ["skip","img","create","allready",""]
-    
 
+def SshQemuResize(NODE_IP,PATH,SIZE):
+    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    get = subprocess.check_output(cmd)
+    if get.decode("UTF-8").splitlines()[0] == "0":
+        cmd = ["ssh" , NODE_IP, "qemu-img resize " ,PATH, SIZE+"G"]
+        try:
+            create = subprocess.check_output(cmd)
+        except Exception as e:
+            return ["error","img","resize","fail", str(e)]
+        if create.decode("UTF-8").splitlines()[0].split(" ")[0] == "Formatting" or True:
+            return ["success","img","resize","Success",""]
+        else:
+            return ["error","img","resize","fail",create.decode("UTF-8")]
+    else:
+        return ["skip","img","resize","image not found",""]
+
+def ImageResize(NODE,POOL,FILE,SIZE):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE)
+    imagelist = ImageListXml(NODE,POOL)
+    for image in imagelist:
+        if image['name'] == FILE:
+            return SshQemuResize(NODE_IP,image['path'],SIZE)
 
 
 if __name__ == "__main__":

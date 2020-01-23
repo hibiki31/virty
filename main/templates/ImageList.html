@@ -40,7 +40,7 @@
                                         <th class="column-title">Allocation <i class="fa fa-unsorted"></i></th>
                                         <th class="column-title">Physical <i class="fa fa-unsorted"></i></th>
                                         <th class="column-title">Path <i class="fa fa-unsorted"></i></th>
-                                        <th class="column-title">Delete </th>
+                                        <th class="column-title">Edit </th>
                                         </th>
                                         <th class="bulk-actions" colspan="7">
                                         <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
@@ -61,7 +61,7 @@
                                         <td class=" ">{{image['data']['allocation']}}{{image['data']['allocation-unit']}}</td>
                                         <td class=" ">{{image['data']['physical']}}{{image['data']['physical-unit']}}</td>
                                         <td class=" ">{{image['data']['path']}}</td>
-                                        <td class=" "><a href="/image/delete/{{image['node']}}/{{image['pool']}}/{{image['data']['name']}}">Delete</a></td>
+                                        <td class=" "><a href="/ui/edit/image/{{image['node']}}/{{image['pool']}}/{{image['data']['name']}}">Edit</a></td>
                                         </td>
                                     </tr>
                                     

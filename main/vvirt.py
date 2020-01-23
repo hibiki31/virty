@@ -220,18 +220,6 @@ class Libvirtc():
         if self.dompower == 5:
             return ["error","domain","shutdown","Already shutdown domain",""]
         try:
-            self.con.destroy()
-        except:
-            return ["skip","domain","stop","Libvirt error",""]
-        else:
-            self.dompower = self.con.state()[0]
-            return ["success","domain","stop","Success destroy",""]
-
-    def DomainShutdown(self):
-        if self.dompower == 5:
-            return ["error","domain","shutdown","Already shutdown domain",""]
->>>>>>> develop
-        try:
             self.con.shutdown()
             self.dompower = self.con.state()[0]
         except:
@@ -422,9 +410,6 @@ class Libvirtc():
                 self.domxml.remove(seclabel)
 
 
-class Xmlc():
-    def __init__(self,XML_ROOT):
-        self.xml = XML_ROOT
 
 class Xmlc():
     def __init__(self,XML_ROOT):
