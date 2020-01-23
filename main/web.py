@@ -337,5 +337,5 @@ def api_que(OBJECT,METHOD):
     return redirect(request.referrer, code=302)
 
 if __name__ == "__main__":
-    virty.WorkerUp()    
+    virty.WorkerUp()
     app.run(debug=True, host='0.0.0.0', port=80)

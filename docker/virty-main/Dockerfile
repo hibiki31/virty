@@ -18,6 +18,7 @@ RUN dnf clean all
 RUN pip3 install --upgrade pip
 RUN pip3 install flask Flask-JWT uwsgi libvirt-python jsonify ansible flask_login
 RUN pip3 install pings bcrypt
+RUN pip3 install Werkzeug
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
 
