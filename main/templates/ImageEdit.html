@@ -32,15 +32,7 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Image Size <span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <select id="domain-list" name="size" class="form-control" required="">
-                    <option value=16>16G</option>
-                    <option value=32>32G</option>
-                    <option value=64>64G</option>
-                    <option value=128>128G</option>
-                    <option value=256>256G</option>
-                    <option value=512>512G</option>
-                    <option value=1024>1024G</option>
-                  </select>
+                  <input type="number" name="size" value="32">
                   <input type="hidden" name="node" value="{{data[0]}}">
                   <input type="hidden" name="pool" value="{{data[1]}}">
                   <input type="hidden" name="file" value="{{data[2]}}">
