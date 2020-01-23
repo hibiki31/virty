@@ -334,7 +334,7 @@ def api_que(OBJECT,METHOD):
 
     virty.Queuing(OBJECT,METHOD,task)
     
-    return redirect("/", code=302)
+    return redirect(request.referrer, code=302)
 
 if __name__ == "__main__":
     virty.WorkerUp()    

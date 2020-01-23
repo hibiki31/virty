@@ -87,7 +87,7 @@ class Libvirtc():
         return data
     
     def StorageXml(self,STORAGE_NAME):
-        return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
+        return XmlStringRoot(self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc())
 
     def StorageDefine(self,XML_DUMP):
         try:

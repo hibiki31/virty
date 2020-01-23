@@ -636,6 +636,8 @@ def DomainDefineStatic(DOM_DIC):
     NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
     NODE_DATA = vsql.SqlGetData("NODE_NAME","NODE_DATA",NODE_NAME)
 
+    node = vvirt.Libvirtc(NODE_IP)
+
     editor = vvirt.Xmlc(vvirt.XmlFileRoot("dom_base"))
 
     editor.DomainEmulator(NODE_DATA[5])
@@ -655,17 +657,13 @@ def DomainDefineStatic(DOM_DIC):
         IMG_NAME = IMG_DEVICE_NAME[COUNTER]
         COUNTER = COUNTER + 1
         STORAGE_NAME = storage.get('storage')
-
-        for data in StorageList(NODE_NAME):
-            if data['name'] == STORAGE_NAME:
-                STORAGE_PATH = data['path']
-            
-
         ARCHIVE_NAME = storage.get('archive')
-        ARCHIVE_PATH = "/kvm/archive/"+ARCHIVE_NAME
 
-        IMG_PATH = STORAGE_PATH +"/"+ DOM_NAME + "_" + IMG_NAME + '.img'
-
+        ARCHIVE_POOL_DATA = vvirt.Xmlc(node.StorageXml("archive")).StorageData()
+        STORAGE_POOL_DATA = vvirt.Xmlc(node.StorageXml(STORAGE_NAME)).StorageData()
+        
+        ARCHIVE_PATH = ARCHIVE_POOL_DATA['path'] + "/" + ARCHIVE_NAME
+        IMG_PATH = STORAGE_POOL_DATA['path'] +"/"+ DOM_NAME + "_" + IMG_NAME + '.img'
 
         editor.DomainImageSet(IMG_PATH)
         vansible.AnsibleFilecpInnode(NODE_IP,ARCHIVE_PATH,IMG_PATH)
