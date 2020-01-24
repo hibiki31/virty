@@ -32,7 +32,6 @@ elif que[3] == "domain" and que[4] == "selinux":
 elif que[3] == "domain" and que[4] == "list-reload":
     virty.DomainListInit()
     result = ["success","","","Succes"]
-    sleep(10)
     print("List-reload")
 
 elif que[3] == "domain" and que[4] == "undefine":
@@ -76,7 +75,7 @@ elif que[3] == "network" and que[4] == "undefine":
 
 elif que[3] == "network" and que[4] == "internal-define":
     virty.NetworkInternalDefine(POST['node'],POST['net-name'])
-    virty.NetworkListinit()
+    virty.DomainListInit()
     result = ["success","","","Succes"]
 
 elif que[3] == "domain" and que[4] == "memory-edit":
