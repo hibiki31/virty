@@ -48,20 +48,19 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for image in datas['image'] %}
-                                    
+                                    {% for image in images %}
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" ">{{image['node']}}</td>
-                                        <td class=" ">{{image['pool']}}</td>
-                                        <td class=" ">{{image['data']['name']}}</td>
-                                        <td class=" ">{{image['data']['capacity']}}{{image['data']['capacity-unit']}}</td>
-                                        <td class=" ">{{image['data']['allocation']}}{{image['data']['allocation-unit']}}</td>
-                                        <td class=" ">{{image['data']['physical']}}{{image['data']['physical-unit']}}</td>
-                                        <td class=" ">{{image['data']['path']}}</td>
-                                        <td class=" "><a href="/ui/edit/image/{{image['node']}}/{{image['pool']}}/{{image['data']['name']}}">Edit</a></td>
+                                        <td class=" ">{{image[1]}}</td>
+                                        <td class=" ">{{image[2]}}</td>
+                                        <td class=" ">{{image[0]}}</td>
+                                        <td class=" ">{{image[3]}}G</td>
+                                        <td class=" ">{{image[4]}}G</td>
+                                        <td class=" ">{{image[5]}}G</td>
+                                        <td class=" ">{{image[6]}}</td>
+                                        <td class=" "><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Edit</a></td>
                                         </td>
                                     </tr>
                                     
@@ -114,17 +113,16 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for image in datas['pool'] %}
-                                    
+                                    {% for pool in pools %}
                                     <tr class="even pointer">
                                         <td class="a-center ">
                                         <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" ">{{image['node']}}</td>
-                                        <td class=" ">{{image['name']}}</td>
-                                        <td class=" ">{{image['capacity']}}{{image['capacity-unit']}}</td>
-                                        <td class=" ">{{image['available']}}{{image['available-unit']}}</td>
-                                        <td class=" ">{{image['path']}}</td>
+                                        <td class=" ">{{pool[1]}}</td>
+                                        <td class=" ">{{pool[0]}}</td>
+                                        <td class=" ">{{pool[3]}}G</td>
+                                        <td class=" ">{{pool[4]}}G</td>
+                                        <td class=" ">{{pool[7]}}</td>
                                         </td>
                                     </tr>
                                     

@@ -55,20 +55,20 @@
                                         <td class="a-center ">
                                             <input type="checkbox" class="flat" name="table_records">
                                         </td>
-                                        <td class=" ">{{dom['name']}}</td>
-                                        <td class=" ">{{dom['capacity']}}{{dom['capacity-unit']}}</td>
-                                        <td class=" ">{{dom['available']}}{{dom['available-unit']}}</td>
+                                        <td class=" ">{{dom[0]}}</td>
+                                        <td class=" ">{{dom[3]}}G</td>
+                                        <td class=" ">{{dom[4]}}G</td>
                                         <td>
                                             <div class="progress progress_sm" style="width: 98%;">
                                                 <div class="progress-bar bg-green" role="progressbar"
-                                                    data-transitiongoal="{{(dom['capacity']-dom['available']) / dom['capacity']*100}}" aria-valuenow="{{(dom['capacity']-dom['available']) / dom['capacity']*100}}" style="width: 100%;">
+                                                    data-transitiongoal="{{(dom[3]-dom[4]) / dom[3]*100}}" aria-valuenow="{{(dom[3]-dom[4]) / dom[3]*100}}" style="width: 100%;">
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class=" ">{{dom['node']}}</td>
-                                        <td class=" ">{{dom['path']}}</td>
+                                        <td class=" ">{{dom[1]}}</td>
+                                        <td class=" ">{{dom[7]}}</td>
                                         <td class=" last">
-                                            <a href="/storage/{{dom['node']}}/{{dom['name']}}">Delete</a>
+                                            <a href="/storage/{{dom[1]}}/{{dom[0]}}">Delete</a>
                                         </td>
                                         
                                     </tr>
