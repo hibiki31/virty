@@ -86,7 +86,7 @@ class VirtEditor():
     ############################
     def DomainInfo(self):
         editor = XmlEditor("root",self.domxml)
-        editor.Save("dom")
+        editor.DumpSave("dom")
         data = editor.DomainData()
         data['power'] = self.dompower
         data['autostart'] = self.domauto
@@ -94,7 +94,7 @@ class VirtEditor():
 
     def NetInfo(self):
         editor = XmlEditor("root",self.netxml)
-        editor.Save("net")
+        editor.DumpSave("net")
         data = editor.DomainData()
         data['power'] = self.dompower
         data['autostart'] = self.domauto

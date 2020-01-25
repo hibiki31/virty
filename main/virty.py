@@ -209,10 +209,9 @@ def DomainListInit():
             temp['node'] = NODE[0]
             temp['device'] = "none"
             temp['type'] = "none"
-            if data['image'] == list:
-                for image in data['image']:
-                    image['node'] = NODE[0]
-                    pool.append([image['name'], image['node'], temp['name'], image['capacity'], image['allocation'], image['physical'], image['path']])
+            for image in data['image']:
+                if type(image) == dict:
+                    pool.append([image['name'], NODE[0], temp['name'], image['capacity'], image['allocation'], image['physical'], image['path']])
             send.append(temp)
         vsql.ImageAdd(pool)
         vsql.UpdateStorage(send)
