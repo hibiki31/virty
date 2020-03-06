@@ -35,7 +35,6 @@ def WorkerUp():
     if int(output) == 0:
         subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
 
-
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
 
@@ -57,17 +56,7 @@ def DomainStart(DOM_NAME):
     manager.DomainOpen(DOM_UUID)
     result = manager.DomainPoweron()
 
-    # manager.DomainOpen(DOM_UUID)
-    # data = manager.DomainInfo()
-
-    # data['node-name'] = NODE_NAME
-    # data['node-ip'] = NODE_IP
-
-    # vsql.SqlUpdateDomain(data)
-    # print(data)
-
     return result
-
 
 def DomainShutdown(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -79,19 +68,9 @@ def DomainShutdown(DOM_NAME):
         return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
     
-
     manager = vvirt.VirtEditor(NODE_IP)
     manager.DomainOpen(DOM_UUID)
     result = manager.DomainShutdown()
-
-    # manager.DomainOpen(DOM_UUID)
-    # data = manager.DomainInfo()
-    
-    # data['node-name'] = NODE_NAME
-    # data['node-ip'] = NODE_IP
-
-    # vsql.SqlUpdateDomain(data)
-    # print(data)
 
     return result
     
@@ -105,19 +84,9 @@ def DomainDestroy(DOM_NAME):
         return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
-
     manager = vvirt.VirtEditor(NODE_IP)
     manager.DomainOpen(DOM_UUID)
     result = manager.DomainDestroy()
-
-    # manager.DomainOpen(DOM_UUID)
-    # data = manager.DomainInfo()
-    
-    # data['node-name'] = NODE_NAME
-    # data['node-ip'] = NODE_IP
-
-    # vsql.SqlUpdateDomain(data)
-    # print(data)
 
     return result
 
@@ -145,9 +114,6 @@ def DomainAutostart(DOM_NAME):
     print(data)
 
     return result
-
-
-
 
 def DomainUndefine(DOM_NAME):
     DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
@@ -186,20 +152,6 @@ def DomainListInit():
             continue
 
         send = []
-        datas = manager.DomainAllData()
-        for data in datas:
-            editor = vvirt.XmlEditor("str",data['xml'])
-            temp = editor.DomainData()
-            temp['node-name'] = NODE[0]
-            temp['node-ip'] = NODE[1]
-            temp['power'] = data['status']
-            temp['autostart'] = data['auto']
-            send.append((temp['name'], temp['power'],temp['node-name'],temp['vcpu'],temp['memory'],temp['uuid'],"unknown","unknown"))
-            editor.DumpSave("dom")
-        vsql.UpdateDomainStatus([NODE[0]],[],10)
-        vsql.SqlAddDomain(send)
-
-        send = []
         pool = []
         datas = manager.StorageAllData()
         for data in datas:
@@ -216,10 +168,24 @@ def DomainListInit():
         vsql.ImageAdd(pool)
         vsql.UpdateStorage(send)
 
+        send = []
+        datas = manager.DomainAllData()
+        for data in datas:
+            editor = vvirt.XmlEditor("str",data['xml'])
+            temp = editor.DomainData()
+            for disk in temp['disk']:
+                vsql.SqlCommit("update kvm_img SET domain=? WHERE path=?",[(temp['name'],disk[2])])
+            temp['node-name'] = NODE[0]
+            temp['node-ip'] = NODE[1]
+            temp['power'] = data['status']
+            temp['autostart'] = data['auto']
+            send.append((temp['name'], temp['power'],temp['node-name'],temp['vcpu'],temp['memory'],temp['uuid'],"unknown","unknown"))
+            editor.DumpSave("dom")
+        vsql.UpdateDomainStatus([NODE[0]],[],10)
+        vsql.SqlAddDomain(send)
 
         send = []
         datas = manager.NetworkAllData()
-        vsql.SqlDeleteAll("kvm_network")
         for data in datas:
             editor = vvirt.XmlEditor("str",data['xml'])
             editor.DumpSave("net")
@@ -309,6 +275,7 @@ def StorageUndefine(NODE_NAME,STORAGE_NAME):
 
     server = vvirt.VirtEditor(NODE_IP)
     server.StorageUndefine(STORAGE_NAME)
+
     return [0,"storage","undefine","Success",""]
 
 
@@ -320,6 +287,8 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
 
     editor = vvirt.VirtEditor(NODE_IP)
     editor.ImageList(STORAGEP_NAME)
+
+
 
 
 
@@ -390,18 +359,21 @@ def ImageArchiveListAll():
 #Node
 def NodeAdd(NODE_NAME,NODE_IP):
     try:
-        NODE_MEM = SshInfoMem(NODE_IP)
-        NODE_CORE = SshInfocpu(NODE_IP)
-        NODE_CPU = SshInfocpuname(NODE_IP)
-        NODE_OS = SshOsinfo(NODE_IP)
+        MEM = SshInfoMem(NODE_IP)
+        CORE = SshInfocpu(NODE_IP)
+        CPU = SshInfocpuname(NODE_IP)
+        OS = SshOsinfo(NODE_IP)
+        QEMU = SshInfoQemu(NODE_IP)
+        VIRT = SshInfoLibvirt(NODE_IP)
     except Exception as e:
         return ["error","node","add",str(e)]
 
-    NODE_DATAS_NEW = []
-    NODE_DATAS_NEW.append([NODE_NAME,NODE_IP,NODE_MEM,NODE_CORE,NODE_CPU,NODE_OS['NAME'],NODE_OS['VERSION'],NODE_OS['ID_LIKE'],10])
-    vsql.SqlAddNode(NODE_DATAS_NEW)
-
-    return ["success","","","Succes"]
+    DATA = []
+    DATA.append([NODE_NAME,NODE_IP,MEM,CORE,CPU,OS['NAME'],OS['VERSION'],OS['ID_LIKE'],10,QEMU,VIRT])
+    SQL = "replace into kvm_node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status, qemu, libvirt) values (?,?,?,?,?,?,?,?,?,?,?)"
+    vsql.SqlCommit(SQL,DATA)
+    vansible.AnsibleNodelistInit()
+    return ["success","node","add","Succes"]
 
 def NetworkXmlSaveAll():
     NODE_DATAS = vsql.SqlGetAll("kvm_node")
@@ -441,6 +413,15 @@ def NetworkInternalDefine(NODE_NAME,NET_NAME):
     manager.NetworkDefine(editor.DumpStr())
     manager.NetworkStart()
 
+def NetworkBridgeDefine(NODE_NAME,NET_NAME,BRIDGE):
+    NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
+
+    editor = vvirt.XmlEditor("file","net_bridge")
+    editor.EditNetworkBridge(NET_NAME,BRIDGE)
+
+    manager = vvirt.VirtEditor(NODE_IP)
+    manager.NetworkDefine(editor.DumpStr())
+    manager.NetworkStart()
 
 def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     editor = vvirt.VirtEditor(NODE_IP)
@@ -622,6 +603,7 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
     editor.DomainCpuEdit(NEW_CPU)
     return editor.DomainXmlUpdate()
 
+
 ############################
 # SSH                      #
 ############################
@@ -639,6 +621,24 @@ def SshInfocpu(NODE_IP):
     cmd = ["ssh" , NODE_IP, "grep processor /proc/cpuinfo | wc -l"]
     words = str(subprocess.check_output(cmd)).rstrip("\\n'").lstrip("'b")
     return words
+
+def SshInfoLibvirt(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "virsh version --daemon|grep libvirt|grep Using"]
+    try:
+        version = str(subprocess.check_output(cmd))
+    except:
+        return "error"
+    return version.rstrip("\\n'").lstrip("'b").split()[3]
+    
+def SshInfoQemu(NODE_IP):
+    cmd = ["ssh" , NODE_IP, "virsh version --daemon|grep hypervisor:"]
+    try:
+        version = str(subprocess.check_output(cmd))
+    except:
+        return "error"
+    return version.rstrip("\\n'").lstrip("'b").split()[3]
+
+
 
 def SshInfocpuname(NODE_IP):
     cmd = ["ssh" , NODE_IP, "grep 'model name' /proc/cpuinfo|uniq"]

@@ -78,6 +78,11 @@ elif que[3] == "network" and que[4] == "internal-define":
     virty.DomainListInit()
     result = ["success","","","Succes"]
 
+elif que[3] == "network" and que[4] == "bridge-define":
+    virty.NetworkBridgeDefine(POST['node'],POST['name'],POST['source'])
+    virty.DomainListInit()
+    result = ["success","","","Succes"]
+
 elif que[3] == "domain" and que[4] == "memory-edit":
     virty.DomainEditMemory(POST['uuid'],POST['memory'])
     virty.DomainListInit()
