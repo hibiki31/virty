@@ -55,10 +55,11 @@ class VirtEditor():
         except:
             pass
         else:
-            if sp.info() == 0:
+            print(sp.info())
+            if sp.info()[0] == 2:
                 sp.destroy()
-            else:
-                sp.undefine()
+            sp.undefine()
+            return ["success","storagepool","undefine","Success Undefine",""]
                 
     def DomainUndefine(self):
         if self.dompower == 1:

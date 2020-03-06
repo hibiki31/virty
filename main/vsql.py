@@ -155,7 +155,7 @@ def NetworkAdd(NETWORK_DICS):
 def SqlAddNode(NODE_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status) values (?,?,?,?,?,?,?,?,?)'
+    sql = ''
     cur.executemany(sql, NODE_DATAS)
     con.commit()
     
@@ -430,16 +430,16 @@ def SqlInit():
         pass
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    cur.execute('create table if not exists kvm_node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, primary key (name))')
+    cur.execute('create table if not exists kvm_node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
     cur.execute('create table if not exists kvm_user (userid, name, password, primary key (userid))')
     cur.execute('create table if not exists kvm_group (groupid, name, owner, primary key (groupid))')
     cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
-    cur.execute('create table if not exists kvm_network (name,bridge,uuid,node,type,dhcp,primary key (name))')
+    cur.execute('create table if not exists kvm_network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
     cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_uuid, storage_capacity, storage_available,storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
     cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
     cur.execute('create table if not exists kvm_domainpool (domainpool_name, domainpool_node_name, domainpool_setram)')
     cur.execute('create table if not exists kvm_archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
-    cur.execute('create table if not exists kvm_img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
+    cur.execute('create table if not exists kvm_img (name, node, pool, capa, allocation, physical, path, domain, primary key (name,node,pool))')
     cur.execute("insert into kvm_group VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
     cur.execute("insert into kvm_user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
     con.commit()
