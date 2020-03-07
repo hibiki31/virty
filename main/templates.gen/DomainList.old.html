@@ -1,0 +1,104 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<div class="right_col" role="main">
+    <div class="">
+        <div class="row top_tiles">
+            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                    <div class="icon"><i class="fa fa-at"></i></div>
+                    <div class="count">{{'%0.0f' % sumdata[1]|float}}</div>
+                    <h3>Total CPU</h3>
+                </div>
+
+            </div>
+            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                    <div class="icon"><i class="fa fa-rocket"></i></div>
+                    <div class="count">{{sumdata[0]}}</div>
+                    <h3>Total Memory</h3>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2>Domain List <small></small></h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                    <li><a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <div class="table-responsive">
+                            <table id=domain-table class="table table-striped jambo_table bulk_action">
+                                <thead>
+                                    <tr class="headings">
+                                        <th>
+                                            <input type="checkbox" id="check-all" class="flat">
+                                        </th>
+                                        <th class="column-title">Name <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Status <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Node <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">vCPU <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">Memory <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title">UUID <i class="fa fa-unsorted"></i></th>
+                                        <th class="column-title no-link last"><span class="nobr">Info </span>
+                                        </th>
+                                        <th class="bulk-actions" colspan="7">
+                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
+                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dom in domain %}
+                                    <tr class="even pointer">
+                                        <td class="a-center ">
+                                            <input type="checkbox" class="flat" name="table_records">
+                                        </td>
+                                        <td class=" "><a href="/domain/{{dom[5]}}/info">{{dom[0]}}</a></td>
+                                
+                                        {% if dom[1] == 1 %}
+                                        <td class=" "><i class="fa fa-square green"></i> Run</td>
+                                        {% elif dom[1] == 5 %}
+                                        <td class=" "><i class="fa fa-square dark"></i> Stop</td>
+                                        {% elif dom[1] == 7 %}
+                                        <td class=" "><i class="fa fa-square purple"></i> Maintenance</td>
+                                        {% else %}
+                                        <td class=" "><i class="fa fa-square red"></i> Lost</td>
+                                        {% endif %}
+                                
+                                        <td class=" ">{{dom[2]}}</td>
+                                        <td class=" ">{{dom[3]}}</td>
+                                        <td class=" ">{{'%0.0f' % dom[4]|float}}</td>
+                                        <td class="a-right a-right ">{{dom[5]}}</td>
+                                        <td class=" last"><a href="/domain/{{dom[5]}}/info">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
