@@ -1,5 +1,7 @@
-body{
+html{
     background-color: #eeeeee;
+}
+body{
     font-size: 0.85rem;
 }
 .menu-list a {

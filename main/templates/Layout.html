@@ -1,16 +1,5 @@
-<!doctype html>
-<html lang="ja">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Virty</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.0/css/bulma.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
-  <link rel="stylesheet" href="/static/css/virty.css">
-  <link rel="icon" href="/static/images/favicon.ico" type="image/ico" />
-  <!-- 記述場所⑤ -->
-</head>
+{% extends "LayoutHead.html" %}
+{% block body %}
 
 <body>
   <nav class="navbar is-transparent is-primary">
@@ -25,61 +14,52 @@
       </div>
       <div class="navbar-menu">
         <div class="navbar-start">
-          <a class="navbar-item" href="#">Home</a>
+          <a class="navbar-item" href="/">Home</a>
         </div>
         <div class="navbar-end">
           <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link" href="#">Docs</a>
+            <a class="navbar-link" href="#">Signed in as&nbsp;<div class="user_id has-text-weight-semibold"></div></a>
             <div class="navbar-dropdown is-boxed">
-              <a class="navbar-item" href="#">Overview</a>
-              <a class="navbar-item" href="#">Modifiers </a>
+              <a class="navbar-item" href="/logout">Logout </a>
             </div>
           </div>
         </div>
       </div>
     </div>
   </nav>
+  <section class="section">
+    <main class="columns">
+      <div class="column is-narrow-desktop is-narrow-touch">
+        <aside class="box menu">
+          <p class="menu-label">管理者ツール</p>
+          <ul class="menu-list is-size-6" id="nav">
+            <li><a href="/domain/list"><i class="fa fa-server"></i> 仮想マシン</a></li>
+            <li><a href="/list/archive"><i class="fa fa-box "></i> テンプレート</a></li>
+            <li><a href="/list/network"><i class="fa fa-cloud"></i> ネットワーク</a></li>
+            <li><a href="/image/list"><i class="fa fa-hdd"></i> 仮想ディスク</a></li>  
+            <li><a href="/list/storage"><i class="fa fa-database"></i> ストレージ</a></li>
+            <li><a href="/list/node"><i class="fa fa-cubes"></i> ノード</a></li>
+            <li><a href="/list/que"><i class="fa fa-coffee"></i> タスク</a></li>
+          </ul>
+          <p class="menu-label">ベータ版</p>
+          <ul class="menu-list is-size-6" id="nav">
+            <li><a href="/domain/tools">Domain Tools</a></li>
+            <li><a href="/domain/define">Domain Define</a></li>
+            <li><a href="/node/add">Node Add</a></li>
+            <li><a href="/storage/add">Storage Add</a></li>
+            <li><a href="/network/2ldefine">L2</a></li>
+            <li><a href="/network/add">bridge</a></li>
+          </ul>
+        </aside>
+      </div>
+      <div class="column">
+        {% block content %}
+        {% endblock %}
+      </div>
 
-  <main class="columns section">
-    <div class="column is-narrow" style="width: 200px;">
-      <aside class="box menu">
-        <p class="menu-label">管理者ツール</p>
-        <ul class="menu-list is-size-6" id="nav">
-          <li><a href="/domain/list"><i class="fa fa-server"></i> 仮想マシン</a></li>
-          <li><a href="/list/storage"><i class="fa fa-database"></i> ストレージ</a></li>
-          <li><a href="/list/archive"><i class="fa fa-box"></i> テンプレート</a></li>
+    </main>
+  </section>
 
-          <li><a href="/domain/tools">Domain Tools</a></li>
-          <li><a href="/domain/define">Domain Define</a></li>
-
-          
-
-          <li><a href="/image/list">Image List</a></li>
-
-          
-          <li><a href="/storage/add">Storage Add</a></li>
-
-          <li><a href="/list/network">Network List</a></li>
-          <li><a href="/network/2ldefine">Network Define 2L</a></li>
-          <li><a href="/network/add">Network Bridge</a></li>
-
-          <li><a href="/list/node">Node List</a></li>
-          <li><a href="/node/add">Node Add</a></li>
-
-          <li><a href="/list/que">Que List</a></li>
-        </ul>
-      </aside>
-    </div>
-    <div class="column">
-      {% block content %}
-      {% endblock %}
-
-    </div>
-
-  </main>
 </body>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="/static/js/virty.js"></script>
-
-</html>
+{% endblock %}
