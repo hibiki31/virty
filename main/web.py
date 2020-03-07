@@ -118,7 +118,11 @@ def info_storage(NODE,NAME):
 @app.route('/image/list')
 @login_required
 def storage_list():
-    html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
+    if request.args.get('tree') == "true":
+        data = virty.vsql.SqlGetAll('kvm_storage')
+        html = render_template('ImageListNode.html',data=data)
+    else:
+        html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
     return html
 
 @app.route('/archive/list')
@@ -230,7 +234,9 @@ def network_add():
 @app.route('/domain/<DOM_UUID>/info')
 @login_required
 def domain_info(DOM_UUID):
-    html = render_template('DomainInfo.html',domain=virty.DomainData(DOM_UUID))
+    xml = virty.DomainData(DOM_UUID)
+    db = virty.vsql.SqlFetchall("select * from kvm_domain where domain_uuid=?",[(DOM_UUID)])
+    html = render_template('DomainInfo.html',xml=xml,db=db)
     return html
 
 @app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')

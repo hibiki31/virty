@@ -1,10 +1,26 @@
 {% extends "Layout.html" %}
 {% block content %}
+<div class="tabs is-centered">
+    <ul>
+        <li class="is-active">
+            <a href="/image/list?tree=false">
+                <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
+                <span>All</span>
+            </a>
+        </li>
+        <li>
+            <a href="/image/list?tree=true">
+                <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
+                <span>Folder</span>
+            </a>
+        </li>
+    </ul>
+</div>
 
 <article class="box">
     <table class="table is-fullwidth">
         <thead>
-            <tr>      
+            <tr>
                 <th>Node </th>
                 <th>Pool </th>
                 <th>Name </th>

@@ -7,7 +7,7 @@ function Jsonget(URL) {
     contentType: "application/json",
   }).fail(function (XMLHttpRequest) {
     if (XMLHttpRequest.status == 401) {
-      location.href = '/login';
+      // location.href = '/login';
     }
   }).always(function (e) {
   });
@@ -144,6 +144,19 @@ $(function () {
     }
   });
 });
+
+$(function () {
+  $('.tabs ul li').each(function () {
+    var $href = $(this).children('a').attr('href');
+    var $path = location.pathname + location.search;
+    if ($href == $path) {
+      $(this).addClass('is-active');
+    } else {
+      $(this).removeClass('is-active');
+    }
+  });
+});
+
 $('td').hover(
   function () {
     $(this).addClass('is-active');

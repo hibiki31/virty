@@ -1,0 +1,48 @@
+{% extends "Layout.html" %}
+{% block content %}
+<div class="tabs is-centered">
+  <ul>
+      <li>
+          <a href="/image/list?tree=false">
+              <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
+              <span>All</span>
+          </a>
+      </li>
+      <li>
+          <a href="/image/list?tree=true">
+              <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
+              <span>Folder</span>
+          </a>
+      </li>
+  </ul>
+</div>
+
+<article class="box">
+  <table class="table is-fullwidth">
+    <thead>
+      <tr>
+        <th class="column-title">名前 </th>
+        <th class="column-title">最大容量 </th>
+        <th class="column-title">空き容量 </th>
+        <th class="column-title" style="width: 25%;"></th>
+        <th class="column-title">Node </th>
+        <th class="column-title">Path </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dom in data %}
+      <tr>
+        <td>{{dom[0]}}</td>
+        <td>{{dom[3]}}G</td>
+        <td>{{dom[4]}}G</td>
+        <td><progress class="progress is-primary is-small" value="{{(dom[4])}}" max="{{dom[3]}}"></progress></td>
+        <td>{{dom[1]}}</td>
+        <td>{{dom[7]}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</article>
+
+{% endblock %}
