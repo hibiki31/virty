@@ -123,5 +123,5 @@ $(function () {
 
 // Table sort
 $(document).ready(function () {
-  $('[id$=table]').tablesorter();
+  $('.table').tablesorter();
 });

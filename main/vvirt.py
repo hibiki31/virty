@@ -7,25 +7,16 @@ import vsql, vansible, vhelp,os, uuid
 SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
-def DomXmldump(DOM_NAME):
-    NODE_NAME = vsql.SqlGetData("DOM_NAME","NODE_NAME",DOM_NAME)
-    NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
-    conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
-    con = conn.lookupByName(DOM_NAME)
-    return con.XMLDesc()
 
-
-def DomainDefine(XML_DATA,NODE_IP):
-    conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
-    conn.defineXML(XML_DATA)
-
-
-class Libvirtc():
+class VirtEditor():
     def __init__(self,NODE_DOMAIN):
         self.nodeip = NODE_DOMAIN
         self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
 
 
+    ############################
+    # OPEN                     #
+    ############################
     def DomainOpen(self,DOMAIN_UUID):
         self.con = self.node.lookupByUUIDString(DOMAIN_UUID)
         self.domxml = ET.fromstring(self.con.XMLDesc())
@@ -33,9 +24,83 @@ class Libvirtc():
         self.domauto = self.con.autostart()
         self.domuuid = DOMAIN_UUID
 
-
+    def NetworkOpen(self,NET_UUID):
+        self.network = self.node.networkLookupByUUIDString(NET_UUID)
+        self.netpower = self.network.isActive()
+        self.netauto = self.network.autostart()
+        self.netxml = ET.fromstring(self.network.XMLDesc())
     
-    #Storage
+    def StorageXml(self,STORAGE_NAME):
+        return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
+
+
+    ############################
+    # DEFINE                   #
+    ############################
+    def StorageDefine(self,XML_DUMP):
+        try:
+            sp = self.node.storagePoolDefineXML(XML_DUMP,0)
+        except:
+            pass
+        else:
+            sp.create()
+            if sp.autostart() == True:
+                sp.setAutostart(0)
+            else:
+                sp.setAutostart(1)
+                
+    def StorageUndefine(self,STORAGE_NAME):
+        try:
+            sp = self.node.storagePoolLookupByName(STORAGE_NAME)
+        except:
+            pass
+        else:
+            print(sp.info())
+            if sp.info()[0] == 2:
+                sp.destroy()
+            sp.undefine()
+            return ["success","storagepool","undefine","Success Undefine",""]
+                
+    def DomainUndefine(self):
+        if self.dompower == 1:
+            return ["error","domain","poweron","Fail Undefine. because status is poweron",""]
+        try:
+            self.con.undefine()
+        except:
+            return ["skip","domain","poweron","Libvirt error",""]
+        else:
+            return ["success","domain","poweron","Success Undefine",""]                
+
+    def NetworkUndefine(self):
+        if self.netpower == 1:
+            self.network.destroy()
+        try:
+            self.network.undefine()
+        except:
+            return ["error","network","undefine","Libvirt error",""]
+        else:
+            return ["error","network","undefine","Success Undefine",""]                
+
+
+    ############################
+    # INFO                     #
+    ############################
+    def DomainInfo(self):
+        editor = XmlEditor("root",self.domxml)
+        editor.DumpSave("dom")
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
+
+    def NetInfo(self):
+        editor = XmlEditor("root",self.netxml)
+        editor.DumpSave("net")
+        data = editor.DomainData()
+        data['power'] = self.dompower
+        data['autostart'] = self.domauto
+        return data
+
     def StorageInfo(self,STORAGEP_NAME):
         pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
         if pool == None:
@@ -57,6 +122,22 @@ class Libvirtc():
 
         print(pool.XMLDesc(0))
 
+    def ImageInfo(self,STORAGEP_NAME,IMG_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        image = pool.storageVolLookupByName(IMG_NAME)
+        info = image.info()
+        print('    Type: '+str(info[0]))
+        print('    Capacity: '+str(info[1]))
+        print('    Allocation: '+str(info[2]))
+
+
+    ############################
+    # ALL LSIT                 #
+    ############################
     def StorageList(self):
         pools = self.node.listAllStoragePools(0)
         if pools == None:
@@ -76,6 +157,19 @@ class Libvirtc():
             print('  Allocation: '+str(round(int(info[2])/1000000000,1))+' GB')
             print('  Available: '+str(round(int(info[3])/1000000000,1))+' GB')
 
+    def ImageList(self,STORAGEP_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        for image in pool.listVolumes():
+            print(image)
+
+
+    ############################
+    # ALL XML                  #
+    ############################
     def AllStorageXml(self):
         pools = self.node.listAllStoragePools(0)
         if pools == None:
@@ -86,81 +180,6 @@ class Libvirtc():
             data.append(pool.XMLDesc())
         return data
     
-    def StorageXml(self,STORAGE_NAME):
-        return self.node.storagePoolLookupByName(STORAGE_NAME).XMLDesc()
-
-    def StorageDefine(self,XML_DUMP):
-        try:
-            sp = self.node.storagePoolDefineXML(XML_DUMP,0)
-        except:
-            pass
-        else:
-            sp.create()
-            if sp.autostart() == True:
-                sp.setAutostart(0)
-            else:
-                sp.setAutostart(1)
-                
-    def StorageUndefine(self,STORAGE_NAME):
-        try:
-            sp = self.node.storagePoolLookupByName(STORAGE_NAME)
-        except:
-            pass
-        else:
-            if sp.info() == 0:
-                sp.destroy()
-            else:
-                sp.undefine()
-                
-                
-            
-    def DomainInfo(self):
-        editor = Xmlc(self.domxml)
-        editor.Save("dom")
-        data = editor.DomainData()
-        data['power'] = self.dompower
-        data['autostart'] = self.domauto
-        return data
-
-    def NetInfo(self):
-        editor = Xmlc(self.netxml)
-        editor.Save("net")
-        data = editor.DomainData()
-        data['power'] = self.dompower
-        data['autostart'] = self.domauto
-        return data
-
-    #Image
-    def ImageList(self,STORAGEP_NAME):
-        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
-        if pool == None:
-            print('Failed to locate any StoragePool objects.', file=sys.stderr)
-            exit(1)
-
-        for image in pool.listVolumes():
-            print(image)
-
-    def ImageInfo(self,STORAGEP_NAME,IMG_NAME):
-        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
-        if pool == None:
-            print('Failed to locate any StoragePool objects.', file=sys.stderr)
-            exit(1)
-
-        image = pool.storageVolLookupByName(IMG_NAME)
-        info = image.info()
-        print('    Type: '+str(info[0]))
-        print('    Capacity: '+str(info[1]))
-        print('    Allocation: '+str(info[2]))
-
-    def ImageDelete(self,STORAGEP_NAME,IMG_NAME):
-        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
-        if pool == None:
-            print('Failed to locate any StoragePool objects.', file=sys.stderr)
-            exit(1)
-
-        image = pool.storageVolLookupByName(IMG_NAME)
-        image.delete()
-
     def AllImageXml(self,STORAGEP_NAME):
         pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
         if pool == None:
@@ -174,30 +193,109 @@ class Libvirtc():
             xmllist.append(image.XMLDesc())
         return xmllist
 
-    #Domain
-    def DomainXmlDump(self): 
-        return  [0,"domain","xmldump","Get domain xml",ET.tostring(self.domxml).decode()]
+    def DomainAllData(self):
+        if self.node == None:
+            return
+        domains = self.node.listAllDomains()
+        DATA = []
+        for domain in domains:
+            temp = {}
+            temp['status'] = domain.state()[0]
+            temp['auto'] = domain.autostart()
+            temp['xml'] = domain.XMLDesc()
+            DATA.append(temp)
+        return DATA
 
+    def StorageAllData(self):
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+        data = []
+        for pool in pools:
+            pool.refresh()
+            temp = {}
+            temp['active'] = pool.isActive()
+            temp['auto'] = pool.autostart()
+            temp['status'] = pool.info()[0]
+            temp['xml'] = pool.XMLDesc(0)
+            temp['image'] = []
+            for image in pool.listAllVolumes():
+                xmledit = XmlEditor("str",image.XMLDesc())
+                temp['image'].append(xmledit.ImageData())
+            data.append(temp)
+        return data
+
+    def NetworkAllData(self):
+        networks = self.node.listAllNetworks()
+        data = []
+        for net in networks:
+            temp = {}
+            temp['xml'] = net.XMLDesc()
+            temp['status'] = net.isActive()
+            temp['auto'] = net.autostart()
+            data.append(temp)
+        return data
+
+    ############################
+    # XML                  #
+    ############################
+    def DomainXmlPerth(self,DOM_UUID):
+        if self.node == None:
+            return
+        domain = self.node.lookupByUUIDString(DOM_UUID)
+        DATA = ["","",""]
+        DATA[2] = domain.XMLDesc()
+        DATA[0]= domain.state()[0]
+        DATA[1] = domain.autostart()
+        return DATA
+
+
+    ############################
+    # DELETE                   #
+    ############################
+    def ImageDelete(self,STORAGEP_NAME,IMG_NAME):
+        pool = self.node.storagePoolLookupByName(STORAGEP_NAME)
+        if pool == None:
+            print('Failed to locate any StoragePool objects.', file=sys.stderr)
+            exit(1)
+
+        image = pool.storageVolLookupByName(IMG_NAME)
+        image.delete()
+
+
+
+    ############################
+    # EDIT                     #
+    ############################
     def DomainNameEdit(self,NEW_NAME):
         self.domxml.findall('name')[0].text = NEW_NAME
         
-    def DomainEditMemory(self,NEW_MEM):
+    def DomainMemoryEdit(self,NEW_MEM):
         self.domxml.find('memory').text = NEW_MEM
         self.domxml.find('memory').set('unit',"MiB")
         self.domxml.find('currentMemory').text = NEW_MEM
         self.domxml.find('currentMemory').set('unit',"MiB")
         
-    def DomainEditCpu(self,NEW_CPU):
+    def DomainCpuEdit(self,NEW_CPU):
         self.domxml.find('vcpu').text = NEW_CPU
 
+    def DomainSelinuxEdit(self):
+        for seclabel in self.domxml.findall('seclabel'):
+            if seclabel.get('model','None') == 'selinux':
+                self.domxml.remove(seclabel)
+
+
+    ############################
+    # UPDATE                   #
+    ############################
     def DomainXmlUpdate(self):
         ET.tostring(self.domxml).decode()
         if self.dompower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return ["success","domain","selinux","Success disable selinux",""]
+            return ["success","domain","name-edit","Success domain name edit",""]
         else:
-            return ["success","domain","selinux","domain started",""]
+            return ["success","domain","name-edit","domain started",""]
 
     def DomainPowerGet(self):
         if self.dompower == 5:
@@ -205,6 +303,10 @@ class Libvirtc():
         else :
             return "RUN"
     
+
+    ############################
+    # STATUS                   #
+    ############################
     def DomainDestroy(self):
         if self.dompower == 5:
             return ["error","domain","stop","Already stop domain",""]
@@ -238,69 +340,28 @@ class Libvirtc():
         else:
             return ["success","domain","poweron","Success poweron",""]
 
-    def DomainAutostart(self):
-        if self.domauto == 1:
-            return ["error","domain","poweron","Already autostart domain",""]
-        try:
-            self.con.setAutostart(1)
-            self.domauto = self.con.autostart()
-        except:
-            return ["skip","domain","poweron","Libvirt error",""]
-        else:
-            return ["success","domain","poweron","Success autostart",""]
+    def DomainAutostart(self,STATUS):
+        if STATUS == "off":
+            if self.domauto == 1:
+                return ["error","domain","poweron","Already autostart domain",""]
+            try:
+                self.con.setAutostart(1)
+                self.domauto = self.con.autostart()
+            except:
+                return ["skip","domain","poweron","Libvirt error",""]
+            else:
+                return ["success","domain","poweron","Success autostart",""]
+        elif STATUS == "on":
+            if self.domauto == 0:
+                return ["error","domain","poweron","Already autostart domain",""]
+            try:
+                self.con.setAutostart(0)
+                self.domauto = self.con.autostart()
+            except:
+                return ["skip","domain","poweron","Libvirt error",""]
+            else:
+                return ["success","domain","poweron","Success autostart",""]
 
-    def DomainNotautostart(self):
-        if self.domauto == 0:
-            return ["error","domain","poweron","Already autostart domain",""]
-        try:
-            self.con.setAutostart(0)
-            self.domauto = self.con.autostart()
-        except:
-            return ["skip","domain","poweron","Libvirt error",""]
-        else:
-            return ["success","domain","poweron","Success autostart",""]
-
-    def DomainUndefine(self):
-        if self.dompower == 1:
-            return ["error","domain","poweron","Fail Undefine. because status is poweron",""]
-        try:
-            self.con.undefine()
-        except:
-            return ["skip","domain","poweron","Libvirt error",""]
-        else:
-            return ["success","domain","poweron","Success Undefine",""]
-
-    def AllDomainXmlPerth(self):
-        if self.node == None:
-            return
-        DOMAINS = self.node.listAllDomains()
-        PERTHDATA = []
-        for domain in DOMAINS:
-            DATA = ["","",""]
-            DATA[2] = domain.XMLDesc()
-            DATA[0] = domain.state()[0]
-            DATA[1] = domain.autostart()
-            PERTHDATA.append((DATA))
-        return PERTHDATA
-
-    def DomainXmlPerth(self,DOM_UUID):
-        if self.node == None:
-            return
-        domain = self.node.lookupByUUIDString(DOM_UUID)
-        DATA = ["","",""]
-        DATA[2] = domain.XMLDesc()
-        DATA[0]= domain.state()[0]
-        DATA[1] = domain.autostart()
-        return DATA
-
-
-    #Network
-    def NetworkOpen(self,NET_UUID):
-        self.network = self.node.networkLookupByUUIDString(NET_UUID)
-        self.netxml = ET.fromstring(self.network.XMLDesc())
-
-    def NetworkUndefine(self):
-        self.network.undefine()
 
     def NetworkXmlTemplate(self,NETWORK_TEMPLATE):
         tree = ET.parse(NETWORK_TEMPLATE) 
@@ -326,8 +387,7 @@ class Libvirtc():
     def NetworkStart(self):
         self.network.create()
 
-    def NetworkStop(self):
-        self.network.destroy()
+
 
     def NetworkList(self):
         test = []
@@ -404,17 +464,33 @@ class Libvirtc():
         else :
             return "off"
 
-    def DeleteSelinux(self):
-        for seclabel in self.domxml.findall('seclabel'):
-            if seclabel.get('model','None') == 'selinux':
-                self.domxml.remove(seclabel)
 
 
 
-class Xmlc():
-    def __init__(self,XML_ROOT):
-        self.xml = XML_ROOT
+class XmlEditor():
+    def __init__(self,TYPE,XML):
+        if TYPE == "file":
+            os.chdir = SPATH
+            tree = ET.parse(SPATH + '/xml/'+ XML +'.xml') 
+            root = tree.getroot()
+            self.xml = root
+        elif TYPE == "dom":
+            os.chdir = SPATH
+            tree = ET.parse(SPATH + '/dump/dom/'+ XML +'.xml') 
+            root = tree.getroot()
+            self.xml = root
+        elif TYPE == "net":
+            os.chdir = SPATH
+            tree = ET.parse(SPATH + '/dump/net/'+ XML +'.xml') 
+            root = tree.getroot()
+            self.xml = root
+        elif TYPE == "str":
+            root = ET.fromstring(XML)
+            self.xml = root
 
+    ############################
+    # DATA                     #
+    ############################
     def DomainData(self):
         DATA = {}
         DATA['name'] = self.xml.find('name').text
@@ -468,8 +544,6 @@ class Xmlc():
     
             DATA['interface'].append([TYPE,MAC,TARGET,TO])
 
-
-
         DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):
             if seclabel.get('model','None') == 'selinux':
@@ -492,7 +566,7 @@ class Xmlc():
                 DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
                 DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
                 DATA['dhcp'].append([DHCP_START,DHCP_END])
-        
+
         DATA['bridge'] = self.xml.find('bridge').get("name")
 
         if self.xml.find('mac') is not None:
@@ -513,10 +587,8 @@ class Xmlc():
             DATA['type'] = "Bridge"
         else:
             DATA['type'] = "unknown"
+        
         return DATA
-
-
-
 
     def ImageData(self):
         DATA = {}
@@ -565,14 +637,10 @@ class Xmlc():
 
         return DATA
 
-    def StorageMake(self,STORAGE_NAME,STORAGE_PATH):
-        self.xml.find('name').text = STORAGE_NAME
-        self.xml.find('target').find('path').text = STORAGE_PATH
-
-    def Dump(self):
-        return ET.tostring(self.xml).decode()
-
-    def NetworkInternal(self,NAME):
+    ############################
+    # EDIT                     #
+    ############################
+    def EditNetworkInternal(self,NAME):
         self.xml.find('name').text= NAME
 
     def EditNetworkBridge(self,NAME,Bridge):
@@ -580,13 +648,7 @@ class Xmlc():
         self.xml.find('forward').set('mode','bridge')
         self.xml.find('bridge').set('name',Bridge)
 
-
-    def Save(self,TYPE):
-        os.chdir = SPATH
-        DOM_UUID = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
-
-    def DomainBaseEdit(self,DOM_NAME,MEMORY,CORE,VNC_PORT,VNC_PASS):
+    def EditDomainBase(self,DOM_NAME,MEMORY,CORE,VNC_PORT,VNC_PASS):
         self.xml.findall('name')[0].text = DOM_NAME
         self.xml.find('memory').text = MEMORY
         self.xml.find('currentMemory').text = MEMORY
@@ -595,20 +657,17 @@ class Xmlc():
         if VNC_PORT == "auto":
             self.xml.find('devices').find('graphics').set('autoport', "yes")
             self.xml.find('devices').find('graphics').set('port', "0")	
-            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)	
         else:
             self.xml.find('devices').find('graphics').set('autoport', "no")
-            self.xml.find('devices').find('graphics').set('port', VNC_PORT)
-            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)    
+            self.xml.find('devices').find('graphics').set('port', VNC_PORT) 
 
-    def DomainNetworkAdd(self,NET_NAME):
-        MAC_ADDRESS = XmlGenMac()
-        ET.SubElement(self.xml.find('devices'), "interface").set('type', 'network')
-        ET.SubElement(self.xml.find('devices').find('interface'), 'mac').set('address', MAC_ADDRESS)
-        ET.SubElement(self.xml.find('devices').find('interface'), 'source').set('network', NET_NAME)
-        ET.SubElement(self.xml.find('devices').find('interface'), 'model').set('type', 'virtio')
+        if not VNC_PASS == "":
+            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)
 
-    def DomainEmulator(self,DOM_EMU):
+
+
+
+    def EditDomainEmulator(self,DOM_EMU):
         if DOM_EMU == "debian":
             self.xml.find('devices').find('emulator').text = "/usr/bin/kvm"
             self.xml.find('os').find('type').set('machine', "pc-i440fx-2.8")
@@ -616,12 +675,19 @@ class Xmlc():
             self.xml.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
             self.xml.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
 
-    def DomainImageMeta(self,STORAGE_NAME,ARCHIVE_NAME):
+    def EditDomainImageMeta(self,STORAGE_NAME,ARCHIVE_NAME):
         ET.SubElement(self.xml.find('metadata'), "storage")
         self.xml.find('metadata').find('storage').set('storage',STORAGE_NAME)
         self.xml.find('metadata').find('storage').set('archive',ARCHIVE_NAME)
 
-    def DomainImageSet(self,IMG_PATH):
+    def EditStorageBase(self,STORAGE_NAME,STORAGE_PATH):
+        self.xml.find('name').text = STORAGE_NAME
+        self.xml.find('target').find('path').text = STORAGE_PATH
+
+    ############################
+    # ADD                      #
+    ############################
+    def AddDomainImage(self,IMG_PATH):
         disk = ET.SubElement(self.xml.find('devices'), "disk")
         disk.set('type', 'file')
         disk.set('device', 'disk')
@@ -640,36 +706,32 @@ class Xmlc():
         address.set('slot', '0x04')
         address.set('type', 'pci')
 
+    def AddDomainNetwork(self,NET_NAME):
+        MAC_ADDRESS = MacGen()
+        add = ET.SubElement(self.xml.find('devices'), "interface")
+        add.set('type', 'network')
+        ET.SubElement(add, 'mac').set('address', MAC_ADDRESS)
+        ET.SubElement(add, 'source').set('network', NET_NAME)
+        ET.SubElement(add, 'model').set('type', 'virtio')
+
+    ############################
+    # DUMP                     #
+    ############################
+    def DumpSave(self,TYPE):
+        os.chdir = SPATH
+        DOM_UUID = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
+
+    def DumpStr(self):
+        return ET.tostring(self.xml).decode()
+
+
+############################
+# OTHER                    #
+############################
 def ping(IP):
     p = pings.Ping().ping(IP).is_reached()
     print(p)
-
-
-
-
-def XmlFileRoot(XML_FILE):
-    os.chdir = SPATH
-    tree = ET.parse(SPATH + '/xml/'+ XML_FILE +'.xml') 
-    root = tree.getroot()
-    return root
-
-def XmlDomainXml(UUID):
-    os.chdir = SPATH
-    tree = ET.parse(SPATH + '/dump/dom/'+ UUID +'.xml') 
-    root = tree.getroot()
-    return root
-
-def XmlNetworkXml(UUID):
-    os.chdir = SPATH
-    tree = ET.parse(SPATH + '/dump/net/'+ UUID +'.xml') 
-    root = tree.getroot()
-    return root
-
-def XmlStringRoot(XML_STRING):
-    root = ET.fromstring(XML_STRING)
-    return root
-
-
 
 def UnitConvertor(EC,DC,DATA):
     if EC == "bytes":
@@ -683,129 +745,10 @@ def UnitConvertor(EC,DC,DATA):
             DATA = float(DATA)/1024
             return round(DATA,1)
 
-
-def XmlGenMac():
+def MacGen():
     import random
     mac = [ 0x00, 0x16, 0x3e,
     random.randint(0x00, 0x7f),
     random.randint(0x00, 0xff),
     random.randint(0x00, 0xff) ]
     return( ':'.join(map(lambda x: "%02x" % x, mac)))
-
-def XmlDomainBaseMake(DOM_NAME,MEMORY,CORE,VNC_PORT,VNC_PASS):
-    os.chdir = SPATH
-
-    tree = ET.parse(SPATH + '/xml/dom_base.xml') 
-    root = tree.getroot()
-
-    root.findall('name')[0].text = DOM_NAME
-    root.find('memory').text = MEMORY
-    root.find('currentMemory').text = MEMORY
-    root.find('vcpu').text = CORE
-
-    if VNC_PORT == "auto":
-        root.find('devices').find('graphics').set('autoport', "yes")
-        root.find('devices').find('graphics').set('port', "0")	
-        #root.find('devices').find('graphics').set('passwd', "pass")	
-    else:
-        root.find('devices').find('graphics').set('autoport', "no")
-        root.find('devices').find('graphics').set('port', VNC_PORT)
-    
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
-
-def XmlBridgeNicAdd(DOM_NAME,SOURCE):
-    os.chdir = SPATH
-
-    MAC_ADDRESS = XmlGenMac()
-
-    tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
-    root = tree.getroot()
-
-    interface = ET.SubElement(root.find('devices'), "interface")
-    interface.set('type', 'bridge')
-    ET.SubElement(interface, 'mac').set('address', MAC_ADDRESS)
-    ET.SubElement(interface, 'source').set('bridge', SOURCE)
-    ET.SubElement(interface, 'model').set('type', 'virtio')
-    
-    # address = ET.SubElement(interface, 'address')
-    # address.set('bus', '0x00')
-    # address.set('domain', '0x0000')
-    # address.set('function', '0x0')
-    # address.set('slot', '0x03')
-    # address.set('type', 'pci')
-
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
-
-def XmlNetworkNicAdd(DOM_NAME,SOURCE):
-    os.chdir = SPATH
-
-    MAC_ADDRESS = XmlGenMac()
-
-    tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
-    root = tree.getroot()
-
-    interface = ET.SubElement(root.find('devices'), "interface")
-    interface.set('type', 'bridge')
-    ET.SubElement(interface, 'mac').set('address', MAC_ADDRESS)
-    ET.SubElement(interface, 'source').set('bridge', SOURCE)
-    ET.SubElement(interface, 'model').set('type', 'virtio')
-    
-    # address = ET.SubElement(interface, 'address')
-    # address.set('bus', '0x00')
-    # address.set('domain', '0x0000')
-    # address.set('function', '0x0')
-    # address.set('slot', '0x03')
-    # address.set('type', 'pci')
-
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
-
-
-def XmlL2lessnetMake(l2l_NAME,l2l_GW,l2l_IP):
-    tree = ET.parse(SPATH + '/xml/net_l2less.xml') 
-    root = tree.getroot()
-
-
-    root.find('name').text= l2l_NAME
-    root.find('ip').set('address',l2l_GW)
-
-
-    tree.write(SPATH + '/define/' + l2l_NAME + '.xml')
-
-def XmlImgAdd(DOM_NAME,IMG_PATH):
-    os.chdir = SPATH
-
-    tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
-    root = tree.getroot()
-
-    disk = ET.SubElement(root.find('devices'), "disk")
-    disk.set('type', 'file')
-    disk.set('device', 'disk')
-    driver = ET.SubElement(disk, 'driver')
-    source = ET.SubElement(disk, 'source')
-    target = ET.SubElement(disk, 'target')
-    address = ET.SubElement(disk, 'address')
-    driver.set('name','qemu')
-    driver.set('type','qcow2')
-    source.set('file',IMG_PATH)
-    target.set('dev','vda')
-    target.set('bus','virtio')
-    address.set('bus', '0x00')
-    address.set('domain', '0x0000')
-    address.set('function', '0x0')
-    address.set('slot', '0x04')
-    address.set('type', 'pci')
-    
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')
-
-
-
-def XmlMetaSetStorage(DOM_NAME,STORAGE_NAME,ARCHIVE_NAME):
-    os.chdir = SPATH
-    tree = ET.parse(SPATH + '/define/' + DOM_NAME + '.xml') 
-    root = tree.getroot()
-
-    storage = ET.SubElement(root.find('metadata'), "storage")
-    storage.set('storage',STORAGE_NAME)
-    storage.set('archive',ARCHIVE_NAME)
-
-    tree.write(SPATH + '/define/' + DOM_NAME + '.xml')

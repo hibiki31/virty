@@ -1,6 +1,6 @@
 # Virty
 
-## Overview
+## Note
 
 1. This system is vulnerable, use only locally
 2. Authentication function is prototype
@@ -56,9 +56,39 @@ http://IP/node/add
 
 ### System storage pool
 
-Each node must have archive and iso. The directory must exist.
+Each node must have `archive` and `iso`. The directory must exist.
 
 ```
 http://IP/storage/add
+```
+
+## Libvirt
+
+### CentOS
+
+```
+
+```
+
+### Ubuntu
+
+```
+sudo apt update
+sudo apt upgrade
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils 
+```
+
+select editor
+
+```
+sudo update-alternatives --config editor
+```
+
+add
+
+```
+sudo visudo
+-- tail --
+ubuntu ALL=(ALL) NOPASSWD: ALL
 ```
 

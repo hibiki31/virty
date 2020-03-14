@@ -110,7 +110,7 @@ def info_storage(NODE,NAME):
 @app.route('/image/list')
 @login_required
 def storage_list():
-    html = render_template('ImageList.html',datas=virty.AllImageXml())
+    html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
     return html
 
 @app.route('/archive/list')
@@ -141,11 +141,10 @@ def node_list(GET_DATA):
         html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
         return html
     elif GET_DATA == "storage":
-        data = virty.StorageListAll()
+        data = virty.vsql.SqlGetAll('kvm_storage')
         html = render_template('StorageList.html',data=data)
         return html
     elif GET_DATA == "network":
-        virty.NetworkListinit()
         html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("kvm_network"))
         return html
     elif GET_DATA == "que":
@@ -334,8 +333,8 @@ def api_que(OBJECT,METHOD):
 
     virty.Queuing(OBJECT,METHOD,task)
     
-    return redirect("/", code=302)
+    return redirect(request.referrer, code=302)
 
 if __name__ == "__main__":
-    virty.WorkerUp()    
+    virty.WorkerUp()
     app.run(debug=True, host='0.0.0.0', port=80)

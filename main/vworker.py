@@ -6,7 +6,6 @@ SPATH = '/root/virty/main'
 SQLFILE = SPATH + '/data.sqlite'
 
 while True:
-    print("Checking Que")
     que = virty.vsql.SqlQueuget("init")
     if que == None or que == []:
         sleep(3)
