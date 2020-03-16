@@ -52,7 +52,7 @@ def check_password(hashed_password, user_password):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    return redirect("/login", code=302)
+    return redirect("/login", code=301)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -64,17 +64,16 @@ def login():
         user = virty.vsql.UserGet(request.form["username"])
         if user and check_password(user.password,request.form["password"]):
             login_user(user)
-            return redirect("/", code=302)
+            return redirect("/", code=301)
         else:
-            return abort(401)
+            return redirect("/login", code=302)
     elif(request.method == "GET"):
         logout_user()
         return render_template('Login.html')
-        
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect("/login", code=302)
+    return redirect("/login", code=301)
 
 ############################
 # SETUP                    #
@@ -95,6 +94,15 @@ def setup():
 @app.route('/')
 @login_required
 def route():
+    DATA = virty.vsql.SqlSumDomain()
+    if DATA[0] > 1000:
+        DATA[0] = str(int(DATA[0])/1000) + "GB"
+    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"),sumdata=DATA)
+    return html
+
+@app.route('/domain/list')
+@login_required
+def domain_list():
     DATA = virty.vsql.SqlSumDomain()
     if DATA[0] > 1000:
         DATA[0] = str(int(DATA[0])/1000) + "GB"

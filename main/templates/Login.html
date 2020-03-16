@@ -1,101 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "LayoutHead.html" %}
+{% block body %}
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <!-- Meta, title, CSS, favicons, etc. -->
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Virty | Login</title>
-
-  <!-- Bootstrap -->
-  <link href="/npm/gentelella/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link href="/npm/gentelella/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-  <!-- NProgress -->
-  <link href="/npm/gentelella/vendors/nprogress/nprogress.css" rel="stylesheet">
-  <!-- Animate.css -->
-  <link href="/npm/gentelella/vendors/animate.css/animate.min.css" rel="stylesheet">
-
-  <!-- Custom Theme Style -->
-  <link href="/npm/gentelella/build/css/custom.min.css" rel="stylesheet">
-</head>
-
-<body class="login">
-  <div>
-    <a class="hiddenanchor" id="signup"></a>
-    <a class="hiddenanchor" id="signin"></a>
-
-    <div class="login_wrapper">
-      <div class="animate form login_form">
-        <section class="login_content">
-          <form action="/login" method="post" name="form1">
-            <h1>Control Panel Login</h1>
-            <div>
-              <input type="text" id="userid" class="form-control" placeholder="Username" required="" name="username" />
-            </div>
-            <div>
-              <input type="password" id="password" class="form-control" placeholder="Password" required=""
-                name="password" />
-            </div>
-            <div>
-              <button class="btn btn-default">Submit</button>
-            </div>
-
-            <div class="clearfix"></div>
-
-            <div class="separator">
-
-              <div class="clearfix"></div>
-              <br />
-
-              <div>
-                Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+<body>
+  <section class="hero is-fullheight">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4">
+          <div class="box">
+            <form action="/login" method="post">
+              <div class="field">
+                <label class="label">UserID</label>
+                <div class="control has-icons-left">
+                  <input class="input" name="username" type="text" placeholder="UserID" autofocus="">
+                  <span class="icon is-small is-left"><i class="fa fa-id-card"></i></span>
+                </div>
               </div>
-            </div>
-          </form>
-        </section>
-      </div>
-
-      <div class="animate form registration_form">
-        <section class="login_content">
-          <form>
-            <h1>Create Account</h1>
-            <div>
-              <input type="text" class="form-control" placeholder="Username" required="" />
-            </div>
-            <div>
-              <input type="email" class="form-control" placeholder="Email" required="" />
-            </div>
-            <div>
-              <input type="password" class="form-control" placeholder="Password" required="" />
-            </div>
-            <div>
-              <button class="btn btn-default">Submit</button>
-            </div>
-
-            <div class="clearfix"></div>
-
-            <div class="separator">
-              <p class="change_link">Already a member ?
-                <a href="#signin" class="to_register"> Log in </a>
-              </p>
-
-
-              <div class="clearfix"></div>
-              <br />
-
-              <div>
-                Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+              <div class="field">
+                <label class="label">Password</label>
+                <div class="control has-icons-left">
+                  <input class="input" name="password" type="password" placeholder="Password">
+                  <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                </div>
               </div>
-            </div>
-          </form>
-        </section>
+              <hr>
+              <button class="button is-block is-primary is-fullwidth">Login</button>
+            </form>
+          </div>
+          <p class="has-text-grey">
+            <a href="#">Sign Up</a> &nbsp;·&nbsp;
+            <a href="#">Forgot Password</a> &nbsp;·&nbsp;
+            <a href="https://github.com/hibiki31/virty">Github</a>
+          </p>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
+  <script async type="text/javascript" src="../js/bulma.js"></script>
 </body>
-
-</html>
+{% endblock %}

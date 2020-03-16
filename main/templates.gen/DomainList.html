@@ -1,0 +1,44 @@
+{% extends "Layout.html" %}
+{% block content %}
+<article class="box">
+  <table class="table is-fullwidth is-striped">
+    <thead>
+      <tr>
+        <th>Name </th>
+        <th>Status </th>
+        <th>Node </th>
+        <th>vCPU </th>
+        <th>Memory </th>
+        <th>UUID </th>
+        <th>Info </span>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dom in domain %}
+      <tr>
+        <td><a href="/domain/{{dom[5]}}/info">{{dom[0]}}</a></td>
+
+        {% if dom[1] == 1 %}
+        <td><i class="fa fa-square is-green"></i> Run</td>
+        {% elif dom[1] == 5 %}
+        <td><i class="fa fa-square is-dark"></i> Stop</td>
+        {% elif dom[1] == 7 %}
+        <td><i class="fa fa-square is-purple"></i> Maintenance</td>
+        {% else %}
+        <td><i class="fa fa-square has-text-danger"></i> Lost</td>
+        {% endif %}
+
+        <td>{{dom[2]}}</td>
+        <td>{{dom[3]}}</td>
+        <td>{{'%0.0f' % dom[4]|float}}</td>
+        <td class="a-right a-right " style="font-family:monospace;">{{dom[5]}}</td>
+        <td class=" last"><a href="/domain/{{dom[5]}}/info">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</article>
+
+
+{% endblock %}

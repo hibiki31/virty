@@ -1,383 +1,212 @@
 {% extends "Layout.html" %}
 {% block content %}
 
-<div class="right_col" role="main">
-    <div class="">
-        <div class="row top_tiles">
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                    <div class="icon"><i class="fa fa-at"></i></div>
-                    <div class="count">{{domain['name']}}</div>
-                    <h3>NAME</h3>
-                </div>
-            </div>
-            <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                    <div class="icon"><i class="fa fa-cubes"></i></div>
-                    <div class="count">{{domain['node-name']}}</div>
-                    <h3>NODE_NAME</h3>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-5 col-sm-5 col-xs-5">
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2>Base infomation <small></small></h2>
-                        <ul class="nav navbar-right panel_toolbox">
-                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                            </li>
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a href="#">Settings 1</a>
-                                    </li>
-                                    <li><a href="#">Settings 2</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li><a class="close-link"><i class="fa fa-close"></i></a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <div class="table-responsive">
-                            <table class="table table-striped jambo_table bulk_action">
-                                <thead>
-                                    <tr class="headings">
-                                        <th>
-                                            <input type="checkbox" id="check-all" class="flat">
-                                        </th>
-                                        <th class="column-title">Column </th>
-                                        <th class="column-title">Value </th>
-                                        </th>
-                                        <th class="bulk-actions" colspan="7">
-                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
-                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Node name on which this domain</td>
-                                        <td class=" ">{{domain['node-name']}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Node ip on which this domain</td>
-                                        <td class=" ">{{domain['node-ip']}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Node name on which this domain</td>
-                                        <td class=" ">{{domain['node-name']}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Vnc port</td>
-                                        <td class=" ">{{domain['vnc'][0]}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Auto vnc port mapping</td>
-                                        <td class=" ">{{domain['vnc'][1]}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Allow vnc connection host</td>
-                                        <td class=" ">{{domain['vnc'][2]}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Vnc password</td>
-                                        <td class=" ">{{domain['vnc'][3]}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Selinux enforse</td>
-                                        <td class=" ">{{domain['selinux']}}</td>
-                                        </td>
-                                    </tr>
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">Boot device</td>
-                                        <td class=" ">{{domain['boot']}}</td>
-                                        </td>
-                                    </tr>
-                                </tbody>
-
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2>Console <small></small></h2>
-                        <ul class="nav navbar-right panel_toolbox">
-                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                            </li>
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <a class="dropdown-item" href="#">Settings 1</a>
-                                    <a class="dropdown-item" href="#">Settings 2</a>
-                                </div>
-                            </li>
-                            <li><a class="close-link"><i class="fa fa-close"></i></a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <form method="post" action="/api/que/domain/power/">
-                            <input type="hidden" name="domain-list" value="{{domain['name']}}">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Power</label>
-                                <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <button name="status" value="poweron" class="btn btn-success">PowerON</button>
-                                        <button name="status" value="poweroff" class="btn btn-danger">PowerOFF</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="divider-dashed"></div>
-                        <form method="post" action="/api/que/domain/selinux/">
-                            <input type="hidden" name="uuid" value="{{domain['uuid']}}">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">SElinux</label>
-                                <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <button name="state" value="disable" class="btn btn-danger">Disable</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="divider-dashed"></div>
-                        <form action="/api/que/domain/name-edit/" method="post">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Edit name</label>
-                                <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
-                                        <input type="text" id="domain-name" name="newname" class="form-control">
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-primary">Edit</button>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="divider-dashed"></div>
-                        <form action="/api/que/domain/memory-edit/" method="post">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Memory</label>
-                                <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
-                                        <select class="form-control" name="memory" required="required">
-                                            <option value="512">512MB</option>
-                                            <option value="1024">1024MB</option>
-                                            <option value="2048">2048MB</option>
-                                            <option value="4096">4096MB</option>
-                                            <option value="8192">8192MB</option>
-                                            <option value="16384">16GB</option>
-                                            <option value="32768">32GB</option>
-                                            <option value="65536">64GB</option>
-                                            <option value="13072">128GB</option>
-                                        </select>
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-primary">Edit</button>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="divider-dashed"></div>
-                        <form action="/api/que/domain/cpu-edit/" method="post">
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">CPU</label>
-                                <div class="col-sm-9">
-                                    <div class="input-group">
-                                        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
-                                        <select class="form-control" name="cpu" required="required">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="4">4</option>
-                                            <option value="8">8</option>
-                                            <option value="16">16</option>
-                                            <option value="32">32</option>
-                                            <option value="48">48</option>
-                                        </select>
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-primary">Edit</button>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-7 col-sm-7 col-xs-7">
-
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2>Nic_List <small></small></h2>
-                        <ul class="nav navbar-right panel_toolbox">
-                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                            </li>
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a href="#">Settings 1</a>
-                                    </li>
-                                    <li><a href="#">Settings 2</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li><a class="close-link"><i class="fa fa-close"></i></a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <div class="table-responsive">
-                            <table class="table table-striped jambo_table bulk_action">
-                                <thead>
-                                    <tr class="headings">
-                                        <th>
-                                            <input type="checkbox" id="check-all" class="flat">
-                                        </th>
-                                        <th class="column-title">Type </th>
-                                        <th class="column-title">Mac </th>
-                                        <th class="column-title">Target </th>
-                                        <th class="column-title">Source </th>
-                                        <th class="column-title">Edit </th>
-                                        </th>
-                                        <th class="bulk-actions" colspan="7">
-                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
-                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for dom in domain['interface'] %}
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">{{dom[0]}}</td>
-                                        <td class=" ">{{dom[1]}}</td>
-                                        <td class=" ">{{dom[2]}}</td>
-                                        <td class=" ">{{dom[3]}}</td>
-                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/nic/{{dom[1]}}">Edit</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2>Device_List <small></small></h2>
-                        <ul class="nav navbar-right panel_toolbox">
-                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                            </li>
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a href="#">Settings 1</a>
-                                    </li>
-                                    <li><a href="#">Settings 2</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li><a class="close-link"><i class="fa fa-close"></i></a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <div class="table-responsive">
-                            <table class="table table-striped jambo_table bulk_action">
-                                <thead>
-                                    <tr class="headings">
-                                        <th>
-                                            <input type="checkbox" id="check-all" class="flat">
-                                        </th>
-                                        <th class="column-title">Device </th>
-                                        <th class="column-title">Type </th>
-                                        <th class="column-title">Source </th>
-                                        <th class="column-title">Target </th>
-                                        <th class="column-title">Edit </th>
-                                        </th>
-                                        <th class="bulk-actions" colspan="7">
-                                            <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span
-                                                    class="action-cnt"> </span> ) <i class="fa fa-chevron-down"></i></a>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for dom in domain['disk'] %}
-                                    <tr class="even pointer">
-                                        <td class="a-center ">
-                                            <input type="checkbox" class="flat" name="table_records">
-                                        </td>
-                                        <td class=" ">{{dom[0]}}</td>
-                                        <td class=" ">{{dom[1]}}</td>
-                                        <td class=" ">{{dom[2]}}</td>
-                                        <td class=" ">{{dom[3]}}</td>
-                                        {% if dom[0] == "cdrom" %}
-                                        <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
-                                            {% else %}
-                                        <td class=" last">-</a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="tile is-ancestor has-text-centered">
+  <div class="tile is-parent is-6">
+    <article class="tile is-child box">
+      <p class="title">{{domain['name']}}</p>
+      <p class="subtitle">Name</p>
+    </article>
+  </div>
+  <div class="tile is-parent is-3">
+    <article class="tile is-child box">
+      <p class="title">{{domain['node-name']}}</p>
+      <p class="subtitle">Node</p>
+    </article>
+  </div>
+  <div class="tile is-parent is-3">
+    <article class="tile is-child box">
+      <p class="title">{{domain['vnc'][0]}}</p>
+      <p class="subtitle">VNC</p>
+    </article>
+  </div>
 </div>
 
+<div class="columns is-vcentered is-multiline">
+  <div class="column">
+    <article class="box">
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Column </th>
+            <th>Value </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Node name on which this domain</td>
+            <td>{{domain['node-name']}}</td>
+          </tr>
+          <tr>
+            <td>Node ip on which this domain</td>
+            <td>{{domain['node-ip']}}</td>
+          </tr>
+          <tr>
+            <td>Node name on which this domain</td>
+            <td>{{domain['node-name']}}</td>
+          </tr>
+          <tr>
+            <td>Vnc port</td>
+            <td>{{domain['vnc'][0]}}</td>
+          </tr>
+          <tr>
+            <td>Auto vnc port mapping</td>
+            <td>{{domain['vnc'][1]}}</td>
+          </tr>
+          <tr>
+            <td>Allow vnc connection host</td>
+            <td>{{domain['vnc'][2]}}</td>
+          </tr>
+          <tr>
+            <td>Vnc password</td>
+            <td>{{domain['vnc'][3]}}</td>
+          </tr>
+          <tr>
+            <td>Selinux enforse</td>
+            <td>{{domain['selinux']}}</td>
+          </tr>
+          <tr>
+            <td>Boot device</td>
+            <td>{{domain['boot']}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </div>
+  <div class="column">
+    <article class="box">
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Device </th>
+            <th>Type </th>
+            <th>Source </th>
+            <th>Target </th>
+            <th>Edit </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dom in domain['disk'] %}
+          <tr>
+            <td>{{dom[0]}}</td>
+            <td>{{dom[1]}}</td>
+            <td>{{dom[2]}}</td>
+            <td>{{dom[3]}}</td>
+            {% if dom[0] == "cdrom" %}
+            <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
+              {% else %}
+            <td class=" last">-</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </article>
+    <article class="box">
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Type </th>
+            <th>Mac </th>
+            <th>Target </th>
+            <th>Source </th>
+            <th>Edit </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dom in domain['interface'] %}
+          <tr>
+            <td>{{dom[0]}}</td>
+            <td>{{dom[1]}}</td>
+            <td>{{dom[2]}}</td>
+            <td>{{dom[3]}}</td>
+            <td class=" last"><a href="/domain/{{domain['uuid']}}/nic/{{dom[1]}}">Edit</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </article>
+  </div>
+  <div class="column is-narrow">
+    <article class="box">
+      <form method="post" action="/api/que/domain/power/" class="field">
+        <label class="label">Power</label>
+        <input type="hidden" name="domain-list" value="{{domain['name']}}">
+        <button name="status" value="poweron" class="button is-success is-small">PowerON</button>
+        <button name="status" value="poweroff" class="button is-danger is-small">PowerOFF</button>
+      </form>
+    
+      <form method="post" action="/api/que/domain/selinux/" class="field">
+        <label class="label">SElinux</label>
+        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <button name="state" value="disable" class="button is-danger is-small">Disable</button>
+      </form>
+    
+      <form action="/api/que/domain/name-edit/" method="post" class="field">
+        <label class="label">Edit name</label>
+        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <div class="field has-addons">
+          <div class="control">
+            <input name="newname" class="input control is-small" type="text" placeholder="Name">
+          </div>
+          <div class="control">
+            <button class="button is-primary is-small">Edit</a>
+          </div>
+        </div>
+      </form>
+    
+      <form action="/api/que/domain/memory-edit/" method="post" class="field">
+        <label class="label">Memory</label>
+        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <div class="field has-addons">
+          <div class="control">
+            <span class="select is-small">
+              <select class="select" name="memory" required="required">
+                <option value="512">512MB</option>
+                <option value="1024">1024MB</option>
+                <option value="2048">2048MB</option>
+                <option value="4096">4096MB</option>
+                <option value="8192">8192MB</option>
+                <option value="16384">16GB</option>
+                <option value="32768">32GB</option>
+                <option value="65536">64GB</option>
+                <option value="13072">128GB</option>
+              </select>
+            </span>
+          </div>
+          <div class="control">
+            <button class="button is-primary is-small">Edit</button>
+          </div>
+        </div>
+      </form>
+    
+      <form action="/api/que/domain/cpu-edit/" method="post" class="field">
+        <label class="label">CPU</label>
+        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <div class="field has-addons">
+          <div class="control">
+            <span class="select is-small">
+              <select class="select" name="cpu" required="required">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="16">16</option>
+                <option value="32">32</option>
+                <option value="48">48</option>
+              </select>
+            </span>
+          </div>
+          <div class="control">
+            <button class="button is-primary is-small">Edit</button>
+          </div>
+        </div>
+      </form>
+    
+    </article>
+  </div>
+</div>
 
 {% endblock %}
