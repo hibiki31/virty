@@ -1,3 +1,4 @@
+//define
 function Jsonget(URL) {
   return $.ajax({
     type: 'GET',
@@ -7,12 +8,14 @@ function Jsonget(URL) {
     contentType: "application/json",
   }).fail(function (XMLHttpRequest) {
     if (XMLHttpRequest.status == 401) {
-      // location.href = '/login';
+      alert("401")
+      location.href = '/login';
     }
   }).always(function (e) {
   });
 }
 
+//interface plus
 $(function () {
   var minCount = 1;
   var maxCount = 6;
@@ -45,10 +48,11 @@ $(function () {
       $(this).parents('.unit').remove();
     }
   });
+  
 });
 
-// Node list
-$(function () {
+//node list
+$(document).ready(function () {
   Jsonget('/api/sql/kvm_node.json').done(function (result) {
     data = result.ResultSet
     for (var i in data) {
@@ -57,7 +61,7 @@ $(function () {
   })
 });
 
-// Define Option
+//define option
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
@@ -86,66 +90,34 @@ $('#node-list').on('change', function () {
   })
 });
 
-
-
-
-// Queue
-$(function () {
-  Jsonget('/ui/get/info').done(function (result) {
-    $('.user_id').text(result.user_id);
-  })
-
-  setInterval(function () {
-    $.getJSON('/api/json/stack-que', function (data) {
-      let p = 0;
-      for (let i in data.ResultSet) {
-        if ($('#que-status li > a').length <= p) {
-          let add_contents = '<li><a><span class="image"><img src="/static/images/admiral.jpg" alt="Profile Image" /></span>'
-          add_contents += '<span><span class="quename">' + data.ResultSet[i][4] + '</span><span class="time">' + data.ResultSet[i][1] + '</span></span><span class="message"></span></a></li>'
-          $('#que-status').prepend(add_contents);
-        } else {
-          $('#que-status .quename').eq(p).text(data.ResultSet[i][4]);
-          $('#que-status .time').eq(p).text(data.ResultSet[i][1]);
-        }
-        p++;
-      }
-      $('#que-status').children(':not(:last-child):nth-child(n + ' + (p + 1) + ')').remove();
-
-      $('#que-badge').html(data.ResultSet.length)
-      if (data.ResultSet.length == 0) {
-        $('#que-badge').hide();
-      } else {
-        $('#que-badge').show();
-      }
-    });
-  }, 10000);
-});
-
-// Table sort
+//table sort
 $(document).ready(function () {
   $('.table').tablesorter();
 });
 
-
-
+///menu
 $(document).ready(function () {
   $(".navbar-burger").click(function () {
     $(".navbar-burger").toggleClass("is-active");
     $(".navbar-menu").toggleClass("is-active");
   });
-});
-$(function () {
-  $('.menu li a').each(function () {
-    var $href = $(this).attr('href');
-    if (location.pathname.match($href)) {
-      $(this).addClass('is-active');
-    } else {
-      $(this).removeClass('is-active');
-    }
+  $(".modal-delete").click(function () {
+    $(".modal").removeClass("is-active");
+  });
+  $(".open-interface").click(function () {
+    var mac = $(this).attr("id");
+    $("#modal-mac").attr('value',mac);
+    $("#modal-interface").addClass("is-active");
+  });
+  $("#modal-open-undefine").click(function () {
+    $("#modal-undefine").addClass("is-active");
   });
 });
 
-$(function () {
+
+
+///effect
+$(document).ready(function () {
   $('.tabs ul li').each(function () {
     var $href = $(this).children('a').attr('href');
     var $path = location.pathname + location.search;
@@ -155,13 +127,12 @@ $(function () {
       $(this).removeClass('is-active');
     }
   });
+  $('.menu li a').each(function () {
+    var $href = $(this).attr('href');
+    if (location.pathname.match($href)) {
+      $(this).addClass('is-active');
+    } else {
+      $(this).removeClass('is-active');
+    }
+  });
 });
-
-$('td').hover(
-  function () {
-    $(this).addClass('is-active');
-  },
-  function () {
-    $(this).removeClass('is-active');
-  }
-);

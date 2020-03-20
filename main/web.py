@@ -68,8 +68,10 @@ def login():
         else:
             return redirect("/login", code=302)
     elif(request.method == "GET"):
-        logout_user()
+        # logout_user()
+        print("get")
         return render_template('Login.html')
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -79,7 +81,8 @@ def logout():
 # SETUP                    #
 ############################
 @app.route('/setup',methods=["POST","GET"])
-def setup():
+@login_required
+def resetup():
     if request.method == 'POST':
         if request.form["status"] == "dbinit":
             virty.vsql.SqlInit()
@@ -94,35 +97,12 @@ def setup():
 @app.route('/')
 @login_required
 def route():
-    DATA = virty.vsql.SqlSumDomain()
-    if DATA[0] > 1000:
-        DATA[0] = str(int(DATA[0])/1000) + "GB"
-    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"),sumdata=DATA)
-    return html
-
-@app.route('/domain/list')
-@login_required
-def domain_list():
-    DATA = virty.vsql.SqlSumDomain()
-    if DATA[0] > 1000:
-        DATA[0] = str(int(DATA[0])/1000) + "GB"
-    html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"),sumdata=DATA)
-    return html
+    return redirect("/ui/domain", code=302)
 
 @app.route('/storage/<NODE>/<NAME>')
 @login_required
 def info_storage(NODE,NAME):
     html = render_template('StorageUndefine.html',domain=[NODE,NAME])
-    return html
-
-@app.route('/image/list')
-@login_required
-def storage_list():
-    if request.args.get('tree') == "true":
-        data = virty.vsql.SqlGetAll('kvm_storage')
-        html = render_template('ImageListNode.html',data=data)
-    else:
-        html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
     return html
 
 @app.route('/archive/list')
@@ -131,37 +111,52 @@ def storage_listall():
     html = render_template('ArchiveImageList.html',datas=virty.ImageArchiveListAll())
     return html
 
-@app.route('/image/delete/<NODE>/<POOL>/<IMAGE>')
-@login_required
-def image_delete(NODE,POOL,IMAGE):
-    virty.ImageDelete(NODE,POOL,IMAGE)
-    return redirect("/image/list", code=302)
-
 @app.route('/network/delete/<NODE>/<SOURCE>')
 @login_required
 def network_delete(NODE,SOURCE):
     virty.vsql.NetworkDelete(NODE,SOURCE)
     return redirect("/list/network", code=302)
 
-@app.route('/list/<GET_DATA>')
+@app.route('/ui/<GET_DATA>')
 @login_required
 def node_list(GET_DATA):
     if GET_DATA == "node":
         html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("kvm_node"),sumdata=virty.vsql.SqlSumNode())
-        return html
     elif GET_DATA == "archive":
         html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
-        return html
     elif GET_DATA == "storage":
         data = virty.vsql.SqlGetAll('kvm_storage')
         html = render_template('StorageList.html',data=data)
-        return html
     elif GET_DATA == "network":
         html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("kvm_network"))
-        return html
     elif GET_DATA == "que":
-        html = render_template('QueList.html',domain=virty.vsql.SqlGetAll("kvm_que"),status=virty.WorkerStatus())
-        return html
+        domain = virty.vsql.SqlFetchall("select * from kvm_que order by que_id desc",[])
+        html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
+    elif GET_DATA == "image":
+        if request.args.get('tree') == "true":
+            if not request.args.get('node') == None:
+                if not request.args.get('pool') == None:
+                    data = virty.vsql.SqlFetchall("select * from kvm_img where node=? and pool=?",[(request.args.get('node')),(request.args.get('pool'))])
+                    html = render_template('ImageList.html',images=data)
+                else:
+                    data = virty.vsql.SqlFetchall("select * from kvm_storage where storage_node_name=?",[(request.args.get('node'))])
+                    html = render_template('ImageListPool.html',data=data)
+            else:
+                data = virty.vsql.SqlGetAll('kvm_storage')
+                html = render_template('ImageListNode.html',domain=virty.vsql.SqlGetAll("kvm_node"))
+        else:
+            html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
+    elif GET_DATA == "domain":
+        if not request.args.get('uuid') == None:
+            xml = virty.DomainData(request.args.get('uuid'))
+            db = virty.vsql.SqlFetchall("select * from kvm_domain where domain_uuid=?",[(request.args.get('uuid'))])
+            net = virty.NodeNetworkList(virty.vsql.Convert("DOM_UUID","NODE_NAME",request.args.get('uuid')))
+            html = render_template('DomainInfo.html',xml=xml,db=db,net=net)
+        else:
+            html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"))
+    else:
+        return abort(404)
+    return html
 
 #GETでやろう
 @app.route('/ui/edit/image/<NODE>/<POOL>/<FILE>')
@@ -171,57 +166,31 @@ def ui_edit(NODE,POOL,FILE):
     html = render_template('ImageEdit.html',data=data)
     return html
 
-
-@app.route('/domain/define')
+############################
+# UI MAKE                  #
+############################
+@app.route('/ui/make/domain')
 @login_required
 def domain_add():
     virty.WorkerUp()
     html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
     return html
 
-@app.route('/domain/define/normal')
-@login_required
-def domain_define():
-    virty.WorkerUp()
-    html = render_template('DomainDefineNormal.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
-    return html
-
-@app.route('/network/2ldefine')
-@login_required
-def net_define():
-    virty.WorkerUp()
-    html = render_template('NetworkDefine2l.html')
-    return html
-
-@app.route('/domain/power')
-@login_required
-def domain_power():
-    virty.WorkerUp()
-    html = render_template('DomainPower.html',domain=virty.vsql.SqlGetAll("kvm_domain"))
-    return html
-
-@app.route('/domain/tools')
-@login_required
-def domain_listinit():
-    virty.WorkerUp()
-    html = render_template('DomainTools.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"))
-    return html
-
-@app.route('/node/add')
+@app.route('/ui/make/node')
 @login_required
 def node_add():
     virty.WorkerUp()
     html = render_template('NodeAdd.html')
     return html
 
-@app.route('/storage/add')
+@app.route('/ui/make/storage')
 @login_required
 def storage_add():
     virty.WorkerUp()
     html = render_template('StorageAdd.html')
     return html
 
-@app.route('/network/add')
+@app.route('/ui/make/network')
 @login_required
 def network_add():
     virty.WorkerUp()
@@ -231,22 +200,6 @@ def network_add():
 ############################
 # DOMAIN                   #
 ############################
-@app.route('/domain/<DOM_UUID>/info')
-@login_required
-def domain_info(DOM_UUID):
-    xml = virty.DomainData(DOM_UUID)
-    db = virty.vsql.SqlFetchall("select * from kvm_domain where domain_uuid=?",[(DOM_UUID)])
-    html = render_template('DomainInfo.html',xml=xml,db=db)
-    return html
-
-@app.route('/domain/<DOM_UUID>/nic/<DOM_MAC>')
-@login_required
-def domain_nic(DOM_UUID,DOM_MAC):
-    NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
-    NETWORK_DATAS = virty.NodeNetworkList(NODE_NAME)
-    html = render_template('DomainNicEdit.html',NET=NETWORK_DATAS,DOM=[DOM_UUID,DOM_MAC])
-    return html
-
 @app.route('/domain/<DOM_UUID>/disk/<TARGET>')
 @login_required
 def domain_cdrom(DOM_UUID,TARGET):
@@ -298,14 +251,6 @@ def api_get(OBJECT):
 ############################
 # POST                     #
 ############################
-@app.route("/api/add/<POST_TASK>",methods=["POST"])
-@login_required
-def api_add(POST_TASK):
-    if POST_TASK == "que_clear":
-        if request.form["status"] == "que_clear":
-            virty.vsql.SqlDeleteAll("kvm_que")
-            return "que_list_clear"
-
 @app.route("/api/edit/<POST_TASK>",methods=["POST"])
 @login_required
 def api_edit(POST_TASK):
@@ -350,5 +295,8 @@ def api_que(OBJECT,METHOD):
     return redirect(request.referrer, code=302)
 
 if __name__ == "__main__":
+    if virty.vsql.SqlFetchall("select name from sqlite_master where type='table';",[]) == []:
+        print("database init")
+        virty.vsql.SqlInit()
     virty.WorkerUp()
     app.run(debug=True, host='0.0.0.0', port=80)

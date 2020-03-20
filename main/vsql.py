@@ -321,8 +321,6 @@ def UpdateNodeStatus(NODES,CODE):
 # QUE                      #
 ############################
 
-#26|2020-01-13 01:31:52|finish|domain|power|{'domain-list': 'nfs_2306', 'status': 'poweron'}|Success poweron
-
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
@@ -377,8 +375,8 @@ def QueueUpdateTime(QUE_ID,QUE_TIME):
 # USER                     #
 ############################
 class User(UserMixin):
-    def __init__(self, id, username, password):
-        self.id = id
+    def __init__(self, userid, username, password):
+        self.id = userid
         self.username = username
         self.password = password
 

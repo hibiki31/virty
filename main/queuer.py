@@ -35,7 +35,7 @@ elif que[3] == "domain" and que[4] == "list-reload":
     print("List-reload")
 
 elif que[3] == "domain" and que[4] == "undefine":
-    result = virty.DomainUndefine(POST['domain-list'])
+    result = virty.DomainUndefine(POST['uuid'])
     virty.vsql.SqlDeleteAll("kvm_domain")
     virty.DomainListInit()
 

@@ -2,20 +2,20 @@
 {% block content %}
 <div class="tabs is-centered">
     <ul>
-        <li class="is-active">
-            <a href="/image/list?tree=false">
+        <li>
+            <a href="/ui/image?tree=false">
                 <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
                 <span>All</span>
             </a>
         </li>
         <li>
-            <a href="/image/list?tree=true">
+            <a href="/ui/image?tree=true">
                 <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
                 <span>Folder</span>
             </a>
         </li>
     </ul>
-</div>
+  </div>
 
 <article class="box">
     <table class="table is-fullwidth">
@@ -49,33 +49,6 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
-</article>
-
-
-<article class="box">
-    <table class="table is-fullwidth">
-        <thead>
-            <tr>
-                <th>Node </th>
-                <th>Name </th>
-                <th>Capa </th>
-                <th>Available </th>
-                <th>Path </th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pool in pools %}
-            <tr>
-                <td class=" ">{{pool[1]}}</td>
-                <td class=" ">{{pool[0]}}</td>
-                <td class=" ">{{pool[3]}}G</td>
-                <td class=" ">{{pool[4]}}G</td>
-                <td class=" ">{{pool[7]}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
     </table>
 </article>
 

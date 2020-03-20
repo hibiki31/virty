@@ -115,8 +115,7 @@ def DomainAutostart(DOM_NAME):
 
     return result
 
-def DomainUndefine(DOM_NAME):
-    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
+def DomainUndefine(DOM_UUID):
     if DOM_UUID == None:
         return ["error","sql","get","Domain name not found",""]
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)

@@ -16,7 +16,7 @@
     <tbody>
       {% for data in domain %}
       <tr>
-        <td><a href="/domain/{{data[5]}}/info">{{data[0]}}</a></td>
+        <td><a href="/ui/domain?uuid={{data[5]}}">{{data[0]}}</a></td>
 
         {% if data[1] == 1 %}
         <td><i class="fa fa-square has-text-primary"></i> Up</td>
@@ -32,7 +32,7 @@
         <td>{{data[3]}}</td>
         <td>{{'%0.0f' % data[4]|float}}</td>
         <td class="a-right" style="font-family:monospace;">{{data[5]}}</td>
-        <td class="last"><a href="/domain/{{data[5]}}/info">View</a>
+        <td class="last"><a href="/ui/domain?uuid={{data[5]}}">View</a>
         </td>
       </tr>
       {% endfor %}

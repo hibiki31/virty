@@ -101,7 +101,7 @@
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
             {% if dom[0] == "cdrom" %}
-            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}">Edit</a>
+            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}"><span class="fa fa-edit has-text-primary"></span></a>
               {% else %}
             <td class=" last">-</a>
               {% endif %}
@@ -129,8 +129,7 @@
             <td>{{dom[1]}}</td>
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
-            <td class=" last"><a href="/domain/{{xml['uuid']}}/nic/{{dom[1]}}">Edit</a>
-            </td>
+            <td class="last"><i class="fa fa-edit has-text-primary open-interface" id={{dom[1]}}></i></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -150,6 +149,11 @@
         <label class="label">SElinux</label>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <button name="state" value="disable" class="button is-danger is-small">Disable</button>
+      </form>
+
+      <form class="field">
+        <label class="label">Undefine</label>
+        <span id="modal-open-undefine" class="button is-danger is-small">Confirm</span>
       </form>
 
       <form action="/api/que/domain/name-edit/" method="post" class="field">
@@ -214,6 +218,55 @@
       </form>
 
     </article>
+  </div>
+</div>
+
+<div class="modal" id="modal-interface">
+  <div class="modal-background modal-delete"></div>
+  <div class="modal-card">
+    <form action="/api/que/domain/nic-edit/" method="post" class="">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Interface change</p>
+        <button class="delete modal-delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <label class="label" for="first-name">to *</label>
+        <select name="network" class="select" required="">
+          {% for interface in net[0] %}
+          <option value={{interface}}>Interface Bridge @{{interface}}</option>
+          {% endfor %}
+          {% for network in net[1] %}
+          <option value={{network['name']}}>{{network['name']}}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
+        <input type="hidden" name="mac" value="" id="modal-mac">
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-primary">Post queue</button>
+        <span class="button modal-delete">Cancel</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-undefine">
+  <div class="modal-background modal-delete"></div>
+  <div class="modal-card">
+    <form action="/api/que/domain/undefine/" method="post">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Undefine</p>
+        <button class="delete modal-delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        仮想マシンの電源がONの場合タスクは無視されます
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
+      </section>
+      <footer class="modal-card-foot">
+        <button name="status" value="undefine" class="button is-danger">Undefine</button>
+        <span class="button modal-delete">Cancel</button>
+      </footer>
+    </form>
   </div>
 </div>
 
