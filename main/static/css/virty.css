@@ -7,3 +7,7 @@ body{
 .menu-list a {
     font-size: 0.85rem;
 }
+span.tag {
+    font-size: 0.70rem;
+    margin: -10px;
+}

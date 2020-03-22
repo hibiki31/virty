@@ -50,10 +50,6 @@
             <td>{{xml['node-ip']}}</td>
           </tr>
           <tr>
-            <td>Node name on which this domain</td>
-            <td>{{xml['node-name']}}</td>
-          </tr>
-          <tr>
             <td>Vnc port</td>
             <td>{{xml['vnc'][0]}}</td>
           </tr>
@@ -101,7 +97,7 @@
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
             {% if dom[0] == "cdrom" %}
-            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}"><span class="fa fa-edit has-text-primary"></span></a>
+            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}"><span class="fa fa-edit has-text-link"></span></a>
               {% else %}
             <td class=" last">-</a>
               {% endif %}
@@ -129,7 +125,7 @@
             <td>{{dom[1]}}</td>
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
-            <td class="last"><i class="fa fa-edit has-text-primary open-interface" id={{dom[1]}}></i></td>
+            <td class="last"><i class="fa fa-edit has-text-link open-interface" id={{dom[1]}}></i></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -164,7 +160,7 @@
             <input name="newname" class="input control is-small" type="text" placeholder="Name">
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</a>
+            <button class="button is-link is-small">Edit</a>
           </div>
         </div>
       </form>
@@ -189,7 +185,7 @@
             </span>
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</button>
+            <button class="button is-link is-small">Edit</button>
           </div>
         </div>
       </form>
@@ -212,7 +208,7 @@
             </span>
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</button>
+            <button class="button is-link is-small">Edit</button>
           </div>
         </div>
       </form>
@@ -227,7 +223,7 @@
     <form action="/api/que/domain/nic-edit/" method="post" class="">
       <header class="modal-card-head">
         <p class="modal-card-title">Interface change</p>
-        <button class="delete modal-delete" aria-label="close"></button>
+        <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
         <label class="label" for="first-name">to *</label>
@@ -243,7 +239,7 @@
         <input type="hidden" name="mac" value="" id="modal-mac">
       </section>
       <footer class="modal-card-foot">
-        <button class="button is-primary">Post queue</button>
+        <button class="button is-link">Post queue</button>
         <span class="button modal-delete">Cancel</button>
       </footer>
     </form>
@@ -256,7 +252,7 @@
     <form action="/api/que/domain/undefine/" method="post">
       <header class="modal-card-head">
         <p class="modal-card-title">Undefine</p>
-        <button class="delete modal-delete" aria-label="close"></button>
+        <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
         仮想マシンの電源がONの場合タスクは無視されます

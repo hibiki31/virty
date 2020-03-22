@@ -121,39 +121,40 @@ def network_delete(NODE,SOURCE):
 @login_required
 def node_list(GET_DATA):
     if GET_DATA == "node":
-        html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("kvm_node"),sumdata=virty.vsql.SqlSumNode())
+        html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("node"),sumdata=virty.vsql.SqlSumNode())
     elif GET_DATA == "archive":
         html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
     elif GET_DATA == "storage":
-        data = virty.vsql.SqlGetAll('kvm_storage')
+        data = virty.vsql.SqlGetAll('storage')
         html = render_template('StorageList.html',data=data)
     elif GET_DATA == "network":
-        html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("kvm_network"))
+        html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("network"))
     elif GET_DATA == "que":
-        domain = virty.vsql.SqlFetchall("select * from kvm_que order by que_id desc",[])
+        domain = virty.vsql.RawFetchall("select * from que order by que_id desc",[])
         html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
     elif GET_DATA == "image":
         if request.args.get('tree') == "true":
             if not request.args.get('node') == None:
                 if not request.args.get('pool') == None:
-                    data = virty.vsql.SqlFetchall("select * from kvm_img where node=? and pool=?",[(request.args.get('node')),(request.args.get('pool'))])
+                    data = virty.vsql.RawFetchall("select * from img where node=? and pool=?",[(request.args.get('node')),(request.args.get('pool'))])
                     html = render_template('ImageList.html',images=data)
                 else:
-                    data = virty.vsql.SqlFetchall("select * from kvm_storage where storage_node_name=?",[(request.args.get('node'))])
+                    data = virty.vsql.PoolListGet(request.args.get('node'))
                     html = render_template('ImageListPool.html',data=data)
             else:
-                data = virty.vsql.SqlGetAll('kvm_storage')
-                html = render_template('ImageListNode.html',domain=virty.vsql.SqlGetAll("kvm_node"))
+                data = virty.vsql.SqlGetAll('storage')
+                html = render_template('ImageListNode.html',domain=virty.vsql.SqlGetAll("node"))
         else:
-            html = render_template('ImageList.html',images=virty.vsql.SqlGetAll('kvm_img'),pools=virty.vsql.SqlGetAll('kvm_storage'))
+            images = virty.vsql.SqlGetAll('img')
+            html = render_template('ImageList.html',images=images)
     elif GET_DATA == "domain":
         if not request.args.get('uuid') == None:
             xml = virty.DomainData(request.args.get('uuid'))
-            db = virty.vsql.SqlFetchall("select * from kvm_domain where domain_uuid=?",[(request.args.get('uuid'))])
+            db = virty.vsql.RawFetchall("select * from domain where uuid=?",[(request.args.get('uuid'))])
             net = virty.NodeNetworkList(virty.vsql.Convert("DOM_UUID","NODE_NAME",request.args.get('uuid')))
             html = render_template('DomainInfo.html',xml=xml,db=db,net=net)
         else:
-            html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("kvm_domain","domain_name"))
+            html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("domain","name"))
     else:
         return abort(404)
     return html
@@ -173,7 +174,7 @@ def ui_edit(NODE,POOL,FILE):
 @login_required
 def domain_add():
     virty.WorkerUp()
-    html = render_template('DomainDefine.html',domain=virty.vsql.SqlGetAll("kvm_archive"))
+    html = render_template('DomainDefine.html',node=virty.vsql.SqlGetAll("node"))
     return html
 
 @app.route('/ui/make/node')
@@ -208,6 +209,20 @@ def domain_cdrom(DOM_UUID,TARGET):
     html = render_template('DomainCdromEdit.html',IMG=IMAGE_DATAS,DOM=[DOM_UUID,TARGET])
     return html
 
+
+############################
+# ACTION                   #
+############################
+@app.route('/action/image/delete',methods=["POST"])
+@login_required
+def action_image_delete():
+    task = {}
+    for key, value in request.form.items():
+        task[key]=value
+    print(task)
+    virty.ImageDelete(task['node'],task['pool'],task['name'])
+    virty.DomainListInit()
+    return redirect("/ui/image", code=302)
 
 
 ############################
@@ -295,7 +310,7 @@ def api_que(OBJECT,METHOD):
     return redirect(request.referrer, code=302)
 
 if __name__ == "__main__":
-    if virty.vsql.SqlFetchall("select name from sqlite_master where type='table';",[]) == []:
+    if virty.vsql.RawFetchall("select name from sqlite_master where type='table';",[]) == []:
         print("database init")
         virty.vsql.SqlInit()
     virty.WorkerUp()

@@ -27,6 +27,7 @@
         <th class="column-title" style="width: 25%;"></th>
         <th class="column-title">Node </th>
         <th class="column-title">Path </th>
+        <th class="column-title">Contains </th>
       </tr>
     </thead>
     <tbody>
@@ -38,6 +39,7 @@
         <td><progress class="progress is-primary is-small" value="{{(dom[4])}}" max="{{dom[3]}}"></progress></td>
         <td>{{dom[1]}}</td>
         <td>{{dom[7]}}</td>
+        <td>{{dom['count(*)']}}</td>
       </tr>
       {% endfor %}
     </tbody>

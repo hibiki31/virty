@@ -1,72 +1,72 @@
 {% extends "Layout.html" %}
 {% block content %}
+<div class="columns is-multiline">
+  <div class="column is-4">
+    <article class="box">
+      <form action="/api/que/domain/define/" method="post" class="field">
+        <label class="label">Node</label>
+        <select id="node-list" name="node" class="select is-small" required="">
+          {%for i in node%}
+          <option value="{{i[0]}}">{{i[0]}}</option>
+          {%endfor%}
+        </select>
 
-<article class="box">
-  <form action="/api/que/domain/define/" method="post" class="field">
-    <label class="label">Node <span class="required">*</span></label>
-    <select id="node-list" name="node" class="select" required="">
-      <option value=""></option>
-    </select>
+        <label class="label">Archive</label>
+        <select id="archive-list" name="archive" class="select is-small" required=""></select>
 
-    <label class="label">Archive <span class="required">*</span></label>
-    <select id="archive-list" name="archive" class="select" required=""></select>
+        <label class="label">Storage</label>
+        <select id="storage-list" name="storage" class="select is-small" required=""></select>
 
-    <label class="label">Storage <span class="required">*</span></label>
-    <select id="storage-list" name="storage" class="select" required=""></select>
+        <label class="label" for="last-name">Name</label>
+        <input type="text" id="domain-name" name="name" required="required" class="input is-small">
 
-    <label class="label" for="last-name">Name <span class="required">*</span></label>
-    <input type="text" id="domain-name" name="name" required="required" class="input">
+        <label class="label">vCPU</label>
+        <select id="node_list" class="select is-small" name="cpu" required="required">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+          <option value="8">8</option>
+          <option value="16">16</option>
+          <option value="32">32</option>
+          <option value="48">48</option>
+        </select>
 
-    <label class="label">vCPU <span class="required">*</span></label>
-    <select id="node_list" class="select" name="cpu" required="required">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="4">4</option>
-      <option value="8">8</option>
-      <option value="16">16</option>
-      <option value="32">32</option>
-      <option value="48">48</option>
-    </select>
+        <label class="label">Memory</label>
+        <select id="node_list" class="select is-small" name="memory" required="required">
+          <option value="512">512MB</option>
+          <option value="1024">1024MB</option>
+          <option value="2048">2048MB</option>
+          <option value="4096">4096MB</option>
+          <option value="8192">8192MB</option>
+          <option value="16384">16GB</option>
+          <option value="32768">32GB</option>
+          <option value="65536">64GB</option>
+          <option value="13072">128GB</option>
+        </select>
 
-    <label class="label">Memory <span class="required">*</span></label>
-    <select id="node_list" class="select" name="memory" required="required">
-      <option value="512">512MB</option>
-      <option value="1024">1024MB</option>
-      <option value="2048">2048MB</option>
-      <option value="4096">4096MB</option>
-      <option value="8192">8192MB</option>
-      <option value="16384">16GB</option>
-      <option value="32768">32GB</option>
-      <option value="65536">64GB</option>
-      <option value="13072">128GB</option>
-    </select>
+        <div id="define-interface">
+          <div class="unit">
+            <label class="label">Network</label>
+            <div class="field has-addons">
+              <div class="control">
+                <select name="bridge" class="select network-list is-small" required=""></select>
 
-    <div id="demo-area" class="form-group">
-      <div class="unit">
-        <div class="form-group">
-          <label class="label">Network <span class="required">*</span>
-          </label>
-          <div class="col-md-6 col-sm-6 col-xs-12">
-            <div class="input-group">
-              <select id="network-list" name="bridge" class="select" required=""></select>
-              <span class="input-group-btn demo-minus">
-                <button type="button" class="button is-danger">-</button>
-              </span>
+              </div>
+              <div class="control">
+                <span class="interface-op-remove button is-danger is-small">-</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-        <div id="demo-plus" class="button is-primary">+</div>
-      </div>
-    </div>
+        <br>
+        <span id="interface-op-add" class="button is-primary is-small">+</span>
+        <hr>
+        <button class="button is-primary is-small">Submit</button>
 
-    <button class="button is-primary">Submit</button>
-
-  </form>
-</article>
+      </form>
+    </article>
+  </div>
+</div>
 
 
 

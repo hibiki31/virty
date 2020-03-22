@@ -19,57 +19,31 @@ function Jsonget(URL) {
 $(function () {
   var minCount = 1;
   var maxCount = 6;
-  $('#demo-plus').on('click', function () {
-    var inputCount = $('#demo-area .unit').length;
+  $('#interface-op-add').on('click', function () {
+    var inputCount = $('#define-interface .unit').length;
     if (inputCount < maxCount) {
-      var element = $('#demo-area .unit:last-child').clone(true);
-      $('#demo-area .unit').parent().append(element);
+      var element = $('#define-interface .unit:last-child').clone(true);
+      $('#define-interface .unit').parent().append(element);
     }
   });
 
-  $('.demo-minus').on('click', function () {
-    var inputCount = $('#demo-area .unit').length;
+  $('.interface-op-remove').on('click', function () {
+    var inputCount = $('#define-interface .unit').length;
     if (inputCount > minCount) {
       $(this).parents('.unit').remove();
     }
   });
-
-  $('#image-plus').on('click', function () {
-    var inputCount = $('#image-list .unit').length;
-    if (inputCount < maxCount) {
-      var element = $('#image-list .unit:last-child').clone(true);
-      $('#image-list .unit').parent().append(element);
-    }
-  });
-
-  $('.image-minus').on('click', function () {
-    var inputCount = $('#image-list .unit').length;
-    if (inputCount > minCount) {
-      $(this).parents('.unit').remove();
-    }
-  });
-  
-});
-
-//node list
-$(document).ready(function () {
-  Jsonget('/api/sql/kvm_node.json').done(function (result) {
-    data = result.ResultSet
-    for (var i in data) {
-      $('#node-list').append('<option value="' + data[i][0] + '">' + data[i][0] + '</option>');
-    }
-  })
 });
 
 //define option
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
-  $('#network-list').children().remove();
+  $('.network-list').children().remove();
   Jsonget('/api/json/network/?node=' + node).done(function (result) {
     data = result.ResultSet;
     for (var i in data[1]) {
-      $('#network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
+      $('.network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
     }
   })
 
@@ -97,24 +71,34 @@ $(document).ready(function () {
 
 ///menu
 $(document).ready(function () {
+
   $(".navbar-burger").click(function () {
     $(".navbar-burger").toggleClass("is-active");
     $(".navbar-menu").toggleClass("is-active");
   });
+
   $(".modal-delete").click(function () {
     $(".modal").removeClass("is-active");
   });
+
   $(".open-interface").click(function () {
     var mac = $(this).attr("id");
-    $("#modal-mac").attr('value',mac);
+    $("#modal-mac").attr('value', mac);
     $("#modal-interface").addClass("is-active");
   });
+
   $("#modal-open-undefine").click(function () {
     $("#modal-undefine").addClass("is-active");
   });
+
+  $(".modal-open-image-delete").click(function () {
+    $("#modal-image-node").attr('value', $(this).parent().siblings('td[name="node"]').attr("value"));
+    $("#modal-image-pool").attr('value', $(this).parent().siblings('td[name="pool"]').attr("value"));
+    $("#modal-image-name").attr('value', $(this).parent().siblings('td[name="name"]').attr("value"));
+    $("#modal-open-image-delete").addClass("is-active");
+  });
+
 });
-
-
 
 ///effect
 $(document).ready(function () {
@@ -134,5 +118,10 @@ $(document).ready(function () {
     } else {
       $(this).removeClass('is-active');
     }
+  });
+  $('tbody tr').hover(function () {
+    $(this).addClass("is-selected");
+  }, function () {
+    $(this).removeClass("is-selected");
   });
 });

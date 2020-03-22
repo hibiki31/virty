@@ -31,9 +31,11 @@ def WorkerUp():
     p2.stdout.close()
     p3.stdout.close()
     output = p4.communicate()[0].decode("utf8").replace('\n','')
-    print(output)
     if int(output) == 0:
+        print("Worker up")
         subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
+    else:
+        print("Worker upped")
 
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
@@ -134,25 +136,25 @@ def DomainUndefine(DOM_UUID):
 
 
 def DomainListInit():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
-
+    NODE_DATAS = vsql.SqlGetAll("node")
     for NODE in NODE_DATAS:
         if int(NODE[8]) == 20:#Maintenance
-            vsql.UpdateDomainStatus([NODE[0]],[],7)
+            vsql.DomainStatusUpdate([NODE[0]],[],7)
             continue
         elif int(NODE[8]) > 20:#Error
-            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            vsql.DomainStatusUpdate([NODE[0]],[],20)
             continue
         try:
             manager = vvirt.VirtEditor(NODE[1])
         except:
-            vsql.UpdateNodeStatus([NODE[0]],50)
-            vsql.UpdateDomainStatus([NODE[0]],[],20)
+            vsql.NodeStatusUpdate([NODE[0]],50)
+            vsql.DomainStatusUpdate([NODE[0]],[],20)
             continue
 
         send = []
         pool = []
         datas = manager.StorageAllData()
+        # vsql.RawCommit("delete from img where node=?",[(NODE[0])])
         for data in datas:
             editor = vvirt.XmlEditor("str",data['xml'])
             editor.DumpSave("storage")
@@ -172,15 +174,18 @@ def DomainListInit():
         for data in datas:
             editor = vvirt.XmlEditor("str",data['xml'])
             temp = editor.DomainData()
-            for disk in temp['disk']:
-                vsql.SqlCommit("update kvm_img SET domain=? WHERE path=?",[(temp['name'],disk[2])])
+            for interface in temp['interface']:
+                interface.insert(0,temp['uuid'])
+                vsql.DomainInterfaceAdd(interface)
+            # for disk in temp['disk']:
+            #     vsql.RawCommit("update img SET domain=? WHERE path=?",[temp['name'],disk[2]])
             temp['node-name'] = NODE[0]
             temp['node-ip'] = NODE[1]
             temp['power'] = data['status']
             temp['autostart'] = data['auto']
             send.append((temp['name'], temp['power'],temp['node-name'],temp['vcpu'],temp['memory'],temp['uuid'],"unknown","unknown"))
             editor.DumpSave("dom")
-        vsql.UpdateDomainStatus([NODE[0]],[],10)
+        vsql.DomainStatusUpdate([NODE[0]],[],10)
         vsql.SqlAddDomain(send)
 
         send = []
@@ -223,7 +228,7 @@ def DomainData(DOM_UUID):
 # Storage                  #
 ############################
 def StorageListAll():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     data = []
     for NODE in NODE_DATAS:
         try:
@@ -312,7 +317,8 @@ def ImageDelete(NODE_NAME,STORAGEP_NAME,IMG_NAME):
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     editor = vvirt.VirtEditor(NODE_IP)
-    editor.ImageDelete(STORAGEP_NAME,IMG_NAME)    
+    editor.ImageDelete(STORAGEP_NAME,IMG_NAME)
+    vsql.RawCommit("delete from img where node=? and pool=? and name=?",(NODE_NAME,STORAGEP_NAME,IMG_NAME))
 
 
 def ImageIsoList(NODE_NAME):
@@ -340,7 +346,7 @@ def ImageArchiveList(NODE_NAME):
     return image
 
 def ImageArchiveListAll():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     image = []
     for NODE in NODE_DATAS:
         try:
@@ -367,15 +373,14 @@ def NodeAdd(NODE_NAME,NODE_IP):
     except Exception as e:
         return ["error","node","add",str(e)]
 
-    DATA = []
-    DATA.append([NODE_NAME,NODE_IP,MEM,CORE,CPU,OS['NAME'],OS['VERSION'],OS['ID_LIKE'],10,QEMU,VIRT])
-    SQL = "replace into kvm_node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status, qemu, libvirt) values (?,?,?,?,?,?,?,?,?,?,?)"
-    vsql.SqlCommit(SQL,DATA)
+    DATA = [NODE_NAME,NODE_IP,MEM,CORE,CPU,OS['NAME'],OS['VERSION'],OS['ID_LIKE'],10,QEMU,VIRT]
+    SQL = "replace into node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status, qemu, libvirt) values (?,?,?,?,?,?,?,?,?,?,?)"
+    vsql.RawCommit(SQL,DATA)
     vansible.AnsibleNodelistInit()
     return ["success","node","add","Succes"]
 
 def NetworkXmlSaveAll():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     for NODE in NODE_DATAS:
         try:
             manager = vvirt.VirtEditor(NODE[1])
@@ -435,7 +440,7 @@ def Network2lDefine(NODE_IP,XML_PATH,NAME,GW):
     
 
 def NetworkUndefine(NET_UUID):
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     for NODE in NODE_DATAS:
         editor = vvirt.VirtEditor(NODE[1])
         editor.NetworkOpen(NET_UUID)
@@ -452,7 +457,7 @@ def InterfaceList(NODE_NAME):
     return editor.InterfaceList()
 
 def AllInterfaceList():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     data = []
     for NODE in NODE_DATAS:
         editor = vvirt.VirtEditor(NODE[1])
@@ -470,7 +475,7 @@ def NodeNetworkList(NODE_NAME):
     return data
 
 def NodeNetworkAllList():
-    NODE_DATAS = vsql.SqlGetAll("kvm_node")
+    NODE_DATAS = vsql.SqlGetAll("node")
     data = []
     for NODE in NODE_DATAS:
         temp = {}
