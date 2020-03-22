@@ -21,6 +21,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 ############################
+# SETUP                    #
+############################
+if virty.vsql.RawFetchall("select name from sqlite_master where type='table';",[]) == []:
+    print("database init")
+    virty.vsql.SqlInit()
+
+############################
 # JWT                      #
 ############################
 def authenticate(user_id, password):
