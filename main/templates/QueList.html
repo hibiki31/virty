@@ -44,9 +44,11 @@
 
 
 <article class="box">
-    <a class="label">{{status}}</a>
+    <a class="label">status</a>
+    <span class="button is-small">{{status}}</span> 
+    <a class="label">Delete</a>
     <form action="/api/add/que_clear" method="post" class="field">
-        <button name="status" value="que_clear" class="button is-danger">Delete</button>
+        <button name="status" value="que_clear" class="button is-danger is-small">Delete</button>
     </form>
 </article>
 

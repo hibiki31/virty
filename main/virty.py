@@ -137,6 +137,9 @@ def DomainUndefine(DOM_UUID):
 
 def DomainListInit():
     NODE_DATAS = vsql.SqlGetAll("node")
+
+    vsql.DataStatusIsUpdating("domain_interface")
+    vsql.DataStatusIsUpdating("domain_drive")
     for NODE in NODE_DATAS:
         if int(NODE[8]) == 20:#Maintenance
             vsql.DomainStatusUpdate([NODE[0]],[],7)
@@ -177,8 +180,9 @@ def DomainListInit():
             for interface in temp['interface']:
                 interface.insert(0,temp['uuid'])
                 vsql.DomainInterfaceAdd(interface)
-            # for disk in temp['disk']:
-            #     vsql.RawCommit("update img SET domain=? WHERE path=?",[temp['name'],disk[2]])
+            for disk in temp['disk']:
+                disk.insert(0,temp['uuid'])
+                vsql.DomainDriveAdd(disk)
             temp['node-name'] = NODE[0]
             temp['node-ip'] = NODE[1]
             temp['power'] = data['status']
@@ -197,7 +201,8 @@ def DomainListInit():
             temp['node'] = NODE[0]
             send.append(temp)
         vsql.NetworkAdd(send)
-
+    vsql.DataStatusDelete("domain_interface")
+    vsql.DataStatusDelete("domain_drive")
         
    
 

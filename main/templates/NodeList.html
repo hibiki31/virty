@@ -52,16 +52,16 @@
 
 <article class="box">
     <form action="/api/que/node/status-update/" method="post" class="field">
-        <select name="name" class="select" required="">
+        <select name="name" class="select is-small" required="">
             {% for dom in domain %}
             <option value={{dom[0]}}>{{dom[0]}}</option>
             {% endfor %}
         </select>
-        <select name="status" class="select" required="">
+        <select name="status" class="select is-small" required="">
             <option value="10">Up</option>
             <option value="20">Maintenance</option>
         </select>
-        <button class="button is-success">Update</button>
+        <button class="button is-success is-small">Update</button>
     </form>
 </article>
 

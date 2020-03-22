@@ -68,8 +68,7 @@ def login():
         else:
             return redirect("/login", code=302)
     elif(request.method == "GET"):
-        # logout_user()
-        print("get")
+        logout_user()
         return render_template('Login.html')
 
 @app.route('/logout')
@@ -136,7 +135,7 @@ def node_list(GET_DATA):
         if request.args.get('tree') == "true":
             if not request.args.get('node') == None:
                 if not request.args.get('pool') == None:
-                    data = virty.vsql.RawFetchall("select * from img where node=? and pool=?",[(request.args.get('node')),(request.args.get('pool'))])
+                    data = virty.vsql.RawFetchall("select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*) from img left join domain_drive on img.path=domain_drive.source left join domain on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name where node=? and pool=? group by img.node,img.path;",[(request.args.get('node')),(request.args.get('pool'))])
                     html = render_template('ImageList.html',images=data)
                 else:
                     data = virty.vsql.PoolListGet(request.args.get('node'))
@@ -145,7 +144,7 @@ def node_list(GET_DATA):
                 data = virty.vsql.SqlGetAll('storage')
                 html = render_template('ImageListNode.html',domain=virty.vsql.SqlGetAll("node"))
         else:
-            images = virty.vsql.SqlGetAll('img')
+            images = virty.vsql.RawFetchall("select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*) from img left join domain_drive on img.path=domain_drive.source left join domain on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name group by img.node,img.path;",[])
             html = render_template('ImageList.html',images=images)
     elif GET_DATA == "domain":
         if not request.args.get('uuid') == None:

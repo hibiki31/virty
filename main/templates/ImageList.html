@@ -45,9 +45,11 @@
                 <td>{{image[6]}}</td>
 
                 {%if image[7] == None%}
+                <td><span class="tag is-light">{{image[7]}}</span></td>
+                {%elif image['count(*)'] == 1 %}
                 <td><span class="tag is-dark">{{image[7]}}</span></td>
                 {%else%}
-                <td><span class="tag is-light">{{image[7]}}</span></td>
+                <td><span class="tag is-dark">{{image[7]}}</span><span class="tag is-dark">....</span></td>
                 {%endif%}
                 <td><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Edit</a></td>
                 <td><span class="modal-open-image-delete">Delete</span></td>

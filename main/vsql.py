@@ -398,12 +398,20 @@ def UserGet(username):
 # Domain                   #
 ############################
 def DomainInterfaceAdd(DATA):
-    SQL = "update domain_interface set is_updating=? where dom_uuid=?"
-    RawCommit(SQL,["true",DATA[0]])
     SQL = "replace into domain_interface (dom_uuid, type, mac, target, source, network, is_updating) values (?,?,?,?,?,?,'false')"
     RawCommit(SQL,DATA)
-    SQL = "delete from domain_interface where is_updating='true' and dom_uuid=?"
-    RawCommit(SQL,[DATA[0]])
+    
+def DomainDriveAdd(DATA):
+    SQL = "replace into domain_drive (dom_uuid, device, type, source, target, is_updating) values (?,?,?,?,?,'false')"
+    RawCommit(SQL,DATA)
+
+def DataStatusIsUpdating(TABLE):
+    SQL = "update "+ TABLE +" set is_updating='true'"
+    RawCommit(SQL,[])
+
+def DataStatusDelete(TABLE):
+    SQL = "delete from "+ TABLE +" where is_updating='true'"
+    RawCommit(SQL,[])
 
 ############################
 # Pool                     #
@@ -451,16 +459,16 @@ def SqlInit():
     cur = con.cursor()
     cur.execute('create table domain_interface (dom_uuid, type, mac, target, source, network, is_updating, primary key (dom_uuid, mac))')
     cur.execute('create table domain_drive (dom_uuid, device, type, target, source, is_updating, primary key (dom_uuid, target))')
-    cur.execute('create table if not exists node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
-    cur.execute('create table if not exists user (userid, name, password, primary key (userid))')
-    cur.execute('create table if not exists groups (groupid, name, owner, primary key (groupid))')
-    cur.execute('create table if not exists que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
-    cur.execute('create table if not exists network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
-    cur.execute('create table if not exists storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
-    cur.execute('create table if not exists domain (name, status, node_name, core,memory,uuid, type,os,primary key (name,node_name))')
-    cur.execute('create table if not exists dompool (domainpool_name, domainpool_node_name, domainpool_setram)')
-    cur.execute('create table if not exists archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
-    cur.execute('create table if not exists img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
+    cur.execute('create table node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
+    cur.execute('create table user (userid, name, password, primary key (userid))')
+    cur.execute('create table groups (groupid, name, owner, primary key (groupid))')
+    cur.execute('create table que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
+    cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
+    cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
+    cur.execute('create table domain (name, status, node_name, core,memory,uuid, type,os,primary key (name,node_name))')
+    cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')
+    cur.execute('create table archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
+    cur.execute('create table img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
     cur.execute("insert into groups VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
     cur.execute("insert into user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
     con.commit()
