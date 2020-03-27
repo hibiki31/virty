@@ -6,6 +6,7 @@
       <form action="/api/que/domain/define/" method="post" class="field">
         <label class="label">Node</label>
         <select id="node-list" name="node" class="select is-small" required="">
+          <option></option>
           {%for i in node%}
           <option value="{{i[0]}}">{{i[0]}}</option>
           {%endfor%}
