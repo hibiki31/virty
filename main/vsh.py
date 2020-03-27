@@ -236,7 +236,7 @@ def DomainXmlDump(DOM_NAME):
 
 #Node
 def NodeList():
-    nodes = vsql.SqlGetAll("kvm_node")
+    nodes = vsql.SqlGetAll("node")
     for data in nodes:
         LogInfo("NODE",'{0:8} {1:14} {2:6.2f} {3:2} {4:8}'.format(data[0], data[1], data[2], str(data[3]),data[4]))
     vansible.AnsibleNodelistInit()
@@ -277,7 +277,7 @@ def NodeInit(PBNAME,EXVALUE):
 
 #Storage
 def StorageList():
-    datas = vsql.SqlGetAll("kvm_storage")
+    datas = vsql.SqlGetAll("storage")
     print('          {0:12} {1:8} {2:8} {3:8} {4:8}'.format("NAME","NODE","DEVICE","TYPE","PATH"))
     for data in datas:
         LogSuccess("STORAGE",'{0:12} {1:8} {2:8} {3:8} {4:8}'.format(data[0], data[1], data[2], data[3], data[4]))
@@ -287,7 +287,7 @@ def StorageAdd(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PAT
     vsql.SqlAddStorage([(STORAGE_NAME,STORAGE_NODE,STORAGE_DEVICE,STORAGE_TYPE,STORAGE_PATH)])    
 
 def StorageInfo(STORAGE_NAME):
-    datas = vsql.SqlPush("select * from kvm_storage where storage_name='" + STORAGE_NAME + "'")
+    datas = vsql.SqlPush("select * from storage where name='" + STORAGE_NAME + "'")
     print('{0:12} {1:8} {2:8} {3:8} {4:8}'.format("NAME","NODE","DEVICE","TYPE","PATH"))
     for data in datas:
         NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",data[1])
@@ -304,7 +304,7 @@ def StorageMake(NODE_NAME,STORAGE_NAME,STORAGE_PATH):
 
 #Archive
 def ArchiveInit(NAME):
-    nodes = vsql.SqlGetAll("kvm_node")
+    nodes = vsql.SqlGetAll("node")
     for node in nodes:
         ARCHIVE_DIR = vsql.SqlGetData("NODE_NAME","ARCHIVE_DIR",node[0])
         if ARCHIVE_DIR == None:
@@ -323,7 +323,7 @@ def ArchiveList():
 
 #Que
 def QueList():
-    datas = vsql.SqlGetAll("kvm_que")
+    datas = vsql.SqlGetAll("que")
     print('          {0:12} {1:8}'.format("NAME","NODE"))
     for data in datas:
         LogSuccess("QUE",'{0:12} {1:8}'.format(data[0], data[1]))
@@ -361,7 +361,7 @@ def DomainpoolList():
     return poolnode
 
 def DomainpoolFree(POOLNAME):
-    domains = vsql.SqlGetAll("kvm_domain")
+    domains = vsql.SqlGetAll("dom")
     poollist = vsql.SqlGetDomainpool()
     nodememory = {}
     for node in poollist:
@@ -453,7 +453,7 @@ def ImageDelete(DOM_NAME):
     vansible.AnsibleFiledeleteInnode(NODE_IP,"/kvm/dom/" + DOM_NAME + ".img")
 
 def VirtyImgInit(IMG):
-    nodes = vsql.SqlGetAll("kvm_node")
+    nodes = vsql.SqlGetAll("node")
     for node in nodes:
         FileCpToNode(node[1], '../img/' + IMG + '.img', IMG + '.img')
 

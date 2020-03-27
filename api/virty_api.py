@@ -44,7 +44,7 @@ def domain_undefine(DOMAIN_NAME):
         LogError("ER","Domain undefine " + DOMAIN_DATA["domain-list"])
 
 def domain_data():
-    return requests.get(API_URL+"/api/sql/kvm_domain.json").json()['ResultSet']
+    return requests.get(API_URL+"/api/sql/dom.json").json()['ResultSet']
 
 def domain_start(DOMAIN_NAME):
     POST_DATA = {}

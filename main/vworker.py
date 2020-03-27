@@ -23,5 +23,5 @@ while True:
     
     time_end = time()
     time_run = time_end - time_start
-    print(str(time_run) + " s")
     virty.vsql.QueueUpdateTime(que[0],time_run)
+    print("Finish "+str(time_run) + " s")

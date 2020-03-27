@@ -4,20 +4,28 @@
 <div class="tile is-ancestor has-text-centered">
   <div class="tile is-parent is-6">
     <article class="tile is-child box">
-      <p class="title">{{domain['name']}}</p>
+      <p class="title">{{xml['name']}}</p>
       <p class="subtitle">Name</p>
     </article>
   </div>
   <div class="tile is-parent is-3">
     <article class="tile is-child box">
-      <p class="title">{{domain['node-name']}}</p>
+      <p class="title">{{xml['node-name']}}</p>
       <p class="subtitle">Node</p>
     </article>
   </div>
   <div class="tile is-parent is-3">
     <article class="tile is-child box">
-      <p class="title">{{domain['vnc'][0]}}</p>
-      <p class="subtitle">VNC</p>
+      {% if db[0][1] == 1 %}
+      <p class="title">Up</p>
+      {% elif db[0][1] == 5 %}
+      <p class="title">Down</p>
+      {% elif db[0][1] == 7 %}
+      <p class="title">Maint</p>
+      {% else %}
+      <p class="title">Lost</p>
+      {% endif %}
+      <p class="subtitle">Status</p>
     </article>
   </div>
 </div>
@@ -35,39 +43,35 @@
         <tbody>
           <tr>
             <td>Node name on which this domain</td>
-            <td>{{domain['node-name']}}</td>
+            <td>{{xml['node-name']}}</td>
           </tr>
           <tr>
             <td>Node ip on which this domain</td>
-            <td>{{domain['node-ip']}}</td>
-          </tr>
-          <tr>
-            <td>Node name on which this domain</td>
-            <td>{{domain['node-name']}}</td>
+            <td>{{xml['node-ip']}}</td>
           </tr>
           <tr>
             <td>Vnc port</td>
-            <td>{{domain['vnc'][0]}}</td>
+            <td>{{xml['vnc'][0]}}</td>
           </tr>
           <tr>
             <td>Auto vnc port mapping</td>
-            <td>{{domain['vnc'][1]}}</td>
+            <td>{{xml['vnc'][1]}}</td>
           </tr>
           <tr>
             <td>Allow vnc connection host</td>
-            <td>{{domain['vnc'][2]}}</td>
+            <td>{{xml['vnc'][2]}}</td>
           </tr>
           <tr>
             <td>Vnc password</td>
-            <td>{{domain['vnc'][3]}}</td>
+            <td>{{xml['vnc'][3]}}</td>
           </tr>
           <tr>
             <td>Selinux enforse</td>
-            <td>{{domain['selinux']}}</td>
+            <td>{{xml['selinux']}}</td>
           </tr>
           <tr>
             <td>Boot device</td>
-            <td>{{domain['boot']}}</td>
+            <td>{{xml['boot']}}</td>
           </tr>
         </tbody>
       </table>
@@ -86,14 +90,14 @@
           </tr>
         </thead>
         <tbody>
-          {% for dom in domain['disk'] %}
+          {% for dom in xml['disk'] %}
           <tr>
             <td>{{dom[0]}}</td>
             <td>{{dom[1]}}</td>
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
             {% if dom[0] == "cdrom" %}
-            <td class=" last"><a href="/domain/{{domain['uuid']}}/disk/{{dom[3]}}">Edit</a>
+            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}"><span class="fa fa-edit has-text-link"></span></a>
               {% else %}
             <td class=" last">-</a>
               {% endif %}
@@ -115,14 +119,13 @@
           </tr>
         </thead>
         <tbody>
-          {% for dom in domain['interface'] %}
+          {% for dom in xml['interface'] %}
           <tr>
             <td>{{dom[0]}}</td>
             <td>{{dom[1]}}</td>
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
-            <td class=" last"><a href="/domain/{{domain['uuid']}}/nic/{{dom[1]}}">Edit</a>
-            </td>
+            <td class="last"><i class="fa fa-edit has-text-link open-interface" id={{dom[1]}}></i></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -133,33 +136,38 @@
     <article class="box">
       <form method="post" action="/api/que/domain/power/" class="field">
         <label class="label">Power</label>
-        <input type="hidden" name="domain-list" value="{{domain['name']}}">
+        <input type="hidden" name="domain-list" value="{{xml['name']}}">
         <button name="status" value="poweron" class="button is-success is-small">PowerON</button>
         <button name="status" value="poweroff" class="button is-danger is-small">PowerOFF</button>
       </form>
-    
+
       <form method="post" action="/api/que/domain/selinux/" class="field">
         <label class="label">SElinux</label>
-        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <button name="state" value="disable" class="button is-danger is-small">Disable</button>
       </form>
-    
+
+      <form class="field">
+        <label class="label">Undefine</label>
+        <span id="modal-open-undefine" class="button is-danger is-small">Confirm</span>
+      </form>
+
       <form action="/api/que/domain/name-edit/" method="post" class="field">
         <label class="label">Edit name</label>
-        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
           <div class="control">
             <input name="newname" class="input control is-small" type="text" placeholder="Name">
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</a>
+            <button class="button is-link is-small">Edit</a>
           </div>
         </div>
       </form>
-    
+
       <form action="/api/que/domain/memory-edit/" method="post" class="field">
         <label class="label">Memory</label>
-        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
           <div class="control">
             <span class="select is-small">
@@ -177,14 +185,14 @@
             </span>
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</button>
+            <button class="button is-link is-small">Edit</button>
           </div>
         </div>
       </form>
-    
+
       <form action="/api/que/domain/cpu-edit/" method="post" class="field">
         <label class="label">CPU</label>
-        <input type="hidden" name="uuid" value="{{domain['uuid']}}">
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
           <div class="control">
             <span class="select is-small">
@@ -200,12 +208,61 @@
             </span>
           </div>
           <div class="control">
-            <button class="button is-primary is-small">Edit</button>
+            <button class="button is-link is-small">Edit</button>
           </div>
         </div>
       </form>
-    
+
     </article>
+  </div>
+</div>
+
+<div class="modal" id="modal-interface">
+  <div class="modal-background modal-delete"></div>
+  <div class="modal-card">
+    <form action="/api/que/domain/nic-edit/" method="post" class="">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Interface change</p>
+        <span class="delete modal-delete" aria-label="close"></span>
+      </header>
+      <section class="modal-card-body">
+        <label class="label" for="first-name">to *</label>
+        <select name="network" class="select" required="">
+          {% for interface in net[0] %}
+          <option value={{interface}}>Interface Bridge @{{interface}}</option>
+          {% endfor %}
+          {% for network in net[1] %}
+          <option value={{network['name']}}>{{network['name']}}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
+        <input type="hidden" name="mac" value="" id="modal-mac">
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-link">Post queue</button>
+        <span class="button modal-delete">Cancel</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-undefine">
+  <div class="modal-background modal-delete"></div>
+  <div class="modal-card">
+    <form action="/api/que/domain/undefine/" method="post">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Undefine</p>
+        <span class="delete modal-delete" aria-label="close"></span>
+      </header>
+      <section class="modal-card-body">
+        仮想マシンの電源がONの場合タスクは無視されます
+        <input type="hidden" name="uuid" value="{{xml['uuid']}}">
+      </section>
+      <footer class="modal-card-foot">
+        <button name="status" value="undefine" class="button is-danger">Undefine</button>
+        <span class="button modal-delete">Cancel</button>
+      </footer>
+    </form>
   </div>
 </div>
 

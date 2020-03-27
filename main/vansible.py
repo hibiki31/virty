@@ -36,7 +36,7 @@ def AnsibleFilecpTonode(NODEIP,CP,TO):
 	subprocess.check_call(cmd, shell=True)
 
 def	AnsibleNodelistInit():
-	NODE_DATAS = vsql.SqlGetAll("kvm_node")
+	NODE_DATAS = vsql.SqlGetAll("node")
 	nodeiplist = []
 	for node in NODE_DATAS:
 		nodeiplist.append(node[1] + "\n")

@@ -35,8 +35,8 @@ elif que[3] == "domain" and que[4] == "list-reload":
     print("List-reload")
 
 elif que[3] == "domain" and que[4] == "undefine":
-    result = virty.DomainUndefine(POST['domain-list'])
-    virty.vsql.SqlDeleteAll("kvm_domain")
+    result = virty.DomainUndefine(POST['uuid'])
+    virty.vsql.SqlDeleteAll("dom")
     virty.DomainListInit()
 
 elif que[3] == "network" and que[4] == "2l-define":  
@@ -90,7 +90,7 @@ elif que[3] == "domain" and que[4] == "memory-edit":
 
 elif que[3] == "node" and que[4] == "status-update":
     if POST['status'] == "10" or POST['status'] == "20":
-        virty.vsql.UpdateNodeStatus([POST['name']],POST['status'])
+        virty.vsql.NodeStatusUpdate([POST['name']],POST['status'])
         virty.DomainListInit()
         result = ["success","","","Succes"]
     else:
@@ -103,6 +103,11 @@ elif que[3] == "domain" and que[4] == "cpu-edit":
 
 elif que[3] == "image" and que[4] == "resize":
     result = virty.ImageResize(POST['node'],POST['pool'],POST['file'],POST['size'])
+
+elif que[3] == "image" and que[4] == "delete":
+    virty.ImageDelete(POST['node'],POST['pool'],POST['name'])
+    virty.DomainListInit()
+    result = ["success","","","Succes"]
     
 else:
     print("Found unkown Que")

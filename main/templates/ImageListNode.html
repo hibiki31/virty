@@ -1,0 +1,69 @@
+{% extends "Layout.html" %}
+{% block content %}
+<div class="tabs is-centered">
+  <ul>
+      <li>
+          <a href="/ui/image?tree=false">
+              <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
+              <span>All</span>
+          </a>
+      </li>
+      <li>
+          <a href="/ui/image?tree=true">
+              <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
+              <span>Folder</span>
+          </a>
+      </li>
+  </ul>
+</div>
+
+<article class="box">
+  <table class="table is-fullwidth">
+      <thead>
+          <tr>
+              <th class="column-title">Name </th>
+              <th class="column-title">Host </th>
+              <th class="column-title">Status </th>
+              <th class="column-title">Memory </th>
+              <th class="column-title">vCPU </th>
+              <th class="column-title">Model </th>
+              <th class="column-title">Type </th>
+              <th class="column-title">OS </th>
+              <th class="column-title">Version </th>
+              <th class="column-title">Qemu </th>
+              <th class="column-title">Libvirt </th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for dom in domain %}
+          <tr>
+              <td class=" "><a href="/ui/image?tree=true&node={{dom[0]}}">{{dom[0]}}</td>
+              <td class=" ">{{dom[1]}}</td>
+              {% if dom[8] == 10 %}
+              <td class=" "><i class="fa fa-square has-text-primary"></i> Up</td>
+              {% elif dom[8] == 20 %}
+              <td class=" "><i class="fa fa-square has-text-warning"></i> Maintenance</td>
+              {% elif dom[8] == 30 %}
+              <td class=" "><i class="fa fa-square has-text-dark"></i> Down</td>
+              {% elif dom[8] == 40 %}
+              <td class=" "><i class="fa fa-square has-text-danger"></i> Error</td>
+              {% elif dom[8] == 50 %}
+              <td class=" "><i class="fa fa-square has-text-danger"></i> Lost</td>
+              {% else %}
+              <td class=" "><i class="fa fa-square has-text-danger"></i> {{dom[8]}}</td>
+              {% endif %}
+              <td class=" ">{{'%0.1f' % dom[2]|float}}</td>
+              <td class=" ">{{dom[3]}}</td>
+              <td class=" ">{{dom[4]}}</td>
+              <td class=" ">{{dom[5]}}</td>
+              <td class=" ">{{dom[6]}}</td>
+              <td class=" ">{{dom[7]}}</td>
+              <td class=" ">{{dom[9]}}</td>
+              <td class=" ">{{dom[10]}}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</article>
+
+{% endblock %}

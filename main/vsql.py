@@ -22,88 +22,83 @@ def SqlGetAllSort(TABLE,COLUMN):
 def SqlGetData(SRC,DST,HINT):
     if SRC == "DOM_NAME":
         if DST == "NODE_NAME":
-            for data in SqlGetAll("kvm_domain"):
+            for data in SqlGetAll("domain"):
                 if data[0] == HINT:
                     return data[2]
     elif SRC == "NODE_NAME":
         if DST == "NODE_IP":
-            for data in SqlGetAll("kvm_node"):
+            for data in SqlGetAll("node"):
                 if data[0] == HINT:
                     return data[1]
         elif DST == "ARCHIVE_DIR":
-            GET = ExFetchall("select * from kvm_storage where storage_name='archive' and storage_node_name='" + HINT + "'")
+            GET = ExFetchall("select * from storage where name='archive' and node_name='" + HINT + "'")
             if GET == []:	return
             return GET[0][4].rstrip("/") + "/"
         elif DST == "NODE_DATA":
-            GET = ExFetchall("select * from kvm_node where name='" + HINT + "'")
+            GET = ExFetchall("select * from node where name='" + HINT + "'")
             if GET == []:	return
             return GET[0]
 
     elif SRC == "ARCHIVE_DATA":
         if DST == "EXIST_STATUS":
-            GET = ExFetchall("select * from kvm_archive where archive_node_name='" + HINT[0] + "' and archive_name='" + HINT[1] + "'")
+            GET = ExFetchall("select * from archive where archive_node_name='" + HINT[0] + "' and archive_name='" + HINT[1] + "'")
             if GET == []:	return 1
             return 0
 
     elif SRC == "STORAGE_DATA":
         if DST == "STORAGE_PATH":
-            GET = ExFetchall("select * from kvm_storage where storage_node_name='" + HINT[0] + "' and storage_name='" + HINT[1] + "'")
+            GET = ExFetchall("select * from storage where node_name='" + HINT[0] + "' and name='" + HINT[1] + "'")
             if GET == []:	return 1
             return GET[0][4].rstrip("/") + "/"
 
 def Convert(SRC,DST,HINT):
     if SRC == "DOM_UUID" and DST == "NODE_NAME":
-        for data in SqlGetAll("kvm_domain"):
+        for data in SqlGetAll("domain"):
             if data[5] == HINT:
                 return data[2]
     if SRC == "DOM_NAME" and DST == "DOM_UUID":
-        for data in SqlGetAll("kvm_domain"):
+        for data in SqlGetAll("domain"):
             if data[0] == HINT:
                 return data[5]
     if SRC == "NODE_NAME" and DST == "NODE_IP":
-        for data in SqlGetAll("kvm_node"):
+        for data in SqlGetAll("node"):
             if data[0] == HINT:
                 return data[1]
     if SRC == "NODE_NAME" and DST == "NETWORK_DATAS":
-        return  ExFetchall("select * from kvm_network where network_node='" + HINT + "'")
+        return  ExFetchall("select * from network where network_node='" + HINT + "'")
     if SRC == "NODE_NAME" and DST == "NODE_STATUS":
-        return int(SqlFetchall("select * from kvm_node where name=?",[(HINT)])[0][8])
+        return int(RawFetchall("select * from node where name=?",[(HINT)])[0][8])
 
 
 
-############################
-# DELETE                   #
-############################
 def SqlDeleteNode(NODENAMES):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
     for node in NODENAMES:
-        sql = 'delete from kvm_node where node_name = "' + node + '"'
+        sql = 'delete from node where node_name = "' + node + '"'
         cur.execute(sql)
     con.commit()
-    
-    
     vansible.AnsibleNodelistInit()
 
 def SqlDeleteDomain(DOM_NAMES):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
     for dom in DOM_NAMES:
-        sql = 'delete from kvm_domain where domain_name = "' + dom + '"'
+        sql = 'delete from domain where name = "' + dom + '"'
         cur.execute(sql)
     con.commit()
 
 def NetworkDelete(NODE,SOURCE):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'delete from kvm_network where network_node = "' + NODE + '" and network_bridge = "' + SOURCE + '"'
+    sql = 'delete from network where network_node = "' + NODE + '" and network_bridge = "' + SOURCE + '"'
     cur.execute(sql)
     con.commit()
 
 def DomainDelete(UUID):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'delete from kvm_domain where domain_uuid = "' + UUID + '"'
+    sql = 'delete from domain where uuid = "' + UUID + '"'
     cur.execute(sql)
     con.commit()
 ############################
@@ -112,9 +107,9 @@ def DomainDelete(UUID):
 def SqlSumNode():
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'select sum(memory) from kvm_node'
+    sql = 'select sum(memory) from node'
     RAM = cur.execute(sql).fetchone()
-    sql = 'select sum(core) from kvm_node'
+    sql = 'select sum(core) from node'
     CORE = cur.execute(sql).fetchone()
     if CORE[0] == None:CORE = 0
     else:CORE = CORE[0]
@@ -125,9 +120,9 @@ def SqlSumNode():
 def SqlSumDomain():
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'select sum(domain_memory) from kvm_domain'
+    sql = 'select sum(memory) from dom'
     RAM = cur.execute(sql).fetchone()
-    sql = 'select sum(domain_core) from kvm_domain'
+    sql = 'select sum(core) from dom'
     CORE = cur.execute(sql).fetchone()
     if CORE[0] == None:CORE = 0
     else:CORE = CORE[0]
@@ -149,7 +144,7 @@ def NetworkAdd(NETWORK_DICS):
             temp['dhcp'] = "enable"
         SEND = [temp['name'],temp['bridge'],temp['uuid'],temp['node'],temp['type'],temp['dhcp']]
         data.append(SEND)
-    SqlCommit("replace into kvm_network (name,bridge,uuid,node,type,dhcp) values (?,?,?,?,?,?)",data)
+    RawCommits("replace into network (name,bridge,uuid,node,type,dhcp) values (?,?,?,?,?,?)",data)
 
 
 def SqlAddNode(NODE_DATAS):
@@ -165,7 +160,7 @@ def SqlAddNode(NODE_DATAS):
 def StorageAdd(STORAGE_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_storage (storage_name, storage_node_name, storage_device, storage_type, storage_path) values (?,?,?,?,?)'
+    sql = 'replace into storage (name, node_name, device, type, path) values (?,?,?,?,?)'
     cur.executemany(sql, STORAGE_DATAS)
     con.commit()
     
@@ -175,7 +170,7 @@ def StorageAdd(STORAGE_DATAS):
 def SqlAddNetwork(NETWORK_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_network (network_name,network_bridge,network_node) values (?,?,?)'
+    sql = 'replace into network (network_name,network_bridge,network_node) values (?,?,?)'
     cur.executemany(sql, NETWORK_DATAS)
     con.commit()
     
@@ -184,7 +179,7 @@ def SqlAddNetwork(NETWORK_DATAS):
 def SqlAddArchive(ARCHIVE_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_archive (archive_name, archive_path, archive_node_name) values (?,?,?)'
+    sql = 'replace into archive (archive_name, archive_path, archive_node_name) values (?,?,?)'
     cur.executemany(sql, ARCHIVE_DATAS)
     con.commit()
     
@@ -193,7 +188,7 @@ def SqlAddArchive(ARCHIVE_DATAS):
 def ImageAdd(IMG_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_img (name, node, pool, capa, allocation, physical, path) values (?,?,?,?,?,?,?)'
+    sql = 'replace into img (name, node, pool, capa, allocation, physical, path) values (?,?,?,?,?,?,?)'
     cur.executemany(sql, IMG_DATAS)
     con.commit()
     
@@ -202,7 +197,7 @@ def ImageAdd(IMG_DATAS):
 def SqlAddDomain(DOMAIN_DATAS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os) values (?,?,?,?,?,?,?,?)'
+    sql = 'replace into domain (name, status, node_name, core,memory,uuid, type,os) values (?,?,?,?,?,?,?,?)'
     cur.executemany(sql, DOMAIN_DATAS)
     con.commit()
     
@@ -215,7 +210,7 @@ def SqlAddDomain(DOMAIN_DATAS):
 def SqlUpdateDomain(DOM_DIC):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os) values (?,?,?,?,?,?,?,?)'
+    sql = 'replace into domain (name, status, node_name, core,memory,uuid, type,os) values (?,?,?,?,?,?,?,?)'
     
     DOM_DATA = [(
         DOM_DIC['name'],
@@ -234,7 +229,7 @@ def SqlUpdateDomain(DOM_DIC):
 def NetworkListUpdate(NET_DIC_LIST):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp) values (?,?,?,?,?,?)'
+    sql = 'replace into network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp) values (?,?,?,?,?,?)'
     
     NET_DATA = []
 
@@ -259,7 +254,7 @@ def NetworkListUpdate(NET_DIC_LIST):
 def UpdateImage(DIC_LIST):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_img (img_name, img_archive_name, img_domain_name,img_node_name) values (?,?,?,?)'
+    sql = 'replace into img (img_name, img_archive_name, img_domain_name,img_node_name) values (?,?,?,?)'
     
     DATA = []
 
@@ -278,7 +273,7 @@ def UpdateImage(DIC_LIST):
 def UpdateStorage(DIC_LIST):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'replace into kvm_storage(storage_name, storage_node_name, storage_uuid, storage_capacity, storage_available,storage_device, storage_type, storage_path) values (?,?,?,?,?,?,?,?)'
+    sql = 'replace into storage(name, node_name, uuid, capacity, available,device, type, path) values (?,?,?,?,?,?,?,?)'
     
     DATA = []
 
@@ -298,22 +293,22 @@ def UpdateStorage(DIC_LIST):
     con.commit()
     con.close()
 
-def UpdateDomainStatus(NODES,DOMAINS,CODE):
+def DomainStatusUpdate(NODES,DOMAINS,CODE):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
     for NODE in NODES:
-        sql = 'UPDATE kvm_domain SET domain_status=? WHERE domain_node_name=?'
+        sql = 'UPDATE domain SET status=? WHERE node_name=?'
         cur.executemany(sql, [(int(CODE),NODE)])
     for UUID in DOMAINS:
-        sql = 'UPDATE kvm_domain SET domain_status=? WHERE domain_uuid=?'
+        sql = 'UPDATE domain SET status=? WHERE uuid=?'
         cur.executemany(sql, [(int(CODE),UUID)])
     con.commit()
 
-def UpdateNodeStatus(NODES,CODE):
+def NodeStatusUpdate(NODES,CODE):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
     for NODE in NODES:
-        sql = 'UPDATE kvm_node SET status=? WHERE name=?'
+        sql = 'UPDATE node SET status=? WHERE name=?'
         cur.executemany(sql, [(int(CODE),NODE)])
     con.commit()
 
@@ -321,12 +316,10 @@ def UpdateNodeStatus(NODES,CODE):
 # QUE                      #
 ############################
 
-#26|2020-01-13 01:31:52|finish|domain|power|{'domain-list': 'nfs_2306', 'status': 'poweron'}|Success poweron
-
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = "insert into kvm_que (que_time, que_status, que_object, que_method, que_json, que_mesg) values (datetime('now', 'localtime'),?,?,?,?,?)"
+    sql = "insert into que (que_time, que_status, que_object, que_method, que_json, que_mesg) values (datetime('now', 'localtime'),?,?,?,?,?)"
     
     quedata = [[]]
     quedata[0].append(str("init"))
@@ -342,21 +335,21 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'UPDATE kvm_que SET que_status=?, que_mesg=? WHERE que_id=?'
+    sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
 def SqlQueuget(QUE_STATUS):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'select * from kvm_que where que_status ="'+QUE_STATUS+'"'
+    sql = 'select * from que where que_status ="'+QUE_STATUS+'"'
     data = cur.execute(sql).fetchall()
     return data
 
 def QueueUpdate(QUE_ID,QUE_STATUS,QUE_MESG):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    sql = 'UPDATE kvm_que SET que_status=?, que_mesg=? WHERE que_id=?'
+    sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
@@ -369,7 +362,7 @@ def SqlDeleteAll(TABLE_NAME):
     return 0
 
 def QueueUpdateTime(QUE_ID,QUE_TIME):
-    SqlCommit("UPDATE kvm_que SET run=? WHERE que_id=?",[(QUE_TIME,QUE_ID)])
+    RawCommit("UPDATE que SET run=? WHERE que_id=?",[QUE_TIME,QUE_ID])
 
 
 
@@ -377,8 +370,8 @@ def QueueUpdateTime(QUE_ID,QUE_TIME):
 # USER                     #
 ############################
 class User(UserMixin):
-    def __init__(self, id, username, password):
-        self.id = id
+    def __init__(self, userid, username, password):
+        self.id = userid
         self.username = username
         self.password = password
 
@@ -392,7 +385,7 @@ class User(UserMixin):
         return self.id
 
 def UserGet(username):
-    user = SqlFetchall("select * from kvm_user where userid=?",[(username)])
+    user = RawFetchall("select * from user where userid=?",[(username)])
     if len(user) == 0:
         return None
     elif len(user) >1:
@@ -401,27 +394,61 @@ def UserGet(username):
         user = user[0]
         return User(user[0],user[1],user[2])
 
+############################
+# Domain                   #
+############################
+def DomainInterfaceAdd(DATA):
+    SQL = "replace into domain_interface (dom_uuid, type, mac, target, source, network, is_updating) values (?,?,?,?,?,?,'false')"
+    RawCommit(SQL,DATA)
+    
+def DomainDriveAdd(DATA):
+    SQL = "replace into domain_drive (dom_uuid, device, type, source, target, is_updating) values (?,?,?,?,?,'false')"
+    RawCommit(SQL,DATA)
+
+def DataStatusIsUpdating(TABLE):
+    SQL = "update "+ TABLE +" set is_updating='true'"
+    RawCommit(SQL,[])
+
+def DataStatusDelete(TABLE):
+    SQL = "delete from "+ TABLE +" where is_updating='true'"
+    RawCommit(SQL,[])
+
+############################
+# Pool                     #
+############################
+def PoolListGet(NODE):
+    SQL = (" select *,count(*) from storage left join img on storage.node_name=img.node and storage.name=img.pool and storage.node_name=img.node where node_name=? group by storage.name,storage.node_name;")
+    if NODE == True:
+        return RawFetchall(SQL,[])
+    else:
+        return RawFetchall(SQL,[NODE])
 
 ############################
 # RAW                      #
 ############################
-def SqlFetchall(SQL,DATA):
-    con = sqlite3.connect(SQLFILE)
-    cur = con.cursor()
-    return cur.execute(SQL, DATA).fetchall()
-
-def SqlCommit(SQL,DATA):
-    con = sqlite3.connect(SQLFILE)
-    cur = con.cursor()
-    cur.executemany(SQL,DATA)
-    con.commit()
-    con.close()
-
 def ExFetchall(SQL):
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
     get = cur.execute(SQL).fetchall()
     return get
+
+def RawCommits(SQL,DATAS):
+    con = sqlite3.connect(SQLFILE)
+    cur = con.cursor()
+    cur.executemany(SQL,DATAS)
+    con.commit()
+
+def RawCommit(SQL,DATA):
+    con = sqlite3.connect(SQLFILE)
+    cur = con.cursor()
+    cur.execute(SQL,DATA)
+    con.commit()
+
+def RawFetchall(SQL,DATA):
+    con = sqlite3.connect(SQLFILE)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    return cur.execute(SQL,DATA).fetchall()
 
 def SqlInit():
     try:
@@ -430,18 +457,20 @@ def SqlInit():
         pass
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
-    cur.execute('create table if not exists kvm_node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
-    cur.execute('create table if not exists kvm_user (userid, name, password, primary key (userid))')
-    cur.execute('create table if not exists kvm_group (groupid, name, owner, primary key (groupid))')
-    cur.execute('create table if not exists kvm_que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
-    cur.execute('create table if not exists kvm_network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
-    cur.execute('create table if not exists kvm_storage (storage_name, storage_node_name, storage_uuid, storage_capacity, storage_available,storage_device, storage_type, storage_path, primary key (storage_name, storage_node_name))')
-    cur.execute('create table if not exists kvm_domain (domain_name, domain_status, domain_node_name, domain_core,domain_memory,domain_uuid, domain_type,domain_os,primary key (domain_name,domain_node_name))')
-    cur.execute('create table if not exists kvm_domainpool (domainpool_name, domainpool_node_name, domainpool_setram)')
-    cur.execute('create table if not exists kvm_archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
-    cur.execute('create table if not exists kvm_img (name, node, pool, capa, allocation, physical, path, domain, primary key (name,node,pool))')
-    cur.execute("insert into kvm_group VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
-    cur.execute("insert into kvm_user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
+    cur.execute('create table domain_interface (dom_uuid, type, mac, target, source, network, is_updating, primary key (dom_uuid, mac))')
+    cur.execute('create table domain_drive (dom_uuid, device, type, target, source, is_updating, primary key (dom_uuid, target))')
+    cur.execute('create table node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
+    cur.execute('create table user (userid, name, password, primary key (userid))')
+    cur.execute('create table groups (groupid, name, owner, primary key (groupid))')
+    cur.execute('create table que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
+    cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
+    cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
+    cur.execute('create table domain (name, status, node_name, core,memory,uuid, type,os,primary key (name,node_name))')
+    cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')
+    cur.execute('create table archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
+    cur.execute('create table img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
+    cur.execute("insert into groups VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
+    cur.execute("insert into user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
     con.commit()
     cur.close()
     con.close()

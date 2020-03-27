@@ -261,6 +261,7 @@ class VirtEditor():
 
         image = pool.storageVolLookupByName(IMG_NAME)
         image.delete()
+        pool.refresh()
 
 
 
@@ -535,14 +536,20 @@ class XmlEditor():
             MAC = nic.find("mac").get("address")
 
             if TYPE == "bridge":
-                TO = nic.find("source").get("bridge")
+                SOURCE = nic.find("source").get("bridge")
             else:
-                TO = nic.find("source").get("network")
+                SOURCE = nic.find("source").get("network")
 
-            if nic.find("target") == None:TARGET = "none"
-            else:TARGET = nic.find("target").get("dev","none")
+            NETWORK = nic.find("source").get("network",None)
+            if NETWORK != None:
+                TYPE = "network"
+
+            if nic.find("target") == None:
+                TARGET = "none"
+            else:
+                TARGET = nic.find("target").get("dev","none")
     
-            DATA['interface'].append([TYPE,MAC,TARGET,TO])
+            DATA['interface'].append([TYPE,MAC,TARGET,SOURCE,NETWORK])
 
         DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):

@@ -49,7 +49,7 @@ $(function () {
 
 // Node list
 $(function () {
-  Jsonget('/api/sql/kvm_node.json').done(function (result) {
+  Jsonget('/api/sql/node.json').done(function (result) {
     data = result.ResultSet
     for (var i in data) {
       $('#node-list').append('<option value="' + data[i][0] + '">' + data[i][0] + '</option>');

@@ -1,10 +1,26 @@
 {% extends "Layout.html" %}
 {% block content %}
+<div class="tabs is-centered">
+    <ul>
+        <li>
+            <a href="/ui/image?tree=false">
+                <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
+                <span>All</span>
+            </a>
+        </li>
+        <li>
+            <a href="/ui/image?tree=true">
+                <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
+                <span>Folder</span>
+            </a>
+        </li>
+    </ul>
+</div>
 
 <article class="box">
     <table class="table is-fullwidth">
         <thead>
-            <tr>      
+            <tr>
                 <th>Node </th>
                 <th>Pool </th>
                 <th>Name </th>
@@ -20,47 +36,49 @@
         <tbody>
             {% for image in images %}
             <tr>
-                <td class=" ">{{image[1]}}</td>
-                <td class=" ">{{image[2]}}</td>
-                <td class=" ">{{image[0]}}</td>
-                <td class=" ">{{image[3]}}G</td>
-                <td class=" ">{{image[4]}}G</td>
-                <td class=" ">{{image[5]}}G</td>
-                <td class=" ">{{image[6]}}</td>
-                <td class=" ">{{image[7]}}</td>
-                <td class=" "><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Edit</a></td>
-                <td class=" "><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Delete</a></td>
+                <td name="node" value={{image[1]}}>{{image[1]}}</td>
+                <td name="pool" value={{image[2]}}>{{image[2]}}</td>
+                <td name="name" value={{image[0]}}>{{image[0]}}</td>
+                <td>{{image[3]}}G</td>
+                <td>{{image[4]}}G</td>
+                <td>{{image[5]}}G</td>
+                <td>{{image[6]}}</td>
+
+                {%if image[7] == None%}
+                <td><span class="tag is-light">{{image[7]}}</span></td>
+                {%elif image['count(*)'] == 1 %}
+                <td><span class="tag is-dark">{{image[7]}}</span></td>
+                {%else%}
+                <td><span class="tag is-dark">{{image[7]}}</span><span class="tag is-dark">....</span></td>
+                {%endif%}
+                <td><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Edit</a></td>
+                <td><span class="modal-open-image-delete">Delete</span></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </article>
 
-
-<article class="box">
-    <table class="table is-fullwidth">
-        <thead>
-            <tr>
-                <th>Node </th>
-                <th>Name </th>
-                <th>Capa </th>
-                <th>Available </th>
-                <th>Path </th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pool in pools %}
-            <tr>
-                <td class=" ">{{pool[1]}}</td>
-                <td class=" ">{{pool[0]}}</td>
-                <td class=" ">{{pool[3]}}G</td>
-                <td class=" ">{{pool[4]}}G</td>
-                <td class=" ">{{pool[7]}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
-</article>
+<div class="modal" id="modal-open-image-delete">
+    <div class="modal-background modal-delete"></div>
+    <div class="modal-card">
+        <form action="/api/que/image/delete/" method="post">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Delete</p>
+                <span class="delete modal-delete" aria-label="close"></span>
+            </header>
+            <section class="modal-card-body">
+                スケジューリングされ順次削除されます
+                <input id="modal-image-node" type="hidden" name="node" value="">
+                <input id="modal-image-pool" type="hidden" name="pool" value="">
+                <input id="modal-image-name" type="hidden" name="name" value="">
+            </section>
+            <footer class="modal-card-foot">
+                <button name="status" value="delete" class="button is-danger">Delete</button>
+                <span class="button modal-delete">Cancel</button>
+            </footer>
+        </form>
+    </div>
+</div>
 
 {% endblock %}
