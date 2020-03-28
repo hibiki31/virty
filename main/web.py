@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request,redirect, Response, a
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import safe_str_cmp
+from functools import wraps
 from time import  sleep
 import subprocess, logging, bcrypt
 import virty
@@ -19,6 +20,16 @@ app.config['JWT_LEEWAY'] = 100000000
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+def UserRoll(func):
+    @wraps(func)
+    @login_required
+    def wrapper(*args, **kwargs):
+        if not current_user.get_id() == "admin":
+            return "<h1>Insufficient permissions</h1>"
+        return func(*args, **kwargs)
+    return wrapper
 
 ############################
 # SETUP                    #
@@ -59,6 +70,7 @@ def check_password(hashed_password, user_password):
 
 @login_manager.unauthorized_handler
 def unauthorized():
+    print("unauthorized")
     return redirect("/login", code=301)
 
 @login_manager.user_loader
@@ -75,8 +87,10 @@ def login():
         else:
             return redirect("/login", code=302)
     elif(request.method == "GET"):
-        logout_user()
-        return render_template('Login.html')
+        if current_user.is_authenticated:
+            return redirect("/", code=301)
+        else:
+            return render_template('Login.html')
 
 @app.route('/logout')
 def logout():
@@ -86,9 +100,8 @@ def logout():
 ############################
 # SETUP                    #
 ############################
-@app.route('/setup',methods=["POST","GET"])
-@login_required
-def resetup():
+@app.route('/ui/setup',methods=["POST","GET"])
+def setup():
     if request.method == 'POST':
         if request.form["status"] == "dbinit":
             virty.vsql.SqlInit()
@@ -138,6 +151,25 @@ def node_list(GET_DATA):
     elif GET_DATA == "que":
         domain = virty.vsql.RawFetchall("select * from que order by que_id desc",[])
         html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
+    elif GET_DATA == "users":
+        groups = {}
+        for i in virty.vsql.SqlGetAll("users_groups"):
+            if groups.get(i[0],False):
+                groups[i[0]].append(i[1])
+            else:
+                groups[i[0]] = [i[1]]
+        html = render_template('UserList.html',users=virty.vsql.SqlGetAll("users"),groups=groups)
+    
+    elif GET_DATA == "groups":
+        groups = {}
+        for i in virty.vsql.SqlGetAll("users_groups"):
+            if groups.get(i[1],False):
+                groups[i[1]].append(i[0])
+            else:
+                groups[i[1]] = [i[0]]
+        html = render_template('GroupList.html',users=virty.vsql.SqlGetAll("groups"),groups=groups)
+
+
     elif GET_DATA == "image":
         if request.args.get('tree') == "true":
             if not request.args.get('node') == None:
@@ -160,7 +192,15 @@ def node_list(GET_DATA):
             net = virty.NodeNetworkList(virty.vsql.Convert("DOM_UUID","NODE_NAME",request.args.get('uuid')))
             html = render_template('DomainInfo.html',xml=xml,db=db,net=net)
         else:
-            html = render_template('DomainList.html',domain=virty.vsql.SqlGetAllSort("domain","name"))
+            if current_user.isadmin:
+                domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid",[])
+                users = virty.vsql.SqlGetAll("users")
+                groups = virty.vsql.SqlGetAll("groups")
+                html = render_template('DomainList.html',domain=domain,users=users,groups=groups)
+            else:
+                domain = []
+                html = render_template('DomainList.html',domain=domain)
+
     else:
         return abort(404)
     return html
@@ -204,6 +244,15 @@ def network_add():
     html = render_template('NetworkAdd.html')
     return html
 
+@app.route('/ui/make/user')
+@login_required
+def user_add():
+    users = virty.vsql.SqlGetAll("users")
+    groups = virty.vsql.SqlGetAll("groups")
+    virty.WorkerUp()
+    html = render_template('UserAdd.html',users=users,groups=groups)
+    return html
+
 ############################
 # DOMAIN                   #
 ############################
@@ -230,6 +279,36 @@ def action_image_delete():
     virty.DomainListInit()
     return redirect("/ui/image", code=302)
 
+@app.route('/action/user/add',methods=["POST"])
+@UserRoll
+def action_user_add():
+    virty.UserAdd(request.form['userid'],hash_password(request.form['password']))
+    return redirect("/", code=302)
+
+@app.route('/action/group/add',methods=["POST"])
+@UserRoll
+def action_group_add():
+    virty.vsql.RawCommit("insert into groups ('id') values (?)",[request.form['groupid']])
+    return redirect("/", code=302)
+
+@app.route('/action/group/join',methods=["POST"])
+@UserRoll
+def action_group_join():
+    virty.vsql.RawCommit("insert into users_groups ('user_id','group_id') values (?,?)",[request.form['userid'],request.form['groupid']])
+    return redirect("/", code=302)
+
+@app.route('/action/group/leave',methods=["POST"])
+@UserRoll
+def action_group_leave():
+    virty.vsql.RawCommit("delete from users_groups where user_id=? and group_id=?",[request.form['userid'],request.form['groupid']])
+    return redirect("/ui/groups", code=302)
+
+@app.route('/action/owner/change',methods=["POST"])
+@UserRoll
+def action_owner_change():
+    if request.form['target'] == "domain_user":
+        virty.vsql.RawCommit("replace into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[request.form['uuid'],request.form['userid'],None])
+    return redirect("/", code=302)
 
 ############################
 # JSON                     #

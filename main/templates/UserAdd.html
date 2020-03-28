@@ -1,0 +1,64 @@
+{% extends "Layout.html" %}
+{% block content %}
+<article class="box">
+  <label class="label">User add</label>
+  <form action="/action/user/add" method="post" data-parsley-validate class="form-horizontal form-label-left">
+
+    <label class="">userid</label>
+    <div>
+      <input type="text" name="userid" required="required" class="form-control col-md-7 col-xs-12">
+    </div>
+
+    <label class="">password</label>
+    <div>
+      <input type="password" name="password" required="required" class="form-control col-md-7 col-xs-12">
+    </div>
+
+    <button class="btn btn-success">Submit</button>
+
+  </form>
+</article>
+
+<article class="box">
+  <label class="label">Group Add</label>
+  <form action="/action/group/add" method="post" data-parsley-validate class="form-horizontal form-label-left">
+
+    <label class="">groupid</label>
+    <div>
+      <input type="text" name="groupid" required="required">
+    </div>
+
+    <button class="btn btn-success">Submit</button>
+
+  </form>
+</article>
+
+
+<article class="box">
+  <label class="label">Join Group</label>
+  <form action="/action/group/join" method="post" data-parsley-validate class="form-horizontal form-label-left">
+
+    <label class="">User</label>
+    <div>
+      <select name="userid" class="select is-small" required="">
+        {%for i in users%}
+        <option value="{{i[0]}}">{{i[0]}}</option>
+        {%endfor%}
+      </select>
+    </div>
+
+    <label class="">Group</label>
+    <div>
+    <select name="groupid" class="select is-small" required="">
+      {%for i in groups%}
+      <option value="{{i[0]}}">{{i[0]}}</option>
+      {%endfor%}
+    </select>
+  </div>
+    <button class="btn btn-success">Submit</button>
+
+  </form>
+</article>
+
+
+{% endblock %}

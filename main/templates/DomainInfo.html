@@ -232,7 +232,7 @@
           <option value={{interface}}>Interface Bridge @{{interface}}</option>
           {% endfor %}
           {% for network in net[1] %}
-          <option value={{network['name']}}>{{network['name']}}</option>
+          <option value="{{network['name']}}">{{network['name']}}</option>
           {% endfor %}
         </select>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">

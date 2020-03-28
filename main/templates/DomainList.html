@@ -4,13 +4,15 @@
   <table class="table is-fullwidth">
     <thead>
       <tr>
-        <th>名前 </th>
-        <th style="width: 75px;">状態 </th>
+        <th>Name </th>
+        <th style="width: 75px;">Status </th>
         <th>Node </th>
         <th>vCPU </th>
         <th>RAM </th>
         <th>UUID </th>
-        <th>詳細 </span>
+        <th>Group </th>
+        <th>User </th>
+        <th>Info </span>
       </tr>
     </thead>
     <tbody>
@@ -32,6 +34,19 @@
         <td>{{data[3]}}</td>
         <td>{{'%0.0f' % data[4]|float}}</td>
         <td class="a-right" style="font-family:monospace;">{{data[5]}}</td>
+
+        {%if data[9] == None %}
+        <td><span uuid="{{data[5]}}" class="tag is-light modal-open-domain-group">{{data[9]}}</span></td>
+        {%else %}
+        <td><span uuid="{{data[5]}}" class="tag is-dark modal-open-domain-group">{{data[9]}}</span></td>
+        {%endif %}
+
+        {%if data[10] == None %}
+        <td><span uuid="{{data[5]}}" class="tag is-light modal-open-domain-user">{{data[10]}}</span></td>
+        {%else %}
+        <td><span uuid="{{data[5]}}" class="tag is-dark modal-open-domain-user">{{data[10]}}</span></td>
+        {%endif %}
+
         <td class="last"><a href="/ui/domain?uuid={{data[5]}}">View</a>
         </td>
       </tr>
@@ -45,5 +60,30 @@
     <button name="select" value="all" class="button is-primary is-small">Refresh</button>
   </form>
 </article>
+
+<div class="modal" id="modal-open-user">
+  <div class="modal-background modal-delete"></div>
+  <div class="modal-card">
+    <form action="/action/owner/change" method="post">
+      <header class="modal-card-head">
+        <p class="modal-card-title">User change</p>
+        <span class="delete modal-delete" aria-label="close"></span>
+      </header>
+      <section class="modal-card-body">
+        <select name="userid" class="select" required="">
+          {% for i in users %}
+          <option value={{i[0]}}>{{i[0]}}</option>
+          {% endfor %}
+        </select>
+        <input id="modal-uuid" type="hidden" name="uuid" value="">
+        <input id="modal-target" type="hidden" name="target" value="domain_user">
+      </section>
+      <footer class="modal-card-foot">
+        <button name="status" value="delete" class="button is-danger">Change</button>
+        <span class="button modal-delete">Cancel</button>
+      </footer>
+    </form>
+  </div>
+</div>
 
 {% endblock %}

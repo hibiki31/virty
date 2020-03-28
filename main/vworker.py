@@ -21,6 +21,12 @@ while True:
     if not quer.wait() == 0:
         virty.vsql.QueueUpdate(que[0],"error","Queue error")
     
+    path_w = SPATH + '/log/queue-' + str(que[0]) + '.log'
+    with open(path_w, mode='w') as f:
+
+        f.write(str(quer.communicate()[0]))
+        f.write(str(quer.communicate()[1]))
+
     time_end = time()
     time_run = time_end - time_start
     virty.vsql.QueueUpdateTime(que[0],time_run)

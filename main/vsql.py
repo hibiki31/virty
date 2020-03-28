@@ -370,29 +370,27 @@ def QueueUpdateTime(QUE_ID,QUE_TIME):
 # USER                     #
 ############################
 class User(UserMixin):
-    def __init__(self, userid, username, password):
-        self.id = userid
-        self.username = username
+    def __init__(self, user_id, password):
+        self.id = user_id
         self.password = password
+        self.groups = RawFetchall("select group_id from users_groups where user_id=?",[user_id])
+        self.isadmin = ("admin",) in self.groups
 
     def __str__(self):
-        data = {}
-        data['name'] = self.username
-        data['id'] = self.id
         return str(self.id)
 
     def get_id(self):
         return self.id
 
 def UserGet(username):
-    user = RawFetchall("select * from user where userid=?",[(username)])
+    user = RawFetchall("select * from users where id=?",[(username)])
     if len(user) == 0:
         return None
     elif len(user) >1:
         return None
     else:
         user = user[0]
-        return User(user[0],user[1],user[2])
+        return User(user[0],user[1])
 
 ############################
 # Domain                   #
@@ -446,7 +444,6 @@ def RawCommit(SQL,DATA):
 
 def RawFetchall(SQL,DATA):
     con = sqlite3.connect(SQLFILE)
-    con.row_factory = sqlite3.Row
     cur = con.cursor()
     return cur.execute(SQL,DATA).fetchall()
 
@@ -457,20 +454,23 @@ def SqlInit():
         pass
     con = sqlite3.connect(SQLFILE)
     cur = con.cursor()
+    cur.execute('create table domain (name, status, node_name, core, memory, uuid, type, os, primary key (name, node_name))')
     cur.execute('create table domain_interface (dom_uuid, type, mac, target, source, network, is_updating, primary key (dom_uuid, mac))')
     cur.execute('create table domain_drive (dom_uuid, device, type, target, source, is_updating, primary key (dom_uuid, target))')
+    cur.execute('create table domain_owner (dom_uuid, group_id, user_id, primary key (dom_uuid))')
     cur.execute('create table node (name, ip, core, memory, cpugen, os_like, os_name, os_version, status, qemu, libvirt, primary key (name))')
-    cur.execute('create table user (userid, name, password, primary key (userid))')
-    cur.execute('create table groups (groupid, name, owner, primary key (groupid))')
+    cur.execute('create table users (id, password, primary key (id))')
+    cur.execute('create table groups (id, primary key (id))')
+    cur.execute('create table users_groups (user_id,group_id,primary key (user_id,group_id))')
     cur.execute('create table que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
     cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
     cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
-    cur.execute('create table domain (name, status, node_name, core,memory,uuid, type,os,primary key (name,node_name))')
     cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')
     cur.execute('create table archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
     cur.execute('create table img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
-    cur.execute("insert into groups VALUES (:groupid, :name, :owner)",("admin","admin","admin"))
-    cur.execute("insert into user VALUES (:userid, :name, :password)",("admin","admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
+    cur.execute("insert into users (id, password) values (?,?)",("admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
+    cur.execute("insert into users_groups (user_id,group_id) values (?,?)",["admin","admin"])
+    cur.execute("insert into groups (id) values (?)",["admin"])
     con.commit()
     cur.close()
     con.close()

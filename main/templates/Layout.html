@@ -19,7 +19,7 @@
         <div class="navbar-end">
           <div class="navbar-item has-dropdown is-hoverable">
             {% if current_user.is_authenticated %}
-            <a class="navbar-link" href="#">Signed in as&nbsp;{{ current_user.get_id() }}</a>
+            <a class="navbar-link" href="#">{{ current_user.get_id() }}</a>
             {% endif %}
             <div class="navbar-dropdown is-boxed">
               <a class="navbar-item" href="/logout">Logout </a>
@@ -33,22 +33,25 @@
     <main class="columns">
       <div class="column is-narrow-desktop is-narrow-touch">
         <aside class="box menu">
-          <p class="menu-label">管理者ツール</p>
+          <p class="menu-label">Administrator</p>
           <ul class="menu-list is-size-6" id="nav">
-            <li><a href="/ui/domain"><i class="fa fa-server"></i> 仮想マシン</a></li>
-            <li><a href="/ui/archive"><i class="fa fa-box "></i> テンプレート</a></li>
-            <li><a href="/ui/network"><i class="fa fa-cloud"></i> ネットワーク</a></li>
-            <li><a href="/ui/image"><i class="fa fa-hdd"></i> 仮想ディスク</a></li>
-            <li><a href="/ui/storage"><i class="fa fa-database"></i> ストレージ</a></li>
-            <li><a href="/ui/node"><i class="fa fa-cubes"></i> ノード</a></li>
-            <li><a href="/ui/que"><i class="fa fa-coffee"></i> タスク</a></li>
+            <li><a href="/ui/domain"><span class="icon is-small"><i class="fas fa-server"></i></span>&nbsp;Machine</a></li>
+            <li><a href="/ui/archive"><span class="icon is-small"><i class="fas fa-box "></i></span>&nbsp;Template</a></li>
+            <li><a href="/ui/network"><span class="icon is-small"><i class="fas fa-cloud"></i></span>&nbsp;Network</a></li>
+            <li><a href="/ui/image"><span class="icon is-small"><i class="fas fa-hdd"></i></span>&nbsp;Disk</a></li>
+            <li><a href="/ui/storage"><span class="icon is-small"><i class="fas fa-database"></i></span>&nbsp;Storage</a></li>
+            <li><a href="/ui/node"><span class="icon is-small"><i class="fas fa-cubes"></i></span>&nbsp;Node</a></li>
+            <li><a href="/ui/que"><span class="icon is-small"><i class="fas fa-coffee"></i></span>&nbsp;Task</a></li>
+            <li><a href="/ui/users"><span class="icon is-small"><i class="fas fa-user"></i></span>&nbsp;Users</a></li>
+            <li><a href="/ui/groups"><span class="icon is-small"><i class="fas fa-users"></i></span>&nbsp;Groups</a></li>
           </ul>
-          <p class="menu-label">リソース作成</p>
+          <p class="menu-label">Resource</p>
           <ul class="menu-list is-size-6" id="nav">
-            <li><a href="/ui/make/domain">仮想マシン</a></li>
-            <li><a href="/ui/make/network">ネットワーク</a></li>
-            <li><a href="/ui/make/storage">ストレージ</a></li>
-            <li><a href="/ui/make/node">ノード</a></li>
+            <li><a href="/ui/make/domain"><span class="icon is-small"><i class="fas fa-server"></i></span>&nbsp;Machine</a></li>
+            <li><a href="/ui/make/network"><span class="icon is-small"><i class="fas fa-cloud"></i></span>&nbsp;Network</a></li>
+            <li><a href="/ui/make/storage"><span class="icon is-small"><i class="fas fa-database"></i></span>&nbsp;Storage</a></li>
+            <li><a href="/ui/make/node"><span class="icon is-small"><i class="fas fa-cubes"></i></span>&nbsp;Node</a></li>
+            <li><a href="/ui/make/user"><span class="icon is-small"><i class="fas fa-user"></i></span>&nbsp;Users</a></li>
           </ul>
         </aside>
       </div>

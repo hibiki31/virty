@@ -1,0 +1,47 @@
+{% extends "Layout.html" %}
+{% block content %}
+<article class="box">
+    <table class="table is-fullwidth">
+        <thead>
+            <tr>
+                <th>GroupID </th>
+                <th>User </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in users %}
+            <tr>
+                <td>{{data[0]}}</td>
+                <td>
+                    {% for i in groups[data[0]] %}
+                    <span class="tag">{{i}}<button userid="{{i}}" groupid="{{data[0]}}" class="delete is-small modal-open-group"></button></span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+
+<div class="modal" id="modal-group">
+    <div class="modal-background modal-delete"></div>
+    <div class="modal-card">
+        <form action="/action/group/leave" method="post">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Delete</p>
+                <span class="delete modal-delete" aria-label="close"></span>
+            </header>
+            <section class="modal-card-body">
+                グループからユーザを削除します
+                <input id="modal-group-id" type="hidden" name="groupid" value="">
+                <input id="modal-user-id" type="hidden" name="userid" value="">
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-danger">Delete</button>
+                <span class="button modal-delete">Cancel</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
