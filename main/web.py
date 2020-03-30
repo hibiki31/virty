@@ -63,7 +63,7 @@ jwt = JWT(app, authenticate, identity)
 @app.route('/')
 @login_required
 def route():
-    return redirect("/ui/domain", code=302)
+    return redirect("/domain", code=302)
 
 
 
