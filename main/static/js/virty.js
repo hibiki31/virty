@@ -99,11 +99,12 @@ $(document).ready(function () {
 
   $(".modal-open-domain-user").click(function () {
     $("#modal-open-user").addClass("is-active");
-    $("#modal-uuid").attr('value', $(this).attr("uuid"));
+    $("#modal-uuid-user").attr('value', $(this).attr("uuid"));
   });
 
   $(".modal-open-domain-group").click(function () {
     $("#modal-open-group").addClass("is-active");
+    $("#modal-uuid-group").attr('value', $(this).attr("uuid"));
   });
 
   $(".modal-open-image-delete").click(function () {

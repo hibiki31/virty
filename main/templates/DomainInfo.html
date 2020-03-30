@@ -97,7 +97,7 @@
             <td>{{dom[2]}}</td>
             <td>{{dom[3]}}</td>
             {% if dom[0] == "cdrom" %}
-            <td class=" last"><a href="/domain/{{xml['uuid']}}/disk/{{dom[3]}}"><span class="fa fa-edit has-text-link"></span></a>
+            <td class=" last"><a href="/domain?ui=cdrom&uuid={{xml['uuid']}}&target={{dom[3]}}"><span class="fa fa-edit has-text-link"></span></a>
               {% else %}
             <td class=" last">-</a>
               {% endif %}
@@ -134,14 +134,14 @@
   </div>
   <div class="column is-narrow">
     <article class="box">
-      <form method="post" action="/api/que/domain/power/" class="field">
+      <form method="post" action="/api/que/domain/power" class="field">
         <label class="label">Power</label>
         <input type="hidden" name="domain-list" value="{{xml['name']}}">
         <button name="status" value="poweron" class="button is-success is-small">PowerON</button>
         <button name="status" value="poweroff" class="button is-danger is-small">PowerOFF</button>
       </form>
 
-      <form method="post" action="/api/que/domain/selinux/" class="field">
+      <form method="post" action="/action/selinux" class="field">
         <label class="label">SElinux</label>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <button name="state" value="disable" class="button is-danger is-small">Disable</button>
@@ -152,7 +152,7 @@
         <span id="modal-open-undefine" class="button is-danger is-small">Confirm</span>
       </form>
 
-      <form action="/api/que/domain/name-edit/" method="post" class="field">
+      <form action="/api/que/domain/name-edit" method="post" class="field">
         <label class="label">Edit name</label>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
@@ -165,7 +165,7 @@
         </div>
       </form>
 
-      <form action="/api/que/domain/memory-edit/" method="post" class="field">
+      <form action="/api/que/domain/memory-edit" method="post" class="field">
         <label class="label">Memory</label>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
@@ -190,7 +190,7 @@
         </div>
       </form>
 
-      <form action="/api/que/domain/cpu-edit/" method="post" class="field">
+      <form action="/api/que/domain/cpu-edit" method="post" class="field">
         <label class="label">CPU</label>
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
         <div class="field has-addons">
@@ -220,7 +220,7 @@
 <div class="modal" id="modal-interface">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
-    <form action="/api/que/domain/nic-edit/" method="post" class="">
+    <form action="/api/que/domain/nic-edit" method="post" class="">
       <header class="modal-card-head">
         <p class="modal-card-title">Interface change</p>
         <span class="delete modal-delete" aria-label="close"></span>
@@ -249,13 +249,13 @@
 <div class="modal" id="modal-undefine">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
-    <form action="/api/que/domain/undefine/" method="post">
+    <form action="/api/que/domain/undefine" method="post">
       <header class="modal-card-head">
         <p class="modal-card-title">Undefine</p>
         <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
-        仮想マシンの電源がONの場合タスクは無視されます
+        Task is ignored if the virtual machine is powered on
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
       </section>
       <footer class="modal-card-foot">
