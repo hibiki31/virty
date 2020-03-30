@@ -4,6 +4,9 @@ html{
 body{
     font-size: 0.85rem;
 }
+.label{
+    font-size: 0.85rem;
+}
 .menu-list a {
     font-size: 0.85rem;
 }

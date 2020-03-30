@@ -40,7 +40,7 @@ $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
   $('.network-list').children().remove();
-  Jsonget('/api/json/network/?node=' + node).done(function (result) {
+  Jsonget('/api/json/network?node=' + node).done(function (result) {
     data = result.ResultSet;
     for (var i in data[1]) {
       $('.network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
@@ -48,7 +48,7 @@ $('#node-list').on('change', function () {
   })
 
   $('#archive-list').children().remove();
-  Jsonget('/api/json/archive/?node=' + node).done(function (result) {
+  Jsonget('/api/json/archive?node=' + node).done(function (result) {
     data = result.ResultSet;
     for (var i in data) {
       $('#archive-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
@@ -56,7 +56,7 @@ $('#node-list').on('change', function () {
   })
 
   $('#storage-list').children().remove();
-  Jsonget('/api/json/storage/?node=' + node).done(function (result) {
+  Jsonget('/api/json/storage?node=' + node).done(function (result) {
     data = result.ResultSet;
     for (var i in data) {
       $('#storage-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
@@ -129,7 +129,7 @@ $(document).ready(function () {
   });
   $('.menu li a').each(function () {
     var $href = $(this).attr('href');
-    if (location.pathname.match($href)) {
+    if (location.pathname === $href) {
       $(this).addClass('is-active');
     } else {
       $(this).removeClass('is-active');

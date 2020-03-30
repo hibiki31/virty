@@ -43,9 +43,9 @@
 </article>
 
 <article class="box">
-    <form action="/api/que/network/undefine/" method="post" class="field">
-        <label class="label">削除</label>
-        <select id="domain-list" name="uuid" class="select" required="">
+    <form action="/api/que/network/undefine" method="post" class="field">
+        <label class="label">Delete</label>
+        <select id="domain-list" name="uuid" class="select is-small" required="">
             {% for network in networks %}
             <option value={{network[2]}}>{{network[0]}} @{{network[1]}}</option>
             {% endfor %}
@@ -55,12 +55,14 @@
 </article>
 
 <article class="box">
-    <form action="/api/que/network/internal-define/" method="post" class="field">
-        <label class="label">内部ネットワーク作成</label>
-        <select id="node-list" name="node" class="select" required="">
-            <option value=""></option>
+    <form action="/api/que/network/internal-define" method="post" class="field">
+        <label class="label">Internal network make</label>
+        <select id="node-list" name="node" class="select is-small" required>
+            {% for i in node %}
+            <option value={{i[0]}}>{{i[0]}}</option>
+            {% endfor %}
         </select>
-        <input type="text" id="net-name" name="net-name" required="required" class="input">
+        <input type="text" id="net-name" name="net-name" required class="input is-small">
         <button class="button is-success is-small">Submit</button>
         </div>
         </div>

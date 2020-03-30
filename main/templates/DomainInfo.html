@@ -137,8 +137,20 @@
       <form method="post" action="/api/que/domain/power" class="field">
         <label class="label">Power</label>
         <input type="hidden" name="domain-list" value="{{xml['name']}}">
-        <button name="status" value="poweron" class="button is-success is-small">PowerON</button>
+        {% if db[0][1] == 1 %}
+        <button name="status" value="poweron" class="button is-success is-small" disabled>PowerON</button>
         <button name="status" value="poweroff" class="button is-danger is-small">PowerOFF</button>
+        {% elif db[0][1] == 5 %}
+        <button name="status" value="poweron" class="button is-success is-small">PowerON</button>
+        <button name="status" value="poweroff" class="button is-danger is-small" disabled>PowerOFF</button>
+        {% elif db[0][1] == 7 %}
+        <button name="status" value="poweron" class="button is-success is-small" disabled>PowerON</button>
+        <button name="status" value="poweroff" class="button is-danger is-small" disabled>PowerOFF</button>
+        {% else %}
+        <button name="status" value="poweron" class="button is-success is-small" disabled>PowerON</button>
+        <button name="status" value="poweroff" class="button is-danger is-small" disabled>PowerOFF</button>
+        {% endif %}
+        
       </form>
 
       <form method="post" action="/action/selinux" class="field">
@@ -172,15 +184,16 @@
           <div class="control">
             <span class="select is-small">
               <select class="select" name="memory" required="required">
-                <option value="512">512MB</option>
-                <option value="1024">1024MB</option>
-                <option value="2048">2048MB</option>
-                <option value="4096">4096MB</option>
-                <option value="8192">8192MB</option>
-                <option value="16384">16GB</option>
-                <option value="32768">32GB</option>
-                <option value="65536">64GB</option>
-                <option value="13072">128GB</option>
+
+                {% set memory = [['512','512MB'],['1024','1GB'],['2048','2GB'],['4096','4GB'],['8192','8GB'],['16384','16GB'],['32768','32GB'],['65536','64GB'],['13072','128GB']] %}
+                {% for i in memory%}
+                  {% if i[0] == db[0][4]|replace('.0', '')%}
+                  <option value="{{i[0]}}" selected>{{i[1]}}</option>
+                  {% else %}
+                  <option value="{{i[0]}}">{{i[1]}}</option>
+                  {% endif %}
+                {% endfor %}
+              
               </select>
             </span>
           </div>
@@ -197,13 +210,15 @@
           <div class="control">
             <span class="select is-small">
               <select class="select" name="cpu" required="required">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="4">4</option>
-                <option value="8">8</option>
-                <option value="16">16</option>
-                <option value="32">32</option>
-                <option value="48">48</option>
+                {% set cpu = ['1','2','4','8','12','16','24','32','48','64','96'] %}
+                {% for i in cpu%}
+                {% if i == db[0][3]%}
+                <option value="{{i}}" selected>{{i}}</option>
+                {% else %}
+                <option value="{{i}}">{{i}}</option>
+                {% endif %}
+              {% endfor %}
+              
               </select>
             </span>
           </div>

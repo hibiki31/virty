@@ -4,54 +4,66 @@
   <div class="column is-4">
     <article class="box">
       <form action="/api/que/domain/define/" method="post" class="field">
-        <label class="label">Node</label>
-        <select id="node-list" name="node" class="select is-small" required="">
-          <option></option>
-          {%for i in node%}
-          <option value="{{i[0]}}">{{i[0]}}</option>
-          {%endfor%}
-        </select>
 
-        <label class="label">Archive</label>
-        <select id="archive-list" name="archive" class="select is-small" required=""></select>
+        <div class="field is-horizontal">
+          <label class="field-label is-normal label" for="last-name">Name</label>
+          <input type="text" id="domain-name" name="name" required class="input is-small field-body">
+        </div>
 
-        <label class="label">Storage</label>
-        <select id="storage-list" name="storage" class="select is-small" required=""></select>
+        <div class="field is-horizontal">
+          <label class="field-label is-normal label">Node</label>
+          <select id="node-list" name="node" class="select is-small field-body field" required>
+            <option></option>
+            {%for i in node%}
+            <option value="{{i[0]}}">{{i[0]}}</option>
+            {%endfor%}
+          </select>
+        </div>
 
-        <label class="label" for="last-name">Name</label>
-        <input type="text" id="domain-name" name="name" required="required" class="input is-small">
+        <div class="field is-horizontal">
+          <label class="field-label is-normal label">Archive</label>
+          <select id="archive-list" name="archive" class="select is-small field-body" required></select>
+        </div>
 
-        <label class="label">vCPU</label>
-        <select id="node_list" class="select is-small" name="cpu" required="required">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="4">4</option>
-          <option value="8">8</option>
-          <option value="16">16</option>
-          <option value="32">32</option>
-          <option value="48">48</option>
-        </select>
+        <div class="field is-horizontal">
+          <label class="field-label is-normal label">Storage</label>
+          <select id="storage-list" name="storage" class="select is-small field-body" required></select>
+        </div>
 
-        <label class="label">Memory</label>
-        <select id="node_list" class="select is-small" name="memory" required="required">
-          <option value="512">512MB</option>
-          <option value="1024">1024MB</option>
-          <option value="2048">2048MB</option>
-          <option value="4096">4096MB</option>
-          <option value="8192">8192MB</option>
-          <option value="16384">16GB</option>
-          <option value="32768">32GB</option>
-          <option value="65536">64GB</option>
-          <option value="13072">128GB</option>
-        </select>
+        <div class="field is-horizontal">
+          <label class="field-label label">vCPU</label>
+          <select id="node_list" class="select is-small field-body" name="cpu" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+
+        <div class="field is-horizontal">
+          <label class="field-label is-normal label">Memory</label>
+          <select id="node_list" class="select is-small field-body" name="memory" required>
+            <option value="512">512MB</option>
+            <option value="1024">1024MB</option>
+            <option value="2048">2048MB</option>
+            <option value="4096">4096MB</option>
+            <option value="8192">8192MB</option>
+            <option value="16384">16GB</option>
+            <option value="32768">32GB</option>
+            <option value="65536">64GB</option>
+            <option value="13072">128GB</option>
+          </select>
+        </div>
 
         <div id="define-interface">
-          <div class="unit">
-            <label class="label">Network</label>
-            <div class="field has-addons">
+          <div class="unit field is-horizontal">
+            <label class="field-label is-normal label">Network</label>
+            <div class="field has-addons field-body">
               <div class="control">
-                <select name="bridge" class="select network-list is-small" required=""></select>
-
+                <select name="bridge" class="select network-list is-small field-body" required></select>
               </div>
               <div class="control">
                 <span class="interface-op-remove button is-danger is-small">-</span>
@@ -60,9 +72,17 @@
           </div>
         </div>
         <br>
-        <span id="interface-op-add" class="button is-primary is-small">+</span>
+        <div class="field is-grouped is-grouped-right">
+          <span id="interface-op-add" class="button is-primary is-small control">+</span>
+        </div>
+        
         <hr>
-        <button class="button is-primary is-small">Submit</button>
+        <div class="field is-grouped is-grouped-right">
+          <button class="button is-primary is-small control">Submit</button>
+        </div>
+        
+
+
 
       </form>
     </article>

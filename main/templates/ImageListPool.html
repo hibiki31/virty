@@ -3,13 +3,13 @@
 <div class="tabs is-centered">
   <ul>
       <li>
-          <a href="/ui/image?tree=false">
+          <a href="/image?tree=false">
               <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
               <span>All</span>
           </a>
       </li>
       <li>
-          <a href="/ui/image?tree=true">
+          <a href="/image?tree=true">
               <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
               <span>Folder</span>
           </a>
@@ -21,9 +21,9 @@
   <table class="table is-fullwidth">
     <thead>
       <tr>
-        <th class="column-title">名前 </th>
-        <th class="column-title">最大容量 </th>
-        <th class="column-title">空き容量 </th>
+        <th class="column-title">Name </th>
+        <th class="column-title">Max </th>
+        <th class="column-title">Free </th>
         <th class="column-title" style="width: 25%;"></th>
         <th class="column-title">Node </th>
         <th class="column-title">Path </th>
@@ -33,7 +33,7 @@
     <tbody>
       {% for dom in data %}
       <tr>
-        <td><a href="/ui/image?tree=true&node={{dom[1]}}&pool={{dom[0]}}">{{dom[0]}}</a></td>
+        <td><a href="/image?tree=true&node={{dom[1]}}&pool={{dom[0]}}">{{dom[0]}}</a></td>
         <td>{{dom[3]}}G</td>
         <td>{{dom[4]}}G</td>
         <td><progress class="progress is-primary is-small" value="{{(dom[4])}}" max="{{dom[3]}}"></progress></td>

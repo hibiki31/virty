@@ -7,25 +7,21 @@
 
 
     <div class="form-group">
-      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name <span class="required">*</span>
-      </label>
+      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">Name</label>
       <div class="col-md-6 col-sm-6 col-xs-12">
-        <input type="text" id="domain-name" name="name" required="required" class="form-control col-md-7 col-xs-12">
+        <input type="text" id="domain-name" name="name" required="required" pattern="^[0-9A-Za-z_-]+$" maxlength='24'>
       </div>
     </div>
 
 
     <div class="form-group">
-      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">User <span class="required">*</span>
-      </label>
+      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">User</label>
       <div class="col-md-6 col-sm-6 col-xs-12">
         <input type="text" id="domain-name" name="user" required="required" class="form-control col-md-7 col-xs-12">
       </div>
     </div>
     <div class="form-group">
-      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">IP or Domain <span
-          class="required">*</span>
-      </label>
+      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">IP or Domain</label>
       <div class="col-md-6 col-sm-6 col-xs-12">
         <input type="text" id="domain-name" name="ip" required="required" class="form-control col-md-7 col-xs-12">
       </div>

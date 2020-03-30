@@ -189,7 +189,7 @@ def archive():
 ############################
 @app.route('/network',methods=["GET"])
 def network():
-    html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("network"))
+    html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("network"),node=virty.vsql.SqlGetAll("node"))
     return html
 
 
