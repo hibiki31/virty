@@ -51,7 +51,7 @@
 </article>
 
 <article class="box">
-    <form action="/api/que/node/status-update/" method="post" class="field">
+    <form action="/api/que/node/status-update" method="post" class="field">
         <select name="name" class="select is-small" required="">
             {% for dom in domain %}
             <option value={{dom[0]}}>{{dom[0]}}</option>
