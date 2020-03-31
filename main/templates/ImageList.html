@@ -46,12 +46,12 @@
 
                 {%if image[7] == None%}
                 <td><span class="tag is-light">{{image[7]}}</span></td>
-                {%elif image['count(*)'] == 1 %}
+                {%elif image[8] == 1 %}
                 <td><span class="tag is-dark">{{image[7]}}</span></td>
                 {%else%}
                 <td><span class="tag is-dark">{{image[7]}}</span><span class="tag is-dark">....</span></td>
                 {%endif%}
-                <td><a href="/ui/edit/image/{{image[0]}}/{{image[2]}}/{{image[0]}}">Edit</a></td>
+                <td><a href="/image?ui=edit&node={{image[1]}}&pool={{image[2]}}&file={{image[0]}}">Edit</a></td>
                 <td><span class="modal-open-image-delete">Delete</span></td>
             </tr>
             {% endfor %}

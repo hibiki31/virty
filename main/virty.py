@@ -205,7 +205,10 @@ def DomainListInit():
     vsql.DataStatusDelete("domain_drive")
         
    
-
+def UserAdd(USER_ID,PASSWORD):
+    SQL = "insert into users (id,password) values (?,?)"
+    DATA = [USER_ID,PASSWORD]
+    vsql.RawCommit(SQL,DATA)
 
 
 def GetNicData(DOM_UUID):

@@ -1,0 +1,28 @@
+{% extends "Layout.html" %}
+{% block content %}
+<article class="box">
+    <table class="table is-fullwidth">
+        <thead>
+            <tr>
+                <th>Name </th>
+                <th>Password </th>
+                <th>Groups </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in users %}
+            <tr>
+                <td>{{data[0]}}</td>
+                <td>{{data[1]}}</td>
+                <td>
+                    {% for i in groups[data[0]] %}
+                    <span class="tag">{{i}}</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+
+{% endblock %}

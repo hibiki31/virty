@@ -91,6 +91,22 @@ $(document).ready(function () {
     $("#modal-undefine").addClass("is-active");
   });
 
+  $(".modal-open-group").click(function () {
+    $("#modal-group-id").attr('value', $(this).attr("groupid"));
+    $("#modal-user-id").attr('value', $(this).attr("userid"));
+    $("#modal-group").addClass("is-active");
+  });
+
+  $(".modal-open-domain-user").click(function () {
+    $("#modal-open-user").addClass("is-active");
+    $("#modal-uuid-user").attr('value', $(this).attr("uuid"));
+  });
+
+  $(".modal-open-domain-group").click(function () {
+    $("#modal-open-group").addClass("is-active");
+    $("#modal-uuid-group").attr('value', $(this).attr("uuid"));
+  });
+
   $(".modal-open-image-delete").click(function () {
     $("#modal-image-node").attr('value', $(this).parent().siblings('td[name="node"]').attr("value"));
     $("#modal-image-pool").attr('value', $(this).parent().siblings('td[name="pool"]').attr("value"));
