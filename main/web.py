@@ -9,9 +9,9 @@ import virty
 
 ############################
 # flask                    #
-############################
-l = logging.getLogger()
-l.addHandler(logging.FileHandler("/dev/null"))
+# ############################
+# l = logging.getLogger()
+# l.addHandler(logging.FileHandler("/dev/null"))
 
 app = Flask(__name__, static_folder='node_modules', static_url_path='/npm')
 app.config['SECRET_KEY'] = 'super-secret'
@@ -139,7 +139,7 @@ def setting():
 # DOMAIN                   #
 ############################
 @app.route('/domain',methods=["GET"])
-def domain():
+def domain_get():
     if not request.args.get('uuid') == None and request.args.get('ui') == None:
         owner = virty.vsql.RawFetchall("select * from domain_owner where dom_uuid=?",[request.args.get('uuid')])
         if not current_user.isadmin:
@@ -159,7 +159,7 @@ def domain():
 
     else:
         if current_user.isadmin:
-            domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid",[])
+            domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
             users = virty.vsql.SqlGetAll("users")
             groups = virty.vsql.SqlGetAll("groups")
             html = render_template('DomainList.html',domain=domain,users=users,groups=groups)
@@ -171,6 +171,21 @@ def domain():
             html = render_template('DomainList.html',domain=domain,users=users,groups=groups)
     return html
 
+@app.route('/domain',methods=["POST"])
+@UserRoll
+def domain_post():
+    virty.vsql.RawCommit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[request.form['uuid'],None,None])
+    if request.form['target'] == "domain_user":
+        if request.form['status'] == "delete":
+            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[None,request.form['uuid']])
+        elif request.form['status'] == "change":
+            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[request.form['user-id'],request.form['uuid']])
+    elif request.form['target'] == "domain_group":
+        if request.form['status'] == "delete":
+            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[None,request.form['uuid']])
+        elif request.form['status'] == "change":
+            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[request.form['group-id'],request.form['uuid']])
+    return redirect("/", code=302)
 
 
 ############################
@@ -258,22 +273,57 @@ def queue():
     html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
     return html
 
-
+@app.route('/queue',methods=["POST"])
+def queue_post():
+    if request.form.get('status') == "que_clear":
+        virty.vsql.RawCommit("delete from que",[])
+        return redirect("/queue",code=303)
+    else:
+        return abort(400)
 
 
 ############################
 # USER                     #
 ############################
-@app.route('/user',methods=["GET"])
+@app.route('/user',methods=["GET","POST"])
 def user():
-    groups = {}
-    for i in virty.vsql.SqlGetAll("users_groups"):
-        if groups.get(i[0],False):
-            groups[i[0]].append(i[1])
+    if request.method == "GET":
+        groups = {}
+        for i in virty.vsql.SqlGetAll("users_groups"):
+            if groups.get(i[0],False):
+                groups[i[0]].append(i[1])
+            else:
+                groups[i[0]] = [i[1]]
+        html = render_template('UserList.html',users=virty.vsql.SqlGetAll("users"),groups=groups)
+        return html
+    elif request.method == "POST":
+        if request.form.get('method') == "delete":
+            if request.form.get('user-id') == "admin":
+                return abort(400)
+            elif request.form.get('user-id') == None:
+                return abort(400)
+            else:
+                virty.vsql.RawCommit("update domain_owner set user_id=? where user_id=?",[None,request.form['user-id']])
+                virty.vsql.RawCommit("delete from users_groups where user_id=?",[request.form['user-id']])
+                virty.vsql.RawCommit("delete from users where id=?",[request.form['user-id']])
+                return redirect("/user", code=303)
+        elif request.form.get('method') == "reset":
+            if request.form.get('user-id') == None or request.form.get('password') == None:
+                return abort(400)
+            else:
+                virty.UserReset(request.form['user-id'],hash_password(request.form['password']))
+                return redirect("/user", code=303)
+        elif request.form.get('method') == "add":
+            if request.form.get('user-id') == None or request.form.get('password') == None:
+                return abort(400)
+            else:
+                if virty.userIsExist(request.form['user-id']):
+                    return abort(400)
+                else:
+                    virty.UserAdd(request.form['user-id'],hash_password(request.form['password']))
+                    return redirect("/user", code=303)
         else:
-            groups[i[0]] = [i[1]]
-    html = render_template('UserList.html',users=virty.vsql.SqlGetAll("users"),groups=groups)
-    return html
+            return abort(400)
 
 
 
@@ -281,18 +331,48 @@ def user():
 ############################
 # GROUP                    #
 ############################
-@app.route('/group',methods=["GET"])
+@app.route('/group',methods=["GET","POST"])
 def group():
-    groups = {}
-    for i in virty.vsql.SqlGetAll("users_groups"):
-        if groups.get(i[1],False):
-            groups[i[1]].append(i[0])
+    if request.method == "GET":
+        tag = {}
+        for i in virty.vsql.SqlGetAll("users_groups"):
+            if tag.get(i[1],False):
+                tag[i[1]].append(i[0])
+            else:
+                tag[i[1]] = [i[0]]
+        html = render_template('GroupList.html',groups=virty.vsql.SqlGetAll("groups"),tag=tag,users=virty.vsql.SqlGetAll("users"))
+        return html
+    elif request.method == "POST":
+        if request.form.get('method') == "delete":
+            if request.form.get('group-id') == "admin":
+                return abort(400)
+            elif request.form.get('group-id') == None:
+                return abort(400)
+            else:
+                virty.vsql.RawCommit("update domain_owner set group_id=? where group_id=?",[None,request.form['group-id']])
+                virty.vsql.RawCommit("delete from users_groups where group_id=?",[request.form['group-id']])
+                virty.vsql.RawCommit("delete from groups where id=?",[request.form['group-id']])
+                return redirect("/group", code=303)
+        elif request.form.get('method') == "add":
+            if request.form.get('group-id') == None:
+                return abort(400)
+            else:
+                if virty.groupIsExist(request.form['group-id']):
+                    return abort(400)
+                else:
+                    virty.vsql.RawCommit("insert into groups ('id') values (?)",[request.form['group-id']])
+                    return redirect("/group", code=303)
+        elif request.form.get('method') == "assgin":
+            virty.vsql.RawCommit("insert into users_groups ('user_id','group_id') values (?,?)",[request.form['user-id'],request.form['group-id']])
+            return redirect("/group", code=303)
+        elif request.form.get('method') == "leave":
+            virty.vsql.RawCommit("delete from users_groups where user_id=? and group_id=?",[request.form['user-id'],request.form['group-id']])
+            return redirect("/group", code=303)
         else:
-            groups[i[1]] = [i[0]]
-    html = render_template('GroupList.html',users=virty.vsql.SqlGetAll("groups"),groups=groups)
-    return html
+            return abort(400)
 
      
+
 
 
 ############################
@@ -305,12 +385,14 @@ def domain_add():
     html = render_template('DomainDefine.html',node=virty.vsql.SqlGetAll("node"))
     return html
 
+
 @app.route('/make/node')
 @login_required
 def node_add():
     virty.WorkerUp()
     html = render_template('NodeAdd.html')
     return html
+
 
 @app.route('/make/storage')
 @login_required
@@ -319,20 +401,12 @@ def storage_add():
     html = render_template('StorageAdd.html')
     return html
 
+
 @app.route('/make/network')
 @login_required
 def network_add():
     virty.WorkerUp()
     html = render_template('NetworkAdd.html')
-    return html
-
-@app.route('/make/user')
-@login_required
-def user_add():
-    users = virty.vsql.SqlGetAll("users")
-    groups = virty.vsql.SqlGetAll("groups")
-    virty.WorkerUp()
-    html = render_template('UserAdd.html',users=users,groups=groups)
     return html
 
 
@@ -352,45 +426,6 @@ def action_image_delete():
     virty.DomainListInit()
     return redirect("/ui/image", code=302)
 
-@app.route('/action/user/add',methods=["POST"])
-@UserRoll
-def action_user_add():
-    virty.UserAdd(request.form['userid'],hash_password(request.form['password']))
-    return redirect("/", code=302)
-
-@app.route('/action/group/add',methods=["POST"])
-@UserRoll
-def action_group_add():
-    virty.vsql.RawCommit("insert into groups ('id') values (?)",[request.form['groupid']])
-    return redirect("/", code=302)
-
-@app.route('/action/group/join',methods=["POST"])
-@UserRoll
-def action_group_join():
-    virty.vsql.RawCommit("insert into users_groups ('user_id','group_id') values (?,?)",[request.form['userid'],request.form['groupid']])
-    return redirect("/", code=302)
-
-@app.route('/action/group/leave',methods=["POST"])
-@UserRoll
-def action_group_leave():
-    virty.vsql.RawCommit("delete from users_groups where user_id=? and group_id=?",[request.form['userid'],request.form['groupid']])
-    return redirect("/ui/groups", code=302)
-
-@app.route('/action/owner/change',methods=["POST"])
-@UserRoll
-def action_owner_change():
-    virty.vsql.RawCommit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[request.form['uuid'],None,None])
-    if request.form['target'] == "domain_user":
-        if request.form['status'] == "delete":
-            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[None,request.form['uuid']])
-        elif request.form['status'] == "change":
-            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[request.form['userid'],request.form['uuid']])
-    elif request.form['target'] == "domain_group":
-        if request.form['status'] == "delete":
-            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[None,request.form['uuid']])
-        elif request.form['status'] == "change":
-            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[request.form['groupid'],request.form['uuid']])
-    return redirect("/", code=302)
 
 @app.route("/action/cdrom/change",methods=["POST"])
 @login_required
@@ -405,6 +440,7 @@ def action_cdrom_change():
     virty.DomainListInit()
     print(task)
     return redirect("/domain?uuid=" + task['uuid'])
+
 
 @app.route("/action/selinux",methods=["POST"])
 @login_required
@@ -442,6 +478,7 @@ def api_json_object(OBJECT):
     else:
         return abort(404)
     return jsonify(ResultSet=result)
+
 
 @app.route("/api/que/<OBJECT>/<METHOD>",methods=["POST"])
 @login_required

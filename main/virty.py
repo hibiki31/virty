@@ -211,6 +211,26 @@ def UserAdd(USER_ID,PASSWORD):
     vsql.RawCommit(SQL,DATA)
 
 
+def UserReset(USER_ID,PASSWORD):
+    SQL = "update users set password=? where id=?"
+    DATA = [PASSWORD,USER_ID]
+    vsql.RawCommit(SQL,DATA)
+
+
+def userIsExist(USER_ID):
+    if vsql.RawFetchall("select * from users where id=?",[USER_ID]) == []:
+        return False
+    else:
+        return True
+
+
+def groupIsExist(GROUP_ID):
+    if vsql.RawFetchall("select * from groups where id=?",[GROUP_ID]) == []:
+        return False
+    else:
+        return True
+
+
 def GetNicData(DOM_UUID):
     NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
@@ -616,6 +636,8 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
     return editor.DomainXmlUpdate()
 
 
+
+
 ############################
 # SSH                      #
 ############################
@@ -649,8 +671,6 @@ def SshInfoQemu(NODE_IP):
     except:
         return "error"
     return version.rstrip("\\n'").lstrip("'b").split()[3]
-
-
 
 def SshInfocpuname(NODE_IP):
     cmd = ["ssh" , NODE_IP, "grep 'model name' /proc/cpuinfo|uniq"]
@@ -728,8 +748,11 @@ def ImageResize(NODE,POOL,FILE,SIZE):
 if __name__ == "__main__":
     args = sys.argv
     argnum = len(args)
-    if argnum == 1:argobj = "none"
-    else: argobj = args[1]
+    if argnum == 1:
+        argobj = "none"
+    else:
+        argobj = args[1]
+
 
     #Help
     if argnum == 1:

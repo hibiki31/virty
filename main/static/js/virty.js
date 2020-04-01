@@ -114,6 +114,22 @@ $(document).ready(function () {
     $("#modal-open-image-delete").addClass("is-active");
   });
 
+  $(".modal-open").click(function () {
+    $("#"+$(this).attr("modal-id")).addClass("is-active");
+    if ($(this).attr("modal-id") === "modal-user-delete"){
+      $(".modal-user-id").attr('value', $(this).attr("user-id"));
+    } 
+    if ($(this).attr("modal-id") === "modal-user-reset"){
+      $(".modal-user-id").attr('value', $(this).attr("user-id"));
+    }
+    if ($(this).attr("modal-id") === "modal-group-delete"){
+      $(".modal-group-id").attr('value', $(this).attr("group-id"));
+    }
+    if ($(this).attr("modal-id") === "modal-group-assgin"){
+      $(".modal-group-id").attr('value', $(this).attr("group-id"));
+    }
+  });
+
 });
 
 ///effect

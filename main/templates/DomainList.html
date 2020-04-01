@@ -66,13 +66,13 @@
 <div class="modal" id="modal-open-user">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
-    <form action="/action/owner/change" method="post">
+    <form action="/domain" method="post">
       <header class="modal-card-head">
         <p class="modal-card-title">User change</p>
         <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
-        <select name="userid" class="select" required="">
+        <select name="user-id" class="select" required="">
           {% for i in users %}
           <option value={{i[0]}}>{{i[0]}}</option>
           {% endfor %}
@@ -92,13 +92,13 @@
 <div class="modal" id="modal-open-group">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
-    <form action="/action/owner/change" method="post">
+    <form action="/domain" method="post">
       <header class="modal-card-head">
         <p class="modal-card-title">Group change</p>
         <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
-        <select name="groupid" class="select" required="">
+        <select name="group-id" class="select" required="">
           {% for i in groups %}
           <option value={{i[0]}}>{{i[0]}}</option>
           {% endfor %}
