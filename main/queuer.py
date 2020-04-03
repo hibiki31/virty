@@ -1,9 +1,9 @@
+import setting
 import virty
 import ast
 from time import sleep
 
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
+
 
 que = virty.vsql.SqlQueuget("running")
 if que == None or que == []:
@@ -36,12 +36,11 @@ elif que[3] == "domain" and que[4] == "list-reload":
 
 elif que[3] == "domain" and que[4] == "undefine":
     result = virty.DomainUndefine(POST['uuid'])
-    virty.vsql.SqlDeleteAll("dom")
     virty.DomainListInit()
 
 elif que[3] == "network" and que[4] == "2l-define":  
     NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",POST['node-list'])
-    XML_PATH = SPATH + '/xml/net_2less.xml'
+    XML_PATH = setting.scriptPath + '/xml/net_2less.xml'
     NAME = "2l-" + POST['net-gw']
     GW = POST['net-gw']
     virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)

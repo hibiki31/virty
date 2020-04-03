@@ -1,20 +1,19 @@
+import setting
 import sqlite3, vansible, os
 from flask_login import UserMixin
 
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
 
 ############################
 # Select                   #
 ############################
 def SqlGetAll(TABLE):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'select * from ' + TABLE
     return cur.execute(sql).fetchall()
 
 def SqlGetAllSort(TABLE,COLUMN):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'select * from ' + TABLE + ' order by ' + COLUMN + ' asc'
     return cur.execute(sql).fetchall()
@@ -72,7 +71,7 @@ def Convert(SRC,DST,HINT):
 
 
 def SqlDeleteNode(NODENAMES):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     for node in NODENAMES:
         sql = 'delete from node where node_name = "' + node + '"'
@@ -81,7 +80,7 @@ def SqlDeleteNode(NODENAMES):
     vansible.AnsibleNodelistInit()
 
 def SqlDeleteDomain(DOM_NAMES):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     for dom in DOM_NAMES:
         sql = 'delete from domain where name = "' + dom + '"'
@@ -89,14 +88,14 @@ def SqlDeleteDomain(DOM_NAMES):
     con.commit()
 
 def NetworkDelete(NODE,SOURCE):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'delete from network where network_node = "' + NODE + '" and network_bridge = "' + SOURCE + '"'
     cur.execute(sql)
     con.commit()
 
 def DomainDelete(UUID):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'delete from domain where uuid = "' + UUID + '"'
     cur.execute(sql)
@@ -105,7 +104,7 @@ def DomainDelete(UUID):
 # SUM                      #
 ############################
 def SqlSumNode():
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'select sum(memory) from node'
     RAM = cur.execute(sql).fetchone()
@@ -118,7 +117,7 @@ def SqlSumNode():
     return [RAM,CORE]
 
 def SqlSumDomain():
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'select sum(memory) from dom'
     RAM = cur.execute(sql).fetchone()
@@ -148,7 +147,7 @@ def NetworkAdd(NETWORK_DICS):
 
 
 def SqlAddNode(NODE_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = ''
     cur.executemany(sql, NODE_DATAS)
@@ -158,7 +157,7 @@ def SqlAddNode(NODE_DATAS):
     vansible.AnsibleNodelistInit()
     
 def StorageAdd(STORAGE_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into storage (name, node_name, device, type, path) values (?,?,?,?,?)'
     cur.executemany(sql, STORAGE_DATAS)
@@ -168,7 +167,7 @@ def StorageAdd(STORAGE_DATAS):
     vansible.AnsibleNodelistInit()
     
 def SqlAddNetwork(NETWORK_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into network (network_name,network_bridge,network_node) values (?,?,?)'
     cur.executemany(sql, NETWORK_DATAS)
@@ -177,7 +176,7 @@ def SqlAddNetwork(NETWORK_DATAS):
     con.close()
         
 def SqlAddArchive(ARCHIVE_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into archive (archive_name, archive_path, archive_node_name) values (?,?,?)'
     cur.executemany(sql, ARCHIVE_DATAS)
@@ -186,7 +185,7 @@ def SqlAddArchive(ARCHIVE_DATAS):
     con.close()
 
 def ImageAdd(IMG_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into img (name, node, pool, capa, allocation, physical, path) values (?,?,?,?,?,?,?)'
     cur.executemany(sql, IMG_DATAS)
@@ -195,7 +194,7 @@ def ImageAdd(IMG_DATAS):
     con.close()
 
 def SqlAddDomain(DOMAIN_DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into domain (name, status, node_name, core,memory,uuid, type,os) values (?,?,?,?,?,?,?,?)'
     cur.executemany(sql, DOMAIN_DATAS)
@@ -208,7 +207,7 @@ def SqlAddDomain(DOMAIN_DATAS):
 # UPDATE                   #
 ############################
 def SqlUpdateDomain(DOM_DIC):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into domain (name, status, node_name, core,memory,uuid, type,os) values (?,?,?,?,?,?,?,?)'
     
@@ -227,7 +226,7 @@ def SqlUpdateDomain(DOM_DIC):
     con.close()
 
 def NetworkListUpdate(NET_DIC_LIST):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into network (network_name,network_bridge,network_uuid,network_node,network_type,network_dhcp) values (?,?,?,?,?,?)'
     
@@ -252,7 +251,7 @@ def NetworkListUpdate(NET_DIC_LIST):
     con.close()
 
 def UpdateImage(DIC_LIST):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into img (img_name, img_archive_name, img_domain_name,img_node_name) values (?,?,?,?)'
     
@@ -271,7 +270,7 @@ def UpdateImage(DIC_LIST):
     con.close()
 
 def UpdateStorage(DIC_LIST):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'replace into storage(name, node_name, uuid, capacity, available,device, type, path) values (?,?,?,?,?,?,?,?)'
     
@@ -294,7 +293,7 @@ def UpdateStorage(DIC_LIST):
     con.close()
 
 def DomainStatusUpdate(NODES,DOMAINS,CODE):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     for NODE in NODES:
         sql = 'UPDATE domain SET status=? WHERE node_name=?'
@@ -305,7 +304,7 @@ def DomainStatusUpdate(NODES,DOMAINS,CODE):
     con.commit()
 
 def NodeStatusUpdate(NODES,CODE):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     for NODE in NODES:
         sql = 'UPDATE node SET status=? WHERE name=?'
@@ -317,7 +316,7 @@ def NodeStatusUpdate(NODES,CODE):
 ############################
 
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = "insert into que (que_time, que_status, que_object, que_method, que_json, que_mesg) values (datetime('now', 'localtime'),?,?,?,?,?)"
     
@@ -333,28 +332,28 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     con.close()
 
 def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
 def SqlQueuget(QUE_STATUS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'select * from que where que_status ="'+QUE_STATUS+'"'
     data = cur.execute(sql).fetchall()
     return data
 
 def QueueUpdate(QUE_ID,QUE_STATUS,QUE_MESG):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
 def SqlDeleteAll(TABLE_NAME):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     sql = 'delete from '+ TABLE_NAME +';'
     cur.execute(sql)
@@ -425,34 +424,34 @@ def PoolListGet(NODE):
 # RAW                      #
 ############################
 def ExFetchall(SQL):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     get = cur.execute(SQL).fetchall()
     return get
 
 def RawCommits(SQL,DATAS):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     cur.executemany(SQL,DATAS)
     con.commit()
 
 def RawCommit(SQL,DATA):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     cur.execute(SQL,DATA)
     con.commit()
 
 def RawFetchall(SQL,DATA):
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     return cur.execute(SQL,DATA).fetchall()
 
 def SqlInit():
     try:
-        os.remove(SQLFILE)
+        os.remove(setting.databasePath)
     except:
         pass
-    con = sqlite3.connect(SQLFILE)
+    con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
     cur.execute('create table domain (name, status, node_name, core, memory, uuid, type, os, primary key (name, node_name))')
     cur.execute('create table domain_interface (dom_uuid, type, mac, target, source, network, is_updating, primary key (dom_uuid, mac))')

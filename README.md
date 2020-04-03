@@ -5,7 +5,7 @@
 1. This system is vulnerable, use only locally
 2. Authentication function is prototype
 
-## Install
+## Virty setup
 
 ### Docker
 
@@ -15,22 +15,28 @@ Git clone
 git clone https://github.com/hibiki31/virty.git
 ```
 
-Docker build
+Docker build & up
 
 ```
 cd virty
-make build
-make up
+docker-compose build     # make build
+docker-compose up -d     # make up
 ```
 
-DB Initialization
+If an error with pip
 
 ```
-http://IP/setup
+docker image prune -a
+```
+
+Login
+
+```
+http://<host ip>
 user=admin,password=admin
 ```
 
-## Start up
+## Node setup
 
 ### Add node
 
@@ -45,13 +51,7 @@ Container login & SSH to node with Use public key authentication to allow SSH wi
 
 ```
 cd virty
-make login
-```
-
-Add node data on web interface
-
-```
-http://IP/node/add
+docker exec -it virty_main_1 bash     # make login
 ```
 
 ### System storage pool
@@ -62,15 +62,15 @@ Each node must have `archive` and `iso`. The directory must exist.
 http://IP/storage/add
 ```
 
-## Libvirt
+## Packages
 
-### CentOS
-
-```
+### CentOS 7
 
 ```
+yum -y install libvirt libvirt-client qemu-kvm virt-manager bridge-utils
+```
 
-### Ubuntu
+### Ubuntu 18
 
 ```
 sudo apt update
@@ -89,6 +89,6 @@ add
 ```
 sudo visudo
 -- tail --
-ubuntu ALL=(ALL) NOPASSWD: ALL
+username ALL=(ALL) NOPASSWD: ALL
 ```
 

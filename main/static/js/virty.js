@@ -118,7 +118,7 @@ $(document).ready(function () {
     $("#"+$(this).attr("modal-id")).addClass("is-active");
     if ($(this).attr("modal-id") === "modal-user-delete"){
       $(".modal-user-id").attr('value', $(this).attr("user-id"));
-    } 
+    }
     if ($(this).attr("modal-id") === "modal-user-reset"){
       $(".modal-user-id").attr('value', $(this).attr("user-id"));
     }

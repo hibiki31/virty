@@ -22,6 +22,8 @@
       <p class="title">Down</p>
       {% elif db[0][1] == 7 %}
       <p class="title">Maint</p>
+      {% elif db[0][1] == 10 %}
+      <p class="title">Deleted</p>
       {% else %}
       <p class="title">Lost</p>
       {% endif %}

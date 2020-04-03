@@ -13,6 +13,8 @@
                 <th class="column-title">Json </th>
                 <th class="column-title">Mesg </th>
                 <th class="column-title">Run </th>
+                <th class="column-title">Log </th>
+                <th class="column-title">Log </th>
             </tr>
         </thead>
         <tbody>
@@ -36,6 +38,8 @@
                 <td class=" ">{{dom[5]}}</td>
                 <td class=" ">{{dom[6]}}</td>
                 <td class=" ">{{'%0.1f' % dom[7]|float}} s</td>
+                <td><a href="/queue/log/{{dom[0]}}/err">Err</a></td>
+                <td><a href="/queue/log/{{dom[0]}}/out">Out</a></td>
             </tr>
             {% endfor %}
         </tbody>

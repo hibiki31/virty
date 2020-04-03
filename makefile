@@ -1,4 +1,4 @@
-buildn:
+rebuild:
 	docker-compose build --no-cache
 build:
 	docker-compose build 

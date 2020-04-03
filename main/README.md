@@ -9,8 +9,8 @@
 ### Domain
 1 ON
 5 OFF
-7 node is aintenance mode
-10 lost domain
+7 node is maintenance mode
+10 deleted domain
 20 lost node
 
 

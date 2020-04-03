@@ -1,3 +1,7 @@
+### Ver 0.0.2.3
+- Separation of set values
+- Package optimization
+
 ### Ver 0.0.2.2
 - Fix user and group function
 - Process logs are taken individually

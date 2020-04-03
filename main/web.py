@@ -3,13 +3,14 @@ from flask_jwt import JWT, jwt_required, current_identity
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import safe_str_cmp
 from functools import wraps
-from time import  sleep
+from time import sleep
 import subprocess, logging, bcrypt
 import virty
 
 ############################
 # flask                    #
-# ############################
+############################
+
 # l = logging.getLogger()
 # l.addHandler(logging.FileHandler("/dev/null"))
 
@@ -123,6 +124,7 @@ def logout():
 # SETTING                  #
 ############################
 @app.route('/setting',methods=["DELETE","GET"])
+@login_required
 def setting():
     if request.method == 'DELETE':
         if request.form["status"] == "dbinit":
@@ -139,6 +141,7 @@ def setting():
 # DOMAIN                   #
 ############################
 @app.route('/domain',methods=["GET"])
+@login_required
 def domain_get():
     if not request.args.get('uuid') == None and request.args.get('ui') == None:
         owner = virty.vsql.RawFetchall("select * from domain_owner where dom_uuid=?",[request.args.get('uuid')])
@@ -172,7 +175,7 @@ def domain_get():
     return html
 
 @app.route('/domain',methods=["POST"])
-@UserRoll
+@login_required
 def domain_post():
     virty.vsql.RawCommit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[request.form['uuid'],None,None])
     if request.form['target'] == "domain_user":
@@ -192,6 +195,7 @@ def domain_post():
 # ARCHIVE                  #
 ############################
 @app.route('/archive',methods=["GET"])
+@login_required
 def archive():
     html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
     return html
@@ -203,6 +207,7 @@ def archive():
 # NETWORK                  #
 ############################
 @app.route('/network',methods=["GET"])
+@login_required
 def network():
     html = render_template('NetworkList.html',networks=virty.vsql.SqlGetAll("network"),node=virty.vsql.SqlGetAll("node"))
     return html
@@ -214,6 +219,7 @@ def network():
 # IMAGE                    #
 ############################
 @app.route('/image',methods=["GET"])
+@login_required
 def image():
     if request.args.get('tree') == "true":
         if not request.args.get('node') == None:
@@ -242,6 +248,7 @@ def image():
 # STORAGE                  #
 ############################
 @app.route('/storage',methods=["GET"])
+@login_required
 def storage():
     if request.args.get('ui') == "undefine":
         html = render_template('StorageUndefine.html',domain=[request.args.get('node'),request.args.get('pool')])
@@ -257,6 +264,7 @@ def storage():
 # NODE                     #
 ############################
 @app.route('/node',methods=["GET"])
+@login_required
 def node():
     html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("node"),sumdata=virty.vsql.SqlSumNode())
     return html
@@ -268,12 +276,26 @@ def node():
 # QUEUE                    #
 ############################
 @app.route('/queue',methods=["GET"])
+@login_required
 def queue():
     domain = virty.vsql.RawFetchall("select * from que order by que_id desc",[])
     html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
     return html
 
+
+@app.route('/queue/log/<ID>/<STATUS>',methods=["GET"])
+@login_required
+def queue_log_id_status(ID,STATUS):
+    if STATUS == "err":
+        return str(virty.queueLogErr(ID))
+    elif STATUS == "out":
+        return str(virty.queueLogOut(ID))
+    else:
+        return abort(400)
+
+
 @app.route('/queue',methods=["POST"])
+@login_required
 def queue_post():
     if request.form.get('status') == "que_clear":
         virty.vsql.RawCommit("delete from que",[])
@@ -282,10 +304,13 @@ def queue_post():
         return abort(400)
 
 
+
+
 ############################
 # USER                     #
 ############################
 @app.route('/user',methods=["GET","POST"])
+@login_required
 def user():
     if request.method == "GET":
         groups = {}
@@ -332,6 +357,7 @@ def user():
 # GROUP                    #
 ############################
 @app.route('/group',methods=["GET","POST"])
+@login_required
 def group():
     if request.method == "GET":
         tag = {}

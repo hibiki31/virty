@@ -1,10 +1,13 @@
 #!/bin/python3
-import libvirt, sys, sqlite3, subprocess, os, time, concurrent.futures, pprint
-import vsql, vansible, vhelp, vvirt,vsh
-
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
-
+import libvirt
+import sys
+import sqlite3
+import subprocess
+import os
+import time
+import concurrent.futures
+import pprint
+import vsql, vansible, vhelp, vvirt, vsh, setting
 
 
 #Worker
@@ -128,7 +131,9 @@ def DomainUndefine(DOM_UUID):
 
     editor = vvirt.VirtEditor(NODE_IP)
     editor.DomainOpen(DOM_UUID)
-    
+
+    vsql.RawCommit("delete from domain where uuid=?",[DOM_UUID])
+
     return editor.DomainUndefine()
 
 
@@ -322,6 +327,13 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
 
 
 
+def queueLogErr(ID):
+    with open(setting.scriptPath+"/log/queue_"+ID+"_err.log") as f:
+        return f.read()
+
+def queueLogOut(ID):
+    with open(setting.scriptPath+"/log/queue_"+ID+"_out.log") as f:
+        return f.read()
 
 
 def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
@@ -694,7 +706,7 @@ def SshOsinfo(NODE_IP):
     return result
 
 def SshScript(NODE_IP,SCRIPT):
-    with open(SPATH + "/script/" + SCRIPT) as f:
+    with open(setting.scriptPath + "/script/" + SCRIPT) as f:
         s = f.read().splitlines()
         send = ""
         for a in s:
