@@ -30,6 +30,7 @@ elif que[3] == "domain" and que[4] == "selinux":
         result = virty.DomSelinuxDisable(POST['uuid'])
     
 elif que[3] == "domain" and que[4] == "list-reload":
+    virty.vsql.RawCommit("delete from domain where status=?",["10"])
     virty.DomainListInit()
     result = ["success","","","Succes"]
     print("List-reload")

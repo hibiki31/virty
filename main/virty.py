@@ -41,7 +41,7 @@ def WorkerUp():
         print("Worker upped")
 
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
-    vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+    return vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
 
 
 

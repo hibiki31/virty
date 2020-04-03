@@ -1,3 +1,6 @@
+### Ver 0.0.2.4
+- Task status can be checked by long polling
+
 ### Ver 0.0.2.3
 - Separation of set values
 - Package optimization

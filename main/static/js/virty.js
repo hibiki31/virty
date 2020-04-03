@@ -8,12 +8,36 @@ function Jsonget(URL) {
     contentType: "application/json",
   }).fail(function (XMLHttpRequest) {
     if (XMLHttpRequest.status == 401) {
-      alert("401")
+      alert("401");
       location.href = '/login';
     }
   }).always(function (e) {
   });
 }
+$(document).ready(function () {
+  $("#domain-reload").click(function () {
+    $(this).addClass("is-loading");
+    $.post("/api/que/domain/list-reload", { "select": "all", "return": "json" }, function (dt) {
+      $.ajax({
+        url: '/queue/status/' + dt,
+        type: 'GET',
+        timeout: 10000,
+        contentType: "json",
+        data: {
+          'interval': 10000
+        }
+      }).done((data) => {
+      }).fail((data) => {
+      }).always((data) => {
+        $(".is-loading").removeClass("is-loading");
+        location.href = '/';
+      });
+    });
+    
+  });
+});
+
+
 
 //interface plus
 $(function () {
@@ -115,22 +139,26 @@ $(document).ready(function () {
   });
 
   $(".modal-open").click(function () {
-    $("#"+$(this).attr("modal-id")).addClass("is-active");
-    if ($(this).attr("modal-id") === "modal-user-delete"){
+    $("#" + $(this).attr("modal-id")).addClass("is-active");
+    if ($(this).attr("modal-id") === "modal-user-delete") {
       $(".modal-user-id").attr('value', $(this).attr("user-id"));
     }
-    if ($(this).attr("modal-id") === "modal-user-reset"){
+    if ($(this).attr("modal-id") === "modal-user-reset") {
       $(".modal-user-id").attr('value', $(this).attr("user-id"));
     }
-    if ($(this).attr("modal-id") === "modal-group-delete"){
+    if ($(this).attr("modal-id") === "modal-group-delete") {
       $(".modal-group-id").attr('value', $(this).attr("group-id"));
     }
-    if ($(this).attr("modal-id") === "modal-group-assgin"){
+    if ($(this).attr("modal-id") === "modal-group-assgin") {
       $(".modal-group-id").attr('value', $(this).attr("group-id"));
     }
   });
 
 });
+
+
+
+
 
 ///effect
 $(document).ready(function () {

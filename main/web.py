@@ -183,11 +183,17 @@ def domain_post():
             virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[None,request.form['uuid']])
         elif request.form['status'] == "change":
             virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[request.form['user-id'],request.form['uuid']])
+        else:
+            return abort(400)
     elif request.form['target'] == "domain_group":
         if request.form['status'] == "delete":
             virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[None,request.form['uuid']])
         elif request.form['status'] == "change":
             virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[request.form['group-id'],request.form['uuid']])
+        else:
+            return abort(400)
+    else:
+        return abort(400)
     return redirect("/", code=302)
 
 
@@ -292,6 +298,25 @@ def queue_log_id_status(ID,STATUS):
         return str(virty.queueLogOut(ID))
     else:
         return abort(400)
+
+@app.route('/queue/status/<ID>',methods=["GET"])
+@login_required
+def queue_status_id(ID):
+    if request.args.get('interval') != None:
+        try:
+            interval = int(request.args.get('interval'))
+        except:
+            return abort(400)
+        
+        for i in range(interval,0,-100):
+            if virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0] == "success":
+                return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
+            else:
+                sleep(0.1)
+        return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
+    else:
+        return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
+
 
 
 @app.route('/queue',methods=["POST"])
@@ -522,9 +547,12 @@ def api_que(OBJECT,METHOD):
         for key, value in request.form.items():
             task[key]=value
 
-    virty.Queuing(OBJECT,METHOD,task)
+    queueid = virty.Queuing(OBJECT,METHOD,task)
     
-    return redirect(request.referrer, code=302)
+    if request.form.get('return') == "json":
+        return jsonify(queueid)
+    else:
+        return redirect(request.referrer, code=302)
 
 
 
