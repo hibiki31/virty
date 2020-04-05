@@ -1,3 +1,6 @@
+### Ver 0.0.3.1
+- fix bug when define by archive mode
+
 ### Ver 0.0.3.0
 - select from three types when creating a virtual machine
 - replace define function

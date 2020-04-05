@@ -134,14 +134,17 @@ $('#list-type').on('change', function () {
     $('#step-2-archive').show();
     $('#step-2-empty').hide();
     $('#step-2-img').hide();
+    $('#input-size').removeAttr('required');
   } else if (type === "empty") {
     $('#step-2-archive').hide();
     $('#step-2-empty').show();
     $('#step-2-img').hide();
+    $('#input-size').attr('required');
   } else if (type === "img") {
     $('#step-2-archive').hide();
     $('#step-2-empty').hide();
     $('#step-2-img').show();
+    $('#input-size').removeAttr('required');
   }
 });
 

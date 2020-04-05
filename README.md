@@ -26,7 +26,8 @@ docker-compose up -d     # make up
 If an error with pip
 
 ```
-docker image prune -a
+docker image rm centos:8 
+ or docker image prune -a
 ```
 
 Login
