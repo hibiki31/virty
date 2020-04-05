@@ -527,7 +527,48 @@ def NodeNetworkAllList():
     return data
 
 
-def DomainDefineStatic(DOM_DIC):
+def DomainDefineStatic(defineData):
+    ### name,node,memory,cpu,archive,pool,nic[],type,size
+
+    domainName = defineData['name']
+
+    nodeName = defineData['node']
+    nodeIp = vsql.SqlGetData("NODE_NAME","NODE_IP",nodeName)
+    nodeData = vsql.SqlGetData("NODE_NAME","NODE_DATA",nodeName)
+    nodeEmulator = nodeData[5]
+
+    manager = vvirt.VirtEditor(nodeIp)
+   
+    editor = vvirt.XmlEditor("file","dom_base")
+    editor.EditDomainEmulator(nodeEmulator)
+    editor.EditDomainBase(defineData['name'],defineData['memory'],defineData['cpu'],"auto","")
+    
+    for network in defineData['nic']:
+        editor.AddDomainNetwork(network[1])
+
+    imgDevice = ["vda","vdb","vdc"]
+    imgData = vvirt.XmlEditor("str",manager.StorageXml(defineData['pool'])).StorageData()
+    imgPath = imgData['path'] +"/"+ domainName + "_" + imgDevice[0] + '.img'
+
+    editor.AddDomainImage(imgPath)
+    
+
+    if defineData['type'] == "archive":
+        archiveImg = vsql.RawFetchall("select * from archive_img where archive_id=?",[defineData['archive']])[0]
+        archivePath = vsql.RawFetchall("select path from img where node=? and pool=? and name=?",[archiveImg[2],archiveImg[3],archiveImg[1]])[0][0]
+        vansible.AnsibleFilecpInnode(nodeIp,archivePath,imgPath)
+    elif defineData['type'] == "empty":
+        SshQemuCreate(nodeIp,imgPath,defineData['disk-size'])
+    
+    else:
+        return ["error","domain","define",]
+
+    manager.node.defineXML(editor.DumpStr())
+
+
+
+
+def DomainDefineStaticOld(DOM_DIC):
     NODE_NAME = DOM_DIC['node']
     DOM_NAME = DOM_DIC['name']
     NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
@@ -568,9 +609,6 @@ def DomainDefineStatic(DOM_DIC):
     conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
     print(editor.DumpStr())
     conn.defineXML(editor.DumpStr())
-
-
-
 
 
 ############################
@@ -718,10 +756,10 @@ def SshScript(NODE_IP,SCRIPT):
     print(get.decode("UTF-8"))
     
 def SshQemuCreate(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , NODE_IP, "sudo test -e" ,PATH,"; echo $?"]
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "1":
-        cmd = ["ssh" , NODE_IP, "qemu-img create " ,PATH, SIZE+"G"]
+        cmd = ["ssh" , NODE_IP, "sudo qemu-img create -f qcow2 " ,PATH, SIZE+"G"]
         try:
             create = subprocess.check_output(cmd)
         except Exception as e:

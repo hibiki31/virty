@@ -1,3 +1,7 @@
+### Ver 0.0.3.0
+- select from three types when creating a virtual machine
+- replace define function
+
 ### Ver 0.0.2.4
 - Task status can be checked by long polling
 

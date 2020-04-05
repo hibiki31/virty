@@ -123,10 +123,10 @@ def logout():
 ############################
 # SETTING                  #
 ############################
-@app.route('/setting',methods=["DELETE","GET"])
+@app.route('/setting',methods=["POST","GET"])
 @login_required
 def setting():
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         if request.form["status"] == "dbinit":
             virty.vsql.SqlInit()
             return "database init"
@@ -165,13 +165,13 @@ def domain_get():
             domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
             users = virty.vsql.SqlGetAll("users")
             groups = virty.vsql.SqlGetAll("groups")
-            html = render_template('DomainList.html',domain=domain,users=users,groups=groups)
+            html = render_template('DomainList.html',domain=domain,users=users,groups=groups,node=virty.vsql.SqlGetAll("node"))
         else:
             SQL = "select * from domain left join domain_owner on uuid=domain_owner.dom_uuid where domain_owner.user_id=? or domain_owner.group_id in (select group_id from users_groups where user_id =?)"
             domain = virty.vsql.RawFetchall(SQL,[current_user.id,current_user.id])
             users = virty.vsql.SqlGetAll("users")
             groups = virty.vsql.SqlGetAll("groups")
-            html = render_template('DomainList.html',domain=domain,users=users,groups=groups)
+            html = render_template('DomainList.html',domain=domain,users=users,groups=groups,node=virty.vsql.SqlGetAll("node"))
     return html
 
 @app.route('/domain',methods=["POST"])
@@ -196,6 +196,20 @@ def domain_post():
         return abort(400)
     return redirect("/", code=302)
 
+@app.route('/domain/define')
+@login_required
+def domain_define():
+    if request.args.get('json') == "define":
+        network = virty.NodeNetworkList(request.args.get('node'))
+        storage = virty.StorageList(request.args.get('node'))
+        archive = virty.vsql.SqlGetAll('archive')
+        return jsonify(network=network,storage=storage,archive=archive)
+    else:
+        virty.WorkerUp()
+        html = render_template('domainDefineSteps.html',node=virty.vsql.SqlGetAll("node"))
+        return html
+
+
 
 ############################
 # ARCHIVE                  #
@@ -203,10 +217,41 @@ def domain_post():
 @app.route('/archive',methods=["GET"])
 @login_required
 def archive():
-    html = render_template('ArchiveList.html',domain=virty.ImageArchiveListAll())
+    if request.args.get("json") == None:
+        img = {}
+        for i in virty.vsql.SqlGetAll("archive_img"):
+            if img.get(i[0],False):
+                img[i[0]].append(i[1])
+            else:
+                img[i[0]] = [i[2]]
+        html = render_template('ArchiveList.html',domain=virty.vsql.SqlGetAll('archive'),img=img)
+        return html
+    else:
+        return abort(400)
+    
+
+
+@app.route('/archive',methods=["POST"])
+@login_required
+def archive_post():
+    d = request.form
+    if d.get('method') == "add":
+        DATA = [d.get('id'),d.get('os'),d.get('version'),d.get('comment'),d.get('url'),d.get('icon'),d.get('user'),d.get('password')]
+        virty.vsql.RawCommit("insert or ignore into archive (id,os,version,comment,url,icon,user,password) values (?,?,?,?,?,?,?,?)",DATA)
+        return redirect("/archive",code=303)
+    elif d.get('method') == "assign":
+        DATA = [d.get('archive-id'),d.get('node'),d.get('pool'),d.get('name')]
+        virty.vsql.RawCommit("insert or ignore into archive_img (archive_id,node,pool,name) values (?,?,?,?)",DATA)
+        return redirect("/archive",code=303)
+    else:
+        return abort(400)
+
+@app.route('/network/add')
+@login_required
+def network_add():
+    virty.WorkerUp()
+    html = render_template('NetworkAdd.html')
     return html
-
-
 
 
 ############################
@@ -230,8 +275,9 @@ def image():
     if request.args.get('tree') == "true":
         if not request.args.get('node') == None:
             if not request.args.get('pool') == None:
-                data = virty.vsql.RawFetchall("select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*) from img left join domain_drive on img.path=domain_drive.source left join domain on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name where node=? and pool=? group by img.node,img.path;",[(request.args.get('node')),(request.args.get('pool'))])
-                html = render_template('ImageList.html',images=data)
+                archive = virty.vsql.SqlGetAll('archive')
+                data = virty.vsql.imgListSelectAdmin(request.args.get('node'),request.args.get('pool'))
+                html = render_template('ImageList.html',images=data,archive=archive)
             else:
                 data = virty.vsql.PoolListGet(request.args.get('node'))
                 html = render_template('ImageListPool.html',data=data)
@@ -242,9 +288,9 @@ def image():
         data = [request.args.get('node'),request.args.get('pool'),request.args.get('target')]
         html = render_template('ImageEdit.html',data=data)
     else:
-        images = virty.vsql.RawFetchall("select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*) from img left join domain_drive on img.path=domain_drive.source left join domain on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name group by img.node,img.path;",[])
-        html = render_template('ImageList.html',images=images)
-
+        archive = virty.vsql.SqlGetAll('archive')
+        images = virty.vsql.imgListAdmin()
+        html = render_template('ImageList.html',images=images,archive=archive)
     return html
 
 
@@ -263,7 +309,12 @@ def storage():
         html = render_template('StorageList.html',data=data)
     return html
 
-
+@app.route('/storage/add')
+@login_required
+def storage_add():
+    virty.WorkerUp()
+    html = render_template('StorageAdd.html')
+    return html
 
 
 ############################
@@ -275,7 +326,12 @@ def node():
     html = render_template('NodeList.html',domain=virty.vsql.SqlGetAll("node"),sumdata=virty.vsql.SqlSumNode())
     return html
 
-
+@app.route('/node/add')
+@login_required
+def node_add():
+    virty.WorkerUp()
+    html = render_template('NodeAdd.html')
+    return html
 
 
 ############################
@@ -421,44 +477,6 @@ def group():
             return redirect("/group", code=303)
         else:
             return abort(400)
-
-     
-
-
-
-############################
-# MAKE                     #
-############################
-@app.route('/make/domain')
-@login_required
-def domain_add():
-    virty.WorkerUp()
-    html = render_template('DomainDefine.html',node=virty.vsql.SqlGetAll("node"))
-    return html
-
-
-@app.route('/make/node')
-@login_required
-def node_add():
-    virty.WorkerUp()
-    html = render_template('NodeAdd.html')
-    return html
-
-
-@app.route('/make/storage')
-@login_required
-def storage_add():
-    virty.WorkerUp()
-    html = render_template('StorageAdd.html')
-    return html
-
-
-@app.route('/make/network')
-@login_required
-def network_add():
-    virty.WorkerUp()
-    html = render_template('NetworkAdd.html')
-    return html
 
 
 

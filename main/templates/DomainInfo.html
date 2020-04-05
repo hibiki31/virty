@@ -163,7 +163,11 @@
 
       <form class="field">
         <label class="label">Undefine</label>
+        {% if db[0][1] == 5 %}
         <span id="modal-open-undefine" class="button is-danger is-small">Confirm</span>
+        {% else %}
+        <span id="modal-open-undefine" class="button is-danger is-small" disabled>Confirm</span>
+        {% endif %}
       </form>
 
       <form action="/api/que/domain/name-edit" method="post" class="field">
@@ -174,7 +178,11 @@
             <input name="newname" class="input control is-small" type="text" placeholder="Name">
           </div>
           <div class="control">
+            {% if db[0][1] == 5 %}
             <button class="button is-link is-small">Edit</a>
+            {% else %}
+            <button class="button is-link is-small" disabled>Edit</a>
+            {% endif %}
           </div>
         </div>
       </form>
@@ -200,7 +208,11 @@
             </span>
           </div>
           <div class="control">
+            {% if db[0][1] == 5 %}
             <button class="button is-link is-small">Edit</button>
+            {% else %}
+            <button class="button is-link is-small" disabled>Edit</button>
+            {% endif %}
           </div>
         </div>
       </form>
@@ -225,7 +237,11 @@
             </span>
           </div>
           <div class="control">
+            {% if db[0][1] == 5 %}
             <button class="button is-link is-small">Edit</button>
+            {% else %}
+            <button class="button is-link is-small" disabled>Edit</button>
+            {% endif %}
           </div>
         </div>
       </form>

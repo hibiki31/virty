@@ -1,4 +1,6 @@
-//define
+//////////////////////////////
+///    function            ///
+//////////////////////////////
 function Jsonget(URL) {
   return $.ajax({
     type: 'GET',
@@ -14,6 +16,14 @@ function Jsonget(URL) {
   }).always(function (e) {
   });
 }
+
+
+
+
+
+//////////////////////////////
+///    loading             ///
+//////////////////////////////
 $(document).ready(function () {
   $("#domain-reload").click(function () {
     $(this).addClass("is-loading");
@@ -33,13 +43,45 @@ $(document).ready(function () {
         location.href = '/';
       });
     });
-    
+  });
+});
+
+$(document).ready(function () {
+  $("#modal-open-image-delete-button").click(function () {
+    $(this).addClass("is-loading");
+    $.post("/api/que/image/delete", {
+      "node": $("#modal-image-node").attr('value'),
+      "pool": $("#modal-image-pool").attr('value'),
+      "name": $("#modal-image-name").attr('value'),
+      "status": "delete",
+      "return": "json"
+    }, function (dt) {
+      $.ajax({
+        url: '/queue/status/' + dt,
+        type: 'GET',
+        timeout: 10000,
+        contentType: "json",
+        data: {
+          'interval': 10000
+        }
+      }).done((data) => {
+      }).fail((data) => {
+      }).always((data) => {
+        $(".is-loading").removeClass("is-loading");
+        location.reload();
+      });
+    });
+
   });
 });
 
 
 
-//interface plus
+
+
+//////////////////////////////
+///    interface plus      ///
+//////////////////////////////
 $(function () {
   var minCount = 1;
   var maxCount = 6;
@@ -59,41 +101,103 @@ $(function () {
   });
 });
 
-//define option
+
+
+
+
+//////////////////////////////
+///    define option       ///
+//////////////////////////////
 $('#node-list').on('change', function () {
   var node = $('#node-list option:selected').val();
 
   $('.network-list').children().remove();
-  Jsonget('/api/json/network?node=' + node).done(function (result) {
-    data = result.ResultSet;
-    for (var i in data[1]) {
-      $('.network-list').append('<option value="' + data[1][i]['name'] + '">' + data[1][i]['name'] + '</option>');
-    }
-  })
-
   $('#archive-list').children().remove();
-  Jsonget('/api/json/archive?node=' + node).done(function (result) {
-    data = result.ResultSet;
-    for (var i in data) {
-      $('#archive-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
-    }
-  })
-
   $('#storage-list').children().remove();
-  Jsonget('/api/json/storage?node=' + node).done(function (result) {
-    data = result.ResultSet;
-    for (var i in data) {
-      $('#storage-list').append('<option value="' + data[i]['name'] + '">' + data[i]['name'] + '</option>');
-    }
+
+  Jsonget('/domain/define?json=define&node=' + node).done(function (result) {
+    $.each(result['network'][1], function (index, value) {
+      $('.network-list').append('<option value="' + value['name'] + '">' + value['name'] + '</option>');
+    });
+    $.each(result['archive'], function (index, value) {
+      $('#archive-list').append('<option value="' + value[0] + '">' + value[0] + '</option>');
+    });
+    $.each(result['storage'], function (index, value) {
+      $('#storage-list').append('<option value="' + value['name'] + '">' + value['name'] + '</option>');
+    });
   })
 });
 
-//table sort
+$('#list-type').on('change', function () {
+  var type = $('#list-type option:selected').val();
+  if (type === "archive") {
+    $('#step-2-archive').show();
+    $('#step-2-empty').hide();
+    $('#step-2-img').hide();
+  } else if (type === "empty") {
+    $('#step-2-archive').hide();
+    $('#step-2-empty').show();
+    $('#step-2-img').hide();
+  } else if (type === "img") {
+    $('#step-2-archive').hide();
+    $('#step-2-empty').hide();
+    $('#step-2-img').show();
+  }
+});
+
+
+
+//////////////////////////////
+///    table sort          ///
+//////////////////////////////
 $(document).ready(function () {
   $('.table').tablesorter();
 });
 
-///menu
+
+$(function () {
+  var stepCounter = 1;
+
+  $("#step-2").css("display", "none");
+  $("#step-3").css("display", "none");
+  $("#step-4").css("display", "none");
+  $("#submit-step").hide();
+
+  $("#next-step").click(function () {
+    if (stepCounter < 4) {
+      $("#step-" + stepCounter).slideUp(600, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+      stepCounter = stepCounter + 1;
+      $("#step-" + stepCounter).slideDown(600, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+    }
+    if (stepCounter == 4) {
+      $("#next-step").hide();
+      $("#submit-step").show();
+    }
+  });
+  $('#prev-step').on('click', function () {
+    if (stepCounter > 1) {
+      $("#step-" + stepCounter).slideUp(300, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+      stepCounter = stepCounter - 1;
+      $("#step-" + stepCounter).slideDown(300, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+    }
+    if (stepCounter == 3) {
+      $("#next-step").show();
+      $("#submit-step").hide();
+    }
+  });
+});
+
+//////////////////////////////
+///    menu                ///
+//////////////////////////////
 $(document).ready(function () {
 
   $(".navbar-burger").click(function () {
@@ -138,6 +242,8 @@ $(document).ready(function () {
     $("#modal-open-image-delete").addClass("is-active");
   });
 
+
+
   $(".modal-open").click(function () {
     $("#" + $(this).attr("modal-id")).addClass("is-active");
     if ($(this).attr("modal-id") === "modal-user-delete") {
@@ -152,6 +258,11 @@ $(document).ready(function () {
     if ($(this).attr("modal-id") === "modal-group-assgin") {
       $(".modal-group-id").attr('value', $(this).attr("group-id"));
     }
+    if ($(this).attr("modal-id") === "modal-archive-assign") {
+      $(".modal-image-node").attr('value', $(this).attr("image-node"));
+      $(".modal-image-pool").attr('value', $(this).attr("image-pool"));
+      $(".modal-image-name").attr('value', $(this).attr("image-name"));
+    }
   });
 
 });
@@ -160,7 +271,9 @@ $(document).ready(function () {
 
 
 
-///effect
+//////////////////////////////
+///    effect              ///
+//////////////////////////////
 $(document).ready(function () {
   $('.tabs ul li').each(function () {
     var $href = $(this).children('a').attr('href');

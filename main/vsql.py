@@ -365,6 +365,33 @@ def SqlDeleteAll(TABLE_NAME):
 def QueueUpdateTime(QUE_ID,QUE_TIME):
     RawCommit("UPDATE que SET run=? WHERE que_id=?",[QUE_TIME,QUE_ID])
 
+############################
+# LONG                     #
+############################
+def imgListAdmin():
+    SQL = (  
+        "select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*),archive_img.archive_id "
+        "from img "
+        "left join domain_drive on img.path=domain_drive.source "
+        "left join domain  on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name "
+        "left join archive_img on img.name=archive_img.name and img.node=archive_img.node "
+        "group by img.node,img.path;"
+    )
+    return RawFetchall(SQL,[])
+
+def imgListSelectAdmin(node,pool):
+    SQL = (
+        "select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*),archive_img.archive_id "
+        "from img "
+        "left join domain_drive on img.path=domain_drive.source "
+        "left join domain  on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name "
+        "left join archive_img on img.name=archive_img.name and img.node=archive_img.node "
+        "where img.node=? and img.pool=? "
+        "group by img.node,img.path;"
+    )
+    return RawFetchall(SQL,[node,pool])
+
+
 
 
 ############################
@@ -467,7 +494,8 @@ def SqlInit():
     cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
     cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
     cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')
-    cur.execute('create table archive (archive_name, archive_path, archive_node_name,primary key (archive_name,archive_node_name))')
+    cur.execute('create table archive (id, os, version, comment, url, icon, user, password, primary key (id))')
+    cur.execute('create table archive_img (archive_id, name, node, pool, primary key (archive_id, name, node, pool))')
     cur.execute('create table img (name, node, pool, capa, allocation, physical, path, primary key (name,node,pool))')
     cur.execute("insert into users (id, password) values (?,?)",("admin","$2b$12$2wXcPezIzrE0BD0WngUGSOrARvInU88Hk/BLWxcE1JYaKeaCljBvG"))
     cur.execute("insert into users_groups (user_id,group_id) values (?,?)",["admin","admin"])
