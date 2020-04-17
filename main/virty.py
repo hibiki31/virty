@@ -13,7 +13,7 @@ import vsql, vansible, vhelp, vvirt, vsh, setting
 #Worker
 def WorkerStatus():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "/root/virty/main/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.scriptPath + "/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -27,7 +27,7 @@ def WorkerStatus():
 
 def WorkerUp():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "/root/virty/main/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.scriptPath + "/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -36,7 +36,7 @@ def WorkerUp():
     output = p4.communicate()[0].decode("utf8").replace('\n','')
     if int(output) == 0:
         print("Worker up")
-        subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
+        subprocess.Popen(["python3", setting.scriptPath + "/vworker.py"])
     else:
         print("Worker upped")
 

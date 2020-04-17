@@ -9,9 +9,11 @@ WORKDIR /root/virty/main
 # ENV http_proxy "http://IP:PORT/"
 # ENV https_proxy "http://IP:PORT/"
 
+ENV VIRTY_PATH="/mnt/d/home/akane/virty/main"
+
 RUN dnf update -y
 RUN dnf upgrade -y
-RUN rm -rf /var/lib/rpm/__db.001 /var/lib/rpm/__db.002 /var/lib/rpm/__db.003
+RUN dnf clean packages
 RUN dnf install -y python36
 RUN dnf install -y python3-libs
 RUN dnf install -y python36-devel
