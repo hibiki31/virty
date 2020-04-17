@@ -5,11 +5,10 @@ RUN mkdir -p /root/.ssh
 RUN chmod 600 /root/.ssh
 
 WORKDIR /root/virty/main
+ENV VIRTY_PATH="/root/virty/main"
 
 # ENV http_proxy "http://IP:PORT/"
 # ENV https_proxy "http://IP:PORT/"
-
-ENV VIRTY_PATH="/mnt/d/home/akane/virty/main"
 
 RUN dnf update -y
 RUN dnf upgrade -y
