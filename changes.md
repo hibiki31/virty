@@ -1,3 +1,7 @@
+### Ver 0.0.3.2
+- Fix bug, when enlarging an image
+- Get script path from env
+
 ### Ver 0.0.3.1
 - fix bug when define by archive mode
 

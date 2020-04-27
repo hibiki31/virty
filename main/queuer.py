@@ -102,7 +102,7 @@ elif que[3] == "domain" and que[4] == "cpu-edit":
     result = ["success","","","Succes"]
 
 elif que[3] == "image" and que[4] == "resize":
-    result = virty.ImageResize(POST['node'],POST['pool'],POST['file'],POST['size'])
+    result = virty.ImageResize(POST['node'],POST['pool'],POST['target'],POST['size'])
 
 elif que[3] == "image" and que[4] == "delete":
     virty.ImageDelete(POST['node'],POST['pool'],POST['name'])
