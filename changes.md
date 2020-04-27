@@ -1,3 +1,6 @@
+### Ver 0.0.3.3
+- Fix bug, ssh command permisson
+
 ### Ver 0.0.3.2
 - Fix bug, when enlarging an image
 - Get script path from env
