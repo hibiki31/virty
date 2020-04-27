@@ -692,7 +692,7 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
 # SSH                      #
 ############################
 def SshInfoMem(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "cat /proc/meminfo |grep MemTotal"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "cat /proc/meminfo |grep MemTotal"]
     try:
         mem = subprocess.check_output(cmd)
     except Exception as e:
@@ -702,12 +702,12 @@ def SshInfoMem(NODE_IP):
     return memory
 
 def SshInfocpu(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "grep processor /proc/cpuinfo | wc -l"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "grep processor /proc/cpuinfo | wc -l"]
     words = str(subprocess.check_output(cmd)).rstrip("\\n'").lstrip("'b")
     return words
 
 def SshInfoLibvirt(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "virsh version --daemon|grep libvirt|grep Using"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "virsh version --daemon|grep libvirt|grep Using"]
     try:
         version = str(subprocess.check_output(cmd))
     except:
@@ -715,7 +715,7 @@ def SshInfoLibvirt(NODE_IP):
     return version.rstrip("\\n'").lstrip("'b").split()[3]
     
 def SshInfoQemu(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "virsh version --daemon|grep hypervisor:"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "virsh version --daemon|grep hypervisor:"]
     try:
         version = str(subprocess.check_output(cmd))
     except:
@@ -723,19 +723,19 @@ def SshInfoQemu(NODE_IP):
     return version.rstrip("\\n'").lstrip("'b").split()[3]
 
 def SshInfocpuname(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "grep 'model name' /proc/cpuinfo|uniq"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "grep 'model name' /proc/cpuinfo|uniq"]
     mem = subprocess.check_output(cmd)
     words = str(mem).split(":")[1].rstrip("\\n'")
     return words
 
 def SshInfoDir(NODE_IP,NODE_DIR):
-    cmd = ["ssh" , NODE_IP, "df" ,NODE_DIR,"|sed -e '1d'"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "df" ,NODE_DIR,"|sed -e '1d'"]
     get = subprocess.check_output(cmd)
     storage = str(get).rstrip("\\n'").lstrip("b'").split()
     return storage
 
 def SshOsinfo(NODE_IP):
-    cmd = ["ssh" , NODE_IP, "cat" ,"/etc/os-release"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "cat" ,"/etc/os-release"]
     get = subprocess.check_output(cmd)
     result = {}
     for data in str(get).rstrip("\\n'").lstrip("b'").split("\\n"):
@@ -751,15 +751,15 @@ def SshScript(NODE_IP,SCRIPT):
             if not a == "":
                 send = send +  a + ";"
         
-    cmd = ["ssh" , NODE_IP, send]
+    cmd = ["ssh" , NODE_IP,  "sudo", send]
     get = subprocess.check_output(cmd)
     print(get.decode("UTF-8"))
     
 def SshQemuCreate(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP, "sudo test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , NODE_IP, "sudo", "test -e" ,PATH,"; echo $?"]
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "1":
-        cmd = ["ssh" , NODE_IP, "sudo qemu-img create -f qcow2 " ,PATH, SIZE+"G"]
+        cmd = ["ssh" , NODE_IP, "sudo", "qemu-img create -f qcow2 " ,PATH, SIZE+"G"]
         try:
             create = subprocess.check_output(cmd)
         except Exception as e:
@@ -772,10 +772,10 @@ def SshQemuCreate(NODE_IP,PATH,SIZE):
         return ["skip","img","create","allready",""]
 
 def SshQemuResize(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , NODE_IP,  "sudo", "test -e" ,PATH,"; echo $?"]
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "0":
-        cmd = ["ssh" , NODE_IP, "qemu-img resize " ,PATH, SIZE+"G"]
+        cmd = ["ssh" , NODE_IP,  "sudo", "qemu-img resize " ,PATH, SIZE+"G"]
         try:
             create = subprocess.check_output(cmd)
         except Exception as e:
