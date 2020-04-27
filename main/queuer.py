@@ -1,9 +1,9 @@
+import setting
 import virty
 import ast
 from time import sleep
 
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
+
 
 que = virty.vsql.SqlQueuget("running")
 if que == None or que == []:
@@ -30,18 +30,18 @@ elif que[3] == "domain" and que[4] == "selinux":
         result = virty.DomSelinuxDisable(POST['uuid'])
     
 elif que[3] == "domain" and que[4] == "list-reload":
+    virty.vsql.RawCommit("delete from domain where status=?",["10"])
     virty.DomainListInit()
     result = ["success","","","Succes"]
     print("List-reload")
 
 elif que[3] == "domain" and que[4] == "undefine":
     result = virty.DomainUndefine(POST['uuid'])
-    virty.vsql.SqlDeleteAll("dom")
     virty.DomainListInit()
 
 elif que[3] == "network" and que[4] == "2l-define":  
     NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",POST['node-list'])
-    XML_PATH = SPATH + '/xml/net_2less.xml'
+    XML_PATH = setting.scriptPath + '/xml/net_2less.xml'
     NAME = "2l-" + POST['net-gw']
     GW = POST['net-gw']
     virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)
@@ -102,7 +102,7 @@ elif que[3] == "domain" and que[4] == "cpu-edit":
     result = ["success","","","Succes"]
 
 elif que[3] == "image" and que[4] == "resize":
-    result = virty.ImageResize(POST['node'],POST['pool'],POST['file'],POST['size'])
+    result = virty.ImageResize(POST['node'],POST['pool'],POST['target'],POST['size'])
 
 elif que[3] == "image" and que[4] == "delete":
     virty.ImageDelete(POST['node'],POST['pool'],POST['name'])

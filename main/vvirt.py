@@ -1,11 +1,11 @@
+import setting
 import sys, sqlite3, subprocess, os
 import xml.etree.ElementTree as ET
 import libvirt, pings
 import vsql, vansible, vhelp,os, uuid
 
 
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
+
 
 
 class VirtEditor():
@@ -471,18 +471,18 @@ class VirtEditor():
 class XmlEditor():
     def __init__(self,TYPE,XML):
         if TYPE == "file":
-            os.chdir = SPATH
-            tree = ET.parse(SPATH + '/xml/'+ XML +'.xml') 
+            os.chdir = setting.scriptPath
+            tree = ET.parse(setting.scriptPath + '/xml/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "dom":
-            os.chdir = SPATH
-            tree = ET.parse(SPATH + '/dump/dom/'+ XML +'.xml') 
+            os.chdir = setting.scriptPath
+            tree = ET.parse(setting.scriptPath + '/dump/dom/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "net":
-            os.chdir = SPATH
-            tree = ET.parse(SPATH + '/dump/net/'+ XML +'.xml') 
+            os.chdir = setting.scriptPath
+            tree = ET.parse(setting.scriptPath + '/dump/net/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "str":
@@ -725,9 +725,9 @@ class XmlEditor():
     # DUMP                     #
     ############################
     def DumpSave(self,TYPE):
-        os.chdir = SPATH
+        os.chdir = setting.scriptPath
         DOM_UUID = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(SPATH + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
+        ET.ElementTree(self.xml).write(setting.scriptPath + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
 
     def DumpStr(self):
         return ET.tostring(self.xml).decode()

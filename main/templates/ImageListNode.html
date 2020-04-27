@@ -3,13 +3,13 @@
 <div class="tabs is-centered">
   <ul>
       <li>
-          <a href="/ui/image?tree=false">
+          <a href="/image?tree=false">
               <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
               <span>All</span>
           </a>
       </li>
       <li>
-          <a href="/ui/image?tree=true">
+          <a href="/image?tree=true">
               <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
               <span>Folder</span>
           </a>
@@ -37,7 +37,7 @@
       <tbody>
           {% for dom in domain %}
           <tr>
-              <td class=" "><a href="/ui/image?tree=true&node={{dom[0]}}">{{dom[0]}}</td>
+              <td class=" "><a href="/image?tree=true&node={{dom[0]}}">{{dom[0]}}</td>
               <td class=" ">{{dom[1]}}</td>
               {% if dom[8] == 10 %}
               <td class=" "><i class="fa fa-square has-text-primary"></i> Up</td>

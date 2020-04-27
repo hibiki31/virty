@@ -4,11 +4,20 @@ html{
 body{
     font-size: 0.85rem;
 }
+.label{
+    font-size: 0.85rem;
+}
 .menu-list a {
     font-size: 0.85rem;
+}
+.modal-card-title {
+    font-size: 1.2rem;
 }
 span.tag {
     font-size: 0.70rem;
     padding: -10px;
     margin-right: 3px;
+}
+.modal-card-foot, .modal-card-head {
+    padding: 15px;
 }

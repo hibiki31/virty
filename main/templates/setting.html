@@ -4,11 +4,11 @@
     <label class="label">Version</label>
     <div class="tags has-addons">
         <span class="tag">virty</span>
-        <span class="tag is-info">0.0.2.0</span>
+        <span class="tag is-info">0.0.3.2</span>
     </div>
     <label class="label">DB reset</label>
-    <form action="/ui/setup" method="delete">
-        <button name="status" value="dbinit" class="btn btn-success">DB init</button>
+    <form action="/setting" method="post">
+        <button name="status" value="dbinit" class="button is-info is-small">DB init</button>
     </form>
 </article>
 {% endblock %}

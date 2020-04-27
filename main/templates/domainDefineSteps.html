@@ -1,0 +1,119 @@
+{% extends "Layout.html" %}
+{% block content %}
+<div class="columns is-multiline">
+  <div class="column is-4">
+    <article class="box">
+      <form action="/api/que/domain/define" method="post" class="field">
+        
+        <h1 id="step-title" class="title is-5">Step 1/4</h1>
+        
+        <div id="step-1">
+          <div class="field is-horizontal">
+            <label class="field-label is-normal label">Node</label>
+            <select id="node-list" name="node" class="select is-small field-body field" required>
+              <option></option>
+              {%for i in node%}
+              <option value="{{i[0]}}">{{i[0]}}</option>
+              {%endfor%}
+            </select>
+          </div>
+        </div>
+
+        <div id="step-2">
+          <div class="field is-horizontal">
+            <label class="field-label is-normal label">Storage</label>
+            <select id="storage-list" name="pool" class="select is-small field-body" required></select>
+          </div>
+
+          <div class="field is-horizontal">
+            <label class="field-label is-normal label">Archive</label>
+            <select id="archive-list" name="archive" class="select is-small field-body" required></select>
+          </div>
+        </div>
+
+        <div id="step-3">
+          <div id="define-interface">
+            <div class="unit field is-horizontal">
+              <label class="field-label is-normal label">Network</label>
+              <div class="field has-addons field-body">
+                <div class="control">
+                  <select name="bridge" class="select network-list is-small field-body" required></select>
+                </div>
+                <div class="control">
+                  <span class="interface-op-remove button is-danger is-small">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div class="field is-grouped is-grouped-right">
+            <span id="interface-op-add" class="button is-primary is-small control">+</span>
+          </div>
+        </div>
+
+        <div id="step-4">
+          <div class="field is-horizontal">
+            <label class="field-label is-normal label" for="last-name">Name</label>
+            <input type="text" id="domain-name" name="name" required class="input is-small field-body">
+          </div>
+
+          <div class="field is-horizontal">
+            <label class="field-label label">vCPU</label>
+            <select id="node_list" class="select is-small field-body" name="cpu" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="8">8</option>
+              <option value="16">16</option>
+              <option value="32">32</option>
+              <option value="48">48</option>
+            </select>
+          </div>
+
+          <div class="field is-horizontal">
+            <label class="field-label is-normal label">Memory</label>
+            <select id="node_list" class="select is-small field-body" name="memory" required>
+              <option value="512">512MB</option>
+              <option value="1024">1024MB</option>
+              <option value="2048">2048MB</option>
+              <option value="4096">4096MB</option>
+              <option value="8192">8192MB</option>
+              <option value="16384">16GB</option>
+              <option value="32768">32GB</option>
+              <option value="65536">64GB</option>
+              <option value="13072">128GB</option>
+            </select>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <hr>
+        <div class="field is-grouped is-grouped-right">
+          <span id="prev-step" class="button is-small control is-warning">Prev</span>
+          <span id="next-step" class="button is-small control is-info">Next</span>
+          <button id="submit-step" class="button is-primary is-small control">Submit</button>
+        </div>
+
+
+
+
+      </form>
+    </article>
+  </div>
+
+</div>
+
+
+
+{% endblock %}

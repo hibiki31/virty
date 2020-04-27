@@ -2,25 +2,12 @@
 {% block content %}
 <article class="box">
   <form action="/api/que/image/resize" method="post" data-parsley-validate class="form-horizontal form-label-left">
-    <div class="form-group">
-      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">Image Size <span class="required">*</span>
-      </label>
-      <div class="col-md-6 col-sm-6 col-xs-12">
-        <input type="number" name="size" value="32">
-        <input type="hidden" name="node" value="{{data[0]}}">
-        <input type="hidden" name="pool" value="{{data[1]}}">
-        <input type="hidden" name="target" value="{{data[2]}}">
-      </div>
-    </div>
-    
-    <div class="ln_solid"></div>
-    <div class="form-group">
-      
-      <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-        <button class="btn btn-success">Commit</button>
-      </div>
-    </div>
-
+    <label class="label" for="first-name">Image Size</label>
+    <input type="number" name="size" value="32" class="select is-small">
+    <input type="hidden" name="node" value="{{data[0]}}">
+    <input type="hidden" name="pool" value="{{data[1]}}">
+    <input type="hidden" name="target" value="{{data[2]}}">
+    <button class="button is-success is-small">Commit</button>
   </form>
 </article>
 {% endblock %}

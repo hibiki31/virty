@@ -1,0 +1,9 @@
+Flask==1.1.1
+Flask-JWT==0.3.2
+Flask_Login==0.5.0
+uwsgi==2.0.18
+libvirt-python==6.1.0
+jsonify==0.5
+ansible==2.9.6
+bcrypt==3.1.7
+pings==0.0.1 

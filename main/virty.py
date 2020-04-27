@@ -1,16 +1,19 @@
 #!/bin/python3
-import libvirt, sys, sqlite3, subprocess, os, time, concurrent.futures, pprint
-import vsql, vansible, vhelp, vvirt,vsh
-
-SPATH = '/root/virty/main'
-SQLFILE = SPATH + '/data.sqlite'
-
+import libvirt
+import sys
+import sqlite3
+import subprocess
+import os
+import time
+import concurrent.futures
+import pprint
+import vsql, vansible, vhelp, vvirt, vsh, setting
 
 
 #Worker
 def WorkerStatus():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "/root/virty/main/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.scriptPath + "/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -24,7 +27,7 @@ def WorkerStatus():
 
 def WorkerUp():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "/root/virty/main/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.scriptPath + "/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -33,12 +36,12 @@ def WorkerUp():
     output = p4.communicate()[0].decode("utf8").replace('\n','')
     if int(output) == 0:
         print("Worker up")
-        subprocess.Popen(["python3", "/root/virty/main/vworker.py"])
+        subprocess.Popen(["python3", setting.scriptPath + "/vworker.py"])
     else:
         print("Worker upped")
 
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
-    vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+    return vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
 
 
 
@@ -128,7 +131,9 @@ def DomainUndefine(DOM_UUID):
 
     editor = vvirt.VirtEditor(NODE_IP)
     editor.DomainOpen(DOM_UUID)
-    
+
+    vsql.RawCommit("delete from domain where uuid=?",[DOM_UUID])
+
     return editor.DomainUndefine()
 
 
@@ -209,6 +214,26 @@ def UserAdd(USER_ID,PASSWORD):
     SQL = "insert into users (id,password) values (?,?)"
     DATA = [USER_ID,PASSWORD]
     vsql.RawCommit(SQL,DATA)
+
+
+def UserReset(USER_ID,PASSWORD):
+    SQL = "update users set password=? where id=?"
+    DATA = [PASSWORD,USER_ID]
+    vsql.RawCommit(SQL,DATA)
+
+
+def userIsExist(USER_ID):
+    if vsql.RawFetchall("select * from users where id=?",[USER_ID]) == []:
+        return False
+    else:
+        return True
+
+
+def groupIsExist(GROUP_ID):
+    if vsql.RawFetchall("select * from groups where id=?",[GROUP_ID]) == []:
+        return False
+    else:
+        return True
 
 
 def GetNicData(DOM_UUID):
@@ -302,6 +327,13 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
 
 
 
+def queueLogErr(ID):
+    with open(setting.scriptPath+"/log/queue_"+ID+"_err.log") as f:
+        return f.read()
+
+def queueLogOut(ID):
+    with open(setting.scriptPath+"/log/queue_"+ID+"_out.log") as f:
+        return f.read()
 
 
 def ImageInfo(NODE_NAME,STORAGEP_NAME,IMG_NAME):
@@ -495,7 +527,48 @@ def NodeNetworkAllList():
     return data
 
 
-def DomainDefineStatic(DOM_DIC):
+def DomainDefineStatic(defineData):
+    ### name,node,memory,cpu,archive,pool,nic[],type,size
+
+    domainName = defineData['name']
+
+    nodeName = defineData['node']
+    nodeIp = vsql.SqlGetData("NODE_NAME","NODE_IP",nodeName)
+    nodeData = vsql.SqlGetData("NODE_NAME","NODE_DATA",nodeName)
+    nodeEmulator = nodeData[5]
+
+    manager = vvirt.VirtEditor(nodeIp)
+   
+    editor = vvirt.XmlEditor("file","dom_base")
+    editor.EditDomainEmulator(nodeEmulator)
+    editor.EditDomainBase(defineData['name'],defineData['memory'],defineData['cpu'],"auto","")
+    
+    for network in defineData['nic']:
+        editor.AddDomainNetwork(network[1])
+
+    imgDevice = ["vda","vdb","vdc"]
+    imgData = vvirt.XmlEditor("str",manager.StorageXml(defineData['pool'])).StorageData()
+    imgPath = imgData['path'] +"/"+ domainName + "_" + imgDevice[0] + '.img'
+
+    editor.AddDomainImage(imgPath)
+    
+
+    if defineData['type'] == "archive":
+        archiveImg = vsql.RawFetchall("select * from archive_img where archive_id=?",[defineData['archive']])[0]
+        archivePath = vsql.RawFetchall("select path from img where node=? and pool=? and name=?",[archiveImg[2],archiveImg[3],archiveImg[1]])[0][0]
+        vansible.AnsibleFilecpInnode(nodeIp,archivePath,imgPath)
+    elif defineData['type'] == "empty":
+        SshQemuCreate(nodeIp,imgPath,defineData['disk-size'])
+    
+    else:
+        return ["error","domain","define",]
+
+    manager.node.defineXML(editor.DumpStr())
+
+
+
+
+def DomainDefineStaticOld(DOM_DIC):
     NODE_NAME = DOM_DIC['node']
     DOM_NAME = DOM_DIC['name']
     NODE_IP = vsql.SqlGetData("NODE_NAME","NODE_IP",NODE_NAME)
@@ -536,9 +609,6 @@ def DomainDefineStatic(DOM_DIC):
     conn = libvirt.open('qemu+ssh://' + NODE_IP + '/system')
     print(editor.DumpStr())
     conn.defineXML(editor.DumpStr())
-
-
-
 
 
 ############################
@@ -616,6 +686,8 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
     return editor.DomainXmlUpdate()
 
 
+
+
 ############################
 # SSH                      #
 ############################
@@ -650,8 +722,6 @@ def SshInfoQemu(NODE_IP):
         return "error"
     return version.rstrip("\\n'").lstrip("'b").split()[3]
 
-
-
 def SshInfocpuname(NODE_IP):
     cmd = ["ssh" , NODE_IP, "grep 'model name' /proc/cpuinfo|uniq"]
     mem = subprocess.check_output(cmd)
@@ -674,7 +744,7 @@ def SshOsinfo(NODE_IP):
     return result
 
 def SshScript(NODE_IP,SCRIPT):
-    with open(SPATH + "/script/" + SCRIPT) as f:
+    with open(setting.scriptPath + "/script/" + SCRIPT) as f:
         s = f.read().splitlines()
         send = ""
         for a in s:
@@ -686,10 +756,10 @@ def SshScript(NODE_IP,SCRIPT):
     print(get.decode("UTF-8"))
     
 def SshQemuCreate(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP, "test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , NODE_IP, "sudo test -e" ,PATH,"; echo $?"]
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "1":
-        cmd = ["ssh" , NODE_IP, "qemu-img create " ,PATH, SIZE+"G"]
+        cmd = ["ssh" , NODE_IP, "sudo qemu-img create -f qcow2 " ,PATH, SIZE+"G"]
         try:
             create = subprocess.check_output(cmd)
         except Exception as e:
@@ -728,8 +798,11 @@ def ImageResize(NODE,POOL,FILE,SIZE):
 if __name__ == "__main__":
     args = sys.argv
     argnum = len(args)
-    if argnum == 1:argobj = "none"
-    else: argobj = args[1]
+    if argnum == 1:
+        argobj = "none"
+    else:
+        argobj = args[1]
+
 
     #Help
     if argnum == 1:

@@ -3,13 +3,13 @@
 <div class="tabs is-centered">
     <ul>
         <li>
-            <a href="/ui/image?tree=false">
+            <a href="/image?tree=false">
                 <span class="icon is-small"><i class="fa fa-list" aria-hidden="true"></i></span>
                 <span>All</span>
             </a>
         </li>
         <li>
-            <a href="/ui/image?tree=true">
+            <a href="/image?tree=true">
                 <span class="icon is-small"><i class="fa fa-indent" aria-hidden="true"></i></span>
                 <span>Folder</span>
             </a>
@@ -29,6 +29,7 @@
                 <th>Physical </th>
                 <th>Path </th>
                 <th>Domain </th>
+                <th>Archive</th>
                 <th>Edit </th>
                 <th>Delete </th>
             </tr>
@@ -43,16 +44,30 @@
                 <td>{{image[4]}}G</td>
                 <td>{{image[5]}}G</td>
                 <td>{{image[6]}}</td>
-
-                {%if image[7] == None%}
-                <td><span class="tag is-light">{{image[7]}}</span></td>
-                {%elif image[8] == 1 %}
-                <td><span class="tag is-dark">{{image[7]}}</span></td>
-                {%else%}
-                <td><span class="tag is-dark">{{image[7]}}</span><span class="tag is-dark">....</span></td>
-                {%endif%}
-                <td><a href="/image?ui=edit&node={{image[1]}}&pool={{image[2]}}&file={{image[0]}}">Edit</a></td>
-                <td><span class="modal-open-image-delete">Delete</span></td>
+                <td>
+                    {%if image[7] == None%}
+                    <span class="tag is-light">{{image[7]}}</span>
+                    {%elif image[8] == 1 %}
+                    <span class="tag is-dark">{{image[7]}}</span>
+                    {%else%}
+                    <span class="tag is-dark">{{image[7]}}</span><span class="tag is-dark">....</span>
+                    {%endif%}
+                </td>
+                
+                <td>
+                    {%if image[9] == None%}
+                    <span 
+                    modal-id="modal-archive-assign" class="modal-open" 
+                    image-name="{{image[0]}}" 
+                    image-node="{{image[1]}}" 
+                    image-pool="{{image[2]}}"><a>assgin</a>
+                    </span>
+                    {% else %}
+                    <span class="tag is-dark">{{image[9]}}</span>
+                    {% endif %}
+                </td>
+                <td><a href="/image?ui=edit&node={{image[1]}}&pool={{image[2]}}&target={{image[0]}}">edit</a></td>
+                <td><span class="modal-open-image-delete"><a>delete</a></span></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -62,19 +77,48 @@
 <div class="modal" id="modal-open-image-delete">
     <div class="modal-background modal-delete"></div>
     <div class="modal-card">
-        <form action="/api/que/image/delete/" method="post">
+        <form action="" method="post"></form>
             <header class="modal-card-head">
                 <p class="modal-card-title">Delete</p>
                 <span class="delete modal-delete" aria-label="close"></span>
             </header>
             <section class="modal-card-body">
-                スケジューリングされ順次削除されます
+                Scheduled and deleted sequentially
                 <input id="modal-image-node" type="hidden" name="node" value="">
                 <input id="modal-image-pool" type="hidden" name="pool" value="">
                 <input id="modal-image-name" type="hidden" name="name" value="">
             </section>
             <footer class="modal-card-foot">
-                <button name="status" value="delete" class="button is-danger">Delete</button>
+                <button id="modal-open-image-delete-button" name="status" value="delete" class="button is-danger">Delete</button>
+                <span class="button modal-delete">Cancel</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal" id="modal-archive-assign">
+    <div class="modal-background modal-delete"></div>
+    <div class="modal-card">
+        <form action="/archive" method="post">
+            <input type="hidden" name="method" value="assign">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Assign</p>
+                <span class="delete modal-delete" aria-label="close"></span>
+            </header>
+            <section class="modal-card-body">
+                <label class="label">Archive</label>
+                <select name="archive-id" class="select is-small" required>
+                    {% for i in archive %}
+                    <option value={{i[0]}}>{{i[0]}}</option>
+                    {% endfor %}
+                </select>
+                <input class="modal-image-node" type="hidden" name="node" value="">
+                <input class="modal-image-pool" type="hidden" name="pool" value="">
+                <input class="modal-image-name" type="hidden" name="name" value="">
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-danger">Assign</button>
                 <span class="button modal-delete">Cancel</button>
             </footer>
         </form>
