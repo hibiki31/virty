@@ -313,7 +313,8 @@ def storage():
 @login_required
 def storage_add():
     virty.WorkerUp()
-    html = render_template('StorageAdd.html')
+    node = virty.vsql.SqlGetAll('node')
+    html = render_template('StorageAdd.html',node=node)
     return html
 
 

@@ -1,6 +1,6 @@
 version: "3"
 services:
-  main:
+  virty-main:
     build: ./docker/virty-main
     volumes:
       - ./key:/root/.ssh
@@ -9,16 +9,29 @@ services:
     environment:
       TZ: "Asia/Tokyo"
     restart: always
+    networks:
+      - virty_backend
 
-  nginx:
+  virty-main:
     build: ./docker/virty-nginx
     volumes:
       - ./docker/volume/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/volume/nginx_log:/var/log/nginx/
-    links:
-      - main
     ports:
-      - "80:80"
+      - "50081:80"
     environment:
       TZ: "Asia/Tokyo"
     restart: always
+    networks:
+      - vhosts
+      - virty_backend
+
+networks:
+  vhosts:
+    external: true
+  virty_backend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
