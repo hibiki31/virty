@@ -5,7 +5,7 @@ services:
     volumes:
       - ./key:/root/.ssh
       - ./main:/root/virty/main
-      - ./docker/volume/uwsgi_log:/var/log/uwsgi/
+      - ./docker/log/uwsgi:/var/log/uwsgi/
     environment:
       TZ: "Asia/Tokyo"
     restart: always
@@ -15,8 +15,8 @@ services:
   virty-main:
     build: ./docker/virty-nginx
     volumes:
-      - ./docker/volume/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/volume/nginx_log:/var/log/nginx/
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/log/nginx:/var/log/nginx/
     ports:
       - "50081:80"
     environment:
