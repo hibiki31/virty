@@ -1,25 +1,70 @@
-from flask import Flask, render_template, jsonify, request,redirect, Response, abort,send_from_directory
+import subprocess
+import logging
+import bcrypt
+from flask import Flask, render_template, jsonify, request,redirect, Response, abort, send_from_directory, Blueprint
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import safe_str_cmp
 from functools import wraps
 from time import sleep
-import subprocess, logging, bcrypt
-import virty
+from module import virty
+from views import domain, api
+
+class AttributeDict(object):
+    def __init__(self, obj):
+        if type(obj) != dict:
+            raise 
+        self.obj = obj
+
+    ### Pickle
+    def __getstate__(self):
+        return self.obj.items()
+
+    ### Pickle
+    def __setstate__(self, items):
+        if not hasattr(self, 'obj'):
+            self.obj = {}
+        for key, val in items:
+            self.obj[key] = val
+
+    ### Class["key"] = "val"
+    def __setitem__(self, key, val):
+        self.obj[key] = val
+
+    ### Class["key"]
+    def __getitem__(self, name):
+        if name in self.obj:
+            return self.obj.get(name)
+        else:
+            return None
+
+    ### Class.name
+    def __getattr__(self, name):
+        if name in self.obj:
+            return self.obj.get(name)
+        else:
+            return None
+
+    ### dict互換
+    def keys(self):
+        return self.obj.keys()
+
+    ### dict互換
+    def values(self):
+        return self.obj.values()
 
 ############################
 # flask                    #
 ############################
-
-# l = logging.getLogger()
-# l.addHandler(logging.FileHandler("/dev/null"))
-
-app = Flask(__name__, static_folder='node_modules', static_url_path='/npm')
+app = Flask(__name__, static_folder='node_modules', static_url_path='/module')
 app.config['SECRET_KEY'] = 'super-secret-key'
 app.config['JWT_AUTH_URL_RULE'] = '/auth'
 app.config['JWT_AUTH_USERNAME_KEY'] = 'userid'
 app.config['JWT_AUTH_PASSWORD_KEY'] = 'passwd'
 app.config['JWT_LEEWAY'] = 100000000
+
+app.register_blueprint(domain.app)
+app.register_blueprint(api.app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -136,81 +181,6 @@ def setting():
             return "database init"
     elif request.method == 'GET':
         html = render_template('setting.html')
-        return html
-
-
-
-
-############################
-# DOMAIN                   #
-############################
-@app.route('/domain',methods=["GET"])
-@login_required
-def domain_get():
-    if not request.args.get('uuid') == None and request.args.get('ui') == None:
-        owner = virty.vsql.RawFetchall("select * from domain_owner where dom_uuid=?",[request.args.get('uuid')])
-        if not current_user.isadmin:
-            if owner == []:
-                return "<h1>Insufficient permissions</h1>"
-            if not current_user.id == owner[0][2] and not (owner[0][1],) in current_user.groups:
-                return "<h1>Insufficient permissions</h1>"
-        xml = virty.DomainData(request.args.get('uuid'))
-        db = virty.vsql.RawFetchall("select * from domain where uuid=?",[(request.args.get('uuid'))])
-        net = virty.NodeNetworkList(virty.vsql.Convert("DOM_UUID","NODE_NAME",request.args.get('uuid')))
-        html = render_template('DomainInfo.html',xml=xml,db=db,net=net)
-    
-    elif request.args.get('ui') == "cdrom":
-        NODE_NAME = virty.vsql.Convert("DOM_UUID","NODE_NAME",request.args.get('uuid'))
-        IMAGE_DATAS = virty.ImageIsoList(NODE_NAME)
-        html = render_template('DomainCdromEdit.html',IMG=IMAGE_DATAS,DOM=[request.args.get('uuid'),request.args.get('target')])
-
-    else:
-        if current_user.isadmin:
-            domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
-            users = virty.vsql.SqlGetAll("users")
-            groups = virty.vsql.SqlGetAll("groups")
-            html = render_template('DomainList.html',domain=domain,users=users,groups=groups,node=virty.vsql.SqlGetAll("node"))
-        else:
-            SQL = "select * from domain left join domain_owner on uuid=domain_owner.dom_uuid where domain_owner.user_id=? or domain_owner.group_id in (select group_id from users_groups where user_id =?)"
-            domain = virty.vsql.RawFetchall(SQL,[current_user.id,current_user.id])
-            users = virty.vsql.SqlGetAll("users")
-            groups = virty.vsql.SqlGetAll("groups")
-            html = render_template('DomainList.html',domain=domain,users=users,groups=groups,node=virty.vsql.SqlGetAll("node"))
-    return html
-
-@app.route('/domain',methods=["POST"])
-@login_required
-def domain_post():
-    virty.vsql.RawCommit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[request.form['uuid'],None,None])
-    if request.form['target'] == "domain_user":
-        if request.form['status'] == "delete":
-            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[None,request.form['uuid']])
-        elif request.form['status'] == "change":
-            virty.vsql.RawCommit("update domain_owner set user_id=? where dom_uuid=?",[request.form['user-id'],request.form['uuid']])
-        else:
-            return abort(400)
-    elif request.form['target'] == "domain_group":
-        if request.form['status'] == "delete":
-            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[None,request.form['uuid']])
-        elif request.form['status'] == "change":
-            virty.vsql.RawCommit("update domain_owner set group_id=? where dom_uuid=?",[request.form['group-id'],request.form['uuid']])
-        else:
-            return abort(400)
-    else:
-        return abort(400)
-    return redirect("/", code=302)
-
-@app.route('/domain/define')
-@login_required
-def domain_define():
-    if request.args.get('json') == "define":
-        network = virty.NodeNetworkList(request.args.get('node'))
-        storage = virty.StorageList(request.args.get('node'))
-        archive = virty.vsql.SqlGetAll('archive')
-        return jsonify(network=network,storage=storage,archive=archive)
-    else:
-        virty.WorkerUp()
-        html = render_template('domainDefineSteps.html',node=virty.vsql.SqlGetAll("node"))
         return html
 
 
@@ -339,55 +309,6 @@ def node_add():
     return html
 
 
-############################
-# QUEUE                    #
-############################
-@app.route('/queue',methods=["GET"])
-@login_required
-def queue():
-    domain = virty.vsql.RawFetchall("select * from que order by que_id desc",[])
-    html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
-    return html
-
-
-@app.route('/queue/log/<ID>/<STATUS>',methods=["GET"])
-@login_required
-def queue_log_id_status(ID,STATUS):
-    if STATUS == "err":
-        return str(virty.queueLogErr(ID))
-    elif STATUS == "out":
-        return str(virty.queueLogOut(ID))
-    else:
-        return abort(400)
-
-@app.route('/queue/status/<ID>',methods=["GET"])
-@login_required
-def queue_status_id(ID):
-    if request.args.get('interval') != None:
-        try:
-            interval = int(request.args.get('interval'))
-        except:
-            return abort(400)
-        
-        for i in range(interval,0,-100):
-            if virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0] == "success":
-                return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
-            else:
-                sleep(0.1)
-        return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
-    else:
-        return jsonify(status=virty.vsql.RawFetchall("select que_status from que where que_id = ?",[ID])[0][0])
-
-
-
-@app.route('/queue',methods=["POST"])
-@login_required
-def queue_post():
-    if request.form.get('status') == "que_clear":
-        virty.vsql.RawCommit("delete from que",[])
-        return redirect("/queue",code=303)
-    else:
-        return abort(400)
 
 
 
@@ -528,78 +449,7 @@ def action_selinux():
 
 
 
-############################
-# API                      #
-############################
-@app.route('/api/json/<OBJECT>')
-@login_required
-def api_json_object(OBJECT):
-    NODE_NAME = request.args.get('node')
-    if OBJECT == "network":
-        if NODE_NAME == None:result = virty.NodeNetworkAllList()
-        else:result=virty.NodeNetworkList(NODE_NAME)
-    elif OBJECT == "interface":
-        if NODE_NAME == None:result=virty.AllInterfaceList()
-        else:result=virty.InterfaceList(NODE_NAME)
-    elif OBJECT == "storage":
-        if NODE_NAME == None:result = []
-        else:result=virty.StorageList(NODE_NAME)
-    elif OBJECT == "archive":
-        if NODE_NAME == None:result = []
-        else:result=virty.ImageArchiveList(NODE_NAME)   
-    elif OBJECT == "stack-que":
-        result=virty.vsql.SqlQueuget("running")
-    else:
-        return abort(404)
-    return jsonify(ResultSet=result)
 
-
-@app.route("/api/que/<OBJECT>/<METHOD>",methods=["POST"])
-@login_required
-def api_que(OBJECT,METHOD):
-    task = {}
-    if OBJECT == "domain" and METHOD == "define":
-        task["nic"] = []
-        for key, value in request.form.items():
-            if key == "bridge":
-                for nic in request.form.getlist('bridge'):
-                    task['nic'].append(["bridge",nic])
-            else:
-                task[key]=value
-    else:
-        for key, value in request.form.items():
-            task[key]=value
-
-    queueid = virty.Queuing(OBJECT,METHOD,task)
-    
-    if request.form.get('return') == "json":
-        return jsonify(queueid)
-    else:
-        return redirect(request.referrer, code=302)
-
-@app.route('/api/read/<OBJECT>')
-@jwt_required()
-def api_read_object(OBJECT):
-    NODE_NAME = request.args.get('node')
-    if OBJECT == "network":
-        if NODE_NAME == None:result = virty.NodeNetworkAllList()
-        else:result=virty.NodeNetworkList(NODE_NAME)
-    elif OBJECT == "interface":
-        if NODE_NAME == None:result=virty.AllInterfaceList()
-        else:result=virty.InterfaceList(NODE_NAME)
-    elif OBJECT == "storage":
-        if NODE_NAME == None:result = []
-        else:result=virty.StorageList(NODE_NAME)
-    elif OBJECT == "archive":
-        if NODE_NAME == None:result = []
-        else:result=virty.ImageArchiveList(NODE_NAME)   
-    elif OBJECT == "stack-que":
-        result=virty.vsql.SqlQueuget("running")
-    elif OBJECT == "domain":
-        result = virty.vsql.SqlGetAll("domain")
-    else:
-        return abort(404)
-    return jsonify(result)
 
 
 if __name__ == "__main__":

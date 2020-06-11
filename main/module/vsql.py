@@ -1,6 +1,6 @@
-import setting
-import sqlite3, vansible, os
+import sqlite3, os
 from flask_login import UserMixin
+from module import setting, vansible
 
 
 ############################

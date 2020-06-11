@@ -1,6 +1,5 @@
-import setting
 import subprocess, os
-import vsql
+from module import vsql, setting
 
 
 def NodeInit(PBNAME,EXVALUE):

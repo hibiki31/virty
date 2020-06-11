@@ -1,9 +1,9 @@
-import setting
-import virty
 import ast
 import subprocess
 from time import sleep
 from time import time
+import setting
+import virty
 
 
 while True:
@@ -32,7 +32,7 @@ while True:
 
     with open(path_err, mode='w') as f_err:
         with open(path_out, mode='w') as f_out:
-            quer = subprocess.run(["python3","queuer.py"], stderr=f_err, stdout=f_out, cwd=setting.scriptPath)
+            quer = subprocess.run(["python3","module/queuer.py"], stderr=f_err, stdout=f_out, cwd=setting.scriptPath)
             if quer.returncode != 0:
                 virty.vsql.QueueUpdate(que[0],"error","Exception occurred")
     

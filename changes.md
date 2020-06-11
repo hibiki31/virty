@@ -1,5 +1,6 @@
 ### Ver 0.0.3.4
 - Change docker image name
+- Modularization of flask
 
 ### Ver 0.0.3.3
 - Fix bug, ssh command permisson

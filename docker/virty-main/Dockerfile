@@ -5,10 +5,6 @@ RUN mkdir -p /root/.ssh
 RUN chmod 600 /root/.ssh
 
 WORKDIR /root/virty/main
-ENV VIRTY_PATH="/root/virty/main"
-
-# ENV http_proxy "http://IP:PORT/"
-# ENV https_proxy "http://IP:PORT/"
 
 RUN dnf update -y
 RUN dnf upgrade -y
@@ -33,6 +29,12 @@ RUN pip3 install --upgrade pip
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
+
+ENV VIRTY_PATH="/root/virty/main"
+ENV PYTHONPATH="/root/virty/main"
+
+# ENV http_proxy "http://IP:PORT/"
+# ENV https_proxy "http://IP:PORT/"
 
 EXPOSE 3031
 

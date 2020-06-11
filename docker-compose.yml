@@ -1,6 +1,7 @@
 version: "3"
 services:
   virty-main:
+    # tty: true
     build: ./docker/virty-main
     volumes:
       - ./key:/root/.ssh
