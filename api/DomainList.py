@@ -1,8 +1,7 @@
-import virty_api as api
+import virty
 
-api.API_URL = "http://192.168.0.1:80"
+api = virty.api(endpoint="")
+api.auth_login("admin","admin")
 
-domains = api.domain_data()
-
-for domain in domains:
-    print(domain[0],domain[2])
+for i in api.domain_data():
+    print(i)

@@ -1,6 +1,6 @@
 import virty_api as api
 
-api.API_URL = "http://localhost:80"
+api.API_URL = ""
 
 domains = api.domain_data()
 
