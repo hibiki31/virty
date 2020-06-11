@@ -9,7 +9,6 @@ from module import virty
 
 app = Blueprint('queue', __name__)
 
-
 @app.route('/queue',methods=["GET"])
 @login_required
 def queue():

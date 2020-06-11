@@ -331,7 +331,7 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     que_id = cur.execute('select que_id from que where que_id = last_insert_rowid()').fetchall()
     con.commit()
     con.close()
-    return que_id
+    return {"que-id":que_id[0]}
 
 def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
     con = sqlite3.connect(setting.databasePath)

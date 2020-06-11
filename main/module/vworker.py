@@ -14,7 +14,12 @@ while True:
         continue
     time_start = time()
     que = que[0]
-    POST = ast.literal_eval(que[5])
+    try:
+        POST = ast.literal_eval(que[5])
+    except:
+        virty.vsql.QueueUpdate(que[0],"error","Can't read json.")
+        continue
+    
     print("Found "+que[3]+" "+que[4])
     virty.vsql.QueueUpdate(que[0],"running","")
 

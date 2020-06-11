@@ -8,51 +8,9 @@ from werkzeug.security import safe_str_cmp
 from functools import wraps
 from time import sleep
 from module import virty
-from views import domain, api
-
-class AttributeDict(object):
-    def __init__(self, obj):
-        if type(obj) != dict:
-            raise 
-        self.obj = obj
-
-    ### Pickle
-    def __getstate__(self):
-        return self.obj.items()
-
-    ### Pickle
-    def __setstate__(self, items):
-        if not hasattr(self, 'obj'):
-            self.obj = {}
-        for key, val in items:
-            self.obj[key] = val
-
-    ### Class["key"] = "val"
-    def __setitem__(self, key, val):
-        self.obj[key] = val
-
-    ### Class["key"]
-    def __getitem__(self, name):
-        if name in self.obj:
-            return self.obj.get(name)
-        else:
-            return None
-
-    ### Class.name
-    def __getattr__(self, name):
-        if name in self.obj:
-            return self.obj.get(name)
-        else:
-            return None
-
-    ### dict互換
-    def keys(self):
-        return self.obj.keys()
-
-    ### dict互換
-    def values(self):
-        return self.obj.values()
-
+from views import domain
+from views import api
+from views import queue
 ############################
 # flask                    #
 ############################
@@ -65,6 +23,7 @@ app.config['JWT_LEEWAY'] = 100000000
 
 app.register_blueprint(domain.app)
 app.register_blueprint(api.app)
+app.register_blueprint(queue.app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

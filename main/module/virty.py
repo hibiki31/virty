@@ -7,8 +7,81 @@ import os
 import time
 import concurrent.futures
 import pprint
+import json
 from module import vsql, vansible, vhelp, vvirt, vsh, setting
 
+class AttributeDict(object):
+    def __init__(self, obj):
+        if type(obj) != dict:
+            raise 
+        self.obj = obj
+
+    ### Pickle
+    def __getstate__(self):
+        return self.obj.items()
+
+    ### Pickle
+    def __setstate__(self, items):
+        if not hasattr(self, 'obj'):
+            self.obj = {}
+        for key, val in items:
+            self.obj[key] = val
+
+    ### Class["key"] = "val"
+    def __setitem__(self, key, val):
+        self.obj[key] = val
+
+    ### Class["key"]
+    def __getitem__(self, name):
+        if name in self.obj:
+            return self.obj.get(name)
+        else:
+            return None
+    
+    def get(self,name):
+        if name in self.obj:
+            return self.obj.get(name)
+        else:
+            return None
+
+    ### Class.name
+    def __getattr__(self, name):
+        if name in self.obj:
+            return self.obj.get(name)
+        else:
+            return None
+
+    ### dict互換
+    def keys(self):
+        return self.obj.keys()
+
+    ### dict互換
+    def values(self):
+        return self.obj.values()
+    
+    def dump(self):
+        return json.dumps(self.obj)
+
+class AttributeJsonEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, AttributeDict): # NotSettedParameterは'NotSettedParameter'としてエンコード
+            return o.obj
+        return super(AttributeJsonEncoder, self).default(o) # 他の型はdefaultのエンコード方式を使用
+
+def attribute_args_convertor(args):
+    data = {}
+    for i in args.keys():
+        if args.getlist(i) == [""]:
+            data[i] = None
+        elif len(args.getlist(i)) == 1:
+            data[i] = args.get(i)
+        else:
+            data[i] = args.getlist(i)
+        
+    return AttributeDict(data)
+
+def attribute_args_dump(attribute_dict):
+    return json.dumps(attribute_dict, cls=AttributeJsonEncoder)
 
 #Worker
 def WorkerStatus():
@@ -40,8 +113,8 @@ def WorkerUp():
     else:
         print("Worker upped")
 
-def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
-    return vsql.Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON)
+def Queuing(QUE_OBJECT,QUE_METHOD,que_dic):
+    return vsql.Queuing(QUE_OBJECT,QUE_METHOD,que_dic.dump())
 
 
 
@@ -543,8 +616,11 @@ def DomainDefineStatic(defineData):
     editor.EditDomainEmulator(nodeEmulator)
     editor.EditDomainBase(defineData['name'],defineData['memory'],defineData['cpu'],"auto","")
     
-    for network in defineData['nic']:
-        editor.AddDomainNetwork(network[1])
+    if defineData['networks'] == str:
+        defineData['networks'] == [defineData['networks']]
+    
+    for network in defineData['networks']:
+        editor.AddDomainNetwork(network)
 
     imgDevice = ["vda","vdb","vdc"]
     imgData = vvirt.XmlEditor("str",manager.StorageXml(defineData['pool'])).StorageData()
