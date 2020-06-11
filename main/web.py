@@ -15,8 +15,10 @@ import virty
 # l.addHandler(logging.FileHandler("/dev/null"))
 
 app = Flask(__name__, static_folder='node_modules', static_url_path='/npm')
-app.config['SECRET_KEY'] = 'super-secret'
+app.config['SECRET_KEY'] = 'super-secret-key'
 app.config['JWT_AUTH_URL_RULE'] = '/auth'
+app.config['JWT_AUTH_USERNAME_KEY'] = 'userid'
+app.config['JWT_AUTH_PASSWORD_KEY'] = 'passwd'
 app.config['JWT_LEEWAY'] = 100000000
 
 login_manager = LoginManager()
@@ -39,19 +41,21 @@ if virty.vsql.RawFetchall("select name from sqlite_master where type='table';",[
     virty.vsql.SqlInit()
 
 
-
-
 ############################
 # JWT                      #
 ############################
-def authenticate(user_id, password):
-    user = virty.vsql.UserGet(user_id)
-    if user and safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8')):
+def authenticate(userid,passwd):
+    user = virty.vsql.UserGet(userid)
+    if user != None and check_password(user.passwd, passwd):
+        print(user)
         return user
+    else:
+        print("password miss match.")
+        
 
 def identity(payload):
-    user_id = payload['identity']
-    return virty.vsql.UserGet(user_id)
+    userid = payload['identity']
+    return virty.vsql.UserGet(userid)
 
 jwt = JWT(app, authenticate, identity)
 
@@ -101,7 +105,7 @@ def load_user(user_id):
 def login():
     if(request.method == "POST"):
         user = virty.vsql.UserGet(request.form["username"])
-        if user and check_password(user.password,request.form["password"]):
+        if user and check_password(user.passwd,request.form["password"]):
             login_user(user)
             return redirect("/", code=301)
         else:
@@ -573,7 +577,29 @@ def api_que(OBJECT,METHOD):
     else:
         return redirect(request.referrer, code=302)
 
-
+@app.route('/api/read/<OBJECT>')
+@jwt_required()
+def api_read_object(OBJECT):
+    NODE_NAME = request.args.get('node')
+    if OBJECT == "network":
+        if NODE_NAME == None:result = virty.NodeNetworkAllList()
+        else:result=virty.NodeNetworkList(NODE_NAME)
+    elif OBJECT == "interface":
+        if NODE_NAME == None:result=virty.AllInterfaceList()
+        else:result=virty.InterfaceList(NODE_NAME)
+    elif OBJECT == "storage":
+        if NODE_NAME == None:result = []
+        else:result=virty.StorageList(NODE_NAME)
+    elif OBJECT == "archive":
+        if NODE_NAME == None:result = []
+        else:result=virty.ImageArchiveList(NODE_NAME)   
+    elif OBJECT == "stack-que":
+        result=virty.vsql.SqlQueuget("running")
+    elif OBJECT == "domain":
+        result = virty.vsql.SqlGetAll("domain")
+    else:
+        return abort(404)
+    return jsonify(result)
 
 
 if __name__ == "__main__":

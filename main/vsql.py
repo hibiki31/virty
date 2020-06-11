@@ -398,9 +398,9 @@ def imgListSelectAdmin(node,pool):
 # USER                     #
 ############################
 class User(UserMixin):
-    def __init__(self, user_id, password):
+    def __init__(self, user_id, passwd):
         self.id = user_id
-        self.password = password
+        self.passwd = passwd
         self.groups = RawFetchall("select group_id from users_groups where user_id=?",[user_id])
         self.isadmin = ("admin",) in self.groups
 
