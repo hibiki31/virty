@@ -9,6 +9,17 @@ import concurrent.futures
 import pprint
 import json
 from module import vsql, vansible, vhelp, vvirt, vsh, setting
+import bcrypt
+
+
+
+def hash_password(password, rounds=12):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds)).decode()
+
+
+def check_password(hashed_password, user_password):
+    return bcrypt.checkpw(user_password.encode(), hashed_password.encode())
+
 
 class AttributeDict(object):
     def __init__(self, obj):
@@ -616,8 +627,10 @@ def DomainDefineStatic(defineData):
     editor.EditDomainEmulator(nodeEmulator)
     editor.EditDomainBase(defineData['name'],defineData['memory'],defineData['cpu'],"auto","")
     
-    if defineData['networks'] == str:
-        defineData['networks'] == [defineData['networks']]
+    if not "network" in defineData:
+        defineData['networks'] = []
+    elif defineData['networks'] == str:
+        defineData['networks'] = [defineData['networks']]
     
     for network in defineData['networks']:
         editor.AddDomainNetwork(network)

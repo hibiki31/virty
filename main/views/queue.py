@@ -1,13 +1,17 @@
-from flask import Flask, render_template, jsonify, request,redirect, Response, abort, send_from_directory, Blueprint
-from flask_jwt import JWT, jwt_required, current_identity
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from werkzeug.security import safe_str_cmp
-from functools import wraps
-from time import sleep
-import subprocess, logging, bcrypt
+from flask import Flask
+from flask import Blueprint
+from flask import render_template
+from flask import request
+from flask import abort
+from flask import jsonify
+from flask import redirect
+from flask_login import login_required
 from module import virty
+from time import sleep
+
 
 app = Blueprint('queue', __name__)
+
 
 @app.route('/queue',methods=["GET"])
 @login_required

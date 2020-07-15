@@ -1,3 +1,6 @@
+### Ver 0.0.3.5
+- View is now modularized
+
 ### Ver 0.0.3.4
 - Change docker image name
 - Modularization of flask
