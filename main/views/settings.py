@@ -19,7 +19,7 @@ def setting():
             virty.vsql.SqlInit()
             return "database init"
     elif request.method == 'GET':
-        html = render_template('setting.html')
+        html = render_template('Setting.html')
         return html
 
 

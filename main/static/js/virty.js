@@ -28,8 +28,9 @@ $(document).ready(function () {
   $("#domain-reload").click(function () {
     $(this).addClass("is-loading");
     $.post("/api/que/domain/list-reload", { "select": "all", "return": "json" }, function (dt) {
+      console.log(JSON.stringify(dt));
       $.ajax({
-        url: '/queue/status/' + dt,
+        url: '/queue/status/' + dt['que-id'][0],
         type: 'GET',
         timeout: 10000,
         contentType: "json",
@@ -116,8 +117,8 @@ $('#node-list').on('change', function () {
   $('#storage-list').children().remove();
 
   Jsonget('/domain/define?json=define&node=' + node).done(function (result) {
-    $.each(result['network'][1], function (index, value) {
-      $('.network-list').append('<option value="' + value['name'] + '">' + value['name'] + '</option>');
+    $.each(result['network'][0], function (index, value) {
+      $('.network-list').append('<option value="' + value + '">' + value + '</option>');
     });
     $.each(result['archive'], function (index, value) {
       $('#archive-list').append('<option value="' + value[0] + '">' + value[0] + '</option>');
@@ -158,45 +159,7 @@ $(document).ready(function () {
 });
 
 
-$(function () {
-  var stepCounter = 1;
 
-  $("#step-2").css("display", "none");
-  $("#step-3").css("display", "none");
-  $("#step-4").css("display", "none");
-  $("#submit-step").hide();
-
-  $("#next-step").click(function () {
-    if (stepCounter < 4) {
-      $("#step-" + stepCounter).slideUp(600, function () {
-        $("#step-title").text("Step " + stepCounter + "/4");
-      });
-      stepCounter = stepCounter + 1;
-      $("#step-" + stepCounter).slideDown(600, function () {
-        $("#step-title").text("Step " + stepCounter + "/4");
-      });
-    }
-    if (stepCounter == 4) {
-      $("#next-step").hide();
-      $("#submit-step").show();
-    }
-  });
-  $('#prev-step').on('click', function () {
-    if (stepCounter > 1) {
-      $("#step-" + stepCounter).slideUp(300, function () {
-        $("#step-title").text("Step " + stepCounter + "/4");
-      });
-      stepCounter = stepCounter - 1;
-      $("#step-" + stepCounter).slideDown(300, function () {
-        $("#step-title").text("Step " + stepCounter + "/4");
-      });
-    }
-    if (stepCounter == 3) {
-      $("#next-step").show();
-      $("#submit-step").hide();
-    }
-  });
-});
 
 //////////////////////////////
 ///    menu                ///
@@ -249,6 +212,7 @@ $(document).ready(function () {
 
   $(".modal-open").click(function () {
     $("#" + $(this).attr("modal-id")).addClass("is-active");
+    
     if ($(this).attr("modal-id") === "modal-user-delete") {
       $(".modal-user-id").attr('value', $(this).attr("user-id"));
     }

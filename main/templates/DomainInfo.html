@@ -250,6 +250,7 @@
   </div>
 </div>
 
+<!-- ネットワーク編集 -->
 <div class="modal" id="modal-interface">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
@@ -259,7 +260,6 @@
         <span class="delete modal-delete" aria-label="close"></span>
       </header>
       <section class="modal-card-body">
-        <label class="label" for="first-name">to *</label>
         <select name="network" class="select" required="">
           {% for interface in net[0] %}
           <option value={{interface}}>Interface Bridge @{{interface}}</option>
@@ -272,8 +272,8 @@
         <input type="hidden" name="mac" value="" id="modal-mac">
       </section>
       <footer class="modal-card-foot">
-        <button class="button is-link">Post queue</button>
-        <span class="button modal-delete">Cancel</button>
+        <button class="button is-link is-small">Post queue</button>
+        <span class="button modal-delete is-small">Cancel</button>
       </footer>
     </form>
   </div>
@@ -292,8 +292,8 @@
         <input type="hidden" name="uuid" value="{{xml['uuid']}}">
       </section>
       <footer class="modal-card-foot">
-        <button name="status" value="undefine" class="button is-danger">Undefine</button>
-        <span class="button modal-delete">Cancel</button>
+        <button name="status" value="undefine" class="button is-danger is-small">Undefine</button>
+        <span class="button modal-delete is-small">Cancel</button>
       </footer>
     </form>
   </div>

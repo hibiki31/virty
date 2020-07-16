@@ -16,10 +16,12 @@
 
 
 
-### サポートOS
+### サポートノードOS
+　virty自身はdockerで動くので制約はありません、しかし管理対象のOSサポートは以下になります。
 
-- Ubuntu 18
 - Ubuntu 20
+- Ubuntu 18
+- CentOS 8
 - CentOS 7
 
 

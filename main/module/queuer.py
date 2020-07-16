@@ -1,6 +1,6 @@
 import setting
 import virty
-import ast
+import json
 from time import sleep
 
 
@@ -9,7 +9,7 @@ que = virty.vsql.SqlQueuget("running")
 if que == None or que == []:
     exit
 que = que[0]
-POST = ast.literal_eval(que[5])
+POST = json.loads(que[5])
 print("QueGET "+que[3]+" "+que[4])
 
 

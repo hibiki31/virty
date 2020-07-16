@@ -1,5 +1,5 @@
 html{
-    background-color: #eeeeee;
+    background-color: #eeeeee;/* Bodyにすると白帯が入る */
 }
 body{
     font-size: 0.85rem;
@@ -21,3 +21,4 @@ span.tag {
 .modal-card-foot, .modal-card-head {
     padding: 15px;
 }
+

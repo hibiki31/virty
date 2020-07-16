@@ -1,4 +1,4 @@
-import ast
+import json
 import subprocess
 from time import sleep
 from time import time
@@ -15,7 +15,7 @@ while True:
     time_start = time()
     que = que[0]
     try:
-        POST = ast.literal_eval(que[5])
+        POST = json.loads(que[5])
     except:
         virty.vsql.QueueUpdate(que[0],"error","Can't read json.")
         continue

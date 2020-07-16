@@ -569,6 +569,7 @@ def NetworkUndefine(NET_UUID):
         editor = vvirt.VirtEditor(NODE[1])
         editor.NetworkOpen(NET_UUID)
         editor.NetworkUndefine()
+    
 
 
 
@@ -627,9 +628,9 @@ def DomainDefineStatic(defineData):
     editor.EditDomainEmulator(nodeEmulator)
     editor.EditDomainBase(defineData['name'],defineData['memory'],defineData['cpu'],"auto","")
     
-    if not "network" in defineData:
+    if not "networks" in defineData:
         defineData['networks'] = []
-    elif defineData['networks'] == str:
+    elif type(defineData['networks']) == str:
         defineData['networks'] = [defineData['networks']]
     
     for network in defineData['networks']:
