@@ -9,7 +9,6 @@ from flask import abort
 from flask import jsonify
 from flask import send_from_directory
 from flask_login import login_required
-from flask_jwt import jwt_required
 from module import virty
 
 app = Blueprint('archive', __name__)

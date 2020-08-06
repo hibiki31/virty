@@ -1,5 +1,4 @@
 from flask import Flask, render_template, jsonify, request,redirect, Response, abort, send_from_directory, Blueprint
-from flask_jwt import JWT, jwt_required, current_identity
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import safe_str_cmp
 from functools import wraps

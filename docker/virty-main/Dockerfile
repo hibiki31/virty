@@ -25,11 +25,15 @@ RUN dnf clean all
 
 COPY ./requirements.txt /tmp/
 
+RUN python3.6 -m pip install --upgrade pip
 RUN pip3 install --upgrade pip
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+RUN pip3 install flask-cors
+RUN pip3 install flask_jwt_extended
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
 
+ENV VIRTY_SECRET="secret-key"
 ENV VIRTY_PATH="/root/virty/main"
 ENV PYTHONPATH="/root/virty/main"
 

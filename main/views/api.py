@@ -1,4 +1,5 @@
 import json
+
 from flask import Flask
 from flask import Response
 from flask import Blueprint
@@ -9,11 +10,20 @@ from flask import abort
 from flask import jsonify
 from flask import send_from_directory
 from flask_login import login_required
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import JWTManager
+
 from module import virty
+
 
 app = Blueprint('api', __name__)
 
+
+@app.route('/api/domain')
+def api_domain():
+    domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
+    return jsonify(domain)
 
 
 @app.route('/api/json/<OBJECT>')
@@ -51,7 +61,6 @@ def api_que(OBJECT,METHOD):
         return redirect(request.referrer, code=302)
 
 @app.route('/api/read/<OBJECT>')
-@jwt_required()
 def api_read_object(OBJECT):
     NODE_NAME = request.args.get('node')
     if OBJECT == "network":
@@ -75,7 +84,6 @@ def api_read_object(OBJECT):
     return jsonify(result)
 
 @app.route("/api/create/<OBJECT>/<METHOD>",methods=["POST"])
-@jwt_required()
 def api_create_object_method(OBJECT,METHOD):
     # POSTデータを型クラスに
     form = virty.attribute_args_convertor(request.form)
