@@ -14,12 +14,10 @@ from flask import Blueprint
 
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_cors import CORS
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import create_access_token
 from flask_jwt_extended import JWTManager
-from flask_jwt_extended import get_jwt_identity
 
 from module import virty
+from module import model
 from views import action
 from views import api
 from views import archive
@@ -69,44 +67,9 @@ jwt.unauthorized_loader(jwt_unauthorized_loader_handler)
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
-    user = virty.vsql.UserGet(identity)
+    user = model.get_virty_user_class(identity)
+    print(user,identity)
     return user
-
-@app.route('/api/auth', methods=['POST'])
-def api_auth():
-    if not request.is_json:
-        body = {'message': 'Request type must be JSON'}
-        return jsonify(body), 400
-
-    request_body = request.get_json()
-    if request_body is None:
-        body = {'message': 'Request body is empty'}
-        return jsonify(body), 400
-
-    whitelist = {'userid', 'password'}
-    if not request_body.keys() <= whitelist:
-        body = {'message': 'Missing userid or password in request field'}
-        return jsonify(body), 400
-
-    user = virty.vsql.UserGet(request_body['userid'])
-    if user == None:
-        body = {'message': 'Login failure. Bad userid or password'}
-        return jsonify(body), 401
-    
-    if virty.check_password(user.passwd, request_body['password']) == False:
-        body = {'message': 'Login failure. Bad userid or password'}
-        return jsonify(body), 401
-
-    token = create_access_token(identity=user.id)
-    body = {'message': 'Login succeeded', 'token': token, 'userid': user.id, 'isAdmin': True}
-    return jsonify(body), 200
-
-@app.route('/api/auth/validate', methods=['GET'])
-@jwt_required
-def api_auth_validate():
-    token = request.headers.get("Authorization")
-    userid = get_jwt_identity()
-    return jsonify({'message': 'Validate succeeded', 'token': token, 'userid': userid}), 200
 
 
 
@@ -250,6 +213,71 @@ def storage_add():
 
 
 
+@app.route('/api/json/<OBJECT>')
+@login_required
+def api_json_object(OBJECT):
+    NODE_NAME = request.args.get('node')
+    if OBJECT == "network":
+        if NODE_NAME == None:result = virty.NodeNetworkAllList()
+        else:result=virty.NodeNetworkList(NODE_NAME)
+    elif OBJECT == "interface":
+        if NODE_NAME == None:result=virty.AllInterfaceList()
+        else:result=virty.InterfaceList(NODE_NAME)
+    elif OBJECT == "storage":
+        if NODE_NAME == None:result = []
+        else:result=virty.StorageList(NODE_NAME)
+    elif OBJECT == "archive":
+        if NODE_NAME == None:result = []
+        else:result=virty.ImageArchiveList(NODE_NAME)   
+    elif OBJECT == "stack-que":
+        result=virty.vsql.SqlQueuget("running")
+    else:
+        return abort(404)
+    return jsonify(ResultSet=result)
+
+
+@app.route("/api/que/<OBJECT>/<METHOD>",methods=["POST"])
+@login_required
+def api_que(OBJECT,METHOD):
+    form = virty.attribute_args_convertor(request.form)
+    queueid = virty.Queuing(OBJECT,METHOD,form)
+    
+    if form.get('return') == "json":
+        return jsonify(queueid)
+    else:
+        return redirect(request.referrer, code=302)
+
+@app.route('/api/read/<OBJECT>')
+def api_read_object(OBJECT):
+    NODE_NAME = request.args.get('node')
+    if OBJECT == "network":
+        if NODE_NAME == None:result = virty.NodeNetworkAllList()
+        else:result=virty.NodeNetworkList(NODE_NAME)
+    elif OBJECT == "interface":
+        if NODE_NAME == None:result=virty.AllInterfaceList()
+        else:result=virty.InterfaceList(NODE_NAME)
+    elif OBJECT == "storage":
+        if NODE_NAME == None:result = []
+        else:result=virty.StorageList(NODE_NAME)
+    elif OBJECT == "archive":
+        if NODE_NAME == None:result = []
+        else:result=virty.ImageArchiveList(NODE_NAME)   
+    elif OBJECT == "stack-que":
+        result=virty.vsql.SqlQueuget("running")
+    elif OBJECT == "domain":
+        result = virty.vsql.SqlGetAll("domain")
+    else:
+        return abort(404)
+    return jsonify(result)
+
+@app.route("/api/create/<OBJECT>/<METHOD>",methods=["POST"])
+def api_create_object_method(OBJECT,METHOD):
+    # POSTデータを型クラスに
+    form = virty.attribute_args_convertor(request.form)
+    # そのままDICをJSONで返す
+    return_dic = virty.Queuing(OBJECT,METHOD,form)
+    return virty.attribute_args_dump(return_dic)
+
 
 ############################
 # NODE                     #
@@ -272,4 +300,3 @@ def node_add():
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=80)
-    

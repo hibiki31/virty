@@ -1,92 +1,70 @@
 import json
+import datetime
 
-from flask import Flask
-from flask import Response
 from flask import Blueprint
-from flask import render_template
 from flask import request
 from flask import redirect
 from flask import abort
 from flask import jsonify
-from flask import send_from_directory
-from flask_login import login_required
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_current_user
 
 from module import virty
+from module import model
 
 
 app = Blueprint('api', __name__)
 
 
-@app.route('/api/domain')
-def api_domain():
-    domain = virty.vsql.RawFetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
-    return jsonify(domain)
+@app.route('/api/auth', methods=['POST'])
+def api_auth():
+    if not request.is_json:
+        body = {'message': 'Request type must be JSON'}
+        return jsonify(body), 400
 
+    request_body = request.get_json()
+    if request_body is None:
+        body = {'message': 'Request body is empty'}
+        return jsonify(body), 400
 
-@app.route('/api/json/<OBJECT>')
-@login_required
-def api_json_object(OBJECT):
-    NODE_NAME = request.args.get('node')
-    if OBJECT == "network":
-        if NODE_NAME == None:result = virty.NodeNetworkAllList()
-        else:result=virty.NodeNetworkList(NODE_NAME)
-    elif OBJECT == "interface":
-        if NODE_NAME == None:result=virty.AllInterfaceList()
-        else:result=virty.InterfaceList(NODE_NAME)
-    elif OBJECT == "storage":
-        if NODE_NAME == None:result = []
-        else:result=virty.StorageList(NODE_NAME)
-    elif OBJECT == "archive":
-        if NODE_NAME == None:result = []
-        else:result=virty.ImageArchiveList(NODE_NAME)   
-    elif OBJECT == "stack-que":
-        result=virty.vsql.SqlQueuget("running")
-    else:
-        return abort(404)
-    return jsonify(ResultSet=result)
+    whitelist = {'userid', 'password'}
+    if not request_body.keys() <= whitelist:
+        body = {'message': 'Missing userid or password in request field'}
+        return jsonify(body), 400
 
-
-@app.route("/api/que/<OBJECT>/<METHOD>",methods=["POST"])
-@login_required
-def api_que(OBJECT,METHOD):
-    form = virty.attribute_args_convertor(request.form)
-    queueid = virty.Queuing(OBJECT,METHOD,form)
+    user = model.get_virty_user_class(request_body['userid'])
+    if user == None:
+        body = {'message': 'Login failure. Bad userid or password'}
+        return jsonify(body), 401
     
-    if form.get('return') == "json":
-        return jsonify(queueid)
-    else:
-        return redirect(request.referrer, code=302)
+    if virty.check_password(user.password, request_body['password']) == False:
+        body = {'message': 'Login failure. Bad userid or password'}
+        return jsonify(body), 401
 
-@app.route('/api/read/<OBJECT>')
-def api_read_object(OBJECT):
-    NODE_NAME = request.args.get('node')
-    if OBJECT == "network":
-        if NODE_NAME == None:result = virty.NodeNetworkAllList()
-        else:result=virty.NodeNetworkList(NODE_NAME)
-    elif OBJECT == "interface":
-        if NODE_NAME == None:result=virty.AllInterfaceList()
-        else:result=virty.InterfaceList(NODE_NAME)
-    elif OBJECT == "storage":
-        if NODE_NAME == None:result = []
-        else:result=virty.StorageList(NODE_NAME)
-    elif OBJECT == "archive":
-        if NODE_NAME == None:result = []
-        else:result=virty.ImageArchiveList(NODE_NAME)   
-    elif OBJECT == "stack-que":
-        result=virty.vsql.SqlQueuget("running")
-    elif OBJECT == "domain":
-        result = virty.vsql.SqlGetAll("domain")
-    else:
-        return abort(404)
-    return jsonify(result)
+    expires = datetime.timedelta(days=7)
+    token = create_access_token(identity=user.userid, expires_delta=expires)
+    body = {'message': 'Login succeeded', 'token': token, 'userid': user.userid, 'isAdmin': user.is_admin}
+    return jsonify(body), 200
 
-@app.route("/api/create/<OBJECT>/<METHOD>",methods=["POST"])
-def api_create_object_method(OBJECT,METHOD):
-    # POSTデータを型クラスに
-    form = virty.attribute_args_convertor(request.form)
-    # そのままDICをJSONで返す
-    return_dic = virty.Queuing(OBJECT,METHOD,form)
-    return virty.attribute_args_dump(return_dic)
+
+@app.route('/api/auth/validate', methods=['GET'])
+@jwt_required
+def api_auth_validate():
+    token = request.headers.get("Authorization")
+    user = get_current_user()
+    return jsonify({'message': 'Validate succeeded', 'token': token, 'userid': user.userid, 'isAdmin': user.is_admin}), 200
+
+
+@app.route('/api/domain')
+@jwt_required
+def api_domain():
+    domains = model.get_domain()
+    return model.make_json_response(domains)
+
+@app.route('/api/domain/<uuid>')
+@jwt_required
+def api_domain_uuid(uuid):
+    domain = model.get_domain_by_uuid(uuid)
+    return model.make_json_response(domain)
