@@ -30,6 +30,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 RUN pip3 install flask-cors
 RUN pip3 install flask_jwt_extended
+RUN pip3 install pyhumps
 
 RUN ln -si /root/virty/main/virty.py /usr/local/bin/virty
 

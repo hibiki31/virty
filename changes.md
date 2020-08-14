@@ -1,3 +1,6 @@
+### Ver 0.0.7.0
+- Moving to an API and front composition
+
 ### Ver 0.0.3.6
 - デザインとtemplateの整理
 

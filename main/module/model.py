@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import json
+import humps
+import uuid
 
 from flask import Response
 
@@ -36,8 +38,8 @@ class MyJSONEncoder(json.JSONEncoder):
 class AttributeDict(object):
     def __init__(self, obj):
         if type(obj) != dict:
-            raise 
-        self.obj = obj
+            self.obj = {}
+        self.obj = humps.camelize(obj)
 
     ### Pickle
     def __getstate__(self):
@@ -78,6 +80,25 @@ class AttributeDict(object):
 
 
 
+def attribute_dict_validation(att,rules):
+    if att == None:
+        return {'message': 'Request type must be JSON'}
+    
+    for rule in rules:
+        if rule['type'] == "is_empty":
+            if att[rule['key']] == None:
+                return {'message': rule['key']+' key is not found'}
+        
+        elif rule['type'] == "in_value":
+            if att[rule['key']] == rule['value']:
+                return {'message': rule['key']+' is not allowd value ' + rule['value']}
+
+    return True
+
+
+
+
+
 def get_virty_user_class(userid):
     user = raw_fetchall("select * from users where id=?",[(userid)])
     if len(user) == 0:
@@ -94,18 +115,138 @@ def make_json_response(obj: AttributeDict):
     return Response(json.dumps(obj, cls=MyJSONEncoder), mimetype='application/json')
 
 
+def attribute_args_convertor(args):
+    data = {}
+    for i in args.keys():
+        if args.getlist(i) == [""]:
+            data[i] = None
+        elif len(args.getlist(i)) == 1:
+            data[i] = args.get(i)
+        else:
+            data[i] = args.getlist(i)
+        
+    return AttributeDict(data)
+
+
+def request_json_attribute(request):
+    if not request.is_json:
+        return None
+
+    request_body = request.get_json()
+    if request_body is None:
+        return None
+
+    return AttributeDict(request_body)
+
+
+def create_queue(object,method,que_dic):
+    queue_id = str(uuid.uuid4())
+    sql = "insert into queue (post_time, id, status, object, method, json, message) values (datetime('now', 'localtime'),?,?,?,?,?,?)"
+    que_json = json.dumps(que_dic, cls=MyJSONEncoder)
+    data = [queue_id,str("init"), str(object), str(method), str(que_json), str("Not started")]
+    raw_commit(sql,data)
+
+    return queue_id
+
+
 def get_domain():
-    domains = raw_fetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name",[])
+    domains = raw_fetchall("""
+    select name, status, node_name, core, memory, uuid, type, os, group_id, user_id 
+    from domain left join domain_owner on uuid=domain_owner.dom_uuid order by domain.name
+    """,[])
+
     return domains
 
 
+def get_node():
+    data = raw_fetchall("select * from node",[])
+    return data
+
+
+def get_user():
+    data = raw_fetchall("select * from users",[])
+    return data
+
+
+def get_group():
+    data = raw_fetchall("""
+    select * from groups 
+    """,[])
+    return data
+
+
+def get_groups_users():
+    groups = {}
+
+    users = raw_fetchall("""
+    select * from groups 
+    left join users_groups on groups.id = users_groups.group_id
+    """,[])
+
+    for user in users:
+        if not user.groupId in groups:
+            groups[user.groupId] = []
+        groups[user.groupId].append(user.userId)
+
+    data = []
+    for k, v in groups.items():
+        data.append({"groupId": k, "users": v})
+
+    return data
+
+
+def get_queue():
+    data = raw_fetchall("select * from queue order by post_time desc",[])
+    return_data = []
+    for que in data:
+        que['json'] = json.loads(que['json'])
+        return_data.append(que)
+    return return_data
+
+
+def get_archive():
+    data = raw_fetchall("select * from archive",[])
+    return data
+
+
+def get_storage():
+    data = raw_fetchall("select * from storage",[])
+    return data
+
+
+def get_network():
+    data = raw_fetchall("select * from network",[])
+    return data
+
+
+def get_image():
+    sql = """
+        select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path, 
+        domain.name as domainName, 
+        count(*) as numInUse, 
+        archive_img.archive_id 
+
+        from img 
+        left join domain_drive on img.path=domain_drive.source 
+        left join domain  on domain_drive.dom_uuid=domain.uuid and img.node=domain.node_name 
+        left join archive_img on img.name=archive_img.name and img.node=archive_img.node 
+        group by img.node,img.path;
+    """
+    data = raw_fetchall(sql,[])
+    return data
+
+
 def get_domain_by_uuid(uuid):
+    db = raw_fetchall("""
+    select name, status, node_name, core, memory, uuid, type, os, group_id, user_id 
+    from domain left join domain_owner on uuid=domain_owner.dom_uuid where uuid=? order by domain.name
+    """,[(uuid)])
+    if len(db) == 0:
+        return None
     xml = xml_editor.get_domain_info(uuid)
-    db = raw_fetchall("select * from domain left join domain_owner on uuid=domain_owner.dom_uuid where uuid=? order by domain.name",[(uuid)])
-    if len(db) == 1:
-        xml.update(db[0].obj)
-    else:
-        db = None
+    if xml == None:
+        return None
+    xml.update(db[0].obj)
     return xml
 
 
@@ -121,3 +262,12 @@ def raw_fetchall(SQL,DATA):
     con.row_factory = attribute_dict_factory
     cur = con.cursor()
     return cur.execute(SQL,DATA).fetchall()
+
+
+def raw_commit(SQL,DATA):
+    con = sqlite3.connect(setting.databasePath)
+    cur = con.cursor()
+    cur.execute(SQL,DATA)
+    result = cur.lastrowid
+    con.commit()
+    return result

@@ -318,7 +318,7 @@ def NodeStatusUpdate(NODES,CODE):
 def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
-    sql = "insert into que (que_time, que_status, que_object, que_method, que_json, que_mesg) values (datetime('now', 'localtime'),?,?,?,?,?)"
+    sql = "insert into queue (post_time, status, object, method, json, message) values (datetime('now', 'localtime'),?,?,?,?,?)"
     
     quedata = [[]]
     quedata[0].append(str("init"))
@@ -328,7 +328,7 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
     quedata[0].append(str("Not started"))
 
     cur.executemany(sql, quedata)
-    que_id = cur.execute('select que_id from que where que_id = last_insert_rowid()').fetchall()
+    que_id = cur.execute('select id from queue where id = last_insert_rowid()').fetchall()
     con.commit()
     con.close()
     return {"que-id":que_id[0]}
@@ -336,21 +336,21 @@ def Queuing(QUE_OBJECT,QUE_METHOD,QUE_JSON):
 def Dequeuing(QUE_ID,QUE_STATUS,QUE_MESG):
     con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
-    sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
+    sql = 'UPDATE queue SET status=?, message=? WHERE id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
 def SqlQueuget(QUE_STATUS):
     con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
-    sql = 'select * from que where que_status ="'+QUE_STATUS+'"'
+    sql = 'select * from queue where status ="'+QUE_STATUS+'"'
     data = cur.execute(sql).fetchall()
     return data
 
 def QueueUpdate(QUE_ID,QUE_STATUS,QUE_MESG):
     con = sqlite3.connect(setting.databasePath)
     cur = con.cursor()
-    sql = 'UPDATE que SET que_status=?, que_mesg=? WHERE que_id=?'
+    sql = 'UPDATE queue SET status=?, message=? WHERE id=?'
     cur.executemany(sql, [(QUE_STATUS,QUE_MESG,QUE_ID)])
     con.commit()
     
@@ -363,7 +363,7 @@ def SqlDeleteAll(TABLE_NAME):
     return 0
 
 def QueueUpdateTime(QUE_ID,QUE_TIME):
-    RawCommit("UPDATE que SET run=? WHERE que_id=?",[QUE_TIME,QUE_ID])
+    RawCommit("UPDATE queue SET run_time=? WHERE id=?",[QUE_TIME,QUE_ID])
 
 ############################
 # LONG                     #
@@ -490,7 +490,7 @@ def SqlInit():
     cur.execute('create table users (id, password, primary key (id))')
     cur.execute('create table groups (id, primary key (id))')
     cur.execute('create table users_groups (user_id,group_id,primary key (user_id,group_id))')
-    cur.execute('create table que (que_id integer primary key,que_time ,que_status,que_object,que_method, que_json, que_mesg, run)')
+    cur.execute('create table queue (id primary key, post_time , user_id, status, object, method, json, message, run_time)')
     cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
     cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
     cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')

@@ -16,7 +16,7 @@ app = Blueprint('queue', __name__)
 @app.route('/queue',methods=["GET"])
 @login_required
 def queue():
-    domain = virty.vsql.RawFetchall("select * from que order by que_id desc",[])
+    domain = virty.vsql.RawFetchall("select * from queue order by post_time desc",[])
     html = render_template('QueList.html',domain=domain,status=virty.WorkerStatus())
     return html
 
@@ -55,7 +55,7 @@ def queue_status_id(ID):
 @login_required
 def queue_post():
     if request.form.get('status') == "que_clear":
-        virty.vsql.RawCommit("delete from que",[])
+        virty.vsql.RawCommit("delete from queue",[])
         return redirect("/queue",code=303)
     else:
         return abort(400)

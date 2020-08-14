@@ -240,10 +240,10 @@ def api_json_object(OBJECT):
 @login_required
 def api_que(OBJECT,METHOD):
     form = virty.attribute_args_convertor(request.form)
-    queueid = virty.Queuing(OBJECT,METHOD,form)
+    queueid = model.create_queue(OBJECT,METHOD,form)
     
     if form.get('return') == "json":
-        return jsonify(queueid)
+        return jsonify(queueid['id'])
     else:
         return redirect(request.referrer, code=302)
 
@@ -275,8 +275,8 @@ def api_create_object_method(OBJECT,METHOD):
     # POSTデータを型クラスに
     form = virty.attribute_args_convertor(request.form)
     # そのままDICをJSONで返す
-    return_dic = virty.Queuing(OBJECT,METHOD,form)
-    return virty.attribute_args_dump(return_dic)
+    queueid = model.create_queue(OBJECT,METHOD,form)
+    return model.make_json_response({'id': queueid,'queue':form})
 
 
 ############################

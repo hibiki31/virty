@@ -271,7 +271,10 @@ class XmlEditor():
 
 def get_domain_info(domain_uuid):
     os.chdir = setting.scriptPath
-    tree = ET.parse(setting.scriptPath + '/dump/dom/'+ domain_uuid +'.xml') 
+    try:
+        tree = ET.parse(setting.scriptPath + '/dump/dom/'+ domain_uuid +'.xml') 
+    except:
+        return None
     root = tree.getroot()
 
     DATA = {}

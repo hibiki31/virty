@@ -8,7 +8,7 @@ import time
 import concurrent.futures
 import pprint
 import json
-from module import vsql, vansible, vhelp, vvirt, vsh, setting
+from module import vsql, vansible, vhelp, vvirt, vsh, setting, model
 import bcrypt
 
 
@@ -498,7 +498,7 @@ def NodeAdd(NODE_NAME,NODE_IP):
         return ["error","node","add",str(e)]
 
     DATA = [NODE_NAME,NODE_IP,MEM,CORE,CPU,OS['NAME'],OS['VERSION'],OS['ID_LIKE'],10,QEMU,VIRT]
-    SQL = "replace into node (name, ip, core, memory, cpugen, os_name, os_version, os_like, status, qemu, libvirt) values (?,?,?,?,?,?,?,?,?,?,?)"
+    SQL = "replace into node (name, ip, memory, core, cpugen, os_name, os_version, os_like, status, qemu, libvirt) values (?,?,?,?,?,?,?,?,?,?,?)"
     vsql.RawCommit(SQL,DATA)
     vansible.AnsibleNodelistInit()
     return ["success","node","add","Succes"]
