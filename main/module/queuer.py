@@ -10,108 +10,125 @@ que = model.raw_fetchall("select * from queue where status =?",["running"])
 if que == None or que == []:
     exit
 que = que[0]
-POST = json.loads(que['json'])
+post_json = json.loads(que['json'])
 print("QueGET "+que['object']+" "+que['method'])
 
+result = None
 
-
-if que['object'] == "domain" and que['method'] == "define":
-    virty.DomainDefineStatic(POST)
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
-
-elif que['object'] == "domain" and que['method'] == "power":
-    if POST['status'] == "poweron":
-        result = virty.DomainStart(POST['domain-list'])
-    elif POST['status'] == "poweroff":
-        result = virty.DomainDestroy(POST['domain-list'])
-    
-elif que['object'] == "domain" and que['method'] == "selinux":
-    if POST['state'] == "disable":
-        result = virty.DomSelinuxDisable(POST['uuid'])
-    
-elif que['object'] == "domain" and que['method'] == "list-reload":
-    virty.vsql.RawCommit("delete from domain where status=?",["10"])
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
-    print("List-reload")
-
-elif que['object'] == "domain" and que['method'] == "undefine":
-    result = virty.DomainUndefine(POST['uuid'])
-    virty.DomainListInit()
-
-elif que['object'] == "network" and que['method'] == "2l-define":  
-    NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",POST['node-list'])
+if que['resource'] == "network" and que['method'] == "2l-define":  
+    NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",post_json['node-list'])
     XML_PATH = setting.scriptPath + '/xml/net_2less.xml'
-    NAME = "2l-" + POST['net-gw']
-    GW = POST['net-gw']
+    NAME = "2l-" + post_json['net-gw']
+    GW = post_json['net-gw']
     virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)
-    virty.vsql.SqlAddNetwork([("l2l",NAME,POST['node-list'])])
-    result = ["success","","","Succes"]
+    virty.vsql.SqlAddNetwork([("l2l",NAME,post_json['node-list'])])
+    
 
-elif que['object'] == "node" and que['method'] == "add":
-    result = virty.NodeAdd(POST['name'],POST['user'] +'@'+ POST['ip'])
 
-elif que['object'] == "storage" and que['method'] == "add":
-    virty.StorageMake(POST['node-list'],POST['name'],POST['path'])
-    result = ["success","","","Succes"]
 
-elif que['object'] == "storage" and que['method'] == "undefine":
-    result = virty.StorageUndefine(POST['node'],POST['storagename'])
+elif que['resource'] == "storage" and que['method'] == "create":
+    virty.StorageMake(post_json['node-list'],post_json['name'],post_json['path'])
+    
+
+elif que['resource'] == "storage" and que['method'] == "delete":
+    result = virty.StorageUndefine(post_json['node'],post_json['storagename'])
     virty.DomainListInit()
 
-elif que['object'] == "domain" and que['method'] == "name-edit":
-    result = virty.DomNameEdit(POST['uuid'],POST['newname'])
+elif que['resource'] == "network" and que['method'] == "delete":
+    virty.NetworkUndefine(post_json['uuid'])
+    
+
+elif que['resource'] == "network" and que['method'] == "internal-define":
+    virty.NetworkInternalDefine(post_json['node'],post_json['net-name'])
     virty.DomainListInit()
+    
 
-
-elif que['object'] == "domain" and que['method'] == "nic-edit":
-    virty.DomainEditNicNetwork(POST['uuid'],POST['mac'],POST['network'])
-    result = ["success","","","Succes"]    
+elif que['resource'] == "network" and que['method'] == "bridge-define":
+    virty.NetworkBridgeDefine(post_json['node'],post_json['name'],post_json['source'])
     virty.DomainListInit()
+    
 
-elif que['object'] == "network" and que['method'] == "undefine":
-    virty.NetworkUndefine(POST['uuid'])
-    result = ["success","","","Succes"]
-
-elif que['object'] == "network" and que['method'] == "internal-define":
-    virty.NetworkInternalDefine(POST['node'],POST['net-name'])
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
-
-elif que['object'] == "network" and que['method'] == "bridge-define":
-    virty.NetworkBridgeDefine(POST['node'],POST['name'],POST['source'])
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
-
-elif que['object'] == "domain" and que['method'] == "memory-edit":
-    virty.DomainEditMemory(POST['uuid'],POST['memory'])
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
-
-elif que['object'] == "node" and que['method'] == "status-update":
-    if POST['status'] == "10" or POST['status'] == "20":
-        virty.vsql.NodeStatusUpdate([POST['name']],POST['status'])
+elif que['resource'] == "node" and que['method'] == "status-update":
+    if post_json['status'] == "10" or post_json['status'] == "20":
+        virty.vsql.NodeStatusUpdate([post_json['name']],post_json['status'])
         virty.DomainListInit()
-        result = ["success","","","Succes"]
+        
     else:
         result = ["success","","","Receive error code"]
     
-elif que['object'] == "domain" and que['method'] == "cpu-edit":
-    virty.DomainEditCpu(POST['uuid'],POST['cpu'])
-    virty.DomainListInit()
-    result = ["success","","","Succes"]
+elif que['resource'] == "image" and que['method'] == "resize":
+    result = virty.ImageResize(post_json['node'],post_json['pool'],post_json['target'],post_json['size'])
 
-elif que['object'] == "image" and que['method'] == "resize":
-    result = virty.ImageResize(POST['node'],POST['pool'],POST['target'],POST['size'])
-
-elif que['object'] == "image" and que['method'] == "delete":
-    virty.ImageDelete(POST['node'],POST['pool'],POST['name'])
+elif que['resource'] == "image" and que['method'] == "delete":
+    virty.ImageDelete(post_json['node'],post_json['pool'],post_json['name'])
     virty.DomainListInit()
-    result = ["success","","","Succes"]
     
+
+
+
+### ノード
+elif que['resource'] == "node":
+    if que['method'] == "post":
+        if que['object'] == "base":
+            result = virty.NodeAdd(post_json['name'],post_json['user'] +'@'+ post_json['ip'])
+
+
+
+### 仮想マシン
+elif que['resource'] == "vm":
+    if que['method'] == "post":
+        if que['object'] == "base":
+            virty.DomainDefineStatic(post_json)
+            virty.DomainListInit()
+            
+    
+    elif que['method'] == "delete":
+        if que['object'] == "base":
+            result = virty.DomainUndefine(post_json['uuid'])
+            virty.DomainListInit()
+
+    elif que['method'] == "put":
+        if que['object'] == "cpu":
+            virty.DomainEditCpu(post_json['uuid'],post_json['cpu'])
+            virty.DomainListInit()
+            
+        elif que['object'] == "memory":
+            virty.DomainEditMemory(post_json['uuid'],post_json['memory'])
+            virty.DomainListInit()
+            
+        elif que['object'] == "name":
+            result = virty.DomNameEdit(post_json['uuid'],post_json['newname'])
+            virty.DomainListInit()
+        elif que['object'] == "network":
+            virty.DomainEditNicNetwork(post_json['uuid'],post_json['mac'],post_json['network'])
+            
+            virty.DomainListInit()
+        elif que['object'] == "list":
+            virty.vsql.RawCommit("delete from domain where status=?",["10"])
+            virty.DomainListInit()
+            
+            print("List-reload")
+
+elif que['resource'] == "domain" and que['method'] == "power":
+    if post_json['status'] == "poweron":
+        result = virty.DomainStart(post_json['uuid'])
+    elif post_json['status'] == "poweroff":
+        result = virty.DomainDestroy(post_json['uuid'])
+    
+elif que['resource'] == "domain" and que['method'] == "selinux":
+    if post_json['state'] == "disable":
+        result = virty.DomSelinuxDisable(post_json['uuid'])
+    
+elif que['resource'] == "domain" and que['method'] == "reload":
+    virty.vsql.RawCommit("delete from domain where status=?",["10"])
+    virty.DomainListInit()
+    
+    print("List-reload")
+
 else:
     print("Found unkown Que")
     result = ["error","que","unkown","Found unkown Que"]
-
+if result == None:
+    result = ["success","","","Succes"]
+    
 virty.vsql.Dequeuing(que['id'],result[0],result[3])

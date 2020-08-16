@@ -1,5 +1,6 @@
 import json
 import datetime
+import time
 
 from flask import Blueprint
 from flask import request
@@ -29,23 +30,23 @@ def api_auth():
         body = {'message': 'Request body is empty'}
         return jsonify(body), 400
 
-    whitelist = {'userid', 'password'}
+    whitelist = {'userId', 'password'}
     if not request_body.keys() <= whitelist:
-        body = {'message': 'Missing userid or password in request field'}
+        body = {'message': 'Missing userId or password in request field'}
         return jsonify(body), 400
 
-    user = model.get_virty_user_class(request_body['userid'])
+    user = model.get_virty_user_class(request_body['userId'])
     if user == None:
-        body = {'message': 'Login failure. Bad userid or password'}
+        body = {'message': 'Login failure. Bad userId or password'}
         return jsonify(body), 401
     
     if virty.check_password(user.password, request_body['password']) == False:
-        body = {'message': 'Login failure. Bad userid or password'}
+        body = {'message': 'Login failure. Bad userId or password'}
         return jsonify(body), 401
 
     expires = datetime.timedelta(days=7)
-    token = create_access_token(identity=user.userid, expires_delta=expires)
-    body = {'message': 'Login succeeded', 'token': token, 'userid': user.userid, 'isAdmin': user.is_admin}
+    token = create_access_token(identity=user.user_id, expires_delta=expires)
+    body = {'message': 'Login succeeded', 'token': token, 'userId': user.user_id, 'isAdmin': user.is_admin}
     return jsonify(body), 200
 
 
@@ -54,18 +55,18 @@ def api_auth():
 def api_auth_validate():
     token = request.headers.get("Authorization")
     user = get_current_user()
-    return jsonify({'message': 'Validate succeeded', 'token': token, 'userid': user.userid, 'isAdmin': user.is_admin}), 200
+    return jsonify({'message': 'Validate succeeded', 'token': token, 'userId': user.user_id, 'isAdmin': user.is_admin}), 200
 
 
-@app.route('/api/domain')
+@app.route('/api/vm')
 @jwt_required
-def api_domain():
-    domains = model.get_domain()
-    return model.make_json_response(domains)
+def api_vm():
+    vm = model.get_domain()
+    return model.make_json_response(vm)
 
-@app.route('/api/domain/<uuid>')
+@app.route('/api/vm/<uuid>')
 @jwt_required
-def api_domain_uuid(uuid):
+def api_vm_uuid(uuid):
     domain = model.get_domain_by_uuid(uuid)
     if domain == None:
         return abort(404)
@@ -82,8 +83,8 @@ def api_node():
 @app.route('/api/archive', methods=["GET","POST","DELETE","PUT"])
 @jwt_required
 def api_archive():
+    json = model.request_json_attribute(request)
     if request.method == "POST":
-        json = model.request_json_attribute(request)
         validation = model.attribute_dict_validation(json,[
             {"type":"is_empty","key":"id"},
             {"type":"is_empty","key":"os"},
@@ -101,6 +102,35 @@ def api_archive():
         data = [json['id'],json['os'],json['version'],json['comment'],json['url'],json['icon'],json['user'],json['password']]
         virty.vsql.RawCommit("insert or ignore into archive (id,os,version,comment,url,icon,user,password) values (?,?,?,?,?,?,?,?)",data)
         return jsonify({'message': "succsess"}), 200
+
+    elif request.method == "PUT":
+        validation = model.attribute_dict_validation(json,[
+            {"type":"is_empty","key":"archiveId"},
+            {"type":"is_empty","key":"imageNode"},
+            {"type":"is_empty","key":"imageStorage"},
+            {"type":"is_empty","key":"imageName"}
+        ])
+        if validation != True:
+            return jsonify(validation), 400
+        
+        data = [json['archiveId'],json['imageNode'],json['imageStorage'],json['imageName']]
+        virty.vsql.RawCommit("insert or ignore into archive_img (archive_id,node,pool,name) values (?,?,?,?)",data)
+        return jsonify({'message': "succsess"}), 200
+    
+    elif request.method == "DELETE":
+        validation = model.attribute_dict_validation(json,[
+            {"type":"is_empty","key":"archiveId"},
+            {"type":"is_empty","key":"imageNode"},
+            {"type":"is_empty","key":"imageStorage"},
+            {"type":"is_empty","key":"imageName"}
+        ])
+        if validation != True:
+            return jsonify(validation), 400
+        
+        data = [json['archiveId'],json['imageNode'],json['imageStorage'],json['imageName']]
+        virty.vsql.RawCommit("delete from archive_img where archive_id=? and node=? and pool=? and name=?",data)
+        return jsonify({'message': "succsess"}), 200
+
 
     else:
         data = model.get_archive()
@@ -131,8 +161,29 @@ def api_network():
 @app.route('/api/queue')
 @jwt_required
 def api_queue():
-    data = model.get_queue()
-    return model.make_json_response(data)
+    if request.args.get('status') == None:
+        data = model.get_queue()
+        return model.make_json_response(data)
+    elif request.args.get('status') == "incomplete":
+        json_attribute = model.request_json_attribute(request)
+        json = []
+        validation = model.attribute_dict_validation(json,[])
+        if validation != True:
+            return jsonify(validation), 400
+
+        for att in json_attribute.obj:
+            json.append(model.AttributeDict(att))
+        
+        data = []
+        for i in range(50):
+            data = model.get_queue_incomplete()
+
+            if data != json:
+                return model.make_json_response({'message': 'not match','post':json, 'db': data})
+            time.sleep(0.1)
+        return model.make_json_response({'message': 'match','post':json, 'db': data})
+    else:
+        return abort(400)
 
 
 @app.route('/api/user',methods=["GET","POST","DELETE","PUT"])
@@ -254,9 +305,11 @@ def api_echo():
     return model.make_json_response(json)
 
 
-@app.route("/api/queue/<OBJECT>/<METHOD>",methods=["POST"])
+@app.route("/api/queue/<resource>/<_object>",methods=["POST", "DELETE", "PUT"])
 @jwt_required
-def api_queue_object_method(OBJECT,METHOD):
+def api_queue_object_method(resource,_object):
+    user = get_current_user()
+
     if not request.is_json:
         body = {'message': 'Request type must be JSON'}
         return jsonify(body), 400
@@ -265,9 +318,11 @@ def api_queue_object_method(OBJECT,METHOD):
     if request_body is None:
         body = {'message': 'Request body is empty'}
         return jsonify(body), 400
+    
+    method = str(request.method).lower()
 
     json = model.AttributeDict(request_body)
-    queueid = model.create_queue(OBJECT,METHOD,json)
+    queue_id = model.create_queue(user.user_id, resource, _object, method, json)
 
-    return model.make_json_response({'id': queueid,'queue':json})
+    return model.make_json_response({'id': queue_id ,'resource':resource ,'object': _object, 'method': method ,'queue':json})
     

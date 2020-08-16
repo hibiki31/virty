@@ -12,20 +12,20 @@ from module import xml_editor
 
 
 class VirtyUser():
-    def __init__(self, userid, password):
-        self.userid = str(userid)
+    def __init__(self, user_id, password):
+        self.user_id = str(user_id)
         self.password = password
         self.groups = []
         self.is_admin = False
 
-        for group in raw_fetchall("select group_id from users_groups where user_id=?",[userid]):
+        for group in raw_fetchall("select group_id from users_groups where user_id=?",[user_id]):
             self.groups.append(group.group_id)
             if group.group_id == "admin":
                 self.is_admin = True
             
 
     def __str__(self):
-        return self.userid
+        return self.user_id
 
 
 class MyJSONEncoder(json.JSONEncoder):
@@ -139,11 +139,11 @@ def request_json_attribute(request):
     return AttributeDict(request_body)
 
 
-def create_queue(object,method,que_dic):
+def create_queue(user_id, resource, _object, method, que_dic):
     queue_id = str(uuid.uuid4())
-    sql = "insert into queue (post_time, id, status, object, method, json, message) values (datetime('now', 'localtime'),?,?,?,?,?,?)"
-    que_json = json.dumps(que_dic, cls=MyJSONEncoder)
-    data = [queue_id,str("init"), str(object), str(method), str(que_json), str("Not started")]
+    sql = "insert into queue (post_time, user_id, id, status, resource, object, method, json, message) values (datetime('now', 'localtime'),?,?,?,?,?,?,?,?)"
+    que_json = json.dumps(que_dic, cls=MyJSONEncoder, ensure_ascii=False)
+    data = [user_id, queue_id, str("init") ,str(resource) ,str(_object), str(method), str(que_json), str("Not started")]
     raw_commit(sql,data)
 
     return queue_id
@@ -204,9 +204,33 @@ def get_queue():
     return return_data
 
 
+def get_queue_incomplete():
+    data = raw_fetchall("select * from queue where status='init' or status='running' order by post_time desc",[])
+    return_data = []
+    for que in data:
+        que['json'] = json.loads(que['json'])
+        return_data.append(que)
+    return return_data
+
+
 def get_archive():
-    data = raw_fetchall("select * from archive",[])
-    return data
+    archives = raw_fetchall("""select * from archive""",[])
+    archive_img = raw_fetchall("select * from archive_img",[])
+
+    data = {}
+    for r in archive_img:
+        if not r['archiveId'] in data:
+            data[r['archiveId']] = []
+        data[r['archiveId']].append(r)
+
+    archive_data = []
+    for r in archives:
+        r['images'] = []
+        if r.id in data:
+            r['images'] = data[r.id]
+        archive_data.append(r)
+
+    return archive_data
 
 
 def get_storage():

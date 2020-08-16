@@ -369,7 +369,7 @@ def QueueUpdateTime(QUE_ID,QUE_TIME):
 # LONG                     #
 ############################
 def imgListAdmin():
-    SQL = (  
+    SQL = (
         "select img.name,img.node,img.pool,img.capa,img.allocation,img.physical,img.path,domain.name,count(*),archive_img.archive_id "
         "from img "
         "left join domain_drive on img.path=domain_drive.source "
@@ -490,7 +490,7 @@ def SqlInit():
     cur.execute('create table users (id, password, primary key (id))')
     cur.execute('create table groups (id, primary key (id))')
     cur.execute('create table users_groups (user_id,group_id,primary key (user_id,group_id))')
-    cur.execute('create table queue (id primary key, post_time , user_id, status, object, method, json, message, run_time)')
+    cur.execute('create table queue (id primary key, post_time , user_id, status, resource, object, method, json, message, run_time)')
     cur.execute('create table network (name,bridge,uuid,node,type,dhcp,primary key (name,node))')
     cur.execute('create table storage (name, node_name, uuid, capacity, available,device, type, path, primary key (name, node_name))')
     cur.execute('create table dompool (domainpool_name, domainpool_node_name, domainpool_setram)')

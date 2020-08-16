@@ -68,7 +68,6 @@ jwt.unauthorized_loader(jwt_unauthorized_loader_handler)
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
     user = model.get_virty_user_class(identity)
-    print(user,identity)
     return user
 
 

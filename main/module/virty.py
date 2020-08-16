@@ -131,50 +131,47 @@ def Queuing(QUE_OBJECT,QUE_METHOD,que_dic):
 
 
 #Domain Power
-def DomainStart(DOM_NAME):
-    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    if DOM_UUID == None:
+def DomainStart(domain_uuid):
+    if domain_uuid == None:
         return ["error","sql","get","Domain name not found",""]
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",domain_uuid)
     NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
     if not NODE_STATUS == 10:
         return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     manager = vvirt.VirtEditor(NODE_IP)
-    manager.DomainOpen(DOM_UUID)
+    manager.DomainOpen(domain_uuid)
     result = manager.DomainPoweron()
 
     return result
 
-def DomainShutdown(DOM_NAME):
-    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    if DOM_UUID == None:
+def DomainShutdown(domain_uuid):
+    if domain_uuid == None:
         return ["error","sql","get","Domain name not found",""]
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",domain_uuid)
     NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
     if not NODE_STATUS == 10:
         return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
     
     manager = vvirt.VirtEditor(NODE_IP)
-    manager.DomainOpen(DOM_UUID)
+    manager.DomainOpen(domain_uuid)
     result = manager.DomainShutdown()
 
     return result
     
-def DomainDestroy(DOM_NAME):
-    DOM_UUID = vsql.Convert("DOM_NAME","DOM_UUID",DOM_NAME)
-    if DOM_UUID == None:
+def DomainDestroy(domain_uuid):
+    if domain_uuid == None:
         return ["error","sql","get","Domain name not found",""]
-    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",DOM_UUID)
+    NODE_NAME = vsql.Convert("DOM_UUID","NODE_NAME",domain_uuid)
     NODE_STATUS = vsql.Convert("NODE_NAME","NODE_STATUS",NODE_NAME)
     if not NODE_STATUS == 10:
         return ["skip","node","status","Node is not active",""]
     NODE_IP = vsql.Convert("NODE_NAME","NODE_IP",NODE_NAME)
 
     manager = vvirt.VirtEditor(NODE_IP)
-    manager.DomainOpen(DOM_UUID)
+    manager.DomainOpen(domain_uuid)
     result = manager.DomainDestroy()
 
     return result
