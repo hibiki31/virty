@@ -1,8 +1,12 @@
-### Ver 0.0.7.0
+### Ver 0.0.4.0
+- Dockerize Vue App
+- Added front written in vue
+
+### Ver 0.0.3.7
 - Moving to an API and front composition
 
 ### Ver 0.0.3.6
-- デザインとtemplateの整理
+- Design and template organization
 
 ### Ver 0.0.3.5
 - View is now modularized
