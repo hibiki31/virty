@@ -64,13 +64,33 @@ def api_vm():
     vm = model.get_domain()
     return model.make_json_response(vm)
 
-@app.route('/api/vm/<uuid>')
+@app.route('/api/vm/<uuid>', methods=["GET","POST","DELETE","PUT"])
 @jwt_required
 def api_vm_uuid(uuid):
-    domain = model.get_domain_by_uuid(uuid)
-    if domain == None:
-        return abort(404)
-    return model.make_json_response(domain)
+    json = model.request_json_attribute(request)
+    if request.method == "GET":
+        domain = model.get_domain_by_uuid(uuid)
+        if domain == None:
+            return abort(404)
+        return model.make_json_response(domain)
+    elif request.method == "PUT":
+        validation = model.attribute_dict_validation(json,[
+            {"type":"is_empty","key":"userId"},
+            {"type":"is_empty","key":"action"}
+        ])
+        if validation != True:
+            return jsonify(validation), 400
+
+        if json['action'] == "deleteUser":
+            model.raw_commit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[uuid,None,None])
+            model.raw_commit("update domain_owner set user_id=? where dom_uuid=?",[None,uuid])
+        elif json['action'] == "changeUser":
+            print(json['userId'],uuid)
+            model.raw_commit("insert or ignore into domain_owner (dom_uuid,user_id,group_id) values (?,?,?)",[uuid,None,None])
+            model.raw_commit("update domain_owner set user_id=? where dom_uuid=?",[json['userId'],uuid])
+        else:
+            return abort(400)
+        return jsonify({'message': "succsess"}), 200
 
 
 @app.route('/api/node')

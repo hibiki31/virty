@@ -95,6 +95,13 @@ elif que['resource'] == "vm":
         elif que['object'] == "memory":
             virty.DomainEditMemory(post_json['uuid'],post_json['memory'])
             virty.DomainListInit()
+        
+        elif que['object'] == "power":
+            if post_json['status'] == "poweron":
+                result = virty.DomainStart(post_json['uuid'])
+            elif post_json['status'] == "poweroff":
+                result = virty.DomainDestroy(post_json['uuid'])
+            virty.DomainListInit()
             
         elif que['object'] == "name":
             result = virty.DomNameEdit(post_json['uuid'],post_json['newname'])
