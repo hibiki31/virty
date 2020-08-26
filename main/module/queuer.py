@@ -11,7 +11,7 @@ if que == None or que == []:
     exit
 que = que[0]
 post_json = json.loads(que['json'])
-print("QueGET "+que['object']+" "+que['method'])
+print("resource: " + que['resource'] + " object: "+que['object']+" method: "+que['method'])
 
 result = None
 
@@ -71,6 +71,9 @@ elif que['resource'] == "node":
     if que['method'] == "post":
         if que['object'] == "base":
             result = virty.NodeAdd(post_json['name'],post_json['user'] +'@'+ post_json['ip'])
+    elif que['method'] == "delete":
+        if que['object'] == "base":
+            result = virty.node_delete(post_json['name'])
 
 
 
@@ -131,11 +134,8 @@ elif que['resource'] == "domain" and que['method'] == "reload":
     virty.DomainListInit()
     
     print("List-reload")
-
-else:
-    print("Found unkown Que")
-    result = ["error","que","unkown","Found unkown Que"]
+  
 if result == None:
-    result = ["success","","","Succes"]
+    result = ["error", "Illegal queue"]
     
-virty.vsql.Dequeuing(que['id'],result[0],result[3])
+virty.vsql.Dequeuing(que['id'],result[0],result[1])

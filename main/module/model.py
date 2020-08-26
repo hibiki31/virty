@@ -204,6 +204,15 @@ def get_queue():
     return return_data
 
 
+def get_queue_uuid(uuid):
+    data = raw_fetchall("select * from queue where id=?",[uuid])
+    return_data = []
+    for que in data:
+        que['json'] = json.loads(que['json'])
+        return_data.append(que)
+    return return_data
+
+
 def get_queue_incomplete():
     data = raw_fetchall("select * from queue where status='init' or status='running' order by post_time desc",[])
     return_data = []

@@ -7,6 +7,8 @@ from flask import request
 from flask import redirect
 from flask import abort
 from flask import jsonify
+from flask import Response
+
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -96,8 +98,35 @@ def api_vm_uuid(uuid):
 @app.route('/api/node')
 @jwt_required
 def api_node():
-    data = model.get_node()
-    return model.make_json_response(data)
+    json = model.request_json_attribute(request)
+    if json == None:
+        data = model.get_node()
+        return model.make_json_response(data)
+
+    if json['node'] != None:
+        sql = """
+        select id, os, version, comment, url, icon, user, password from archive 
+        left join archive_img on archive.id=archive_img.archive_id 
+        where archive_img.node=?
+        """
+        archive = model.raw_fetchall(sql,[json['node']])
+
+        sql = "select * from network where node=?"
+        network = model.raw_fetchall(sql,[json['node']])
+
+        sql = "select * from storage where node_name=?"
+        storage = model.raw_fetchall(sql,[json['node']])
+
+        data = {
+            'archive': archive,
+            'network': network,
+            'storage': storage
+        }
+        return model.make_json_response(data)
+
+    else:
+        data = model.get_node()
+        return model.make_json_response(data)
 
 
 @app.route('/api/archive', methods=["GET","POST","DELETE","PUT"])
@@ -204,6 +233,27 @@ def api_queue():
         return model.make_json_response({'message': 'match','post':json, 'db': data})
     else:
         return abort(400)
+
+
+@app.route('/api/queue/<uuid>',methods=["GET"])
+@jwt_required
+def api_queue_uuid(uuid):
+    data = model.get_queue_uuid(uuid)
+    if len(data) == 1:
+        return model.make_json_response(data[0])
+    else:
+        return abort(400)
+
+
+@app.route('/api/queue/<uuid>/log/err',methods=["GET"])
+@jwt_required
+def api_queue_uuid_log_err(uuid):
+    return Response(str(virty.queueLogErr(uuid)), mimetype='text/html')
+
+@app.route('/api/queue/<uuid>/log/out',methods=["GET"])
+@jwt_required
+def api_queue_uuid_log_out(uuid):
+    return Response(str(virty.queueLogOut(uuid)), mimetype='text/html')
 
 
 @app.route('/api/user',methods=["GET","POST","DELETE","PUT"])

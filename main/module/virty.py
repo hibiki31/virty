@@ -8,7 +8,8 @@ import time
 import concurrent.futures
 import pprint
 import json
-from module import vsql, vansible, vhelp, vvirt, vsh, setting, model
+from module import vsql, vansible, vhelp, vvirt, vsh, setting
+from module import model
 import bcrypt
 
 
@@ -499,6 +500,30 @@ def NodeAdd(NODE_NAME,NODE_IP):
     vsql.RawCommit(SQL,DATA)
     vansible.AnsibleNodelistInit()
     return ["success","node","add","Succes"]
+
+
+def node_delete(node_name):
+    print("delete node: ",node_name)
+    sql = "delete from node where name=?"
+    model.raw_commit(sql,[node_name])
+    
+    sql = "delete from domain where node_name=?"
+    model.raw_commit(sql,[node_name])
+
+    sql = "delete from network where node=?"
+    model.raw_commit(sql,[node_name])
+
+    sql = "delete from storage where node_name=?"
+    model.raw_commit(sql,[node_name])
+
+    sql = "delete from archive_img where node=?"
+    model.raw_commit(sql,[node_name])
+
+    sql = "delete from img where node=?"
+    model.raw_commit(sql,[node_name])
+
+    return ["success", "Success"]
+
 
 def NetworkXmlSaveAll():
     NODE_DATAS = vsql.SqlGetAll("node")

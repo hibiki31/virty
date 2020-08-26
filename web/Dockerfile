@@ -1,9 +1,11 @@
 # ビルド環境
+# ADD=No Cash
+# COPY=Use Cash
 FROM node:lts-alpine as build-stage
 WORKDIR /app
-COPY package*.json ./
+ADD package*.json ./
 RUN npm install
-COPY . .
+ADD . .
 RUN npm run build
 
 # 本番環境
