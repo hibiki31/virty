@@ -10,15 +10,9 @@
           border="left"
         >
           <div class="d-flex align-center ml-3">
-            <div class="body-2 mr-auto">
-              {{ props.item.text }}
-            </div>
-            <v-btn icon x-small class="ml-0"
-              @click="props.close"
-            >
-              <v-icon small>
-                fa-times
-              </v-icon>
+            <div class="body-2 mr-auto">{{ props.item.text }}</div>
+            <v-btn icon x-small class="ml-0" @click="props.close">
+              <v-icon small>fa-times</v-icon>
             </v-btn>
           </div>
         </v-alert>
@@ -27,12 +21,8 @@
     <v-navigation-drawer permanent floating app clipped>
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title class="title">
-            {{userId}}
-          </v-list-item-title>
-          <v-list-item-subtitle>
-            Administrator
-          </v-list-item-subtitle>
+          <v-list-item-title class="title">{{userId}}</v-list-item-title>
+          <v-list-item-subtitle>Administrator</v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
       <v-divider></v-divider>
@@ -42,14 +32,7 @@
             <v-list-item-icon>
               <v-icon>mdi-home</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>VM list</v-list-item-title>
-          </v-list-item>
-
-           <v-list-item :to="{name: 'QueueList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-video-4k-box</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Queue list</v-list-item-title>
+            <v-list-item-title>VM</v-list-item-title>
           </v-list-item>
 
           <v-list-item :to="{name: 'NetworkList'}">
@@ -59,7 +42,35 @@
             <v-list-item-title>Network</v-list-item-title>
           </v-list-item>
 
-          <v-list-item :to="{name: 'Logout'}">
+          <v-list-item :to="{name: 'ImageList'}">
+            <v-list-item-icon>
+              <v-icon>mdi-harddisk</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Image</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item :to="{name: 'StorageList'}">
+            <v-list-item-icon>
+              <v-icon>mdi-database</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Storage</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item :to="{name: 'QueueList'}">
+            <v-list-item-icon>
+              <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Queue</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item :to="{name: 'NodeList'}">
+            <v-list-item-icon>
+              <v-icon>mdi-server</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Node</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item :to="{name: 'Logout'}" class="mt-10">
             <v-list-item-icon>
               <v-icon>mdi-account</v-icon>
             </v-list-item-icon>
@@ -74,7 +85,7 @@
       <v-toolbar-title>Virty</v-toolbar-title>
     </v-app-bar>
     <v-main class="ma-2">
-    <router-view />
+      <router-view />
     </v-main>
   </v-app>
 </template>
@@ -93,8 +104,7 @@ export default {
       { title: 'About', icon: 'question_answer' }
     ]
   }),
-  methods: {
-  },
+  methods: {},
   async mounted() {
     axios.interceptors.request.use(
       (config) => {

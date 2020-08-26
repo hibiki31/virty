@@ -1,6 +1,6 @@
 # ビルド環境
-# ADD=No Cash
-# COPY=Use Cash
+# ADD=Cash無効
+# COPY=Cash有効
 FROM node:lts-alpine as build-stage
 WORKDIR /app
 ADD package*.json ./

@@ -8,6 +8,10 @@ import Logout from '../views/Logout.vue';
 import VMDetail from '../views/VMDetail.vue';
 import QueueList from '../views/QueueList.vue';
 import NetworkList from '../views/NetworkList.vue';
+import NodeList from '../views/NodeList.vue';
+import StorageList from '../views/StorageList.vue';
+import QueueDetail from '../views/QueueDetail.vue';
+import ImageList from '../views/ImageList.vue';
 
 Vue.use(VueRouter);
 
@@ -37,9 +41,33 @@ const routes = [
     }
   },
   {
+    path: '/storage',
+    name: 'StorageList',
+    component: StorageList,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/image',
+    name: 'ImageList',
+    component: ImageList,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/network',
     name: 'NetworkList',
     component: NetworkList,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/node',
+    name: 'NodeList',
+    component: NodeList,
     meta: {
       requiresAuth: true
     }
@@ -56,6 +84,14 @@ const routes = [
     path: '/vm/:uuid',
     name: 'VMDetail',
     component: VMDetail,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/queue/:uuid',
+    name: 'QueueDetail',
+    component: QueueDetail,
     meta: {
       requiresAuth: true
     }
