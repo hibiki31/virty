@@ -299,9 +299,9 @@ class VirtEditor():
         if self.dompower == 5:
             self.con.undefine()
             self.node.defineXML(ET.tostring(self.domxml).decode())
-            return ["success","domain","name-edit","Success domain name edit",""]
+            return ["success","xml change"]
         else:
-            return ["success","domain","name-edit","domain started",""]
+            return ["skip","domain started"]
 
     def DomainPowerGet(self):
         if self.dompower == 5:

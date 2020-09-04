@@ -290,6 +290,7 @@ def DomainListInit():
         vsql.NetworkAdd(send)
     vsql.DataStatusDelete("domain_interface")
     vsql.DataStatusDelete("domain_drive")
+    return ["success","domain list init"]
         
    
 def UserAdd(USER_ID,PASSWORD):

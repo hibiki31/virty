@@ -80,25 +80,29 @@ elif que['resource'] == "node":
 ### 仮想マシン
 elif que['resource'] == "vm":
     if que['method'] == "post":
+        # 仮想マシン作成
         if que['object'] == "base":
             virty.DomainDefineStatic(post_json)
             virty.DomainListInit()
-            
-    
+
     elif que['method'] == "delete":
+        # 仮想マシン削除
         if que['object'] == "base":
             result = virty.DomainUndefine(post_json['uuid'])
             virty.DomainListInit()
 
     elif que['method'] == "put":
+        # 仮想マシンCPU変更
         if que['object'] == "cpu":
-            virty.DomainEditCpu(post_json['uuid'],post_json['cpu'])
+            result = virty.DomainEditCpu(post_json['uuid'],post_json['cpu'])
             virty.DomainListInit()
-            
+
+        # 仮想マシンメモリ変更
         elif que['object'] == "memory":
-            virty.DomainEditMemory(post_json['uuid'],post_json['memory'])
+            result = virty.DomainEditMemory(post_json['uuid'],post_json['memory'])
             virty.DomainListInit()
         
+        # 仮想マシン電源変更
         elif que['object'] == "power":
             if post_json['status'] == "poweron":
                 result = virty.DomainStart(post_json['uuid'])
@@ -106,36 +110,32 @@ elif que['resource'] == "vm":
                 result = virty.DomainDestroy(post_json['uuid'])
             virty.DomainListInit()
             
+        # 仮想マシン名変更
         elif que['object'] == "name":
             result = virty.DomNameEdit(post_json['uuid'],post_json['newname'])
             virty.DomainListInit()
+        
+        # 仮想マシンネットワーク変更
         elif que['object'] == "network":
             virty.DomainEditNicNetwork(post_json['uuid'],post_json['mac'],post_json['network'])
-            
             virty.DomainListInit()
+        
+        # 仮想マシンリセット
         elif que['object'] == "list":
-            virty.vsql.RawCommit("delete from domain where status=?",["10"])
-            virty.DomainListInit()
-            
-            print("List-reload")
+            virty.vsql.RawCommit("delete from domain where status=?",[10])
+            result = virty.DomainListInit()
 
-elif que['resource'] == "domain" and que['method'] == "power":
-    if post_json['status'] == "poweron":
-        result = virty.DomainStart(post_json['uuid'])
-    elif post_json['status'] == "poweroff":
-        result = virty.DomainDestroy(post_json['uuid'])
-    
+
+
 elif que['resource'] == "domain" and que['method'] == "selinux":
     if post_json['state'] == "disable":
         result = virty.DomSelinuxDisable(post_json['uuid'])
-    
-elif que['resource'] == "domain" and que['method'] == "reload":
-    virty.vsql.RawCommit("delete from domain where status=?",["10"])
-    virty.DomainListInit()
-    
-    print("List-reload")
   
+
+
 if result == None:
     result = ["error", "Illegal queue"]
     
+
+
 virty.vsql.Dequeuing(que['id'],result[0],result[1])
