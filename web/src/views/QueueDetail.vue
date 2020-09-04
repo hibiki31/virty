@@ -12,23 +12,33 @@
           </v-card-title>
           <v-list class="body-2" dense>
             <v-list-item>
-              <v-list-item-content>Host</v-list-item-content>
+              <v-list-item-content>Date</v-list-item-content>
+              <v-list-item-content class="align-end">{{ queData.postTime }}</v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-content>Resource</v-list-item-content>
               <v-list-item-content class="align-end">{{ queData.resource }}</v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>Node</v-list-item-content>
+              <v-list-item-content>Object</v-list-item-content>
               <v-list-item-content class="align-end">{{ queData.object }}</v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>VNC Port</v-list-item-content>
+              <v-list-item-content>Method</v-list-item-content>
               <v-list-item-content class="align-end">{{ queData.method }}</v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>Protein:</v-list-item-content>
+              <v-list-item-content>UserID</v-list-item-content>
               <v-list-item-content class="align-end">{{ queData.userId }}</v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-content>Status</v-list-item-content>
+              <v-list-item-content class="align-end">{{ queData.status }}</v-list-item-content>
             </v-list-item>
 
           </v-list>
@@ -48,6 +58,13 @@
             <v-icon>mdi-transit-connection-variant</v-icon>Error log
           </v-card-title>
           <v-card-text style="white-space:pre-wrap; word-wrap:break-word;">{{errLog}}</v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4" lg="3">
+        <v-card>
+          <v-card-title class="subheading font-weight-bold">Message</v-card-title>
+          <v-card-text>{{queData.message}}</v-card-text>
         </v-card>
       </v-col>
 

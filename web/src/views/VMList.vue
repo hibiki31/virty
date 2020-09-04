@@ -61,7 +61,7 @@
                 <div class="mb-3">
                   <v-icon v-on:click="vmPowerOn(item.uuid)" color="primary">mdi-power-standby</v-icon>
                 </div>
-                <v-icon v-on:click="vmPowerOff(item.uuid)" color="red">mdi-power-standby</v-icon>
+                <v-icon v-on:click="vmPowerOff(item.uuid)" color="grey">mdi-power-standby</v-icon>
               </v-card-text>
             </v-card>
           </v-menu>
@@ -111,7 +111,10 @@ export default {
   methods: {
     getPowerColor(statusCode) {
       if (statusCode === 1) return 'primary';
-      else if (statusCode === 5) return 'red';
+      else if (statusCode === 5) return 'grey';
+      else if (statusCode === 7) return 'purple';
+      else if (statusCode === 10) return 'red';
+      else if (statusCode === 20) return 'purple';
       else return 'yellow';
     },
     vmPowerOff(uuid) {
