@@ -476,18 +476,18 @@ class VirtEditor():
 class XmlEditor():
     def __init__(self,TYPE,XML):
         if TYPE == "file":
-            os.chdir = setting.scriptPath
-            tree = ET.parse(setting.scriptPath + '/xml/'+ XML +'.xml') 
+            os.chdir = setting.script_path
+            tree = ET.parse(setting.script_path + '/xml/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "dom":
-            os.chdir = setting.scriptPath
-            tree = ET.parse(setting.scriptPath + '/dump/dom/'+ XML +'.xml') 
+            os.chdir = setting.script_path
+            tree = ET.parse(setting.script_path + '/dump/dom/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "net":
-            os.chdir = setting.scriptPath
-            tree = ET.parse(setting.scriptPath + '/dump/net/'+ XML +'.xml') 
+            os.chdir = setting.script_path
+            tree = ET.parse(setting.script_path + '/dump/net/'+ XML +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif TYPE == "str":
@@ -730,9 +730,9 @@ class XmlEditor():
     # DUMP                     #
     ############################
     def DumpSave(self,TYPE):
-        os.chdir = setting.scriptPath
+        os.chdir = setting.script_path
         DOM_UUID = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(setting.scriptPath + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
+        ET.ElementTree(self.xml).write(setting.script_path + '/dump/' +TYPE+ '/' + DOM_UUID + '.xml')
 
     def DumpStr(self):
         return ET.tostring(self.xml).decode()

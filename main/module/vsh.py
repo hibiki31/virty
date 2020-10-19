@@ -174,7 +174,7 @@ def DomainCheckStatic(DOM_NAME,NODE_NAME):
         LogSuccess("OK","Node is found")
 
     try:
-        tree = ET.parse(setting.scriptPath + '/define/' + DOM_NAME + '.xml') 
+        tree = ET.parse(setting.script_path + '/define/' + DOM_NAME + '.xml') 
         root = tree.getroot()
     except:
         LogError("NG","File dose not exit")
@@ -259,13 +259,13 @@ def NodeDelete(NODENAME):
 
 def NodeInit(PBNAME,EXVALUE):
     if PBNAME == "gluster":
-        cmd = 'ansible-playbook ' + setting.scriptPath + '/ansible/pb_init_gluster.yml -i  ' + setting.scriptPath + '/ansible/host_node.ini --extra-vars ' + EXVALUE
+        cmd = 'ansible-playbook ' + setting.script_path + '/ansible/pb_init_gluster.yml -i  ' + setting.script_path + '/ansible/host_node.ini --extra-vars ' + EXVALUE
         subprocess.check_call(cmd, shell=True)
     elif PBNAME == "libvirt":
-        cmd = 'ansible-playbook ' + setting.scriptPath + '/ansible/pb_init_libvirt.yml -i  ' + setting.scriptPath + '/ansible/host_node.ini'
+        cmd = 'ansible-playbook ' + setting.script_path + '/ansible/pb_init_libvirt.yml -i  ' + setting.script_path + '/ansible/host_node.ini'
         subprocess.check_call(cmd, shell=True)	
     elif PBNAME == "frr":
-        cmd = 'ansible-playbook ' + setting.scriptPath + '/ansible/pb_init_frr.yml -i  ' + setting.scriptPath + '/ansible/host_node.ini'
+        cmd = 'ansible-playbook ' + setting.script_path + '/ansible/pb_init_frr.yml -i  ' + setting.script_path + '/ansible/host_node.ini'
         subprocess.check_call(cmd, shell=True)
 
 
@@ -306,7 +306,7 @@ def ArchiveInit(NAME):
             LogInfo("Skip",node[0] + " archive storage dose not exits")
             break
         LogInfo("Info",node[0] + "  on  " + ARCHIVE_DIR)
-        vansible.AnsibleFilecpTonode(node[1], setting.scriptPath + '/img/' + NAME + '.img', ARCHIVE_DIR + NAME + '.img')
+        vansible.AnsibleFilecpTonode(node[1], setting.script_path + '/img/' + NAME + '.img', ARCHIVE_DIR + NAME + '.img')
         vsql.SqlAddArchive([(NAME,ARCHIVE_DIR + NAME + '.img',node[0])])
     
 def ArchiveList():
@@ -375,7 +375,7 @@ def DomainpoolFree(POOLNAME):
 
 #Network
 def NetworkDefine(NODEIP):
-    with open(setting.scriptPath + "/xml/temp_net.xml") as f:
+    with open(setting.script_path + "/xml/temp_net.xml") as f:
         s = f.read()
         conn = libvirt.open('qemu+ssh://' + NODEIP + '/system')
         conn.networkDefineXML(s)

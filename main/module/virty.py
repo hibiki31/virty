@@ -98,7 +98,7 @@ def attribute_args_dump(attribute_dict):
 #Worker
 def WorkerStatus():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", setting.scriptPath + "/module/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.script_path + "/module/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -112,7 +112,7 @@ def WorkerStatus():
 
 def WorkerUp():
     p1 = subprocess.Popen(["ps", "-ef"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", setting.scriptPath + "/module/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p2 = subprocess.Popen(["grep", setting.script_path + "/module/vworker.py"], stdin=p1.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p1.stdout.close()
@@ -121,7 +121,7 @@ def WorkerUp():
     output = p4.communicate()[0].decode("utf8").replace('\n','')
     if int(output) == 0:
         print("Worker up")
-        subprocess.Popen(["python3", setting.scriptPath + "/module/vworker.py"])
+        subprocess.Popen(["python3", setting.script_path + "/module/vworker.py"])
     else:
         print("Worker upped")
 
@@ -411,11 +411,11 @@ def ImageList(NODE_NAME,STORAGEP_NAME):
 
 
 def queueLogErr(ID):
-    with open(setting.scriptPath+"/log/queue_"+ID+"_err.log") as f:
+    with open(setting.script_path+"/log/queue_"+ID+"_err.log") as f:
         return f.read()
 
 def queueLogOut(ID):
-    with open(setting.scriptPath+"/log/queue_"+ID+"_out.log") as f:
+    with open(setting.script_path+"/log/queue_"+ID+"_out.log") as f:
         return f.read()
 
 
@@ -857,7 +857,7 @@ def SshOsinfo(NODE_IP):
     return result
 
 def SshScript(NODE_IP,SCRIPT):
-    with open(setting.scriptPath + "/script/" + SCRIPT) as f:
+    with open(setting.script_path + "/script/" + SCRIPT) as f:
         s = f.read().splitlines()
         send = ""
         for a in s:

@@ -45,13 +45,13 @@ app.register_blueprint(settings.app)
 app.register_blueprint(user.app)
 
 #### Login config ####
-app.config['SECRET_KEY'] = virty.setting.webSecret
+app.config['SECRET_KEY'] = virty.setting.web_secret
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 #### JWT config ####
 app.url_map.strict_slashes = False
-app.config['JWT_SECRET_KEY'] = virty.setting.webSecret
+app.config['JWT_SECRET_KEY'] = virty.setting.web_secret
 
 
 
@@ -77,7 +77,6 @@ def user_loader_callback(identity):
 # STARTUP                  #
 ############################
 if virty.vsql.RawFetchall("select name from sqlite_master where type='table';",[]) == []:
-    print("database init")
     virty.vsql.SqlInit()
     virty.WorkerUp()
 else:
@@ -298,4 +297,4 @@ def node_add():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=80)
+    app.run(debug=True, host='0.0.0.0', port=8888)

@@ -17,7 +17,7 @@ result = None
 
 if que['resource'] == "network" and que['method'] == "2l-define":  
     NODE_IP = virty.vsql.SqlGetData("NODE_NAME","NODE_IP",post_json['node-list'])
-    XML_PATH = setting.scriptPath + '/xml/net_2less.xml'
+    XML_PATH = setting.script_path + '/xml/net_2less.xml'
     NAME = "2l-" + post_json['net-gw']
     GW = post_json['net-gw']
     virty.Network2lDefine(NODE_IP,XML_PATH,NAME,GW)

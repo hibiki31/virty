@@ -33,12 +33,12 @@ while True:
 
 
     
-    path_err = setting.scriptPath + '/log/queue_' + str(que['id']) + '_err.log'
-    path_out = setting.scriptPath + '/log/queue_' + str(que['id']) + '_out.log'
+    path_err = setting.script_path + '/log/queue_' + str(que['id']) + '_err.log'
+    path_out = setting.script_path + '/log/queue_' + str(que['id']) + '_out.log'
 
     with open(path_err, mode='w') as f_err:
         with open(path_out, mode='w') as f_out:
-            quer = subprocess.run(["python3","module/queuer.py"], stderr=f_err, stdout=f_out, cwd=setting.scriptPath)
+            quer = subprocess.run(["python3","module/queuer.py"], stderr=f_err, stdout=f_out, cwd=setting.script_path)
             if quer.returncode != 0:
                 virty.vsql.QueueUpdate(que['id'],"error","Exception occurred")
     
