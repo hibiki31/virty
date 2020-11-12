@@ -1,6 +1,7 @@
 {% extends "Layout.html" %}
 {% block content %}
 
+<!-- メインテーブル -->
 <article class="box">
   <button id="domain-reload" name="select" value="all" class="button is-primary is-small">
     <span class="icon is-small">
@@ -49,16 +50,38 @@
         <td>{{'%0.0f'  % data[4]|float}}</td>
         <td class="a-right" style="font-family:monospace;">{{data[5]}}</td>
 
+        <!-- グループセル -->
         {%if data[9] == None %}
-        <td><span uuid="{{data[5]}}" class="tag is-light modal-open-domain-group">{{data[9]}}</button></td>
+        <td>
+          <div class="tags has-addons">
+            <span uuid="{{data[5]}}" class="tag is-light modal-open-domain-group"><i class="fa fa-pen"></i></span>
+            <span class="tag">{{data[9]}}</span>
+          </div>
+        </td>
         {%else %}
-        <td><span uuid="{{data[5]}}" class="tag is-dark modal-open-domain-group">{{data[9]}}</span></td>
+        <td>
+          <div class="tags has-addons">
+            <span uuid="{{data[5]}}" class="tag is-light modal-open-domain-group"><i class="fa fa-pen"></i></span>
+            <span class="tag is-primary">{{data[9]}}</span>
+          </div>
+        </td>
         {%endif %}
 
+        <!-- ユーザセル -->
         {%if data[10] == None %}
-        <td><span uuid="{{data[5]}}" class="tag is-light modal-open-domain-user">{{data[10]}}</span></td>
+        <td>
+          <div class="tags has-addons">
+            <span uuid="{{data[5]}}" class="tag is-light modal-open-domain-user"><i class="fa fa-pen"></i></span>
+            <span class="tag">{{data[10]}}</span>
+          </div>
+        </td>
         {%else %}
-        <td><span uuid="{{data[5]}}" class="tag is-dark modal-open-domain-user">{{data[10]}}</span></td>
+        <td>
+          <div class="tags has-addons">
+            <span uuid="{{data[5]}}" class="tag is-light modal-open-domain-user"><i class="fa fa-pen"></i></span>
+            <span class="tag is-primary">{{data[10]}}</span>
+          </div>
+        </td>
         {%endif %}
 
       </tr>
@@ -67,8 +90,7 @@
   </table>
 </article>
 
-
-
+<!-- ユーザーモーダル -->
 <div class="modal" id="modal-open-user">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
@@ -87,14 +109,15 @@
         <input id="modal-target" type="hidden" name="target" value="domain_user">
       </section>
       <footer class="modal-card-foot">
-        <button name="status" value="change" class="button is-warning">Change</button>
-        <button name="status" value="delete" class="button is-danger">Delete</button>
-        <span class="button modal-delete">Cancel</button>
+        <button name="status" value="change" class="button is-warning is-small">Change</button>
+        <button name="status" value="delete" class="button is-danger is-small">Delete</button>
+        <span class="button modal-delete is-small">Cancel</button>
       </footer>
     </form>
   </div>
 </div>
 
+<!-- グループモーダル -->
 <div class="modal" id="modal-open-group">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
@@ -113,14 +136,15 @@
         <input id="modal-target" type="hidden" name="target" value="domain_group">
       </section>
       <footer class="modal-card-foot">
-        <button name="status" value="change" class="button is-warning">Change</button>
-        <button name="status" value="delete" class="button is-danger">Delete</button>
-        <span class="button modal-delete">Cancel</button>
+        <button name="status" value="change" class="button is-warning is-small">Change</button>
+        <button name="status" value="delete" class="button is-danger is-small">Delete</button>
+        <span class="button modal-delete is-small">Cancel</button>
       </footer>
     </form>
   </div>
 </div>
 
+<!-- ドメイン作成モーダル -->
 <div class="modal" id="modal-domain-define">
   <div class="modal-background modal-delete"></div>
   <div class="modal-card">
@@ -181,7 +205,7 @@
               <label class="field-label is-normal label">Network</label>
               <div class="field has-addons field-body">
                 <div class="control">
-                  <select name="bridge" class="select network-list is-small field-body" required></select>
+                  <select name="networks" class="select network-list is-small field-body" required></select>
                 </div>
                 <div class="control">
                   <span class="interface-op-remove button is-danger is-small">-</span>
@@ -239,4 +263,49 @@
   </div>
 </div>
 
+{% endblock %}
+
+
+{% block javascript %}
+<script>
+  $(function () {
+  var stepCounter = 1;
+
+  $("#step-2").css("display", "none");
+  $("#step-3").css("display", "none");
+  $("#step-4").css("display", "none");
+  $("#submit-step").hide();
+
+  $("#next-step").click(function () {
+    if (stepCounter < 4) {
+      $("#step-" + stepCounter).slideUp(600, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+      stepCounter = stepCounter + 1;
+      $("#step-" + stepCounter).slideDown(600, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+    }
+    if (stepCounter == 4) {
+      $("#next-step").hide();
+      $("#submit-step").show();
+    }
+  });
+  $('#prev-step').on('click', function () {
+    if (stepCounter > 1) {
+      $("#step-" + stepCounter).slideUp(300, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+      stepCounter = stepCounter - 1;
+      $("#step-" + stepCounter).slideDown(300, function () {
+        $("#step-title").text("Step " + stepCounter + "/4");
+      });
+    }
+    if (stepCounter == 3) {
+      $("#next-step").show();
+      $("#submit-step").hide();
+    }
+  });
+});
+</script>
 {% endblock %}

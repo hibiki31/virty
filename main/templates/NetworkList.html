@@ -11,6 +11,7 @@
                 <th class="column-title">UUID </th>
                 <th class="column-title">Type </th>
                 <th class="column-title">DHCP </th>
+                <th class="column-title">Delete </th>
             </tr>
         </thead>
         <tbody>
@@ -20,7 +21,7 @@
                 <td class=" ">{{network[3]}}</td>
                 <td class=" ">{{network[1]}}</td>
                 <td class=" ">{{network[2]}}</td>
-                
+
                 {%if network[4] == "NAT"%}
                 <td><span class="tag is-success">NAT</span></td>
                 {%elif network[4] == "internal"%}
@@ -36,6 +37,11 @@
                 {%else%}
                 <td><span class="tag is-light">Disable</span></td>
                 {%endif%}
+
+                <td>
+                    <span class="tag is-danger modal-open" modal-id="modal-undefine" bridge-uuid="{{network[2]}}"
+                        bridge-id="{{network[0]}}">Confirm</span>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -69,4 +75,39 @@
     </form>
 </article>
 
+<!-- 削除モーダル -->
+<div class="modal" id="modal-undefine">
+    <div class="modal-background modal-delete"></div>
+    <div class="modal-card">
+        <form action="/api/que/network/undefine" method="post">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Undefine</p>
+                <span class="delete modal-delete" aria-label="close"></span>
+            </header>
+            <section class="modal-card-body">
+                delete <span class="modal-bridge-id"></span>
+                    <input type="hidden" name="uuid" value="" class="modal-bridge-uuid">
+            </section>
+            <footer class="modal-card-foot">
+                <button name="status" value="undefine" class="button is-danger is-small">Undefine</button>
+                <span class="button modal-delete is-small">Cancel</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(".modal-open").click(function () {
+        $("#" + $(this).attr("modal-id")).addClass("is-active");
+
+        if ($(this).attr("modal-id") === "modal-undefine") {
+            $(".modal-bridge-id").text($(this).attr("bridge-id"));
+            $(".modal-bridge-uuid").attr('value', $(this).attr("bridge-uuid"));
+        }
+    });
+</script>
 {% endblock %}

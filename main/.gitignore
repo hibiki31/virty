@@ -1,2 +1,4 @@
+data.sqlite
+data.sqlite-journal
 /*.sqlite
 /__pycache__

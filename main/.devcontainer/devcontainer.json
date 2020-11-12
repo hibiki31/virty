@@ -1,0 +1,15 @@
+{
+	"name": "API",
+	"context": "..",
+	"dockerFile": "../Dockerfile",
+	"settings": { 
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"extensions": [
+		"ms-python.python",
+		"donjayamanne.githistory"
+	],
+	"forwardPorts": [
+		8000
+	],
+}
