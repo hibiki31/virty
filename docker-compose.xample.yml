@@ -9,7 +9,6 @@ services:
       TZ: "Asia/Tokyo"
       VIRTY_ROOT: "/opt/virty/app/"
     restart: always
-
   virty-web:
     build: ./web
     volumes:

@@ -1,4 +1,2 @@
-__pycache__/
-.vscode/
-/log/
 docker-compose.yml
+.DS_Store
