@@ -102,7 +102,7 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/node').then((response) => (this.list = response.data));
+    axios.get('/api/nodes').then((response) => (this.list = response.data));
   },
   methods: {
     nodeAdd() {

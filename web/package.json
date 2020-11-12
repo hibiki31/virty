@@ -13,6 +13,7 @@
     "js-cookie": "^2.2.1",
     "velocity-animate": "^1.5.2",
     "vue": "^2.6.11",
+    "vue-jwt-decode": "^0.1.0",
     "vue-notification": "^1.3.20",
     "vue-router": "^3.2.0",
     "vuetify": "^2.2.11",

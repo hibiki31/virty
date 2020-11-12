@@ -4,10 +4,8 @@ import json
 import humps
 import uuid
 
-from flask import Response
-
 from module import setting
-from module import xml_editor
+from module import xmllib
 
 
 
@@ -276,7 +274,7 @@ def get_domain_by_uuid(uuid):
     """,[(uuid)])
     if len(db) == 0:
         return None
-    xml = xml_editor.get_domain_info(uuid)
+    xml = xmllib.get_domain_info(uuid)
     if xml == None:
         return None
     xml.update(db[0].obj)

@@ -1,5 +1,4 @@
 import sqlite3, os
-from flask_login import UserMixin
 from module import setting, vansible
 
 
@@ -397,7 +396,7 @@ def imgListSelectAdmin(node,pool):
 ############################
 # USER                     #
 ############################
-class User(UserMixin):
+class User():
     def __init__(self, user_id, passwd):
         self.id = user_id
         self.passwd = passwd

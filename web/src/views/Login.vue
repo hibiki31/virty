@@ -86,17 +86,17 @@ export default {
   methods: {
     async doLogin() {
       this.isLoadingLogin = true;
-      const formData = this.formData;
+
+      const params = new FormData();
+      params.append('username', this.formData.userId);
+      params.append('password', this.formData.password);
       await axios
         .post(
           '/api/auth',
+          params,
           {
-            userId: formData.userId,
-            password: formData.password
-          },
-          {
-            validateStatus: (status) => {
-              return status < 500;
+            headers: {
+              'content-type': 'multipart/form-data'
             }
           }
         )

@@ -104,7 +104,7 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/vm').then((response) => (this.list = response.data));
+    axios.get('/api/vms').then((response) => (this.list = response.data));
     axios.get('/api/user').then((response) => (this.user = response.data));
     axios.get('/api/group').then((response) => (this.group = response.data));
   },
