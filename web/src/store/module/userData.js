@@ -1,6 +1,14 @@
 import Cookies from 'js-cookie';
+import VueJwtDecode from 'vue-jwt-decode';
 
-const defaultState = {
+/*
+stateは状態変数そのものの定義。
+stateはどこからでも読み込めるが、代入はしない。
+stateはmutationsからしか変更不可。
+*/
+
+// 初期値を定義
+const stateDefault = {
   isLoaded: false,
   isAuthed: false,
   isAdmin: false,
@@ -8,33 +16,32 @@ const defaultState = {
   userId: null
 };
 
-const state = Object.assign({}, defaultState);
+// state初期値で初期化
+const state = Object.assign({}, stateDefault);
 
 const mutations = {
-  RESET_USER_DATA(state) {
-    Object.assign(state, defaultState);
+  resetAuthState(state) {
+    Object.assign(state, stateDefault);
     Cookies.remove('token');
   },
-  UPDATE_AUTH_STATE(state, { token, userId }) {
-    Object.assign(state, defaultState);
+  updateAuthState(state, responseData) {
+    Object.assign(state, stateDefault);
     Cookies.remove('token');
     state.isLoaded = true;
-    if (token) {
+    if (responseData) {
+      const token = VueJwtDecode.decode(responseData.access_token);
       state.isAuthed = true;
-      state.token = token;
-      state.userId = userId;
+      state.token = responseData.access_token;
+      state.userId = token.sub;
       state.isAdmin = true;
-      Cookies.set('token', token);
+      Cookies.set('token', responseData.access_token);
     }
   }
 };
 
 const actions = {
-  resetUserData: ({ commit }) => {
-    commit('RESET_USER_DATA');
-  },
-  updateAuthState: ({ commit }, userData) => {
-    commit('UPDATE_AUTH_STATE', userData);
+  updateAuthState(context, responseData) {
+    context.commit('updateAuthState', responseData);
   }
 };
 

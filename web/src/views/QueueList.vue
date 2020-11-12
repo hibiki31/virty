@@ -56,7 +56,7 @@ export default {
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'PostTime', value: 'postTime' },
-        { text: 'ID', value: 'id' },
+        { text: 'ID', value: 'uuid' },
         { text: 'Resource', value: 'resource' },
         { text: 'Object', value: 'object' },
         { text: 'Method', value: 'method' },
@@ -66,7 +66,7 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/queue').then((response) => (this.list = response.data));
+    axios.get('/api/tasks').then((response) => (this.list = response.data));
   },
   methods: {
     getPowerColor(statusCode) {

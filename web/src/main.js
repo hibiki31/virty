@@ -37,10 +37,7 @@ const createApp = async() => {
         }
       )
       .then(res => {
-        store.dispatch('updateAuthState', {
-          token,
-          userId: res.data.userId
-        });
+        store.dispatch('updateAuthState', res.data);
         if (router.app._route.name === 'Login') {
           router.push(router.app._route.query.redirect || { name: 'VMList' });
         }
