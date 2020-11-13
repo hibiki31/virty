@@ -18,7 +18,7 @@
         </v-alert>
       </template>
     </notifications>
-    <v-navigation-drawer permanent floating app clipped>
+    <v-navigation-drawer v-if="this.$store.state.userData.isAuthed" permanent floating app clipped>
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title class="title">{{userId}}</v-list-item-title>
@@ -81,7 +81,6 @@
       </v-list>
     </v-navigation-drawer>
     <v-app-bar color="primary" dark dense flat app clipped-left>
-      <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
       <v-toolbar-title>Virty</v-toolbar-title>
     </v-app-bar>
     <v-main class="ma-2">

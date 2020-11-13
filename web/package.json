@@ -11,6 +11,7 @@
     "axios": "^0.19.2",
     "core-js": "^3.6.5",
     "js-cookie": "^2.2.1",
+    "moment": "^2.29.1",
     "velocity-animate": "^1.5.2",
     "vue": "^2.6.11",
     "vue-jwt-decode": "^0.1.0",

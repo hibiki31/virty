@@ -13,7 +13,8 @@ const stateDefault = {
   isAuthed: false,
   isAdmin: false,
   token: null,
-  userId: null
+  userId: null,
+  timeOffcet: 0
 };
 
 // state初期値で初期化
@@ -36,12 +37,19 @@ const mutations = {
       state.isAdmin = true;
       Cookies.set('token', responseData.access_token);
     }
+  },
+  setTimeOffcet(state, timeOffcet) {
+    state.timeOffcet = timeOffcet;
+    Cookies.set('timeOffcet', timeOffcet);
   }
 };
 
 const actions = {
   updateAuthState(context, responseData) {
     context.commit('updateAuthState', responseData);
+  },
+  setTimeOffcet(context, timeOffcet) {
+    context.commit('setTimeOffcet', timeOffcet);
   }
 };
 

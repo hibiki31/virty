@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
 
@@ -13,5 +13,5 @@ class TaskModel(Base):
     resource = Column(String)
     object = Column(String)
     method = Column(String)
-    json_str = Column(String)
+    request = Column(JSON)
     message = Column(String)

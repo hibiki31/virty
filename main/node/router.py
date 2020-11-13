@@ -4,24 +4,26 @@ from sqlalchemy.orm import Session
 from .models import *
 from .schemas import *
 
-from auth.router import get_current_user, CurrentUser
+from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.function import post_task
-
+from task.function import add_background_task
 from mixin.database import get_db
-from module import virty
 from mixin.log import setup_logger
 
-logger = setup_logger(__name__)
+# 非共通モジュール
+from node.models import NodeModel
+from module import virty
 
 
 app = APIRouter()
+logger = setup_logger(__name__)
 
 
-def post_node_base(node: NodeInsert, db: Session):
-    user = node.user_name
-    domain = node.domain
-    port = node.port
+@add_background_task(resource="node", object="base", method="post")
+def post_node_base(db: Session, cu: CurrentUser, model: TaskModel):
+    user = model.request.user_name
+    domain = model.request.domain
+    port = model.request.port
     try:
         memory = virty.SshInfoMem(user, domain, port)
         core = virty.SshInfocpu(user, domain, port)
@@ -33,9 +35,9 @@ def post_node_base(node: NodeInsert, db: Session):
         return None
 
     row = NodeModel(
-        name = node.name,
+        name = model.request.name,
         domain = domain,
-        description = node.description,
+        description = model.request.description,
         user_name = user,
         port = port,
         core = core,
@@ -52,16 +54,14 @@ def post_node_base(node: NodeInsert, db: Session):
     db.commit()
 
 @app.post("/api/nodes", tags=["node"])
-def post_api_nodes(
+async def post_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         node: NodeInsert = None,
         background_tasks: BackgroundTasks = None
     ):
-
-    background_tasks.add_task(post_node_base, db=db, node=node)
-    task_model = post_task(db=db, current_user=current_user, request_model=node, resource="node", object="base", method="post")
-    
+    # タスクを追加
+    task_model = post_node_base(bg=background_tasks, db=db, cu=current_user, model=node)
     return task_model
 
 @app.get("/api/nodes", tags=["node"],response_model=List[NodeSelect])

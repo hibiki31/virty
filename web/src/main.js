@@ -22,6 +22,12 @@ const createApp = async() => {
   }).$mount('#app');
   Vue.use(Notifications, { velocity });
   const token = Cookies.get('token');
+  const timeOffcet = Cookies.get('timeOffcet');
+
+  if (timeOffcet) {
+    store.dispatch('setTimeOffcet', timeOffcet);
+  }
+
   if (!token) {
     store.dispatch('updateAuthState', {});
     if (router.app._route.name === 'Login' && router.app._route.query.redirect) {

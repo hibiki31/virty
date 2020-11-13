@@ -1,6 +1,8 @@
-from fastapi_camelcase import CamelModel
-from pydantic import BaseModel
+from datetime import datetime
 from typing import List, Optional
+from pydantic import BaseModel
+
+from fastapi_camelcase import CamelModel
 
 
 class DomainBase(CamelModel):

@@ -4,38 +4,39 @@ from sqlalchemy.orm import Session
 from .models import *
 from .schemas import *
 
-from auth.router import get_current_user, CurrentUser
+from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.function import post_task
-
-# 任意
-from node.models import NodeModel
-
-from module import virty
-from module import virtlib
-from module import xmllib
+from task.function import add_background_task
 from mixin.database import get_db
 from mixin.log import setup_logger
 
-logger = setup_logger(__name__)
+# 非共通モジュール
+from node.models import NodeModel
+from module import virty
+from module import virtlib
+from module import xmllib
 
 
 app = APIRouter()
+logger = setup_logger(__name__)
 
 
-def put_domain_base(db: Session):
+@add_background_task(resource="domain", object="list", method="update")
+async def put_domain_base(db: Session, cu: CurrentUser, model: TaskModel):
     nodes:NodeModel = db.query(NodeModel).all()
     for node in nodes:
         if node.status != 10:
             continue
         try:
             logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
-            manager = virtlib.VirtEditor(node.user_name + "@" + node.domain)
+            manager = await virtlib.VirtEditor(node.user_name + "@" + node.domain)
         except:
             logger.error(f'ノードへの接続に失敗しました: {node.name}')
             continue
 
-        domains = manager.DomainAllData()
+        domains = await manager.DomainAllData()
+
+        logger.info("ドメイン数：" + str(len(domains)))
 
         for domain in domains:
             editor = xmllib.XmlEditor("str",domain['xml'])
@@ -54,26 +55,9 @@ def put_domain_base(db: Session):
             db.merge(row)
     db.commit()
 
-def queue_task(
-        background_tasks: BackgroundTasks,
-        db: Session,
-        current_user: CurrentUser,
-        model,
-        resource: str,
-        object: str,
-        method: str,
-        func,
-    ):
-    task_model = post_task(db=db, current_user=current_user, request_model=None, resource="domain", object="base", method="put")
-    background_tasks.add_task(func, db=db)
-    return task_model
-
-
-
-
 
 @app.post("/api/vms", tags=["vm"])
-def post_api_domains(
+async def post_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         node: DomainInsert = None,
@@ -86,23 +70,13 @@ def post_api_domains(
     return task_model
 
 @app.put("/api/vms", tags=["vm"])
-def put_api_domains(
+async def put_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         background_tasks: BackgroundTasks = None
     ):
 
-    task_model = queue_task(
-        background_tasks=background_tasks,
-        db=db,
-        current_user=current_user,
-        model=None,
-        resource="domain",
-        object="base",
-        method="put",
-        func=put_domain_base
-    )
-    
+    task_model = put_domain_base(bg=background_tasks, db=db, cu=current_user, model=None)
     
     return task_model
 

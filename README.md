@@ -44,6 +44,7 @@ Dockerイメージのビルドと起動
 
 ```
 cd virty
+cp docker-compose.example.yml docker-compose.yml
 docker-compose build
 docker-compose up -d
 ```

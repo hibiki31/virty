@@ -23,6 +23,7 @@
         >{{ item.name}}</router-link>
       </template>
       <template v-slot:item.userId="{ item }" justify="right">{{item.userId}}</template>
+      <template v-slot:item.postTime="{ item }" justify="right">{{item.postTime | toJST}}</template>
 
       <template v-slot:item.method="{ item }" justify="right">
         <v-icon :color="getMethodColor(item.method)">mdi-draw</v-icon>
@@ -47,6 +48,7 @@
 
 <script>
 import axios from '@/axios/index';
+import moment from 'moment';
 
 export default {
   name: 'VMList',
@@ -88,6 +90,9 @@ export default {
     }
   },
   filters: {
+    toJST: function(date) {
+      return moment(date).add(9, 'hour').format('YYYY/MM/DD HH:mm');
+    },
     toFixedTow: function(val) {
       if (isFinite(val)) {
         return Number(val).toFixed(2);

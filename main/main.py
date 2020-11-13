@@ -21,7 +21,6 @@ import time
 logger = setup_logger(__name__)
 
 
-
 Base.metadata.create_all(bind=Engine)
 
 tags_metadata = [
@@ -82,7 +81,7 @@ async def db_session_middleware(request: Request, call_next):
     # 処理後のログ
     process_time = (time.time() - start_time) * 1000
     formatted_process_time = '{0:.2f}'.format(process_time)
-    logger.info(f"{request.client.host} {request.method} {response.status_code} {request.url.path} {formatted_process_time}ms")
+    logger.info(f"{request.method} {request.client.host} {response.status_code} {request.url.path} {formatted_process_time}ms")
 
     # 結果を返す
     return response
