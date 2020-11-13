@@ -25,17 +25,21 @@ async def put_api_domains(
         db: Session = Depends(get_db),
         background_tasks: BackgroundTasks = None
     ):
-
-    task_model = post_task(db=db, current_user=current_user, request_model=None, resource="vm", object="list", method="update")
-    
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("domain","list","update")
+   
     return task_model
+
 
 @app.get("/api/vms", tags=["vm"],response_model=List[DomainSelect])
 async def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
+
     return db.query(DomainModel).all()
+
 
 @app.delete("/api/vms", tags=["vm"], response_model=List[DomainSelect])
 async def delete_api_domains(
@@ -46,4 +50,5 @@ async def delete_api_domains(
     model = db.query(DomainModel).filter(DomainModel.name==node.name).all()
     db.query(DomainModel).filter(DomainModel.name==node.name).delete()
     db.commit()
+
     return model

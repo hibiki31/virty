@@ -18,6 +18,7 @@ class DomainModel(Base):
     drive = relationship('DomainDriveModel')
     is_lost = Column(Boolean)
 
+
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"
     domain_uuid = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -27,6 +28,7 @@ class DomainInterfaceModel(Base):
     source = Column(String)
     network = Column(String)
     is_updating = Column(Boolean)
+
 
 class DomainDriveModel(Base):
     __tablename__ = "domains_drives"

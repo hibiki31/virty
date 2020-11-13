@@ -1,5 +1,6 @@
 import logging
 
+
 def setup_logger(name, logfile='data/api.log'):
     logger = logging.getLogger(name)
 

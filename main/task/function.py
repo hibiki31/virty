@@ -13,44 +13,56 @@ from mixin.log import setup_logger
 logger = setup_logger(__name__)
 
 
-def post_task(db, current_user, request_model, resource, object, method):
-    logger.info(resource)
+class PostTask():
+    db = None
+    user = None
+    model = None
+    task_model = TaskModel()
 
-    uuid_str = str(uuid.uuid4())
-    time = datetime.now()
-    user_id = current_user.user_id
+    def __init__(self, db:Session, user:CurrentUser, model: BaseModel):
+        self.db = db
+        self.user = user
+        self.model = model
+    
+    def commit(self, resource, object, method):
+        uuid_str = str(uuid.uuid4())
+        time = datetime.now()
+        user_id = self.user.user_id
 
-    if request_model:
-        model = request_model
-    else:
-        model = BaseModel()
+        if self.model:
+            model = request_model
+        else:
+            model = BaseModel()
 
-    row = TaskModel(
-        uuid = uuid_str,
-        post_time = time,
-        run_time = 0,
-        user_id = user_id,
-        status = "start",
-        resource = resource,
-        object = object,
-        method = method,
-        request = model.json(),
-        message = "queing task"
-    )
+        row = TaskModel(
+            uuid = uuid_str,
+            post_time = time,
+            run_time = 0,
+            user_id = user_id,
+            status = "start",
+            resource = resource,
+            object = object,
+            method = method,
+            request = model.json(),
+            message = "queing task"
+        )
 
-    res = TaskModel(
-        uuid = uuid_str,
-        post_time = time,
-        run_time = 0,
-        user_id = user_id,
-        status = "start",
-        resource = resource,
-        object = object,
-        method = method,
-        request = model,
-        message = "queing task"
-    )
+        res = TaskModel(
+            uuid = uuid_str,
+            post_time = time,
+            run_time = 0,
+            user_id = user_id,
+            status = "start",
+            resource = resource,
+            object = object,
+            method = method,
+            request = model,
+            message = "queing task"
+        )
 
-    db.add(row)
-    db.commit()
-    return res
+        db.add(row)
+        db.commit()
+        
+        return res
+
+

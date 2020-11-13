@@ -8,11 +8,14 @@ from fastapi_camelcase import CamelModel
 class DomainBase(CamelModel):
     uuid: str
 
+
 class DomainDelete(DomainBase):
     pass
 
+
 class DomainInsert(DomainBase):
     description: str = None
+
 
 class DomainSelect(DomainInsert):
     name: str
