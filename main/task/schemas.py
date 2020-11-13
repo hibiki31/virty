@@ -9,7 +9,7 @@ import json
 
 class TaskBase(CamelModel):
     post_time: datetime = None
-    run_time: int = None
+    run_time: float = None
     user_id: str = None
     status: str = None
     resource: str = None
@@ -31,6 +31,7 @@ class TaskBase(CamelModel):
 
 class TaskInsert(TaskBase):
     pass
+
 
 class TaskSelect(TaskBase):
     uuid: str = None

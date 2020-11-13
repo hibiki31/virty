@@ -1,4 +1,7 @@
+import subprocess
+import time
 import uvicorn
+
 from fastapi import status, FastAPI, Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,15 +16,13 @@ from domain.router import app as domain_router
 
 from auth.models import UserModel
 
-from module import virty
-
 from mixin.log import setup_logger
-import time
+from mixin.settings import virty_root
+
 
 logger = setup_logger(__name__)
 
-
-Base.metadata.create_all(bind=Engine)
+worker_pool = []
 
 tags_metadata = [
     {
@@ -37,7 +38,6 @@ tags_metadata = [
         "description": "認証",
     }
 ]
-
 
 app = FastAPI(
     title="VirtyAPI",
@@ -56,15 +56,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
 app.include_router(task_router)
 app.include_router(auth_router)
 app.include_router(node_router)
 app.include_router(domain_router)
 
 
+Base.metadata.create_all(bind=Engine)
+
+
+def worker_up():
+    worker_pool.append(subprocess.Popen(["python3", virty_root + "worker.py"]))
+
+
+def worker_down():
+    for w in worker_pool:
+        w.terminate()
+
+
 @app.on_event("startup")
 async def startup_event():
-    pass
+    worker_up()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    worker_down()
+    
 
 # 全てのリクエストで同じ処理が書ける
 @app.middleware("http")
