@@ -34,7 +34,6 @@ def lost_task_cheack():
 
 
 def task_swicher(model:TaskSelect, db:SessionLocal):
-    res = None
     if model.resource == "vm":
         if model.object == "list":
             if model.method == "update":
@@ -43,9 +42,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "base":
             if model.method == "add":
                 res = post_node_base(db=db, model=model)
-                
-    if res == None:
+    try:
+        res
+    except:
         raise Exception("タスクが見つかりませんでした")
+
     return res
 
 
