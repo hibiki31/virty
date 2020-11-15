@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from mixin.database import get_db
 from mixin.log import setup_logger
+from mixin import settings
 
 from .models import *
 from .schemas import *
@@ -31,7 +32,10 @@ class CurrentUser(BaseModel):
             raise exception_authority
 
 # JWTトークンの設定
-SECRET_KEY = "virty"
+if settings.is_dev:
+    SECRET_KEY = "virty-token"
+else:
+    SECRET_KEY = secrets.token_urlsafe(128)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
