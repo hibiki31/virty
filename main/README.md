@@ -41,3 +41,9 @@ Move ファイルの移動
 ```
 Merge branch 'develop' v1.0.0
 ```
+
+changes.mdは以下のコマンドで該当コミットを記録する？意味あるか？
+
+```
+git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
+```

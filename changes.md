@@ -1,3 +1,10 @@
+### Ver 1.1.0
+- 2020-11-15 Change ワーカのエラー処理 04a2efb (@hibiki31) 
+- 2020-11-15 Move xmlとplaybookのパスを変更 55135ad (@hibiki31) 
+- 2020-11-15 Remove 不要なモジュールの整理 9a3c0c8 (@hibiki31) 
+- 2020-11-15 Change タスク処理をワーカへ委任 1356e69 (@hibiki31) 
+- 2020-11-13 Add タスク処理用のデコレータを作成 070d804 (@hibiki31) 
+
 ### Ver 1.0.0
 - バックエンドをFastAPIに変更
 - フロントエンドをVue+Vuetifyに変更
