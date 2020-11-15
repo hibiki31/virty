@@ -2,16 +2,16 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import store from '../store';
 import VMList from '../views/VMList.vue';
-import About from '../views/About.vue';
 import Login from '../views/Login.vue';
 import Logout from '../views/Logout.vue';
 import VMDetail from '../views/VMDetail.vue';
-import QueueList from '../views/QueueList.vue';
+import TaskList from '../views/TaskList.vue';
 import NetworkList from '../views/NetworkList.vue';
 import NodeList from '../views/NodeList.vue';
 import StorageList from '../views/StorageList.vue';
 import QueueDetail from '../views/QueueDetail.vue';
 import ImageList from '../views/ImageList.vue';
+import Empty from '../views/EmptyView.vue';
 
 Vue.use(VueRouter);
 
@@ -26,16 +26,16 @@ const routes = [
   },
   {
     path: '/',
-    name: 'VMList',
+    name: 'Root',
     component: VMList,
     meta: {
       requiresAuth: true
     }
   },
   {
-    path: '/queue',
-    name: 'QueueList',
-    component: QueueList,
+    path: '/task',
+    name: 'TaskList',
+    component: TaskList,
     meta: {
       requiresAuth: true
     }
@@ -73,14 +73,6 @@ const routes = [
     }
   },
   {
-    path: '/about',
-    name: 'About',
-    component: About,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
     path: '/vm/:uuid',
     name: 'VMDetail',
     component: VMDetail,
@@ -105,6 +97,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login
+  },
+  {
+    path: '/empty',
+    name: 'Empty',
+    component: Empty
   },
   {
     path: '*',

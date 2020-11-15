@@ -4,6 +4,7 @@ import router from './router';
 import store from './store';
 import vuetify from './plugins/vuetify';
 import './mixins/utility';
+import './mixins/rules';
 
 import Cookies from 'js-cookie';
 import axios from '@/axios/index';
@@ -12,15 +13,16 @@ import Notifications from 'vue-notification';
 import velocity from 'velocity-animate';
 
 Vue.config.productionTip = false;
+Vue.use(Notifications, { velocity });
+
+new Vue({
+  router,
+  store,
+  vuetify,
+  render: h => h(App)
+}).$mount('#app');
 
 const createApp = async() => {
-  new Vue({
-    router,
-    store,
-    vuetify,
-    render: h => h(App)
-  }).$mount('#app');
-  Vue.use(Notifications, { velocity });
   const token = Cookies.get('token');
   const timeOffcet = Cookies.get('timeOffcet');
 

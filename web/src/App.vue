@@ -4,16 +4,12 @@
       <template slot="body" slot-scope="props">
         <v-alert
           :type="props.item.type"
-          :icon="props.item.data.icon"
-          :color="props.item.data.color"
           class="ma-3 mb-0"
           border="left"
+          colored-border
         >
           <div class="d-flex align-center ml-3">
             <div class="body-2 mr-auto">{{ props.item.text }}</div>
-            <v-btn icon x-small class="ml-0" @click="props.close">
-              <v-icon small>fa-times</v-icon>
-            </v-btn>
           </div>
         </v-alert>
       </template>
@@ -28,62 +24,27 @@
       <v-divider></v-divider>
       <v-list nav dense>
         <v-list-item-group active-class="primary--text text--primary">
-          <v-list-item :to="{name: 'VMList'}">
+          <!-- メニュー描画 -->
+          <v-list-item v-for="item in navList" :key="item.title" :to="item.to">
             <v-list-item-icon>
-              <v-icon>mdi-home</v-icon>
+              <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>VM</v-list-item-title>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
-
-          <v-list-item :to="{name: 'NetworkList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-wan</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Network</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item :to="{name: 'ImageList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-harddisk</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Image</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item :to="{name: 'StorageList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-database</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Storage</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item :to="{name: 'QueueList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Queue</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item :to="{name: 'NodeList'}">
-            <v-list-item-icon>
-              <v-icon>mdi-server</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Node</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item :to="{name: 'Logout'}" class="mt-10">
-            <v-list-item-icon>
-              <v-icon>mdi-account</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Logout</v-list-item-title>
-          </v-list-item>
-
         </v-list-item-group>
       </v-list>
+      <v-divider class="pb-2"></v-divider>
+      <span class="subtitle-2 ml-3">Develop by <a href="https://github.com/hibiki31" class="blue--text">@hibiki31</a></span>
+      <span class="subtitle-2 ml-1">v{{this.version}}</span>
     </v-navigation-drawer>
     <v-app-bar color="primary" dark dense flat app clipped-left>
       <v-toolbar-title>Virty</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn :to="{name: 'Logout'}" text>
+        <v-icon>mdi-logout</v-icon>
+      </v-btn>
     </v-app-bar>
-    <v-main class="ma-2">
+    <v-main class="ma-5">
       <router-view />
     </v-main>
   </v-app>
@@ -97,10 +58,34 @@ export default {
   name: 'App',
 
   data: () => ({
+    version: require('../package.json').version,
     userId: '',
-    items: [
-      { title: 'Home', icon: 'dashboard' },
-      { title: 'About', icon: 'question_answer' }
+    navList: [
+      {
+        to: { name: 'VMList' },
+        title: 'VM',
+        icon: 'mdi-cube-outline'
+      },
+      {
+        to: { name: 'NodeList' },
+        title: 'Node',
+        icon: 'mdi-server'
+      },
+      {
+        to: { name: 'NetworkList' },
+        title: 'Network',
+        icon: 'mdi-wan'
+      },
+      {
+        to: { name: 'ImageList' },
+        title: 'Image',
+        icon: 'mdi-harddisk'
+      },
+      {
+        to: { name: 'TaskList' },
+        title: 'Task',
+        icon: 'mdi-checkbox-multiple-marked-outline'
+      }
     ]
   }),
   methods: {},

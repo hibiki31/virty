@@ -54,17 +54,23 @@ def endless_eight():
     db = SessionLocal()
     while True:
         query = db.query(TaskModel)
-        query = query.filter(TaskModel.status=="start")
+        query = query.filter(TaskModel.status=="init")
         query = query.order_by(desc(TaskModel.post_time))
         tasks = query.all()
         if tasks == []:
             sleep(3)
             continue
 
-        # Model to Schemas
-        task:TaskSelect = TaskSelect().from_orm(tasks[0])
-
+        # 開始処理
+        task:TaskModel = tasks[0]
         logger.info(f'タスク開始: {task.resource}.{task.object}.{task.method} {task.uuid}')
+        task.status = "start"
+        db.merge(task)
+        db.commit()
+
+        # Model to Schemas
+        task:TaskSelect = TaskSelect().from_orm(task)
+
         
         start_time = time()
 

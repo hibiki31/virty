@@ -1,5 +1,6 @@
 <template>
   <div class="Login">
+    <setup-virty-dialog ref="setupVirtyDialog"/>
     <v-container class="fill-height" fluid>
       <v-row align="center" justify="center">
         <v-col cols="12" sm="8" md="4">
@@ -40,6 +41,12 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn
+                  v-on:click="this.openSetupVirtyDialog"
+                  depressed
+                  text
+                  color="secondary"
+                >Setup</v-btn>
+                <v-btn
                   @click.prevent="doLogin"
                   :disabled="!isFormValid"
                   :loading="isLoadingLogin"
@@ -66,12 +73,16 @@
 
 <script>
 import axios from '@/axios/index';
+import SetupVirtyDialog from '../conponents/dialog/SetupVirtyDialog.vue';
 
 export default {
+  name: 'Login',
   props: {
     source: String
   },
-  name: 'Login',
+  components: {
+    SetupVirtyDialog
+  },
   data: () => ({
     isFormValid: false,
     isLoadingLogin: false,
@@ -84,6 +95,9 @@ export default {
     }
   }),
   methods: {
+    openSetupVirtyDialog() {
+      this.$refs.setupVirtyDialog.openDialog();
+    },
     async doLogin() {
       this.isLoadingLogin = true;
 
@@ -111,9 +125,8 @@ export default {
           this.$_pushNotice('Login success', 'success');
           this.$router.push({ name: 'VMList' });
         })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
+        .catch(error => {
+          this.$_pushNotice(error.response.data.detail, 'error');
         });
       this.isLoadingLogin = false;
     }
