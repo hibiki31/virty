@@ -18,4 +18,17 @@ async def get_api_tasks(
         db: Session = Depends(get_db)
     ):
     task = db.query(TaskModel).order_by(desc(TaskModel.post_time)).all()
+    
     return task
+
+
+@app.delete("/api/tasks", tags=["task"], response_model=List[TaskSelect])
+async def delete_api_tasks(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    model = db.query(TaskModel).all()
+    db.query(TaskModel).delete()
+    db.commit()
+
+    return model

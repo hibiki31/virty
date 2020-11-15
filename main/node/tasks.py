@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .models import *
 from .schemas import *
 
-from task.models import TaskModel
+from task.schemas import TaskSelect
 from mixin.log import setup_logger
 
 from node.models import NodeModel
@@ -15,10 +15,11 @@ from module import xmllib
 logger = setup_logger(__name__)
 
 
-def post_node_base(db: Session, model: TaskModel):
-    user = model.request.user_name
-    domain = model.request.domain
-    port = model.request.port
+def post_node_base(db: Session, model: TaskSelect):
+    request = NodeInsert(**model.request)
+    user = request.user_name
+    domain = request.domain
+    port = request.port
     try:
         memory = virty.SshInfoMem(user, domain, port)
         core = virty.SshInfocpu(user, domain, port)
@@ -30,9 +31,9 @@ def post_node_base(db: Session, model: TaskModel):
         return None
 
     row = NodeModel(
-        name = model.request.name,
+        name = request.name,
         domain = domain,
-        description = model.request.description,
+        description = request.description,
         user_name = user,
         port = port,
         core = core,
@@ -46,5 +47,9 @@ def post_node_base(db: Session, model: TaskModel):
         libvirt_version = libvirt,
     )
     db.add(row)
-    db.commit()
+    try:
+        db.commit()
+    except:
+        pass
+    db.close()
     return model

@@ -29,10 +29,8 @@ class PostTask():
         time = datetime.now()
         user_id = self.user.user_id
 
-        if self.model:
-            model = request_model
-        else:
-            model = BaseModel()
+        if self.model == None:
+            self.model = BaseModel()
 
         row = TaskModel(
             uuid = uuid_str,
@@ -43,7 +41,7 @@ class PostTask():
             resource = resource,
             object = object,
             method = method,
-            request = model.json(),
+            request = self.model.json(),
             message = "queing task"
         )
 
@@ -56,12 +54,12 @@ class PostTask():
             resource = resource,
             object = object,
             method = method,
-            request = model,
+            request = self.model,
             message = "queing task"
         )
 
-        db.add(row)
-        db.commit()
+        self.db.add(row)
+        self.db.commit()
         
         return res
 

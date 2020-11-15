@@ -7,7 +7,10 @@ from mixin.log import setup_logger
 from mixin.database import SessionLocal
 
 from task.models import TaskModel
+from auth.models import UserModel
+from task.schemas import TaskSelect
 from domain.tasks import update_domain_list
+from node.tasks import post_node_base
 
 
 logger = setup_logger(__name__)
@@ -30,12 +33,17 @@ def lost_task_cheack():
     db.commit()
 
 
-def task_swicher(m:TaskModel, db:SessionLocal) -> TaskModel:
+def task_swicher(model:TaskSelect, db:SessionLocal):
     res = None
-    if m.resource == "vm":
-        if m.object == "list":
-            if m.method == "update":
-                res = update_domain_list(db=db, model=m)
+    if model.resource == "vm":
+        if model.object == "list":
+            if model.method == "update":
+                res = update_domain_list(db=db, model=model)
+    elif model.resource == "node":
+        if model.object == "base":
+            if model.method == "add":
+                res = post_node_base(db=db, model=model)
+                
     if res == None:
         raise Exception("タスクが見つかりませんでした")
     return res
@@ -43,38 +51,41 @@ def task_swicher(m:TaskModel, db:SessionLocal) -> TaskModel:
 
 def endless_eight():
     logger.info("Worker起動")
+    db = SessionLocal()
     while True:
-        db = SessionLocal()
         query = db.query(TaskModel)
         query = query.filter(TaskModel.status=="start")
         query = query.order_by(desc(TaskModel.post_time))
-        task = query.all()
-        if task == []:
+        tasks = query.all()
+        if tasks == []:
             sleep(3)
             continue
 
-        task:TaskModel = task[0]
+        # Model to Schemas
+        task:TaskSelect = TaskSelect().from_orm(tasks[0])
+
         logger.info(f'タスク開始: {task.resource}.{task.object}.{task.method} {task.uuid}')
         
-        start_time = time.time()
+        start_time = time()
 
         try:
-            task = task_swicher(task, db)
+            task_swicher(model=task, db=db)
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
             task.status = "error"
             task.message = str(e)
         else:
             task.status = "finish"
+            task.message = "finish"
 
-        end_time = time.time()
+        end_time = time()
         task.run_time = end_time - start_time
 
         logger.info(f'タスク終了: {task.resource}.{task.object}.{task.method} {task.uuid} {task.run_time}s')
 
-        db.merge(task)
+        # Schemas to Model
+        db.merge(TaskModel(**task.dict()))
         db.commit()
-        db.close()
 
 
 if __name__ == "__main__":

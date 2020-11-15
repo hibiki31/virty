@@ -3,6 +3,8 @@ from pydantic import BaseModel, ValidationError, validator
 from typing import List, Optional
 from datetime import datetime
 
+from task.models import TaskModel
+
 
 import json
 
@@ -20,13 +22,6 @@ class TaskBase(CamelModel):
 
     class Config:
         orm_mode  =  True
-
-    @validator('request', pre=True)
-    def json_to_dic(cls, v, values, **kwargs):
-        if type(v) == str:
-            return dict(json.loads(v))
-        else:
-            return {}
     
 
 class TaskInsert(TaskBase):
@@ -35,3 +30,9 @@ class TaskInsert(TaskBase):
 
 class TaskSelect(TaskBase):
     uuid: str = None
+
+    @validator('request', pre=True)
+    def json_to_dic(cls, v, values, **kwargs):
+        if type(v) == str:
+            return dict(json.loads(v))
+        return v

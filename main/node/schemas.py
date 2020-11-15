@@ -6,14 +6,17 @@ from typing import List, Optional
 class NodeBase(CamelModel):
     name: str
 
+
 class NodeDelete(NodeBase):
     pass
+
 
 class NodeInsert(NodeBase):
     description: str
     domain: str
     user_name: str
     port: int
+
 
 class NodeSelect(NodeInsert):
     core: int
