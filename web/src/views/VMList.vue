@@ -13,6 +13,11 @@
       </v-card>
     </v-dialog>
     <v-card>
+      <v-card-actions>
+      <v-btn v-on:click="this.vmListReload" small dark class="ma-2" color="primary">
+        <v-icon left>mdi-cached</v-icon>Reload
+      </v-btn>
+    </v-card-actions>
       <v-data-table
         :headers="headers"
         :items="list"
@@ -23,25 +28,25 @@
         }"
         multi-sort
       >
-        <template v-slot:item.name="{ item }" justify="right">
-          <router-link :to="{name: 'VMDetail',params: {uuid: item.uuid}}">{{ item.name}}</router-link>
+        <template v-slot:[`item.uuid`]="{ item }" justify="right">
+          <router-link :to="{name: 'VMDetail',params: {uuid: item.uuid}}" style="font-family:monospace;">{{ item.uuid}}</router-link>
         </template>
 
         <!-- ユーザカラム -->
-        <template v-slot:item.userId="{ item }" justify="right">
+        <template v-slot:[`item.userId`]="{ item }" justify="right">
           <v-icon v-if="item.userId!==null" left v-on:click="uuid=item.uuid;dialog=true" color="primary">mdi-account</v-icon>
           <v-icon v-else left v-on:click="uuid=item.uuid;dialog=true">mdi-account</v-icon>
           <span v-if="item.userId!==null">{{item.userId}}</span>
           <span v-else>N/A</span>
         </template>
 
-        <template v-slot:item.groupId="{ item }" justify="right">
+        <template v-slot:[`item.groupId`]="{ item }" justify="right">
           <v-icon left>mdi-account-multiple</v-icon>
-          <div v-if="item.groupId!==null">{{item.groupId}}</div>
-          <div v-else>N/A</div>
+          <span v-if="item.groupId!==null">{{item.groupId}}</span>
+          <span v-else>N/A</span>
         </template>
 
-        <template v-slot:item.status="{ item }">
+        <template v-slot:[`item.status`]="{ item }">
           <v-menu>
             <template v-slot:activator="{ on: menu, attrs }">
               <v-tooltip bottom>
@@ -59,18 +64,18 @@
             <v-card>
               <v-card-text>
                 <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="primary">mdi-power-standby</v-icon>
+                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="blue">mdi-power-standby</v-icon>
                 </div>
                 <v-icon v-on:click="vmPowerOff(item.uuid)" color="grey">mdi-power-standby</v-icon>
               </v-card-text>
             </v-card>
           </v-menu>
         </template>
-        <template v-slot:item.memory="{ item }" justify="right">
+        <template v-slot:[`item.memory`]="{ item }" justify="right">
           <v-icon left>mdi-memory</v-icon>
           {{ item.memory/1024}} G
         </template>
-        <template v-slot:item.core="{ item }" justify="right">
+        <template v-slot:[`item.core`]="{ item }" justify="right">
           <v-icon left>mdi-cpu-64-bit</v-icon>
           {{ item.core }}
         </template>
@@ -110,12 +115,29 @@ export default {
   },
   methods: {
     getPowerColor(statusCode) {
-      if (statusCode === 1) return 'primary';
+      if (statusCode === 1) return 'blue';
       else if (statusCode === 5) return 'grey';
       else if (statusCode === 7) return 'purple';
       else if (statusCode === 10) return 'red';
       else if (statusCode === 20) return 'purple';
       else return 'yellow';
+    },
+    vmListReload() {
+      axios
+        .put('/api/vms')
+        .then((res) => {
+          if (res.status === 401) {
+            this.$_pushNotice('Wrong userID or password', 'error');
+          } else if (res.status !== 200) {
+            this.$_pushNotice('An error occurred', 'error');
+            return;
+          }
+          this.$_pushNotice('Queueing Relaod task', 'success');
+        })
+        .catch(async() => {
+          await this.$_sleep(500);
+          this.$_pushNotice('An error occurred', 'error');
+        });
     },
     vmPowerOff(uuid) {
       axios

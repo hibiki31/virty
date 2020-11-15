@@ -1,3 +1,6 @@
+### Ver 1.2.0
+- 2020-11-15 Add APIで実装されてる機能をUIに実装 4422999 (@hibiki31) 
+
 ### Ver 1.1.0
 - 2020-11-15 Change ワーカのエラー処理 04a2efb (@hibiki31) 
 - 2020-11-15 Move xmlとplaybookのパスを変更 55135ad (@hibiki31) 

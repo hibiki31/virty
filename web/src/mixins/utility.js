@@ -48,6 +48,17 @@ Vue.mixin({
         duration: 5000,
         data: { icon, color }
       });
+    },
+    // バリデータ
+    required: (value) => !!value || 'Required.',
+    limitLength64: (value) => value.length <= 64 || '64 characters maximum.',
+    characterRestrictions(value) {
+      const regex = new RegExp(/^[A-Za-z0-9-_]*$/);
+      return regex.test(value) || 'Can use character A-Z, a-z, 0-9, -, _';
+    },
+    firstCharacterRestrictions(value) {
+      const regex = new RegExp(/^[A-Za-z].*/);
+      return regex.test(value) || 'Can use first character A-Z, a-z';
     }
   }
 });

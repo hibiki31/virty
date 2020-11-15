@@ -8,14 +8,10 @@ export default new Vuetify({
   theme: {
     themes: {
       dark: {
-        primary: '#3aba8b',
-        success: '#68cd86'
-      },
-      light: {
-        primary: '#3aba8b',
-        success: '#68cd86'
+        primary: '#405F73',
+        success: '#A7F2F2'
       }
     },
-    dark: false
+    dark: true
   }
 });
