@@ -9,6 +9,7 @@ association_table = Table('users_to_groups', Base.metadata,
     Column('groups_id', Integer, ForeignKey('groups.group_id'))
 )
 
+
 class UserModel(Base):
     __tablename__ = "users"
     user_id = Column(String, primary_key=True, index=True)
@@ -22,6 +23,7 @@ class UserRole(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, ForeignKey('users.user_id', onupdate='CASCADE', ondelete='CASCADE'))
     name = Column(String)
+
 
 class GroupModel(Base):
     __tablename__ = "groups"

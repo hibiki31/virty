@@ -1,30 +1,36 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, Security, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
-from sqlalchemy.orm import Session
-from mixin.database import get_db
-
 import os
 import jwt
 import secrets
-
-from .models import *
-from .schemas import *
 
 from datetime import datetime, timedelta
 from typing import List, Optional
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
+from fastapi import APIRouter, Depends, Request, HTTPException, Security, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
+from sqlalchemy.orm import Session
 
+from mixin.database import get_db
 from mixin.log import setup_logger
 
+from .models import *
+from .schemas import *
+
+
 logger = setup_logger(__name__)
-
-
 app = APIRouter()
 
 
+class CurrentUser(BaseModel):
+    user_id: str
+    token: str
+    role: List[str] = []
+    group: List[str] = []
+    def is_joined(self, role):
+        if not role in self.role:
+            raise exception_authority
+
 # JWTトークンの設定
-# SECRET_KEY = secrets.token_urlsafe(32)
 SECRET_KEY = "virty"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -55,7 +61,6 @@ exception_setup = HTTPException(
     detail="すでに初期化されています"
 )
 
-
 # パスワード比較
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -71,7 +76,6 @@ def get_user(db: Session, user_id: str):
     except:
         return None
     return user
-   
 
 # ユーザ認証
 def authenticate_user(db: Session, user_id: str, password: str):
@@ -110,15 +114,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
     return CurrentUser(user_id=token_data.user_id, token=token)
 
-class CurrentUser(BaseModel):
-    user_id: str
-    token: str
-    role: List[str] = []
-    group: List[str] = []
-    def is_joined(self, role):
-        if not role in self.role:
-            raise exception_authority
-
 
 @app.post("/api/auth", response_model=TokenRFC6749Response, tags=["auth"])
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -138,8 +133,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-
-
 @app.get("/api/users/me/", tags=["user"])
 async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     current_user.is_joined("aaaa")
@@ -147,9 +140,11 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     print(current_user)
     return ""
 
+
 @app.get("/api/auth/validate", tags=["auth"])
 async def read_auth_validate(current_user: CurrentUser = Depends(get_current_user)):
     return {"access_token": current_user.token, "token_type": "bearer"}
+
 
 @app.post("/api/users", tags=["user"])
 async def post_api_users(
@@ -164,6 +159,7 @@ async def post_api_users(
     db.commit()
 
     return user
+
 
 @app.get("/api/users", tags=["user"],response_model=List[UserResponse])
 async def get_api_users(

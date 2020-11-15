@@ -24,8 +24,10 @@ class RepresentableBase(object):
             self.__class__.__name__, columns
         )
 
+
 # 全てのクラスに共通のスーパークラスを追加
 Base = declarative_base(cls=RepresentableBase)
+
 
 def get_db():
     db = SessionLocal()

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
 
@@ -18,6 +18,7 @@ class DomainModel(Base):
     drive = relationship('DomainDriveModel')
     is_lost = Column(Boolean)
 
+
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"
     domain_uuid = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -27,6 +28,7 @@ class DomainInterfaceModel(Base):
     source = Column(String)
     network = Column(String)
     is_updating = Column(Boolean)
+
 
 class DomainDriveModel(Base):
     __tablename__ = "domains_drives"
