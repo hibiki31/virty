@@ -87,6 +87,10 @@ sudo apt upgrade
 sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 ```
 
+```
+systemcltf enable libvritd
+```
+
 使用するテキストエディタを選択します
 
 ```
@@ -109,6 +113,10 @@ username ALL=(ALL) NOPASSWD: ALL
 
 ```
 yum -y install libvirt libvirt-client qemu-kvm virt-manager bridge-utils
+```
+
+```
+sudo systemctl status libvirtd.service
 ```
 
 
