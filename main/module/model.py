@@ -8,6 +8,21 @@ from module import setting
 from module import xmllib
 
 
+from pydantic import BaseModel
+from typing import List, Optional
+
+
+class ImageModel(BaseModel):
+    xml: str
+
+
+class StorageModel(BaseModel):
+    active: bool
+    auto_start: bool
+    status: int
+    xml: str
+    images: List[ImageModel]
+
 
 class VirtyUser():
     def __init__(self, user_id, password):
@@ -34,49 +49,13 @@ class MyJSONEncoder(json.JSONEncoder):
 
 
 class AttributeDict(object):
-    def __init__(self, obj):
-        if type(obj) != dict:
-            self.obj = {}
-        self.obj = humps.camelize(obj)
-
-    ### Pickle
-    def __getstate__(self):
-        return self.obj.items()
-
-    ### Pickle
-    def __setstate__(self, items):
-        if not hasattr(self, 'obj'):
-            self.obj = {}
-        for key, val in items:
-            self.obj[key] = val
-
-    ### Class["key"] = "val"
-    def __setitem__(self, key, val):
-        self.obj[key] = val
-
-    ### Class["key"]
-    def __getitem__(self, name):
-        if name in self.obj:
-            return self.obj.get(name)
-        else:
-            return None
-
-    ### Class.name
-    def __getattr__(self, name):
-        if name in self.obj:
-            return self.obj.get(name)
-        else:
-            return None
-
-    ### dict互換
-    def keys(self):
-        return self.obj.keys()
-
-    ### dict互換
-    def values(self):
-        return self.obj.values()
-
-
+    def __init__(self, attrs=None):
+        if type(attrs) == dict:
+            for k, v in attrs.items():
+                setattr(self, k, v)
+    
+    def __repr__(self):
+        return str(self.__dict__)
 
 def attribute_dict_validation(att,rules):
     if att == None:

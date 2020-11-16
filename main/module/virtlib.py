@@ -9,6 +9,54 @@ import os
 import uuid
 from module import vsql, vansible, vhelp, setting
 
+from module.xmllib import XmlEditor
+
+from node.models import NodeModel
+from module.model import ImageModel
+from storage.models import StorageModel
+
+from typing import List, Optional
+
+
+class VirtManager():
+    def __init__(self,node_model:NodeModel):
+        conn_ip = node_model.user_name + "@" + node_model.domain
+        self.node = libvirt.open('qemu+ssh://' + conn_ip + '/system')
+        self.node_model:NodeModel = node_model
+    
+    def storage_data(self, token) -> List[StorageModel]:
+        pools = self.node.listAllStoragePools(0)
+        if pools == None:
+            return []
+        data = []
+        for pool in pools:
+            pool.refresh()
+            storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
+            storage_xml = storage_xml.storage_pase()
+            storage = StorageModel(
+                uuid = pool.UUIDString(),
+                name = pool.name(),
+                node_name = self.node_model.name,
+                capacity = storage_xml.capacity,
+                available = storage_xml.available,
+                type = "",
+                protocol = "",
+                path = storage_xml.path,
+                active = pool.isActive(),
+                auto_start = pool.autostart(),
+                status = pool.info()[0],
+                update_token = token
+            )
+            image = []
+            for image_obj in pool.listAllVolumes():
+                xml_pace = XmlEditor(type="str", obj=image_obj.XMLDesc())
+                xml_pace = xml_pace.image_pase()
+                xml_pace.update_token = token
+                image.append(xml_pace)
+            data.append({"storage":storage, "image": image})
+        return data
+
+    
 
 
 
@@ -17,6 +65,8 @@ class VirtEditor():
     def __init__(self,NODE_DOMAIN):
         self.nodeip = NODE_DOMAIN
         self.node = libvirt.open('qemu+ssh://' + NODE_DOMAIN + '/system')
+
+    
 
 
     ############################
@@ -473,7 +523,7 @@ class VirtEditor():
 
 
 
-class XmlEditor():
+class XmlEditor_old():
     def __init__(self,TYPE,XML):
         if TYPE == "file":
             os.chdir = setting.script_path

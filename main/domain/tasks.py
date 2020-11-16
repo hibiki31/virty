@@ -43,7 +43,7 @@ def update_domain_list(db: Session, model: TaskModel):
                 memory = temp['memory'],
                 status = domain['status'],
                 node_name = node.name,
-                is_lost = False
+                update_token = ""
             )
             db.merge(row)
     db.commit()

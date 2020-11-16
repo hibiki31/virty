@@ -11,6 +11,7 @@ from auth.models import UserModel
 from task.schemas import TaskSelect
 from domain.tasks import update_domain_list
 from node.tasks import post_node_base
+from storage.tasks import update_storage_list
 
 
 logger = setup_logger(__name__)
@@ -42,6 +43,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "base":
             if model.method == "add":
                 res = post_node_base(db=db, model=model)
+    elif model.resource == "storage":
+        if model.object == "list":
+            if model.method == "update":
+                res = update_storage_list(db=db, model=model)
+
     try:
         res
     except:

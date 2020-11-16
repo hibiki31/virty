@@ -3,27 +3,88 @@ import os
 import xml.etree.ElementTree as ET
 
 from mixin.settings import virty_root
+from module.model import AttributeDict
+
+from storage.schemas import ImageRaw
 
 class XmlEditor():
-    def __init__(self,TYPE,XML):
-        if TYPE == "file":
+    def __init__(self, type, obj):
+        """
+        パーサに複数の手段でxml_rootを渡す
+
+        Parameters
+        ----------
+        type : str
+            file, dom, net, str
+        """
+        if type == "file":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/xml/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + '/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "dom":
+        elif type == "dom":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/dump/dom/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + 'data/xml/domain/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "net":
+        elif type == "net":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/dump/net/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + '/dump/net/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "str":
-            root = ET.fromstring(XML)
+        elif type == "str":
+            root = ET.fromstring(obj)
             self.xml = root
+
+
+    def storage_pase(self):
+        """
+        ストレージのXMLをパースする
+        Returns
+        -------
+        AttributeDict()
+        """
+
+        data = AttributeDict()
+        
+        data.name = self.xml.find('name').text
+        data.uuid = self.xml.find('uuid').text
+        data.capacity = self.xml.find('capacity').text
+        data.capacity_unit = self.xml.find('capacity').get("unit")
+        data.allocation_unit = self.xml.find('allocation').get("unit")
+        data.allocation = self.xml.find('allocation').text
+        data.available_unit = self.xml.find('available').get("unit")
+        data.available = self.xml.find('available').text
+
+        data.capacity = unit_convertor(data.capacity_unit, "G", data.capacity)
+        data.capacity_unit = "G"
+        data.allocation = unit_convertor(data.allocation_unit, "G", data.allocation)
+        data.allocation_unit = "G"
+        data.available = unit_convertor(data.available_unit, "G", data.available)
+        data.available_unit = "G"
+        
+        data.path = self.xml.find('target').find('path').text
+
+        return data
+    
+    def image_pase(self):
+        """
+        イメージのXMLをパースする
+        Returns
+        -------
+        AttributeDict()
+        """
+
+        data = ImageRaw(
+            name = self.xml.find('name').text,
+            capacity = unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text),
+            allocation = unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text),
+            capacity_unit = "G",
+            allocation_unit = "G",
+            path = self.xml.find('target').find('path').text
+        )
+
+        return data
 
     ############################
     # DATA                     #
@@ -93,6 +154,15 @@ class XmlEditor():
                 DATA['selinux']
 
         return DATA
+    
+    def dump_file(self,type):
+        xml_dir = virty_root + 'data/xml/' +type+ '/'
+        os.chdir = virty_root
+        os.makedirs(xml_dir, exist_ok=True)
+        uuid = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
+
+class XMLOLD():
 
     def NetworkData(self):
         DATA = {}
@@ -260,12 +330,7 @@ class XmlEditor():
     ############################
     # DUMP                     #
     ############################
-    def dump_file(self,type):
-        xml_dir = virty_root + 'data/xml/' +type+ '/'
-        os.chdir = virty_root
-        os.makedirs(xml_dir, exist_ok=True)
-        uuid = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
+    
 
     def DumpStr(self):
         return ET.tostring(self.xml).decode()
