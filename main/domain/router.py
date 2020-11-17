@@ -54,9 +54,11 @@ async def get_api_domain(
         db: Session = Depends(get_db),
         uuid:str = None
     ):
-
-    domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
-    node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
+    try:
+        domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
+        node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
+    except:
+        raise exception_notfund
 
     editor = virtlib.XmlEditor("dom",domain.uuid)
     domain_xml_pase = editor.domain_parse()

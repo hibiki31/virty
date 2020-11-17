@@ -16,7 +16,7 @@ class TokenData(CamelModel):
 class UserBase(CamelModel):
     user_id: str
     class Config:
-        orm_mode  =  True
+        orm_mode = True
 
 class UserInsert(UserBase):
     password: str
@@ -27,3 +27,15 @@ class UserInDB(UserBase):
 class UserResponse(CamelModel):
     user_id: str
     hashed_password: str
+
+class GroupBase(CamelModel):
+    group_id: str
+    class Config:
+        orm_mode = True
+
+class GroupInsert(GroupBase):
+    pass
+
+class GroupPatch(CamelModel):
+    group_id: str
+    user_id: str
