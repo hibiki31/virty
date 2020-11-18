@@ -35,7 +35,7 @@
       <template v-slot:[`item.resource`]="{ item }" justify="right">
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
-            <v-icon 
+            <v-icon
             v-bind="attrs"
             v-on="on"
             :color="getMethodColor(item.method)"
@@ -49,7 +49,7 @@
       <template v-slot:[`item.status`]="{ item }">
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
-            <v-icon 
+            <v-icon
             v-bind="attrs"
             v-on="on"
             left :color="getStatusColor(item.status)">mdi-check-circle</v-icon>
