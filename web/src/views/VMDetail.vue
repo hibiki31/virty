@@ -37,54 +37,33 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <p class="title">
-      <v-icon>mdi-desktop-classic</v-icon>
-      {{ data.name }}
-    </p>
+    <span class="title">{{ data.db.name }}</span>
+    <span class="body ml-10">{{ data.db.uuid }}</span>
     <v-row>
       <v-col cols="12" sm="6" md="4" lg="3">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
-            <v-icon>mdi-transit-connection-variant</v-icon>VNC
+            Spec
           </v-card-title>
-          <!-- ボタン -->
-          <v-btn v-on:click="memoryDialog=true" small class="ma-2" color="primary">
-            <v-icon left>mdi-server-plus</v-icon>Memory
-          </v-btn>
-
-          <v-btn v-on:click="cpuDialog=true" small class="ma-2" color="primary">
-            <v-icon left>mdi-server-plus</v-icon>CPU
-          </v-btn>
-
           <v-list class="body-2" dense>
             <v-list-item>
-              <v-list-item-content>Name</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.name }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>Node</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.node_name }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
               <v-list-item-content>Memory</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.memory / 1024 }}</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.db.memory / 1024 }} GB</v-list-item-content>
+              <v-list-item-icon>
+                <v-btn v-on:click="memoryDialog=true" small icon color="primary">
+                  <v-icon>mdi-circle-edit-outline</v-icon>
+                </v-btn>
+              </v-list-item-icon>
             </v-list-item>
 
             <v-list-item>
               <v-list-item-content>CPU</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.vcpu }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>UUID</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.uuid }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>SELinux</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.selinux }}</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.db.core }} Core</v-list-item-content>
+              <v-list-item-icon>
+                <v-btn v-on:click="cpuDialog=true" small icon color="primary">
+                  <v-icon>mdi-circle-edit-outline</v-icon>
+                </v-btn>
+              </v-list-item-icon>
             </v-list-item>
           </v-list>
         </v-card>
@@ -92,42 +71,27 @@
       <v-col cols="12" sm="6" md="4" lg="3">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
-            <v-icon>mdi-transit-connection-variant</v-icon>VNC
+            Node
           </v-card-title>
           <v-list class="body-2" dense>
             <v-list-item>
-              <v-list-item-content>Host</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.node_ }}</v-list-item-content>
+              <v-list-item-content>Name</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.node.name }}</v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <v-list-item-content>Node</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.node_name }}</v-list-item-content>
+              <v-list-item-content>Node IP</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.node.domain }}</v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-content>Node status</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.node.status }}</v-list-item-content>
             </v-list-item>
 
             <v-list-item>
               <v-list-item-content>VNC Port</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.vncPort }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>Protein:</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.protein }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>Sodium:</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.sodium }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>Calcium:</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.calcium }}</v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>Iron:</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.iron }}</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.xml.vncPort }}</v-list-item-content>
             </v-list-item>
           </v-list>
         </v-card>
@@ -149,9 +113,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in data.interface" :key="item.macAddress">
+                <tr v-for="item in data.xml.interface" :key="item.mac">
                   <td>{{ item.type }}</td>
-                  <td>{{ item.macAddress }}</td>
+                  <td>{{ item.mac }}</td>
                   <td>{{ item.terget }}</td>
                   <td>{{ item.source }}</td>
                   <td>{{ item.network }}</td>
@@ -194,11 +158,76 @@ export default {
       { text: '24 Core', value: '24' }
     ],
     cpuValue: 0,
-    data: {}
+    data: {
+      db: {
+        uuid: '',
+        description: null,
+        name: '',
+        core: 16,
+        memory: 16384,
+        status: 1,
+        userId: null,
+        groupId: null
+      },
+      node: {
+        name: '',
+        description: '',
+        domain: '',
+        userName: '',
+        port: 22,
+        core: 40,
+        memory: 128,
+        cpuGen: '',
+        osLike: '',
+        osName: '',
+        osVersion: '',
+        status: 10,
+        qemuVersion: '',
+        libvirtVersion: ''
+      },
+      xml: {
+        name: '',
+        memory: 16384,
+        vcpu: 16,
+        uuid: '',
+        vncPort: 5903,
+        disk: [
+          {
+            device: '',
+            type: '',
+            file: null,
+            target: ''
+          },
+          {
+            device: '',
+            type: '',
+            file: '',
+            target: ''
+          },
+          {
+            device: '',
+            type: '',
+            file: '',
+            target: ''
+          }
+        ],
+        interface: [
+          {
+            type: '',
+            mac: '',
+            target: '',
+            source: '',
+            netwrok: null
+          }
+        ],
+        boot: [],
+        selinux: false
+      }
+    }
   }),
   async mounted() {
     await axios
-      .get(`/api/vm/${this.$route.params.uuid}`)
+      .get(`/api/vms/${this.$route.params.uuid}`)
       .then((res) => {
         this.data = res.data;
       })

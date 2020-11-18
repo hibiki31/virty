@@ -1,5 +1,16 @@
 <template>
 <v-card>
+  <v-card-actions>
+        <v-btn
+          v-on:click="this.networkReloadTask"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-cached</v-icon>Reload
+        </v-btn>
+      </v-card-actions>
   <v-data-table
     :headers="headers"
     :items="list"
@@ -33,9 +44,26 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/network').then((response) => (this.list = response.data));
+    axios.get('/api/networks').then((response) => (this.list = response.data));
   },
   methods: {
+    networkReloadTask() {
+      axios
+        .put('/api/networks')
+        .then((res) => {
+          if (res.status === 401) {
+            this.$_pushNotice('Wrong userID or password', 'error');
+          } else if (res.status !== 200) {
+            this.$_pushNotice('An error occurred', 'error');
+            return;
+          }
+          this.$_pushNotice('Queueing Relaod task', 'success');
+        })
+        .catch(async() => {
+          await this.$_sleep(500);
+          this.$_pushNotice('An error occurred', 'error');
+        });
+    },
     getPowerColor(statusCode) {
       if (statusCode === 'success') return 'blue';
       else if (statusCode === 'init') return 'grey lighten-1';

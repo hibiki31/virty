@@ -34,7 +34,7 @@ const mutations = {
       try {
         token = VueJwtDecode.decode(responseData.access_token);
       } catch (error) {
-        return
+        return;
       }
       state.isAuthed = true;
       state.token = responseData.access_token;

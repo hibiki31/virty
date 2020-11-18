@@ -26,18 +26,16 @@ export default {
         { text: 'Name', value: 'name' },
         { text: 'Node', value: 'node' },
         { text: 'Pool', value: 'pool' },
-        { text: 'Capacity', value: 'capa' },
+        { text: 'Capacity', value: 'capacity' },
         { text: 'Allocation', value: 'allocation' },
-        { text: 'Physical', value: 'physical' },
         { text: 'Path', value: 'path' },
-        { text: 'No of Use', value: 'numInUse' },
         { text: 'Domain Name', value: 'domainName' },
         { text: 'Archive Name', value: 'archiveId' }
       ]
     };
   },
   mounted: async function() {
-    axios.get('/api/image').then((response) => (this.list = response.data));
+    axios.get('/api/images').then((response) => (this.list = response.data));
   },
   methods: {
     getPowerColor(statusCode) {

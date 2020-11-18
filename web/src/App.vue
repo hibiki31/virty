@@ -82,6 +82,11 @@ export default {
         icon: 'mdi-harddisk'
       },
       {
+        to: { name: 'StorageList' },
+        title: 'Storage',
+        icon: 'mdi-database'
+      },
+      {
         to: { name: 'TaskList' },
         title: 'Task',
         icon: 'mdi-checkbox-multiple-marked-outline'
