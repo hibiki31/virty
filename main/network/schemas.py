@@ -5,13 +5,16 @@ from pydantic import BaseModel
 from fastapi_camelcase import CamelModel
 
 
-class ImageBase(BaseModel):
-    pass
-
-class ImageRaw(ImageBase):
-    name:str
-    storage_uuid:str = None
-    capacity:int
-    allocation:int
-    path:str
-    update_token:str = None
+class NetworkSelect(CamelModel):
+    name: str
+    uuid: str
+    node_name: str
+    type: str
+    dhcp: bool = None
+    description: str = None
+    active: bool = None
+    host_interface: str = None
+    auto_start: bool = None
+    update_token: str = None
+    class Config:
+        orm_mode  =  True

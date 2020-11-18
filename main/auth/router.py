@@ -189,7 +189,7 @@ async def post_api_users(
     return user
 
 
-@app.get("/api/users", tags=["user"])
+@app.get("/api/users", tags=["user"],response_model=List[UserSelect])
 async def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -201,7 +201,7 @@ async def get_api_users(
     return users
 
 
-@app.get("/api/groups", tags=["groups"])
+@app.get("/api/groups", tags=["groups"],response_model=List[GroupSelect])
 async def get_api_groups(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

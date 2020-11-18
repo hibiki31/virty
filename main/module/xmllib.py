@@ -136,7 +136,6 @@ class XmlEditor():
         DATA['memory-unit'] = self.xml.find('memory').get("unit")
         DATA['vcpu'] = self.xml.find('vcpu').text
         DATA['uuid'] = self.xml.find('uuid').text
-        DATA['vnc'] = []
         DATA['disk'] = []
         DATA['interface'] = []
         DATA['boot'] = []
@@ -150,24 +149,27 @@ class XmlEditor():
             Count = Count + 1
         vnc = self.xml.find('devices').find('graphics')        
     
-        DATA['vnc'].append(vnc.get("port"))
-        DATA['vnc'].append(vnc.get("autoport"))
-        DATA['vnc'].append(vnc.get("listen"))
-        DATA['vnc'].append(vnc.get("passwd", "none"))
+        DATA['vnc_port'] = vnc.get("port")
+        # DATA['vnc'].append(vnc.get("autoport"))
+        # DATA['vnc'].append(vnc.get("listen"))
+        # DATA['vnc'].append(vnc.get("passwd", "none"))
 
         for disk in self.xml.find('devices').findall('disk'):
             if disk.find("source") is not None:
-                DEVICE = disk.get("device")
-                TYPE = disk.get("type")
-                FILE = disk.find("source").get("file","none")
-                TARGET =  disk.find("target").get("dev")
-                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+                DATA['disk'].append({
+                    "device": disk.get("device"),
+                    "type": disk.get("type"),
+                    "file": disk.find("source").get("file","none"),
+                    "target": disk.find("target").get("dev")
+                })
             else:
-                DEVICE = disk.get("device")
-                TYPE = disk.get("type")
-                FILE = "Not Connect"
-                TARGET = disk.find("target").get("dev")
-                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+                DATA['disk'].append({
+                    "device": disk.get("device"),
+                    "type": disk.get("type"),
+                    "file": None,
+                    "target": disk.find("target").get("dev")
+                })
+            
         for nic in self.xml.find('devices').findall('interface'):
             TYPE = nic.get("type")
             MAC = nic.find("mac").get("address")
@@ -186,7 +188,13 @@ class XmlEditor():
             else:
                 TARGET = nic.find("target").get("dev","none")
     
-            DATA['interface'].append([TYPE,MAC,TARGET,SOURCE,NETWORK])
+            DATA['interface'].append({
+                "type":TYPE,
+                "mac":MAC,
+                "target":TARGET,
+                "source":SOURCE,
+                "network":NETWORK
+                })
 
         DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):

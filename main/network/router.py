@@ -21,7 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/networks", tags=["network"])
+@app.get("/api/networks", tags=["network"], response_model=List[NetworkSelect])
 async def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)

@@ -15,3 +15,18 @@ class ImageRaw(ImageBase):
     allocation:int
     path:str
     update_token:str = None
+
+class StorageSelect(CamelModel):
+    name: str
+    uuid: str
+    status: int
+    active: bool 
+    protocol: str
+    available: int
+    capacity: int
+    node_name: str
+    auto_start: bool
+    path: str
+    update_token:str = None
+    class Config:
+        orm_mode  =  True

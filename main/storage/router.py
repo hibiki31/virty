@@ -21,7 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storage"])
+@app.get("/api/storages", tags=["storage"], response_model=List[StorageSelect])
 async def get_api_storages(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)

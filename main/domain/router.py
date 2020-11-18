@@ -48,7 +48,7 @@ async def get_api_domain(
     return db.query(DomainModel).all()
 
 
-@app.get("/api/vms/{uuid}", tags=["vm"])
+@app.get("/api/vms/{uuid}", tags=["vm"],response_model=DomainDetailSelect)
 async def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

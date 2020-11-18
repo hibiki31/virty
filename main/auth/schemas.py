@@ -14,7 +14,7 @@ class TokenData(CamelModel):
     groups: List[str] = []
 
 class UserBase(CamelModel):
-    user_id: str
+    user_id: str = None
     class Config:
         orm_mode = True
 
@@ -39,3 +39,9 @@ class GroupInsert(GroupBase):
 class GroupPatch(CamelModel):
     group_id: str
     user_id: str
+
+class UserSelect(UserBase):
+    groups: List[GroupBase]
+
+class GroupSelect(GroupBase):
+    users: List[UserBase]
