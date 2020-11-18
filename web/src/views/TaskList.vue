@@ -32,18 +32,30 @@
       <template v-slot:[`item.userId`]="{ item }" justify="right">{{item.userId}}</template>
       <template v-slot:[`item.postTime`]="{ item }" justify="right">{{item.postTime | toJST}}</template>
 
-      <template v-slot:[`item.method`]="{ item }" justify="right">
-        <v-icon :color="getMethodColor(item.method)">mdi-draw</v-icon>
-        {{item.method}}
-      </template>
-
       <template v-slot:[`item.resource`]="{ item }" justify="right">
-        <v-icon small>{{getResourceIcon(item.resource)}}</v-icon>
-        {{item.resource}}
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+            v-bind="attrs"
+            v-on="on"
+            :color="getMethodColor(item.method)"
+            >{{getResourceIcon(item.resource)}}</v-icon>
+          </template>
+          <span>Json Param: {{ item.request }}</span>
+        </v-tooltip>
+        <span class="ml-3">{{item.method}}.{{item.resource}}.{{item.object}}</span>
       </template>
 
       <template v-slot:[`item.status`]="{ item }">
-        <v-icon left :color="getStatusColor(item.status)">mdi-check-circle</v-icon>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+            v-bind="attrs"
+            v-on="on"
+            left :color="getStatusColor(item.status)">mdi-check-circle</v-icon>
+          </template>
+          <span>{{ item.message }}</span>
+        </v-tooltip>
         {{item.status}}
       </template>
 
@@ -70,9 +82,7 @@ export default {
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'PostTime', value: 'postTime' },
-        { text: 'Resource', value: 'resource' },
-        { text: 'Object', value: 'object' },
-        { text: 'Method', value: 'method' },
+        { text: 'Request', value: 'resource' },
         { text: 'userId', value: 'userId' },
         { text: 'ID', value: 'uuid' },
         { text: 'TunTime', value: 'runTime' }
@@ -93,15 +103,17 @@ export default {
       else return 'yellow';
     },
     getMethodColor(statusCode) {
-      if (statusCode === 'post') return 'primary';
-      else if (statusCode === 'put') return 'blue';
+      if (statusCode === 'add') return 'primary';
+      else if (statusCode === 'update') return 'blue';
       else if (statusCode === 'delete') return 'red';
       else return 'yellow';
     },
     getResourceIcon(resource) {
-      if (resource === 'vm') return 'mdi-home';
+      if (resource === 'vm') return 'mdi-cube-outline';
       else if (resource === 'node') return 'mdi-server';
-      else return 'mdi-gate-not';
+      else if (resource === 'storage') return 'mdi-database';
+      else if (resource === 'network') return 'mdi-wan';
+      else return 'mdi-help-rhombus';
     }
   },
   filters: {

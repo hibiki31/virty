@@ -805,22 +805,23 @@ def DomainEditCpu(DOM_UUID,NEW_CPU):
 # SSH                      #
 ############################
 def SshInfoMem(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "cat /proc/meminfo |grep MemTotal"]
-    try:
-        mem = subprocess.check_output(cmd)
-    except Exception as e:
-        raise Exception(e)
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "cat /proc/meminfo |grep MemTotal"])
+    print(cmd)
+    mem = subprocess.check_output(cmd)
     words = float(str(mem).split()[1])
     memory = words/1024000
     return memory
 
 def SshInfocpu(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "grep processor /proc/cpuinfo | wc -l"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "grep processor /proc/cpuinfo | wc -l"])
     words = str(subprocess.check_output(cmd)).rstrip("\\n'").lstrip("'b")
     return words
 
 def SshInfoLibvirt(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "virsh version --daemon|grep libvirt|grep Using"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "virsh version --daemon|grep libvirt|grep Using"])
     try:
         version = str(subprocess.check_output(cmd))
     except:
@@ -828,7 +829,8 @@ def SshInfoLibvirt(user, domain, port):
     return version.rstrip("\\n'").lstrip("'b").split()[3]
     
 def SshInfoQemu(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "virsh version --daemon|grep hypervisor:"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "virsh version --daemon|grep hypervisor:"])
     try:
         version = str(subprocess.check_output(cmd))
     except:
@@ -836,19 +838,22 @@ def SshInfoQemu(user, domain, port):
     return version.rstrip("\\n'").lstrip("'b").split()[3]
 
 def SshInfocpuname(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "grep 'model name' /proc/cpuinfo|uniq"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "grep 'model name' /proc/cpuinfo|uniq"])
     mem = subprocess.check_output(cmd)
     words = str(mem).split(":")[1].rstrip("\\n'")
     return words
 
 def SshInfoDir(NODE_IP,NODE_DIR):
-    cmd = ["ssh" , NODE_IP,  "sudo", "df" ,NODE_DIR,"|sed -e '1d'"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "df" ,NODE_DIR,"|sed -e '1d'"])
     get = subprocess.check_output(cmd)
     storage = str(get).rstrip("\\n'").lstrip("b'").split()
     return storage
 
 def SshOsinfo(user, domain, port):
-    cmd = ["ssh" , user+"@"+domain,  "sudo", "cat" ,"/etc/os-release"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "cat" ,"/etc/os-release"])
     get = subprocess.check_output(cmd)
     result = {}
     for data in str(get).rstrip("\\n'").lstrip("b'").split("\\n"):
@@ -856,20 +861,9 @@ def SshOsinfo(user, domain, port):
             result[data.split("=")[0]] = data.split("=")[1].strip("\"")
     return result
 
-def SshScript(NODE_IP,SCRIPT):
-    with open(setting.script_path + "/script/" + SCRIPT) as f:
-        s = f.read().splitlines()
-        send = ""
-        for a in s:
-            if not a == "":
-                send = send +  a + ";"
-        
-    cmd = ["ssh" , NODE_IP,  "sudo", send]
-    get = subprocess.check_output(cmd)
-    print(get.decode("UTF-8"))
-    
 def SshQemuCreate(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP, "sudo", "test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "test -e" ,PATH,"; echo $?"])
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "1":
         cmd = ["ssh" , NODE_IP, "sudo", "qemu-img create -f qcow2 " ,PATH, SIZE+"G"]
@@ -885,7 +879,8 @@ def SshQemuCreate(NODE_IP,PATH,SIZE):
         return ["skip","img","create","allready",""]
 
 def SshQemuResize(NODE_IP,PATH,SIZE):
-    cmd = ["ssh" , NODE_IP,  "sudo", "test -e" ,PATH,"; echo $?"]
+    cmd = ["ssh" , user+"@"+domain ]
+    cmd.extend(["sudo", "test -e" ,PATH,"; echo $?"])
     get = subprocess.check_output(cmd)
     if get.decode("UTF-8").splitlines()[0] == "0":
         cmd = ["ssh" , NODE_IP,  "sudo", "qemu-img resize " ,PATH, SIZE+"G"]
@@ -906,7 +901,6 @@ def ImageResize(NODE,POOL,FILE,SIZE):
     for image in imagelist:
         if image['name'] == FILE:
             return SshQemuResize(NODE_IP,image['path'],SIZE)
-
 
 if __name__ == "__main__":
     args = sys.argv

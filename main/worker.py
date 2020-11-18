@@ -11,6 +11,8 @@ from auth.models import UserModel
 from task.schemas import TaskSelect
 from domain.tasks import update_domain_list
 from node.tasks import post_node_base
+from storage.tasks import update_storage_list
+from network.tasks import update_network_list
 
 
 logger = setup_logger(__name__)
@@ -34,7 +36,6 @@ def lost_task_cheack():
 
 
 def task_swicher(model:TaskSelect, db:SessionLocal):
-    res = None
     if model.resource == "vm":
         if model.object == "list":
             if model.method == "update":
@@ -43,9 +44,21 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "base":
             if model.method == "add":
                 res = post_node_base(db=db, model=model)
-                
-    if res == None:
+    elif model.resource == "storage":
+        if model.object == "list":
+            if model.method == "update":
+                res = update_storage_list(db=db, model=model)
+    
+    elif model.resource == "network":
+        if model.object == "list":
+            if model.method == "update":
+                res = update_network_list(db=db, model=model)
+
+    try:
+        res
+    except:
         raise Exception("タスクが見つかりませんでした")
+
     return res
 
 

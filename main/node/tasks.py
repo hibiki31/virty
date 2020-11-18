@@ -20,15 +20,13 @@ def post_node_base(db: Session, model: TaskSelect):
     user = request.user_name
     domain = request.domain
     port = request.port
-    try:
-        memory = virty.SshInfoMem(user, domain, port)
-        core = virty.SshInfocpu(user, domain, port)
-        cpu = virty.SshInfocpuname(user, domain, port)
-        os = virty.SshOsinfo(user, domain, port)
-        qemu = virty.SshInfoQemu(user, domain, port)
-        libvirt = virty.SshInfoLibvirt(user, domain, port)
-    except Exception as e:
-        return None
+    
+    memory = virty.SshInfoMem(user, domain, port)
+    core = virty.SshInfocpu(user, domain, port)
+    cpu = virty.SshInfocpuname(user, domain, port)
+    os = virty.SshOsinfo(user, domain, port)
+    qemu = virty.SshInfoQemu(user, domain, port)
+    libvirt = virty.SshInfoLibvirt(user, domain, port)
 
     row = NodeModel(
         name = request.name,

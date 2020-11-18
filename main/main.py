@@ -13,6 +13,8 @@ from auth.router import app as auth_router
 from node.router import app as node_router
 from task.router import app as task_router
 from domain.router import app as domain_router
+from storage.router import app as storage_router
+from network.router import app as network_router
 
 from auth.models import UserModel
 
@@ -42,7 +44,7 @@ tags_metadata = [
 app = FastAPI(
     title="VirtyAPI",
     description="",
-    version="1.2.0",
+    version="1.3.0",
     openapi_tags=tags_metadata,
     docs_url="/api",
     redoc_url="/api/redoc",
@@ -61,6 +63,8 @@ app.include_router(task_router)
 app.include_router(auth_router)
 app.include_router(node_router)
 app.include_router(domain_router)
+app.include_router(storage_router)
+app.include_router(network_router)
 
 
 Base.metadata.create_all(bind=Engine)

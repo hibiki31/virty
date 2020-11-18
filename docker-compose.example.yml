@@ -6,7 +6,6 @@ services:
       - ./data/app:/opt/virty/app/data/
       - ./data/key:/root/.ssh/
     environment:
-      TZ: "Asia/Tokyo"
       VIRTY_ROOT: "/opt/virty/app/"
     restart: always
   virty-web:
@@ -15,6 +14,4 @@ services:
       - ./data/nginx:/var/log/nginx/
     ports:
       - 0.0.0.0:80:80
-    environment:
-      TZ: "Asia/Tokyo"
     restart: always

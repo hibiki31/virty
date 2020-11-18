@@ -3,27 +3,128 @@ import os
 import xml.etree.ElementTree as ET
 
 from mixin.settings import virty_root
+from module.model import AttributeDict
+
+from storage.schemas import ImageRaw
 
 class XmlEditor():
-    def __init__(self,TYPE,XML):
-        if TYPE == "file":
+    def __init__(self, type, obj):
+        """
+        パーサに複数の手段でxml_rootを渡す
+
+        Parameters
+        ----------
+        type : str
+            file, dom, net, str
+        """
+        if type == "file":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/xml/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + '/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "dom":
+        elif type == "dom":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/dump/dom/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + 'data/xml/domain/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "net":
+        elif type == "net":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/dump/net/'+ XML +'.xml') 
+            tree = ET.parse(virty_root + '/dump/net/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif TYPE == "str":
-            root = ET.fromstring(XML)
+        elif type == "str":
+            root = ET.fromstring(obj)
             self.xml = root
+
+
+    def storage_pase(self):
+        """
+        ストレージのXMLをパースする
+        Returns
+        -------
+        AttributeDict()
+        """
+
+        data = AttributeDict()
+        
+        data.name = self.xml.find('name').text
+        data.uuid = self.xml.find('uuid').text
+        data.capacity = self.xml.find('capacity').text
+        data.capacity_unit = self.xml.find('capacity').get("unit")
+        data.allocation_unit = self.xml.find('allocation').get("unit")
+        data.allocation = self.xml.find('allocation').text
+        data.available_unit = self.xml.find('available').get("unit")
+        data.available = self.xml.find('available').text
+
+        data.capacity = unit_convertor(data.capacity_unit, "G", data.capacity)
+        data.capacity_unit = "G"
+        data.allocation = unit_convertor(data.allocation_unit, "G", data.allocation)
+        data.allocation_unit = "G"
+        data.available = unit_convertor(data.available_unit, "G", data.available)
+        data.available_unit = "G"
+        
+        data.path = self.xml.find('target').find('path').text
+
+        return data
+    
+    def image_pase(self):
+        """
+        イメージのXMLをパースする
+        Returns
+        -------
+        AttributeDict()
+        """
+
+        data = ImageRaw(
+            name = self.xml.find('name').text,
+            capacity = unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text),
+            allocation = unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text),
+            capacity_unit = "G",
+            allocation_unit = "G",
+            path = self.xml.find('target').find('path').text
+        )
+
+        return data
+    
+    def network_pase(self):
+        data = {}
+        data['name'] = self.xml.find('name').text
+        data['uuid'] = self.xml.find('uuid').text
+       
+        data['ip'] = []
+        data['dhcp'] = []
+
+        if self.xml.find('ip') is not None:
+            data['ip'].append(self.xml.find('ip').get("address",None))
+            data['ip'].append(self.xml.find('ip').get("netmask",None))
+            if self.xml.find('ip').find('dhcp') is not None:
+                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
+                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
+                data['dhcp'].append([DHCP_START,DHCP_END])
+
+        data['bridge'] = self.xml.find('bridge').get("name")
+
+        if self.xml.find('mac') is not None:
+            data['mac'] = self.xml.find('mac').get("address",None)
+        else:
+            data['mac'] = None
+
+        if self.xml.find('forward') is not None:
+            data['forward'] = self.xml.find('forward').get("mode")
+        else:
+            data['forward'] = None
+
+        if data['forward'] == "nat":
+            data['type'] = "NAT"
+        elif data['forward'] == None:
+            data['type'] = "internal"
+        elif data['forward'] == "bridge":
+            data['type'] = "Bridge"
+        else:
+            data['type'] = "unknown"
+        
+        return data
+
 
     ############################
     # DATA                     #
@@ -35,7 +136,6 @@ class XmlEditor():
         DATA['memory-unit'] = self.xml.find('memory').get("unit")
         DATA['vcpu'] = self.xml.find('vcpu').text
         DATA['uuid'] = self.xml.find('uuid').text
-        DATA['vnc'] = []
         DATA['disk'] = []
         DATA['interface'] = []
         DATA['boot'] = []
@@ -49,24 +149,27 @@ class XmlEditor():
             Count = Count + 1
         vnc = self.xml.find('devices').find('graphics')        
     
-        DATA['vnc'].append(vnc.get("port"))
-        DATA['vnc'].append(vnc.get("autoport"))
-        DATA['vnc'].append(vnc.get("listen"))
-        DATA['vnc'].append(vnc.get("passwd", "none"))
+        DATA['vnc_port'] = vnc.get("port")
+        # DATA['vnc'].append(vnc.get("autoport"))
+        # DATA['vnc'].append(vnc.get("listen"))
+        # DATA['vnc'].append(vnc.get("passwd", "none"))
 
         for disk in self.xml.find('devices').findall('disk'):
             if disk.find("source") is not None:
-                DEVICE = disk.get("device")
-                TYPE = disk.get("type")
-                FILE = disk.find("source").get("file","none")
-                TARGET =  disk.find("target").get("dev")
-                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+                DATA['disk'].append({
+                    "device": disk.get("device"),
+                    "type": disk.get("type"),
+                    "file": disk.find("source").get("file","none"),
+                    "target": disk.find("target").get("dev")
+                })
             else:
-                DEVICE = disk.get("device")
-                TYPE = disk.get("type")
-                FILE = "Not Connect"
-                TARGET = disk.find("target").get("dev")
-                DATA['disk'].append([DEVICE,TYPE,FILE,TARGET])
+                DATA['disk'].append({
+                    "device": disk.get("device"),
+                    "type": disk.get("type"),
+                    "file": None,
+                    "target": disk.find("target").get("dev")
+                })
+            
         for nic in self.xml.find('devices').findall('interface'):
             TYPE = nic.get("type")
             MAC = nic.find("mac").get("address")
@@ -85,7 +188,13 @@ class XmlEditor():
             else:
                 TARGET = nic.find("target").get("dev","none")
     
-            DATA['interface'].append([TYPE,MAC,TARGET,SOURCE,NETWORK])
+            DATA['interface'].append({
+                "type":TYPE,
+                "mac":MAC,
+                "target":TARGET,
+                "source":SOURCE,
+                "network":NETWORK
+                })
 
         DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):
@@ -93,46 +202,17 @@ class XmlEditor():
                 DATA['selinux']
 
         return DATA
+    
+    def dump_file(self,type):
+        xml_dir = virty_root + 'data/xml/' +type+ '/'
+        os.chdir = virty_root
+        os.makedirs(xml_dir, exist_ok=True)
+        uuid = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
 
-    def NetworkData(self):
-        DATA = {}
-        DATA['name'] = self.xml.find('name').text
-        DATA['uuid'] = self.xml.find('uuid').text
-       
-        DATA['ip'] = []
-        DATA['dhcp'] = []
+class XMLOLD():
 
-        if self.xml.find('ip') is not None:
-            DATA['ip'].append(self.xml.find('ip').get("address",None))
-            DATA['ip'].append(self.xml.find('ip').get("netmask",None))
-            if self.xml.find('ip').find('dhcp') is not None:
-                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
-                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
-                DATA['dhcp'].append([DHCP_START,DHCP_END])
-
-        DATA['bridge'] = self.xml.find('bridge').get("name")
-
-        if self.xml.find('mac') is not None:
-            DATA['mac'] = self.xml.find('mac').get("address",None)
-        else:
-            DATA['mac'] = None
-
-        if self.xml.find('forward') is not None:
-            DATA['forward'] = self.xml.find('forward').get("mode")
-        else:
-            DATA['forward'] = None
-
-        if DATA['forward'] == "nat":
-            DATA['type'] = "NAT"
-        elif DATA['forward'] == None:
-            DATA['type'] = "internal"
-        elif DATA['forward'] == "bridge":
-            DATA['type'] = "Bridge"
-        else:
-            DATA['type'] = "unknown"
-        
-        return DATA
-
+    
     def ImageData(self):
         DATA = {}
         if not self.xml.get("type") == "file":
@@ -260,12 +340,7 @@ class XmlEditor():
     ############################
     # DUMP                     #
     ############################
-    def dump_file(self,type):
-        xml_dir = virty_root + 'data/xml/' +type+ '/'
-        os.chdir = virty_root
-        os.makedirs(xml_dir, exist_ok=True)
-        uuid = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
+    
 
     def DumpStr(self):
         return ET.tostring(self.xml).decode()

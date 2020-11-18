@@ -6,7 +6,7 @@ from mixin.database import Base, Engine
 class DomainModel(Base):
     __tablename__ = "domains"
     uuid = Column(String, primary_key=True, index=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     core = Column(Integer)
     memory = Column(Integer)
     status = Column(Integer)
@@ -16,7 +16,7 @@ class DomainModel(Base):
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     interface = relationship('DomainInterfaceModel')
     drive = relationship('DomainDriveModel')
-    is_lost = Column(Boolean)
+    update_token = Column(String)
 
 
 class DomainInterfaceModel(Base):
@@ -27,7 +27,7 @@ class DomainInterfaceModel(Base):
     target = Column(String)
     source = Column(String)
     network = Column(String)
-    is_updating = Column(Boolean)
+    update_token = Column(String)
 
 
 class DomainDriveModel(Base):
@@ -36,4 +36,4 @@ class DomainDriveModel(Base):
     target = Column(String, primary_key=True)
     type = Column(String)
     source = Column(String)
-    is_updating = Column(Boolean)
+    update_token = Column(String)

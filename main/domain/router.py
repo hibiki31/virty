@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -21,6 +21,12 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
+exception_notfund = HTTPException(
+    status_code=404,
+    detail="Object not fund."
+)
+
+
 @app.put("/api/vms", tags=["vm"], response_model=TaskSelect)
 async def put_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
@@ -40,6 +46,24 @@ async def get_api_domain(
     ):
 
     return db.query(DomainModel).all()
+
+
+@app.get("/api/vms/{uuid}", tags=["vm"],response_model=DomainDetailSelect)
+async def get_api_domain(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        uuid:str = None
+    ):
+    try:
+        domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
+        node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
+    except:
+        raise exception_notfund
+
+    editor = virtlib.XmlEditor("dom",domain.uuid)
+    domain_xml_pase = editor.domain_parse()
+
+    return {'db':domain, 'node': node, 'xml': domain_xml_pase}
 
 
 @app.delete("/api/vms", tags=["vm"], response_model=List[DomainSelect])

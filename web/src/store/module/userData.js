@@ -30,7 +30,12 @@ const mutations = {
     Cookies.remove('token');
     state.isLoaded = true;
     if (responseData) {
-      const token = VueJwtDecode.decode(responseData.access_token);
+      let token;
+      try {
+        token = VueJwtDecode.decode(responseData.access_token);
+      } catch (error) {
+        return;
+      }
       state.isAuthed = true;
       state.token = responseData.access_token;
       state.userId = token.sub;

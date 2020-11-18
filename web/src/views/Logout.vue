@@ -8,8 +8,8 @@
 
 export default {
   name: 'Logout',
-  mounted() {
-    this.$_sleep(1000);
+  async mounted() {
+    await this.$_sleep(1000);
     this.$store.dispatch('updateAuthState', {});
     this.$router.push({ name: 'Login' });
   }

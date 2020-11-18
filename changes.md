@@ -1,3 +1,18 @@
+### Ver 1.3.0
+- 2020-11-18 Fix lint (WEB) e121771 (@hibiki31) 
+- 2020-11-18 Add 各リソースの一覧ページ (WEB) 067d463 (@hibiki31) 
+- 2020-11-18 Change レスポンスのスキーマ定義 (API) b5ea0f0 (@hibiki31) 
+- 2020-11-18 Update VScode設定 383670f (@hibiki31) 
+- 2020-11-18 Fix ログアウト時にリダイレクトされない (WEB) 9581e6e (@hibiki31) 
+- 2020-11-18 Add ネットワーク関連のAPI e75b43f (@hibiki31) 
+- 2020-11-17 Add グループ関連のAPI d4f37bf (@hibiki31) 
+- 2020-11-16 Add VM詳細の取得API 6d753ee (@hibiki31) 
+- 2020-11-16 Update README.md d98d8b0 (@hibiki31) 
+- 2020-11-15 Fix LANG 9de316a (@hibiki31) 
+- 2020-11-15 Change 開発環境の判定と、本番環境でのトークン自動生成 c5cc164 (@hibiki31) 
+- 2020-11-15 Update version 240ceb7 (@hibiki31) 
+- 2020-11-15 Add APIで実装されてる機能をUIに実装 4422999 (@hibiki31) 
+
 ### Ver 1.2.0
 - 2020-11-15 Add APIで実装されてる機能をUIに実装 4422999 (@hibiki31) 
 
