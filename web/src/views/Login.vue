@@ -123,7 +123,7 @@ export default {
           }
           this.$store.dispatch('updateAuthState', res.data);
           this.$_pushNotice('Login success', 'success');
-          this.$router.push({ name: 'VMList' });
+          this.$router.push(this.$route.query.redirect || { name: 'VMList' });
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');
