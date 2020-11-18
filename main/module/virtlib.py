@@ -14,6 +14,7 @@ from module.xmllib import XmlEditor
 from node.models import NodeModel
 from module.model import ImageModel
 from storage.models import StorageModel
+from network.models import NetworkModel
 
 from typing import List, Optional
 
@@ -55,9 +56,25 @@ class VirtManager():
                 image.append(xml_pace)
             data.append({"storage":storage, "image": image})
         return data
-
     
-
+    def network_data(self, token):
+        networks = self.node.listAllNetworks()
+        data = []
+        for net in networks:
+            xml = XmlEditor(type="str", obj=net.XMLDesc())
+            xml = xml.network_pase()
+            data.append(NetworkModel(
+                uuid = xml['uuid'],
+                name = xml['name'],
+                host_interface = xml['bridge'],
+                type = xml['type'],
+                active = net.isActive(),
+                auto_start = net.autostart(),
+                dhcp = None,
+                update_token = token
+            ))
+            
+        return data
 
 
 

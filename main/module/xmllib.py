@@ -85,6 +85,46 @@ class XmlEditor():
         )
 
         return data
+    
+    def network_pase(self):
+        data = {}
+        data['name'] = self.xml.find('name').text
+        data['uuid'] = self.xml.find('uuid').text
+       
+        data['ip'] = []
+        data['dhcp'] = []
+
+        if self.xml.find('ip') is not None:
+            data['ip'].append(self.xml.find('ip').get("address",None))
+            data['ip'].append(self.xml.find('ip').get("netmask",None))
+            if self.xml.find('ip').find('dhcp') is not None:
+                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
+                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
+                data['dhcp'].append([DHCP_START,DHCP_END])
+
+        data['bridge'] = self.xml.find('bridge').get("name")
+
+        if self.xml.find('mac') is not None:
+            data['mac'] = self.xml.find('mac').get("address",None)
+        else:
+            data['mac'] = None
+
+        if self.xml.find('forward') is not None:
+            data['forward'] = self.xml.find('forward').get("mode")
+        else:
+            data['forward'] = None
+
+        if data['forward'] == "nat":
+            data['type'] = "NAT"
+        elif data['forward'] == None:
+            data['type'] = "internal"
+        elif data['forward'] == "bridge":
+            data['type'] = "Bridge"
+        else:
+            data['type'] = "unknown"
+        
+        return data
+
 
     ############################
     # DATA                     #
@@ -164,45 +204,7 @@ class XmlEditor():
 
 class XMLOLD():
 
-    def NetworkData(self):
-        DATA = {}
-        DATA['name'] = self.xml.find('name').text
-        DATA['uuid'] = self.xml.find('uuid').text
-       
-        DATA['ip'] = []
-        DATA['dhcp'] = []
-
-        if self.xml.find('ip') is not None:
-            DATA['ip'].append(self.xml.find('ip').get("address",None))
-            DATA['ip'].append(self.xml.find('ip').get("netmask",None))
-            if self.xml.find('ip').find('dhcp') is not None:
-                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
-                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
-                DATA['dhcp'].append([DHCP_START,DHCP_END])
-
-        DATA['bridge'] = self.xml.find('bridge').get("name")
-
-        if self.xml.find('mac') is not None:
-            DATA['mac'] = self.xml.find('mac').get("address",None)
-        else:
-            DATA['mac'] = None
-
-        if self.xml.find('forward') is not None:
-            DATA['forward'] = self.xml.find('forward').get("mode")
-        else:
-            DATA['forward'] = None
-
-        if DATA['forward'] == "nat":
-            DATA['type'] = "NAT"
-        elif DATA['forward'] == None:
-            DATA['type'] = "internal"
-        elif DATA['forward'] == "bridge":
-            DATA['type'] = "Bridge"
-        else:
-            DATA['type'] = "unknown"
-        
-        return DATA
-
+    
     def ImageData(self):
         DATA = {}
         if not self.xml.get("type") == "file":

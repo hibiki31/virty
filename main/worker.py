@@ -12,6 +12,7 @@ from task.schemas import TaskSelect
 from domain.tasks import update_domain_list
 from node.tasks import post_node_base
 from storage.tasks import update_storage_list
+from network.tasks import update_network_list
 
 
 logger = setup_logger(__name__)
@@ -47,6 +48,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "list":
             if model.method == "update":
                 res = update_storage_list(db=db, model=model)
+    
+    elif model.resource == "network":
+        if model.object == "list":
+            if model.method == "update":
+                res = update_network_list(db=db, model=model)
 
     try:
         res
