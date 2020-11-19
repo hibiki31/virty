@@ -1,5 +1,6 @@
 <template>
   <div>
+    <DomainAddDialog ref="domainAddDialog"/>
     <v-dialog width="300" v-model="dialog">
       <v-card>
         <v-card-title>Change VM owner</v-card-title>
@@ -35,8 +36,18 @@
           dark
           class="ma-2"
           color="primary"
+          :loading="this.reloadLoading"
         >
           <v-icon left>mdi-cached</v-icon>Reload
+        </v-btn>
+        <v-btn
+          v-on:click="this.openDomainAddDialog"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-server-plus</v-icon>ADD
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -133,14 +144,19 @@
 
 <script>
 import axios from '@/axios/index';
+import DomainAddDialog from '../conponents/dialog/DomainAddDialog';
 
 export default {
   name: 'VMList',
+  components: {
+    DomainAddDialog
+  },
   data: function() {
     return {
       list: [],
       dialog: false,
       uuid: '',
+      reloadLoading: false,
       selectUserId: '',
       headers: [
         { text: 'Status', value: 'status' },
@@ -161,6 +177,9 @@ export default {
     axios.get('/api/groups').then((response) => (this.group = response.data));
   },
   methods: {
+    openDomainAddDialog() {
+      this.$refs.domainAddDialog.openDialog();
+    },
     getPowerColor(statusCode) {
       if (statusCode === 1) return 'blue';
       else if (statusCode === 5) return 'grey';
@@ -170,25 +189,30 @@ export default {
       else return 'yellow';
     },
     vmListReload() {
+      this.reloadLoading = true;
       axios
         .put('/api/vms')
-        .then((res) => {
-          if (res.status === 401) {
-            this.$_pushNotice('Wrong userID or password', 'error');
-          } else if (res.status !== 200) {
-            this.$_pushNotice('An error occurred', 'error');
-            return;
-          }
-          this.$_pushNotice('Queueing Relaod task', 'success');
+        .then(res => {
+          this.$_pushNotice('Added a task!', 'success');
+          axios
+            .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
+            .then(res => {
+              this.$_pushNotice('Finished a task!', 'success');
+              axios.get('/api/vms').then((response) => (this.list = response.data));
+              this.reloadLoading = false;
+            })
+            .catch(error => {
+              this.$_pushNotice(error.response.data.detail, 'error');
+              this.reloadLoading = false;
+            });
         })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
+        .catch(error => {
+          this.$_pushNotice(error.response.data.detail, 'error');
         });
     },
     vmPowerOff(uuid) {
       axios
-        .put('/api/queue/vm/power', { uuid: uuid, status: 'poweroff' })
+        .patch('/api/vms', { uuid: uuid, status: 'off' })
         .then((res) => {
           if (res.status === 401) {
             this.$_pushNotice('Wrong userID or password', 'error');
@@ -205,7 +229,7 @@ export default {
     },
     vmPowerOn(uuid) {
       axios
-        .put('/api/queue/vm/power', { uuid: uuid, status: 'poweron' })
+        .patch('/api/vms', { uuid: uuid, status: 'on' })
         .then((res) => {
           if (res.status !== 200) {
             this.$_pushNotice('An error occurred', 'error');

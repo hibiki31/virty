@@ -59,7 +59,29 @@
         {{item.status}}
       </template>
 
-      <template v-slot:[`item.runTime`]="{ item }">{{ item.runTime | toFixedTow}} s</template>
+      <template v-slot:[`item.runTime`]="{ item }">
+        {{ item.runTime | toFixedTow}} s
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+            v-bind="attrs"
+            v-on="on"
+            class="ml-5"
+            >mdi-code-json</v-icon>
+          </template>
+          <span>{{ item.request }}</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+            v-bind="attrs"
+            v-on="on"
+            class="ml-5"
+            >mdi-android-messages</v-icon>
+          </template>
+          <span>{{ item.message }}</span>
+        </v-tooltip>
+      </template>
 
     </v-data-table>
   </v-card>
