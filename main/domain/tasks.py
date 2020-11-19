@@ -147,10 +147,18 @@ def change_domain_base(db: Session, model: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
+
+    # 電源
     if request.status == "on":
         manager.domain_poweron(uuid=request.uuid)
     elif request.status == "off":
         manager.domain_destroy(uuid=request.uuid)
+    
+    # CDROM 
+    if request.status == "mount":
+        manager.domain_cdrom(request.uuid, request.target, request.path)
+    elif request.status == "unmount":
+        manager.domain_cdrom(request.uuid, request.target)
 
     update_domain_list(db=db, model=TaskModel())
 

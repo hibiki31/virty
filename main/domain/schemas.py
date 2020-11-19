@@ -15,6 +15,8 @@ class DomainDelete(DomainBase):
 
 class DomainPatch(DomainBase):
     status: str = None
+    path: str = None
+    target: str = None
 
 class DomainInsert(DomainBase):
     description: str = None

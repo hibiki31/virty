@@ -182,6 +182,16 @@ class XmlEditor():
 
     def dump_str(self):
         return ET.tostring(self.xml).decode()
+    
+    def domain_cdrom(self, target, path=None):
+        devices = self.xml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == target:
+                    if disk.find('source') == None:
+                        ET.SubElement(disk, 'source') 
+                    disk.find('source').set('file', path)
+                    return ET.tostring(disk).decode()
 
     ############################
     # DATA                     #

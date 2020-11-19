@@ -107,6 +107,12 @@ class VirtManager():
         elif con.autostart() == 0 and not is_enable:
             con.setAutostart(1)
 
+    def domain_cdrom(self, uuid, target, path=None):
+        con = self.node.lookupByUUIDString(uuid)
+
+        xml = XmlEditor(type="str",obj=con.XMLDesc())
+        con.updateDeviceFlags(xml.domain_cdrom(target=target,path=path))
+
 
 
 
