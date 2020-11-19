@@ -76,6 +76,56 @@ class VirtManager():
             
         return data
 
+    def domain_define(self, xml_str):
+        self.node.defineXML(xml_str)
+    
+    def domain_undefine(self, uuid):
+        con = self.node.lookupByUUIDString(uuid)
+        con.undefine()
+
+    def domain_destroy(self, uuid):
+        con = self.node.lookupByUUIDString(uuid)
+        if con.state()[0] != 5:
+            con.destroy()
+
+    def domain_shutdown(self, uuid):
+        con = self.node.lookupByUUIDString(uuid)
+        if con.state()[0] != 5:
+            con.shutdown()
+
+    def domain_poweron(self, uuid):
+        con = self.node.lookupByUUIDString(uuid)
+        if con.state()[0] != 1:
+            con.create()
+
+    def domain_autostart(self,is_enable):
+        con = self.node.lookupByUUIDString(uuid)
+        # Enable
+        if  con.autostart() == 1 and is_enable:
+            con.setAutostart(0)
+        # Disable
+        elif con.autostart() == 0 and not is_enable:
+            con.setAutostart(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class VirtEditor():

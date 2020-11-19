@@ -13,6 +13,8 @@ class DomainBase(CamelModel):
 class DomainDelete(DomainBase):
     pass
 
+class DomainPatch(DomainBase):
+    status: str = None
 
 class DomainInsert(DomainBase):
     description: str = None
@@ -23,6 +25,7 @@ class DomainSelect(DomainInsert):
     core: int
     memory: int
     status: int
+    node_name: str
     user_id: str = None
     group_id: str = None
     class Config:
@@ -58,3 +61,23 @@ class DomainDetailSelect(CamelModel):
     xml: DomainDetailXml
     class Config:
         orm_mode  =  True
+
+class DomainInsertDisk(CamelModel):
+    type: str
+    save_pool: str
+    original_pool: str = None
+    original_name: str = None
+    size_giga_byte: int = None
+
+class DomainInsertInterface(CamelModel):
+    type: str
+    mac: str = None
+    network_name: str
+
+class DomainInsert(CamelModel):
+    name: str
+    node_name: str
+    memory_mega_byte: int
+    cpu: int
+    disks: List[DomainInsertDisk]
+    interface: List[DomainInsertInterface]
