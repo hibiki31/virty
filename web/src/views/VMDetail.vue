@@ -1,5 +1,7 @@
 <template>
   <div class="VMDetail">
+    <DomainCDRomDialog ref="domainCDRomDialog" />
+    <DomainDeleteDialog ref="domainDeleteDialog" />
     <v-dialog width="300" v-model="memoryDialog">
       <v-card>
         <v-card-title>Change Memory</v-card-title>
@@ -43,7 +45,7 @@
       <v-col cols="12" sm="6" md="4" lg="3">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
-            Spec
+            About
           </v-card-title>
           <v-list class="body-2" dense>
             <v-list-item>
@@ -125,16 +127,69 @@
           </v-simple-table>
         </v-card>
       </v-col>
+      <v-col cols="12" sm="6" md="4" lg="6">
+        <v-card>
+          <v-card-title class="subheading font-weight-bold">
+            <v-icon>mdi-database</v-icon>Storage
+          </v-card-title>
+          <v-simple-table>
+            <template v-slot:default>
+              <thead>
+                <tr>
+                  <th class="text-left">Device</th>
+                  <th class="text-left">Type</th>
+                  <th class="text-left">File</th>
+                  <th class="text-left">Target</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in data.xml.disk" :key="item.path">
+                  <td v-if="item.device=='cdrom'" >
+                    {{ item.device }}
+                    <v-btn icon v-on:click="openCDRomDialog(item.target)">
+                      <v-icon>mdi-pen</v-icon>
+                    </v-btn>
+                  </td>
+                  <td v-else>{{ item.device }}</td>
+                  <td>{{ item.type }}</td>
+                  <td>{{ item.file }}</td>
+                  <td>{{ item.target }}</td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
+        </v-card>
+      </v-col>
+      <v-col cols="12" sm="6" md="4" lg="4">
+        <v-card>
+          <v-card-actions>
+            <v-btn
+              v-on:click="this.openDeleteDialog"
+              small
+              dark
+              class="ma-2"
+              color="red"
+            >
+              <v-icon left>mdi-server-plus</v-icon>Delete
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
     </v-row>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
 import axios from '@/axios/index';
+import DomainCDRomDialog from '../conponents/dialog/DomainCDRomDialog';
+import DomainDeleteDialog from '../conponents/dialog/DomainDeleteDialog';
 
 export default {
   name: 'VMDetail',
+  components: {
+    DomainCDRomDialog,
+    DomainDeleteDialog
+  },
   data: () => ({
     memoryDialog: false,
     memoryItems: [
@@ -236,6 +291,12 @@ export default {
       });
   },
   methods: {
+    openCDRomDialog(target) {
+      this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid);
+    },
+    openDeleteDialog() {
+      this.$refs.domainDeleteDialog.openDialog(this.data.db.uuid);
+    },
     memoryChangeMethod() {
       axios
         .put('/api/queue/vm/memory', { uuid: this.$route.params.uuid, memory: this.memoryValue })

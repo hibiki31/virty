@@ -17,9 +17,9 @@ class XmlEditor():
         type : str
             file, dom, net, str
         """
-        if type == "file":
+        if type == "static":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/xml/'+ obj +'.xml') 
+            tree = ET.parse(virty_root + 'static/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "dom":
@@ -125,6 +125,73 @@ class XmlEditor():
         
         return data
 
+
+    def domain_emulator_edit(self, os_like):
+        if os_like == "debian":
+            self.xml.find('devices').find('emulator').text = "/usr/bin/kvm"
+            self.xml.find('os').find('type').set('machine', "pc-i440fx-2.8")
+        elif os_like == "rhel fedora":
+            self.xml.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
+            self.xml.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
+        
+    
+    def domain_base_edit(self, domain_name, memory_mega_byte, core, vnc_port:int=None, vnc_passwd=None):
+        self.xml.findall('name')[0].text = domain_name
+        self.xml.find('memory').text = str(memory_mega_byte)
+        self.xml.find('currentMemory').text = str(memory_mega_byte)
+        self.xml.find('vcpu').text = str(core)
+
+        if vnc_port == 0:
+            self.xml.find('devices').find('graphics').set('autoport', "yes")
+            self.xml.find('devices').find('graphics').set('port', "0")	
+        elif vnc_port > 0:
+            self.xml.find('devices').find('graphics').set('autoport', "no")
+            self.xml.find('devices').find('graphics').set('port', vnc_port) 
+
+        if vnc_passwd != None:
+            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)
+
+    def domain_interface_add(self, network_name, mac_address=None):
+        if mac_address == None:
+            mac_address = macaddress_generator()
+    
+        add_interface = ET.SubElement(self.xml.find('devices'), "interface")
+        add_interface.set('type', 'network')
+        ET.SubElement(add_interface, 'mac').set('address', mac_address)
+        ET.SubElement(add_interface, 'source').set('network', network_name)
+        ET.SubElement(add_interface, 'model').set('type', 'virtio')
+    
+    def domain_device_image_add(self,image_path, target_device):
+        disk = ET.SubElement(self.xml.find('devices'), "disk")
+        disk.set('type', 'file')
+        disk.set('device', 'disk')
+        driver = ET.SubElement(disk, 'driver')
+        source = ET.SubElement(disk, 'source')
+        target = ET.SubElement(disk, 'target')
+        address = ET.SubElement(disk, 'address')
+        driver.set('name','qemu')
+        driver.set('type','qcow2')
+        source.set('file',image_path)
+        target.set('dev',target_device)
+        target.set('bus','virtio')
+        address.set('bus', '0x00')
+        address.set('domain', '0x0000')
+        address.set('function', '0x0')
+        address.set('slot', '0x04')
+        address.set('type', 'pci')
+
+    def dump_str(self):
+        return ET.tostring(self.xml).decode()
+    
+    def domain_cdrom(self, target, path=None):
+        devices = self.xml.find('devices')
+        for disk in devices.iter('disk'):
+            if disk.get('device') == "cdrom":
+                if disk.find('target').get('dev') == target:
+                    if disk.find('source') == None:
+                        ET.SubElement(disk, 'source') 
+                    disk.find('source').set('file', path)
+                    return ET.tostring(disk).decode()
 
     ############################
     # DATA                     #
@@ -310,24 +377,7 @@ class XMLOLD():
     ############################
     # ADD                      #
     ############################
-    def AddDomainImage(self,IMG_PATH):
-        disk = ET.SubElement(self.xml.find('devices'), "disk")
-        disk.set('type', 'file')
-        disk.set('device', 'disk')
-        driver = ET.SubElement(disk, 'driver')
-        source = ET.SubElement(disk, 'source')
-        target = ET.SubElement(disk, 'target')
-        address = ET.SubElement(disk, 'address')
-        driver.set('name','qemu')
-        driver.set('type','qcow2')
-        source.set('file',IMG_PATH)
-        target.set('dev','vda')
-        target.set('bus','virtio')
-        address.set('bus', '0x00')
-        address.set('domain', '0x0000')
-        address.set('function', '0x0')
-        address.set('slot', '0x04')
-        address.set('type', 'pci')
+    
 
     def AddDomainNetwork(self,NET_NAME):
         MAC_ADDRESS = macaddress_generator()

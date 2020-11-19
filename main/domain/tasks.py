@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
+from time import time
 
 from .models import *
 from .schemas import *
 
 from task.models import TaskModel
 from node.models import NodeModel
+from storage.models import StorageModel
 from mixin.log import setup_logger
 
 from module import virty
 from module import virtlib
 from module import xmllib
+from module import sshlib
 
 
 logger = setup_logger(__name__)
@@ -17,6 +20,8 @@ logger = setup_logger(__name__)
 
 def update_domain_list(db: Session, model: TaskModel):
     nodes:NodeModel = db.query(NodeModel).all()
+    token = time()
+
     for node in nodes:
         if node.status != 10:
             continue
@@ -43,8 +48,118 @@ def update_domain_list(db: Session, model: TaskModel):
                 memory = temp['memory'],
                 status = domain['status'],
                 node_name = node.name,
-                update_token = ""
+                update_token = token
             )
             db.merge(row)
     db.commit()
+    db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
+    db.commit()
+    return model
+
+
+def add_domain_base(db: Session, model: TaskModel):
+    task_model:TaskModel = model
+    model: DomainInsert = DomainInsert(**task_model.request)
+
+    domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==model.name).all()
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name==model.node_name).one()
+    except:
+        raise Exception("node not found")
+    
+    if domains != []:
+        raise Exception("domain name is duplicated")
+
+    manager = virtlib.VirtManager(node_model=node)
+    editor = xmllib.XmlEditor("static","domain_base")
+
+    editor.domain_emulator_edit(node.os_like)
+    editor.domain_base_edit(
+        domain_name=model.name,
+        memory_mega_byte=model.memory_mega_byte,
+        core=model.cpu,
+        vnc_port=0,
+        vnc_passwd=None
+    )
+    
+    for interface in model.interface:
+        interface: DomainInsertInterface
+        editor.domain_interface_add(network_name=interface.network_name, mac_address=None)
+
+    img_device_names = ["vda","vdb","vdc"]
+
+    for device, device_name in zip(model.disks, img_device_names):
+        device: DomainInsertDisk
+        # 新規ディスクの場合
+        if device.type == "empty":
+            try:
+                new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.name==device.save_pool).one()
+            except:
+                raise Exception("request pool name not found")
+            # ファイル名決めてる
+            create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
+            # XMLに追加
+            editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager.qemu_create(
+                size_giga_byte=device.size_giga_byte,
+                path=create_image_path
+            )
+    
+    manager.domain_define(xml_str=editor.dump_str())
+
+    return task_model
+
+
+def delete_domain_base(db: Session, model: TaskModel):
+    request: DomainInsert = DomainDelete(**model.request)
+
+    try:
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+    except:
+        raise Exception("domain not found")
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    manager = virtlib.VirtManager(node_model=node)
+    manager.domain_undefine(request.uuid)
+
+    update_domain_list(db=db, model=TaskModel())
+
+    return model
+
+
+def change_domain_base(db: Session, model: TaskModel):
+    request: DomainPatch = DomainPatch(**model.request)
+
+    try:
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+    except:
+        raise Exception("domain not found")
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    manager = virtlib.VirtManager(node_model=node)
+
+    # 電源
+    if request.status == "on":
+        manager.domain_poweron(uuid=request.uuid)
+    elif request.status == "off":
+        manager.domain_destroy(uuid=request.uuid)
+    
+    # CDROM 
+    if request.status == "mount":
+        manager.domain_cdrom(request.uuid, request.target, request.path)
+    elif request.status == "unmount":
+        manager.domain_cdrom(request.uuid, request.target)
+
+    update_domain_list(db=db, model=TaskModel())
+
     return model

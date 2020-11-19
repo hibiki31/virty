@@ -9,7 +9,7 @@ from mixin.database import SessionLocal
 from task.models import TaskModel
 from auth.models import UserModel
 from task.schemas import TaskSelect
-from domain.tasks import update_domain_list
+from domain.tasks import update_domain_list, add_domain_base, delete_domain_base, change_domain_base
 from node.tasks import post_node_base
 from storage.tasks import update_storage_list
 from network.tasks import update_network_list
@@ -40,10 +40,19 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "list":
             if model.method == "update":
                 res = update_domain_list(db=db, model=model)
+        elif model.object == "base":
+            if model.method == "add":
+                res = add_domain_base(db=db, model=model)
+            elif model.method == "delete":
+                res = delete_domain_base(db=db, model=model)
+            elif model.method == "change":
+                res = change_domain_base(db=db, model=model)
+
     elif model.resource == "node":
         if model.object == "base":
             if model.method == "add":
                 res = post_node_base(db=db, model=model)
+
     elif model.resource == "storage":
         if model.object == "list":
             if model.method == "update":

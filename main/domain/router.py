@@ -66,14 +66,40 @@ async def get_api_domain(
     return {'db':domain, 'node': node, 'xml': domain_xml_pase}
 
 
-@app.delete("/api/vms", tags=["vm"], response_model=List[DomainSelect])
+@app.delete("/api/vms", tags=["vm"], response_model=TaskSelect)
 async def delete_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        node: DomainDelete = None,
+        request_model: DomainDelete = None
     ):
-    model = db.query(DomainModel).filter(DomainModel.name==node.name).all()
-    db.query(DomainModel).filter(DomainModel.name==node.name).delete()
-    db.commit()
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("vm","base","delete")
 
-    return model
+    return task_model
+
+
+@app.post("/api/vms", tags=["vm"], response_model=TaskSelect)
+async def post_api_vms(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: DomainInsert = None
+    ):
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("vm","base","add")
+
+    return task_model
+
+
+@app.patch("/api/vms", tags=["vm"], response_model=TaskSelect)
+async def patch_api_domains(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: DomainPatch = None
+    ):
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("vm","base","change")
+   
+    return task_model

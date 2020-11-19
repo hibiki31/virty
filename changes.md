@@ -1,3 +1,10 @@
+### Ver 1.4.0
+- 2020-11-19 Change ロングポーリングで状態の取得 (WEB) 4276a56 (@hibiki31) 
+- 2020-11-19 Add タスク状況のロングポーリング (API) 26ded34 (@hibiki31) 
+- 2020-11-19 Add CDROMの変更 (API) 5904cf4 (@hibiki31) 
+- 2020-11-19 Add VMの作成・削除・電源 (API) 9dd6e40 (@hibiki31) 
+- 2020-11-18 Update version b3003fa (@hibiki31) 
+
 ### Ver 1.3.0
 - 2020-11-18 Fix lint (WEB) e121771 (@hibiki31) 
 - 2020-11-18 Add 各リソースの一覧ページ (WEB) 067d463 (@hibiki31) 
