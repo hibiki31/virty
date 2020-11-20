@@ -11,7 +11,7 @@ from auth.models import UserModel
 from task.schemas import TaskSelect
 from domain.tasks import update_domain_list, add_domain_base, delete_domain_base, change_domain_base
 from node.tasks import post_node_base
-from storage.tasks import update_storage_list
+from storage.tasks import update_storage_list, add_storage_base, delete_storage_base
 from network.tasks import update_network_list
 
 
@@ -57,6 +57,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "list":
             if model.method == "update":
                 res = update_storage_list(db=db, model=model)
+        elif model.object == "base":
+            if model.method == "add":
+                res = add_storage_base(db=db, model=model)
+            elif model.method == "delete":
+                res = delete_storage_base(db=db, model=model)
     
     elif model.resource == "network":
         if model.object == "list":

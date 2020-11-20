@@ -113,6 +113,16 @@ class VirtManager():
         xml = XmlEditor(type="str",obj=con.XMLDesc())
         con.updateDeviceFlags(xml.domain_cdrom(target=target,path=path))
 
+    def storage_define(self,xml_str):
+        sp = self.node.storagePoolDefineXML(xml_str,0)
+        sp.create()
+        sp.setAutostart(0)
+    
+    def storage_undefine(self, uuid):
+        sp = self.node.storagePoolLookupByUUIDString(uuid)
+        if sp.info()[0] == 2:
+            sp.destroy()
+        sp.undefine()
 
 
 

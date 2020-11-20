@@ -30,3 +30,14 @@ class StorageSelect(CamelModel):
     update_token:str = None
     class Config:
         orm_mode  =  True
+
+class StorageInsert(CamelModel):
+    name: str
+    node_name: str
+    path: str
+    class Config:
+        orm_mode  =  True
+
+class StorageDelete(CamelModel):
+    uuid: str
+    node_name: str

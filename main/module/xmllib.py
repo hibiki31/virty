@@ -277,6 +277,12 @@ class XmlEditor():
         uuid = self.xml.find('uuid').text
         ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
 
+    def storage_base_edit(self,name,path):
+        self.xml.find('name').text = name
+        self.xml.find('target').find('path').text = path
+
+
+
 class XMLOLD():
 
     
