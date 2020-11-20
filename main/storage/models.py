@@ -6,7 +6,7 @@ from mixin.database import Base, Engine
 class StorageModel(Base):
     __tablename__ = "storages"
     uuid = Column(String, primary_key=True, index=True)
-    name = Column(String, unique=True)
+    name = Column(String)
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     capacity = Column(Integer)
     available = Column(Integer)
