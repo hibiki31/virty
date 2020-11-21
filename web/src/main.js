@@ -11,9 +11,11 @@ import axios from '@/axios/index';
 
 import Notifications from 'vue-notification';
 import velocity from 'velocity-animate';
+import VueClipboard from 'vue-clipboard2';
 
 Vue.config.productionTip = false;
 Vue.use(Notifications, { velocity });
+Vue.use(VueClipboard);
 
 new Vue({
   router,

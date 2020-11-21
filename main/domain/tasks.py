@@ -94,7 +94,7 @@ def add_domain_base(db: Session, model: TaskModel):
         # 新規ディスクの場合
         if device.type == "empty":
             try:
-                new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.name==device.save_pool).one()
+                new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.name==device.save_pool, StorageModel.node_name==node.name).one()
             except:
                 raise Exception("request pool name not found")
             # ファイル名決めてる
