@@ -1,5 +1,5 @@
 <template>
- <v-dialog width="400" v-model="dialogState">
+ <v-dialog width="700" v-model="dialogState">
       <v-card>
         <v-form ref="domainAddforms">
           <v-card-title>Create VM</v-card-title>
@@ -43,10 +43,10 @@
               label="Node"
             ></v-select>
 
-            <v-row v-for="(disk, index) in postData.disks" :key="index">
+            <v-row v-for="disk in postData.disks" :key="disk.id">
               <v-col cols="12" md="3">
                 <v-select
-                  :items="{ text: 'Empty', value: 'empty' }"
+                  :items="[{ text: 'Empty', value: 'empty' }]"
                   :rules="[$required]"
                   v-model="disk.type"
                   label="Storage Type"
@@ -67,7 +67,7 @@
                   item-text="name"
                   item-value="name"
                   v-model="disk.savePool"
-                  label="Storage Type"
+                  label="Storage"
                 ></v-select>
               </v-col>
             </v-row>
@@ -76,7 +76,7 @@
             <v-row v-for="(nic, index) in postData.interface" :key="index">
               <v-col cols="12" md="5">
                 <v-select
-                  :items="{ text: 'Network', value: 'network' }"
+                  :items="[{ text: 'Network', value: 'network' }]"
                   :rules="[$required]"
                   v-model="nic.type"
                   label="Network Type"
@@ -89,7 +89,7 @@
                   item-value="name"
                   :rules="[$required]"
                   v-model="nic.networkName"
-                  label="Storage Type"
+                  label="Network"
                 ></v-select>
               </v-col>
             </v-row>
@@ -140,6 +140,7 @@ export default {
         cpu: null,
         disks: [
           {
+            id: 1,
             type: 'empty',
             savePool: 'default',
             originalPool: null,

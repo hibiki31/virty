@@ -3,9 +3,12 @@ import os
 import xml.etree.ElementTree as ET
 
 from mixin.settings import virty_root
+from mixin.log import setup_logger
 from module.model import AttributeDict
 
 from storage.schemas import ImageRaw
+
+logger = setup_logger(__name__)
 
 class XmlEditor():
     def __init__(self, type, obj):
@@ -44,6 +47,7 @@ class XmlEditor():
         -------
         AttributeDict()
         """
+        logger.debug("ストレージのパースを開始")
 
         data = AttributeDict()
         
@@ -63,7 +67,10 @@ class XmlEditor():
         data.available = unit_convertor(data.available_unit, "G", data.available)
         data.available_unit = "G"
         
-        data.path = self.xml.find('target').find('path').text
+        if target := self.xml.find('target'):
+            data.path = target.find('path').text
+        else:
+            data.path = ""
 
         return data
     
@@ -276,6 +283,12 @@ class XmlEditor():
         os.makedirs(xml_dir, exist_ok=True)
         uuid = self.xml.find('uuid').text
         ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
+
+    def storage_base_edit(self,name,path):
+        self.xml.find('name').text = name
+        self.xml.find('target').find('path').text = path
+
+
 
 class XMLOLD():
 

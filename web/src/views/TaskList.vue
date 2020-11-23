@@ -74,9 +74,10 @@
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
             <v-icon
-            v-bind="attrs"
-            v-on="on"
-            class="ml-5"
+              v-bind="attrs"
+              v-on="on"
+              class="ml-5"
+              @click="copyClipBoard(item.message)"
             >mdi-android-messages</v-icon>
           </template>
           <span>{{ item.message }}</span>
@@ -115,6 +116,13 @@ export default {
     axios.get('/api/tasks').then((response) => (this.list = response.data));
   },
   methods: {
+    copyClipBoard(text) {
+      this.$copyText(text).then(function(e) {
+        this.$_pushNotice('An error occurred', 'error');
+      }, function(e) {
+        console.log(e);
+      });
+    },
     openTaskDeleteDialog() {
       this.$refs.taskDeleteDialog.openDialog();
     },

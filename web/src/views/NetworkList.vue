@@ -35,8 +35,8 @@ export default {
       list: [],
       headers: [
         { text: 'Name', value: 'name' },
-        { text: 'Bridge', value: 'bridge' },
-        { text: 'Node', value: 'node' },
+        { text: 'HostInterface', value: 'hostInterface' },
+        { text: 'Node', value: 'nodeName' },
         { text: 'Type', value: 'type' },
         { text: 'UUID', value: 'uuid' },
         { text: 'DHCP', value: 'dhcp' }

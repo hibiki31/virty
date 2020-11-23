@@ -24,7 +24,7 @@ export default {
       list: [],
       headers: [
         { text: 'Name', value: 'name' },
-        { text: 'Node', value: 'node' },
+        { text: 'Node', value: 'nodeName' },
         { text: 'Pool', value: 'pool' },
         { text: 'Capacity', value: 'capacity' },
         { text: 'Allocation', value: 'allocation' },

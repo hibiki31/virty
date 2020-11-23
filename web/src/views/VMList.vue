@@ -63,7 +63,7 @@
         <template v-slot:[`item.uuid`]="{ item }" justify="right">
           <router-link
             :to="{ name: 'VMDetail', params: { uuid: item.uuid } }"
-            style="font-family: monospace"
+            style="font-family: monospace;"
             >{{ item.uuid }}</router-link
           >
         </template>

@@ -21,12 +21,23 @@ class StorageSelect(CamelModel):
     uuid: str
     status: int
     active: bool 
-    protocol: str
-    available: int
-    capacity: int
+    protocol: str = None
+    available: int = None
+    capacity: int = None
     node_name: str
     auto_start: bool
-    path: str
+    path: str = None
     update_token:str = None
     class Config:
         orm_mode  =  True
+
+class StorageInsert(CamelModel):
+    name: str
+    node_name: str
+    path: str
+    class Config:
+        orm_mode  =  True
+
+class StorageDelete(CamelModel):
+    uuid: str
+    node_name: str
