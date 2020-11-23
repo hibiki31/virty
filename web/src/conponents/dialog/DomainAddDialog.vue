@@ -67,7 +67,7 @@
                   item-text="name"
                   item-value="name"
                   v-model="disk.savePool"
-                  label="Storage Type"
+                  label="Storage"
                 ></v-select>
               </v-col>
             </v-row>
@@ -89,7 +89,7 @@
                   item-value="name"
                   :rules="[$required]"
                   v-model="nic.networkName"
-                  label="Storage Type"
+                  label="Network"
                 ></v-select>
               </v-col>
             </v-row>
