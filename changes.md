@@ -1,3 +1,12 @@
+### Ver 1.5.0
+- 2020-11-23 Fix 表記ミスを修正 #8 (WEB) f2f4fb0 (@hibiki31) 
+- 2020-11-23 Fix GlustorFSなどを利用した際のパースエラーを修正 93fb216 (@hibiki31) 
+- 2020-11-22 Change update script 9d1bbfd (@hibiki31) 
+- 2020-11-22 Add エラー内容をクリップボードへコピー (WEB) 6807db7 (@hibiki31) 
+- 2020-11-20 Change ネットワーク名のユニーク制限を削除 dd92548 (@hibiki31) 
+- 2020-11-20 Change プール名のユニーク制限を削除 5d66701 (@hibiki31) 
+- 2020-11-20 Add ストレージの追加と削除 c8ec2e5 (@hibiki31) 
+
 ### Ver 1.4.0
 - 2020-11-19 Change ロングポーリングで状態の取得 (WEB) 4276a56 (@hibiki31) 
 - 2020-11-19 Add タスク状況のロングポーリング (API) 26ded34 (@hibiki31) 
