@@ -13,10 +13,14 @@ from module.xmllib import XmlEditor
 
 from node.models import NodeModel
 from module.model import ImageModel
+from mixin.log import setup_logger
 from storage.models import StorageModel
 from network.models import NetworkModel
 
 from typing import List, Optional
+
+
+logger = setup_logger(__name__)
 
 
 class VirtManager():
@@ -26,12 +30,35 @@ class VirtManager():
         self.node_model:NodeModel = node_model
     
     def storage_data(self, token) -> List[StorageModel]:
+        # GlustorFSが遅い
         pools = self.node.listAllStoragePools(0)
         if pools == None:
             return []
         data = []
         for pool in pools:
+            logger.info(f'プールのステータス{pool.info()}')
+            if pool.info()[0] != 2 :
+                storage = StorageModel(
+                    uuid = pool.UUIDString(),
+                    name = pool.name(),
+                    node_name = self.node_model.name,
+                    capacity = None,
+                    available = None,
+                    type = None,
+                    protocol = None,
+                    path = None,
+                    active = pool.isActive(),
+                    auto_start = pool.autostart(),
+                    status = pool.info()[0],
+                    update_token = token
+                )
+                data.append({"storage":storage, "image": []})
+                continue
+                
+            logger.debug("ストレージのリフレッシュを開始")
+            # GlustorFSが遅い
             pool.refresh()
+            logger.debug("ストレージのリフレッシュが完了")
             storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
             storage_xml = storage_xml.storage_pase()
             storage = StorageModel(
@@ -116,7 +143,7 @@ class VirtManager():
     def storage_define(self,xml_str):
         sp = self.node.storagePoolDefineXML(xml_str,0)
         sp.create()
-        sp.setAutostart(0)
+        sp.setAutostart(1)
     
     def storage_undefine(self, uuid):
         sp = self.node.storagePoolLookupByUUIDString(uuid)

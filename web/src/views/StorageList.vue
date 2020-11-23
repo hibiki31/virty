@@ -59,6 +59,8 @@ export default {
         { text: 'Available', value: 'available' },
         { text: 'Device', value: 'device' },
         { text: 'type', value: 'type' },
+        { text: 'active', value: 'active' },
+        { text: 'auto', value: 'autoStart' },
         { text: 'Path', value: 'path' },
         { text: 'Actions', value: 'actions' }
       ]

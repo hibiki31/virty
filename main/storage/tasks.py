@@ -32,6 +32,8 @@ def update_storage_list(db: Session, model: TaskModel):
             logger.error(f'ノードへの接続に失敗しました: {node.name}')
             continue
 
+        logger.debug('ノードに接続しました')
+
         storages = manager.storage_data(token=token)
         for storage in storages:
             for image in storage["image"]:
@@ -77,6 +79,9 @@ def delete_storage_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_undefine(request.uuid)
 
-    update_storage_list(db=db, model=TaskModel())
+    # update_storage_list(db=db, model=TaskModel())
+
+    db.query(StorageModel).filter(StorageModel.uuid==request.uuid).delete()
+    db.commit()
 
     return model

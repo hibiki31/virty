@@ -39,4 +39,7 @@ def update_network_list(db: Session, model: TaskModel):
             print(network)
 
     db.commit()
+    # トークンで削除
+    db.query(NetworkModel).filter(NetworkModel.update_token!=token).delete()
+    db.commit()
     return model
