@@ -1,0 +1,6 @@
+- hosts: all
+  gather_facts: no
+  become: no
+  tasks:
+  - name: ls
+    command:  ls

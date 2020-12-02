@@ -51,7 +51,7 @@ def update_domain_list(db: Session, model: TaskModel):
                 update_token = token
             )
             db.merge(row)
-    db.commit()
+        db.commit()
     db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
     db.commit()
     return model
