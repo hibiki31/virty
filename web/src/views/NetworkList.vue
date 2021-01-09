@@ -1,35 +1,53 @@
 <template>
-<v-card>
-  <v-card-actions>
-        <v-btn
-          v-on:click="this.networkReloadTask"
-          small
-          dark
-          class="ma-2"
-          color="primary"
-        >
-          <v-icon left>mdi-cached</v-icon>Reload
-        </v-btn>
-      </v-card-actions>
-  <v-data-table
-    :headers="headers"
-    :items="list"
-    :items-per-page="10"
-    :footer-props="{
-      'items-per-page-options': [10, 20, 50, 100],
-      showFirstLastPage: true,
-        }"
-    multi-sort
-  >
-  </v-data-table>
-</v-card>
+<div>
+  <NetworkAddDialog ref="networkAddDialog" />
+  <NetworkDeleteDialog ref="networkDeleteDialog" />
+  <v-card>
+    <v-card-actions>
+      <v-btn
+        v-on:click="networkReloadTask"
+        small
+        dark
+        class="ma-2"
+        color="primary"
+      >
+        <v-icon left>mdi-cached</v-icon>Reload
+      </v-btn>
+      <!-- 追加ボタン -->
+      <v-btn v-on:click="this.openNetworkAddDialog" small class="ma-2" color="primary">
+        <v-icon left>mdi-server-plus</v-icon>Add
+      </v-btn>
+      <!-- 削除ボタン -->
+      <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="red">
+        <v-icon left>mdi-server-remove</v-icon>Delete
+      </v-btn>
+    </v-card-actions>
+    <v-data-table
+      :headers="headers"
+      :items="list"
+      :items-per-page="10"
+      :footer-props="{
+        'items-per-page-options': [10, 20, 50, 100],
+        showFirstLastPage: true,
+          }"
+      multi-sort
+    >
+    </v-data-table>
+  </v-card>
+</div>
 </template>
 
 <script>
 import axios from '@/axios/index';
+import NetworkDeleteDialog from '../conponents/dialog/NetworkDeleteDialog';
+import NetworkAddDialog from '../conponents/dialog/NetworkAddDialog';
 
 export default {
   name: 'NetworkList',
+  components: {
+    NetworkDeleteDialog,
+    NetworkAddDialog
+  },
   data: function() {
     return {
       list: [],
@@ -47,6 +65,12 @@ export default {
     axios.get('/api/networks').then((response) => (this.list = response.data));
   },
   methods: {
+    openNetworkDeleteDialog() {
+      this.$refs.networkDeleteDialog.openDialog(this.list);
+    },
+    openNetworkAddDialog() {
+      this.$refs.networkAddDialog.openDialog();
+    },
     networkReloadTask() {
       axios
         .put('/api/networks')

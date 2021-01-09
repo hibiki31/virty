@@ -68,7 +68,12 @@ def delete_network_base(db: Session, model: TaskModel):
     request: NetworkDelete = NetworkDelete(**model.request)
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
+    except:
+        raise Exception("network not found")
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
     except:
         raise Exception("node not found")
 

@@ -29,4 +29,3 @@ class NetworkInsert(CamelModel):
 
 class NetworkDelete(CamelModel):
     uuid: str
-    node_name: str

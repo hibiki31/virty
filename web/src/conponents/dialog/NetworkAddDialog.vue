@@ -1,0 +1,88 @@
+<template>
+ <v-dialog width="400" v-model="dialogState">
+      <v-card>
+        <v-form ref="networkAddForm">
+          <v-card-title>Add Netwrok</v-card-title>
+          <v-card-text>
+            <v-text-field
+              v-model="postData.name"
+              label="Name"
+              :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
+              counter="64"
+            ></v-text-field>
+            <v-select
+              :items="itemsNodes"
+              item-text="name"
+              item-value="name"
+              v-model="postData.nodeName"
+              label="Select node name"
+              :rules="[required]"
+            >
+              <template v-slot:item="{ item }">
+                <span>{{ item.name }} - {{ item.domain }}</span>
+              </template>
+              <template v-slot:selection="{ item }">
+                <span>{{ item.name }} - {{ item.domain }}</span>
+              </template>
+            </v-select>
+            <v-text-field
+              v-model="postData.bridgeDevice"
+              label="Bridge Name"
+              :rules="[$required]"
+              counter="128"
+            ></v-text-field>
+
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" v-on:click="runMethod">ADD</v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+</template>
+
+<script>
+import axios from '@/axios/index';
+
+export default {
+  name: 'networkAddDialog',
+  data: function() {
+    return {
+      itemsNodes: [],
+      postData: {
+        name: '',
+        bridgeDevice: '',
+        type: 'bridge',
+        nodeName: ''
+      },
+      dialogState: false
+    };
+  },
+  methods: {
+    openDialog() {
+      this.dialogState = true;
+    },
+    runMethod() {
+      if (!this.$refs.networkAddForm.validate()) {
+        return;
+      }
+      axios.request({
+        method: 'post',
+        url: '/api/networks',
+        data: this.postData
+      })
+        .then(res => {
+          this.$_pushNotice('Success add task', 'success');
+          this.dialogState = false;
+        })
+        .catch(error => {
+          this.$_pushNotice(error.response.data.detail, 'error');
+        });
+    }
+  },
+  mounted: function() {
+    axios.get('/api/nodes').then((response) => (this.itemsNodes = response.data));
+  }
+};
+</script>

@@ -9,6 +9,7 @@ from mixin.log import setup_logger
 from node.models import NodeModel
 from module import virtlib
 from module import xmllib
+from module import sshlib
 
 
 logger = setup_logger(__name__)
@@ -19,13 +20,17 @@ def post_node_base(db: Session, model: TaskSelect):
     user = request.user_name
     domain = request.domain
     port = request.port
-    
-    memory = virty.SshInfoMem(user, domain, port)
-    core = virty.SshInfocpu(user, domain, port)
-    cpu = virty.SshInfocpuname(user, domain, port)
-    os = virty.SshOsinfo(user, domain, port)
-    qemu = virty.SshInfoQemu(user, domain, port)
-    libvirt = virty.SshInfoLibvirt(user, domain, port)
+
+    ssh_manager = sshlib.SSHManager(user=user, domain=domain)
+
+    memory = ssh_manager.get_node_mem()
+    core = ssh_manager.get_node_cpu_core()
+    cpu = ssh_manager.get_node_cpu_name()
+    os = ssh_manager.get_node_os_release()
+    qemu = ssh_manager.get_node_qemu_version()
+    libvirt = ssh_manager.get_node_libvirt_version()
+
+    print(os)
 
     row = NodeModel(
         name = request.name,
