@@ -9,7 +9,6 @@ from node.models import NodeModel
 from storage.models import StorageModel
 from mixin.log import setup_logger
 
-from module import virty
 from module import virtlib
 from module import xmllib
 from module import sshlib

@@ -12,7 +12,6 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 
 from node.models import NodeModel
-from module import virty
 
 
 app = APIRouter()

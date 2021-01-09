@@ -7,7 +7,6 @@ from task.models import TaskModel
 from node.models import NodeModel
 from mixin.log import setup_logger
 
-from module import virty
 from module import virtlib
 from module import xmllib
 
