@@ -154,4 +154,12 @@ class VirtManager():
     def network_define(self,xml_str):
         net = self.node.networkDefineXML(xml_str)
         net.create()
-        net.autostart(1)
+        net.autostart()
+
+    def network_undefine(self, uuid):
+        net = self.node.networkLookupByUUIDString(uuid)
+        try:
+            net.destroy()
+        except:
+            pass
+        net.undefine()

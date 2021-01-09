@@ -18,3 +18,15 @@ class NetworkSelect(CamelModel):
     update_token: str = None
     class Config:
         orm_mode  =  True
+
+class NetworkInsert(CamelModel):
+    name: str
+    node_name: str
+    type: str
+    bridge_device: str
+    class Config:
+        orm_mode  =  True
+
+class NetworkDelete(CamelModel):
+    uuid: str
+    node_name: str

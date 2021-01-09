@@ -39,14 +39,18 @@ Revert 変更取り消し
 Move ファイルの移動
 ```
 
-マージするときは以下の規則で行う。
+バージョンアップ時は過去の例に従ってchangesの記述とwebとapiのバージョンを上げる
+changes.mdは以下のコマンドで該当コミットを記録する
+
+```
+git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
+```
+
+マージするときは以下の規則で行う
 
 ```
 Merge branch 'develop' v1.0.0
 ```
 
-changes.mdは以下のコマンドで該当コミットを記録する？意味あるか？
-
-```
-git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
-```
+バージョンのタグをつける
+GitHubでタグに対してリリースを作る

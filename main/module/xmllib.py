@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET
 
 from mixin.settings import virty_root
 from mixin.log import setup_logger
-from module.model import AttributeDict
 
 from storage.schemas import ImageRaw
 
@@ -287,6 +286,13 @@ class XmlEditor():
     def storage_base_edit(self,name,path):
         self.xml.find('name').text = name
         self.xml.find('target').find('path').text = path
+
+    def network_bridge_edit(self,name,bridge):
+        self.xml.find('name').text = name
+        self.xml.find('forward').set('mode', 'bridge')
+        self.xml.find('bridge').set('name', bridge)
+
+
 
 
 

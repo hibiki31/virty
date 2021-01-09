@@ -37,3 +37,27 @@ async def put_api_networks(
     task_model = post_task.commit("network","list","update")
    
     return task_model
+
+@app.post("/api/networks", tags=["network"], response_model=TaskSelect)
+async def post_api_storage(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: NetworkInsert = None
+    ):
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("network","base","add")
+
+    return task_model
+
+@app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
+async def post_api_storage(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: NetworkDelete = None
+    ):
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("network","base","delete")
+
+    return task_model

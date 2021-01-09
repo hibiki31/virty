@@ -7,7 +7,6 @@ from task.models import TaskModel
 from node.models import NodeModel
 from mixin.log import setup_logger
 
-from module import virty
 from module import virtlib
 from module import xmllib
 
@@ -36,10 +35,46 @@ def update_network_list(db: Session, model: TaskModel):
             network: NetworkModel
             network.node_name = node.name
             db.merge(network)
-            print(network)
+        # ノードが変わる前に一度コミット
+        db.commit()
 
     db.commit()
     # トークンで削除
     db.query(NetworkModel).filter(NetworkModel.update_token!=token).delete()
     db.commit()
+    return model
+
+def add_network_base(db: Session, model: TaskModel):
+    request: NetworkInsert = NetworkInsert(**model.request)
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    # XMLを定義、設定
+    editor = xmllib.XmlEditor("static","net_bridge")
+    editor.network_bridge_edit(name=request.name, bridge=request.bridge_device)
+
+    # ソイや！
+    manager = virtlib.VirtManager(node_model=node)
+    manager.network_define(xml_str=editor.dump_str())
+
+    update_network_list(db=db, model=TaskModel())
+
+    return model
+
+def delete_network_base(db: Session, model: TaskModel):
+    request: NetworkDelete = NetworkDelete(**model.request)
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    manager = virtlib.VirtManager(node_model=node)
+    manager.network_undefine(request.uuid)
+
+    update_network_list(db=db, model=TaskModel())
+
     return model
