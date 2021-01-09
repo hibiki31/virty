@@ -34,3 +34,22 @@ class SSHManager():
                 raise Exception("qemu-img command output is illegal")
         else:
             raise Exception("request disk is already exists")
+    
+    def file_copy(self, from_path:str, to_path:str):
+        check_res = self.run_cmd(["sudo", "test -e", to_path, "; echo $?"])
+
+        if check_res.returncode != 0:
+            raise Exception(check_res.stderr)
+
+        # ファイルが存在しないか確認
+        if check_res.stdout == "1\n":
+            # コマンド実行
+            create_res = self.run_cmd(["sudo", "cp" ,from_path, to_path])
+            # 終了結果が正常か判定
+            if create_res.stderr.split() == []:
+                return True
+            else:
+                logger.error(create_res.stderr)
+                raise Exception("cp command output is illegal")
+        else:
+            raise Exception("request disk is already exists")

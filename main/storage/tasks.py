@@ -39,7 +39,6 @@ def update_storage_list(db: Session, model: TaskModel):
             for image in storage["image"]:
                 image = ImageModel(**image.dict())
                 image.storage_uuid = storage["storage"].uuid
-                print(image)
                 db.merge(image)
             db.merge(storage["storage"])
     db.commit()

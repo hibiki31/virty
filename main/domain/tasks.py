@@ -83,30 +83,54 @@ def add_domain_base(db: Session, model: TaskModel):
         vnc_passwd=None
     )
     
+    # ネットワークインターフェイス
     for interface in model.interface:
         interface: DomainInsertInterface
         editor.domain_interface_add(network_name=interface.network_name, mac_address=None)
 
     img_device_names = ["vda","vdb","vdc"]
-
+    
+    # ブロックデバイス
     for device, device_name in zip(model.disks, img_device_names):
+        # 型定義
         device: DomainInsertDisk
+        # 作成先のプールを参照
+        try:
+            new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.save_pool_uuid).one()
+        except:
+            raise Exception("request pool uuid not found")
+        # ファイル名決めてる
+        create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
+        # XMLに追加
+        editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
+
         # 新規ディスクの場合
         if device.type == "empty":
-            try:
-                new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.name==device.save_pool, StorageModel.node_name==node.name).one()
-            except:
-                raise Exception("request pool name not found")
-            # ファイル名決めてる
-            create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
-            # XMLに追加
-            editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
+            # 空のディスク作成
             ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
             ssh_manager.qemu_create(
                 size_giga_byte=device.size_giga_byte,
                 path=create_image_path
             )
-    
+        # 既存ディスクのコピー
+        elif device.type == "copy":
+            # コピー元のプール情報参照
+            try:
+                pool_model:StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.original_pool_uuid).one()
+            except:
+                raise Exception("request src pool uuid not found")
+            pool_path = pool_model.path
+            file_name = device.original_name
+            from_image_path = pool_path + '/' + file_name
+
+            logger.info(f'{from_image_path}を{create_image_path}へコピーします')
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager.file_copy(
+                from_path=from_image_path,
+                to_path=create_image_path
+            )
+
+    # libvirtでXMLを登録
     manager.domain_define(xml_str=editor.dump_str())
 
     return task_model

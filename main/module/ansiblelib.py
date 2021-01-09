@@ -11,6 +11,34 @@ from ansible import context
 import ansible.constants as C
 
 
+def test():
+    play_source =  dict(
+        name = "Ansible Play",
+        hosts = 'all',
+        gather_facts = 'no',
+        tasks = [
+            dict(action=dict(module='shell', args='ls -l /'), register='shell_out')
+        ]
+    )
+    
+    host_list = [ "user@192.168.0.1" ]
+
+    results = ansible_run(play_source=play_source, host_list=host_list)
+
+    for host, result in results.host_ok.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+    
+    for host, result in results.host_failed.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+    
+    for host, result in results.host_unreachable.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+    
+
+
 class ResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
         super(ResultCallback, self).__init__(*args, **kwargs)
@@ -91,28 +119,4 @@ def ansible_run(play_source, host_list):
         return results_callback
 
 if __name__ == "__main__":
-    play_source =  dict(
-        name = "Ansible Play",
-        hosts = 'all',
-        gather_facts = 'no',
-        tasks = [
-            dict(action=dict(module='shell', args='ls -l /'), register='shell_out')
-        ]
-    )
-    
-    host_list = [ "" ]
-
-    results = ansible_run(play_source=play_source, host_list=host_list)
-
-    for host, result in results.host_ok.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_failed.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_unreachable.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
+    pass
