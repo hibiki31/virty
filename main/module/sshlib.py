@@ -13,6 +13,50 @@ class SSHManager():
         cmd = self.base_cmd + cmd
         return subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
+    
+    def get_node_mem(self):
+        res = self.run_cmd(["cat /proc/meminfo |grep MemTotal"])
+        words = float(str(res.stdout).split()[1])
+        memory = words/1024000
+        return memory
+
+    def get_node_cpu_core(self):
+        res = self.run_cmd(["grep processor /proc/cpuinfo | wc -l"])
+        words = str(res.stdout).rstrip("\\n'").lstrip("'b")
+        return words
+
+    def get_node_libvirt_version(self):
+        res = self.run_cmd(["virsh version --daemon|grep libvirt|grep Using"])
+        try:
+            version = str(res.stdout)
+        except:
+            return "error"
+        return version.rstrip("\\n'").lstrip("'b").split()[3]
+        
+    def get_node_qemu_version(self):
+        res = self.run_cmd(["virsh version --daemon|grep hypervisor:"])
+        try:
+            version = str(res.stdout)
+        except:
+            return "error"
+        return version.rstrip("\\n'").lstrip("'b").split()[3]
+
+    def get_node_cpu_name(self):
+        res = self.run_cmd(["grep 'model name' /proc/cpuinfo|uniq"])
+        words = str(res.stdout).split(":")[1].rstrip("\\n'")
+        return words
+
+
+    def get_node_os_release(self):
+        res = self.run_cmd(["cat" ,"/etc/os-release"])
+        result = {}
+        # １行ずつ処理
+        for line in res.stdout.splitlines():
+            key = line.split("=")[0]
+            value = line.split("=")[1]
+            result[key] = value
+        return result
+
 
     def qemu_create(self, path:str, size_giga_byte:int):
         check_res = self.run_cmd(["sudo", "test -e", path, "; echo $?"])

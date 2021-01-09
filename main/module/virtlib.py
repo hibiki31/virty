@@ -28,6 +28,20 @@ class VirtManager():
         conn_ip = node_model.user_name + "@" + node_model.domain
         self.node = libvirt.open('qemu+ssh://' + conn_ip + '/system')
         self.node_model:NodeModel = node_model
+
+    ### DATA
+    def domain_data(self):
+        if self.node == None:
+            return
+        domains = self.node.listAllDomains()
+        DATA = []
+        for domain in domains:
+            temp = {}
+            temp['status'] = domain.state()[0]
+            temp['auto'] = domain.autostart()
+            temp['xml'] = domain.XMLDesc()
+            DATA.append(temp)
+        return DATA
     
     def storage_data(self, token) -> List[StorageModel]:
         # GlustorFSが遅い

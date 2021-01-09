@@ -24,14 +24,14 @@ def update_domain_list(db: Session, model: TaskModel):
     for node in nodes:
         if node.status != 10:
             continue
+        logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
         try:
-            logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
-            manager = virtlib.VirtEditor(node.user_name + "@" + node.domain)
-        except:
-            logger.error(f'ノードへの接続に失敗しました: {node.name}')
+            manager = virtlib.VirtManager(node_model=node)
+        except Exception as e:
+            logger.error(f'{e}')
             continue
 
-        domains = manager.DomainAllData()
+        domains = manager.domain_data()
 
         logger.info("ドメイン数：" + str(len(domains)))
 

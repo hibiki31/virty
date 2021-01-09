@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 
 from mixin.settings import virty_root
 from mixin.log import setup_logger
+from module.model import AttributeDict
 
 from storage.schemas import ImageRaw
 
