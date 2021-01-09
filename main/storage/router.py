@@ -30,7 +30,7 @@ async def get_api_storages(
     return db.query(StorageModel).all()
 
 
-@app.get("/api/images", tags=["storage"])
+@app.get("/api/images", tags=["storage"], response_model=List[ImageRaw])
 async def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)

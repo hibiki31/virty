@@ -66,10 +66,11 @@ class DomainDetailSelect(CamelModel):
 
 class DomainInsertDisk(CamelModel):
     type: str
-    save_pool: str
-    original_pool: str = None
+    save_pool_uuid: str
+    original_pool_uuid: str = None
     original_name: str = None
     size_giga_byte: int = None
+    template_name: str = None
 
 class DomainInsertInterface(CamelModel):
     type: str

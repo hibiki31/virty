@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
 
 from fastapi_camelcase import CamelModel
 
 
-class ImageBase(BaseModel):
+class ImageBase(CamelModel):
     pass
 
 class ImageRaw(ImageBase):
@@ -15,6 +14,8 @@ class ImageRaw(ImageBase):
     allocation:int
     path:str
     update_token:str = None
+    class Config:
+        orm_mode  =  True
 
 class StorageSelect(CamelModel):
     name: str

@@ -43,31 +43,51 @@
               label="Node"
             ></v-select>
 
-            <v-row v-for="disk in postData.disks" :key="disk.id">
+            <div v-if="postData.nodeName != ''">
+              <v-row v-for="disk in postData.disks" :key="disk.id">
               <v-col cols="12" md="3">
                 <v-select
-                  :items="[{ text: 'Empty', value: 'empty' }]"
+                  :items="[{ text: 'Empty', value: 'empty' }, { text: 'Copy', value: 'copy' }]"
                   :rules="[$required]"
                   v-model="disk.type"
                   label="Storage Type"
                 ></v-select>
               </v-col>
-              <v-col cols="12" md="3">
+              <v-col cols="12" md="2" v-if="disk.type==='empty'">
                 <v-text-field
                   v-model="disk.sizeGigaByte"
                   label="Size GB"
                   :rules="[$required]"
-
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="3" v-if="disk.type==='copy'">
                 <v-select
-                  :items="itemsStorages"
+                  :items="itemsStorages.filter(x => x.nodeName===postData.nodeName)"
+                  :rules="[$required]"
+                  item-text="name"
+                  item-value="uuid"
+                  v-model="disk.originalPoolUuid"
+                  label="Src Pool"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3" v-if="disk.type==='copy'">
+                <v-select
+                  :items="itemsImages.filter(x=> x.storageUuid === disk.originalPoolUuid)"
                   :rules="[$required]"
                   item-text="name"
                   item-value="name"
-                  v-model="disk.savePool"
-                  label="Storage"
+                  v-model="disk.originalName"
+                  label="Src Image"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-select
+                  :items="itemsStorages.filter(x => x.nodeName===postData.nodeName)"
+                  :rules="[$required]"
+                  item-text="name"
+                  item-value="uuid"
+                  v-model="disk.savePoolUuid"
+                  label="Dest Pool"
                 ></v-select>
               </v-col>
             </v-row>
@@ -84,7 +104,7 @@
               </v-col>
               <v-col cols="12" md="7">
                 <v-select
-                  :items="itemsNetworks"
+                  :items="itemsNetworks.filter(x => x.nodeName===postData.nodeName)"
                   item-text="name"
                   item-value="name"
                   :rules="[$required]"
@@ -93,7 +113,7 @@
                 ></v-select>
               </v-col>
             </v-row>
-
+          </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -113,6 +133,7 @@ export default {
     return {
       itemsStorages: [],
       itemsNetworks: [],
+      itemsImages: [],
       itemsNodes: [],
       itemsMemory: [
         { text: '512MB', value: '512' },
@@ -142,8 +163,8 @@ export default {
           {
             id: 1,
             type: 'empty',
-            savePool: 'default',
-            originalPool: null,
+            savePoolUuid: 'default',
+            originalPoolUuid: null,
             originalName: null,
             sizeGigaByte: 32
           }
@@ -183,6 +204,7 @@ export default {
   },
   mounted: function() {
     axios.get('/api/storages').then((response) => (this.itemsStorages = response.data));
+    axios.get('/api/images').then((response) => (this.itemsImages = response.data));
     axios.get('/api/networks').then((response) => (this.itemsNetworks = response.data));
     axios.get('/api/nodes').then((response) => (this.itemsNodes = response.data));
   }

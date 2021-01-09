@@ -1,3 +1,10 @@
+### Ver 1.6.0
+- 2021-01-09 Add 既存VMイメージからVMを作成可能 e81701e (@hibiki31) 
+- 2021-01-09 Update highlight.js to a non-vulnerable version 64f2d4d (@hibiki31) 
+- 2021-01-09 Update axios from 0.19.2 to 0.21.1 be82686 (@hibiki31) 
+- 2021-01-09 Update README 5a25af3 (@hibiki31) 
+- 2020-12-02 Add Ansibleのテストコード b2e9e1d (@hibiki31) 
+
 ### Ver 1.5.0
 - 2020-11-23 Fix 表記ミスを修正 #8 (WEB) f2f4fb0 (@hibiki31) 
 - 2020-11-23 Fix GlustorFSなどを利用した際のパースエラーを修正 93fb216 (@hibiki31) 

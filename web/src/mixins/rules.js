@@ -8,17 +8,17 @@ Vue.mixin({
     $limitLength64: (value) => value.length <= 64 || '64 characters maximum.',
     // 文字種制限
     $characterRestrictions(value) {
-      const regex = new RegExp(/^[A-Za-z0-9-_]*$/);
+      const regex = /^[A-Za-z0-9-_]*$/;
       return regex.test(value) || 'Can use character A-Z, a-z, 0-9, -, _';
     },
     // 先頭文字制限
     $firstCharacterRestrictions(value) {
-      const regex = new RegExp(/^[A-Za-z].*/);
+      const regex = /^[A-Za-z].*/;
       return regex.test(value) || 'Can use first character A-Z, a-z';
     },
     // 数字だけ
     $intValueRestrictions(value) {
-      const regex = new RegExp(/^[0-9]*$/);
+      const regex = /^[0-9]*$/;
       return regex.test(value) || 'Only Int value';
     }
   }
