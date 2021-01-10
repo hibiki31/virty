@@ -11,6 +11,26 @@ from ansible import context
 import ansible.constants as C
 
 
+class ResultCallback(CallbackBase):
+    def __init__(self, *args, **kwargs):
+        super(ResultCallback, self).__init__(*args, **kwargs)
+        self.host_ok = {}
+        self.host_unreachable = {}
+        self.host_failed = {}
+
+    def v2_runner_on_unreachable(self, result):
+        host = result._host
+        self.host_unreachable[host.get_name()] = result
+
+    def v2_runner_on_ok(self, result, *args, **kwargs):
+        host = result._host
+        self.host_ok[host.get_name()] = result
+
+    def v2_runner_on_failed(self, result, *args, **kwargs):
+        host = result._host
+        self.host_failed[host.get_name()] = result
+
+
 def test():
     play_source =  dict(
         name = "Ansible Play",
@@ -37,26 +57,6 @@ def test():
         print(host)
         print(json.dumps(result._result, indent=4))
     
-
-
-class ResultCallback(CallbackBase):
-    def __init__(self, *args, **kwargs):
-        super(ResultCallback, self).__init__(*args, **kwargs)
-        self.host_ok = {}
-        self.host_unreachable = {}
-        self.host_failed = {}
-
-    def v2_runner_on_unreachable(self, result):
-        host = result._host
-        self.host_unreachable[host.get_name()] = result
-
-    def v2_runner_on_ok(self, result, *args, **kwargs):
-        host = result._host
-        self.host_ok[host.get_name()] = result
-
-    def v2_runner_on_failed(self, result, *args, **kwargs):
-        host = result._host
-        self.host_failed[host.get_name()] = result
 
 def ansible_run(play_source, host_list):
     # ansible-playbookで指定できる引数と同じ

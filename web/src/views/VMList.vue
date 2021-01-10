@@ -51,6 +51,7 @@
         </v-btn>
       </v-card-actions>
       <v-data-table
+        :loading="tableLoading"
         :headers="headers"
         :items="list"
         :items-per-page="20"
@@ -153,6 +154,7 @@ export default {
   },
   data: function() {
     return {
+      tableLoading: true,
       list: [],
       dialog: false,
       uuid: '',
@@ -172,7 +174,11 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/vms').then((response) => (this.list = response.data));
+    this.tableLoading = true;
+    axios.get('/api/vms').then((response) => {
+      this.list = response.data;
+      this.tableLoading = false;
+    });
     axios.get('/api/users').then((response) => (this.user = response.data));
     axios.get('/api/groups').then((response) => (this.group = response.data));
   },

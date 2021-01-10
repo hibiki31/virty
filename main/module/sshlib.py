@@ -9,6 +9,7 @@ class SSHManager():
     def __init__(self, user, domain):
         self.base_cmd = ["ssh" , user+"@"+domain ]
     
+    
     def run_cmd(self, cmd):
         cmd = self.base_cmd + cmd
         return subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
@@ -20,10 +21,12 @@ class SSHManager():
         memory = words/1024000
         return memory
 
+
     def get_node_cpu_core(self):
         res = self.run_cmd(["grep processor /proc/cpuinfo | wc -l"])
         words = str(res.stdout).rstrip("\\n'").lstrip("'b")
         return words
+
 
     def get_node_libvirt_version(self):
         res = self.run_cmd(["virsh version --daemon|grep libvirt|grep Using"])
@@ -33,6 +36,7 @@ class SSHManager():
             return "error"
         return version.rstrip("\\n'").lstrip("'b").split()[3]
         
+        
     def get_node_qemu_version(self):
         res = self.run_cmd(["virsh version --daemon|grep hypervisor:"])
         try:
@@ -40,6 +44,7 @@ class SSHManager():
         except:
             return "error"
         return version.rstrip("\\n'").lstrip("'b").split()[3]
+
 
     def get_node_cpu_name(self):
         res = self.run_cmd(["grep 'model name' /proc/cpuinfo|uniq"])
@@ -79,6 +84,7 @@ class SSHManager():
         else:
             raise Exception("request disk is already exists")
     
+
     def file_copy(self, from_path:str, to_path:str):
         check_res = self.run_cmd(["sudo", "test -e", to_path, "; echo $?"])
 

@@ -2,6 +2,7 @@
 <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="networkDeleteForm">
+        <v-card-text>起動中のVMに影響はありません</v-card-text>
         <v-card-text>
           <v-select
             :items="items"
@@ -12,10 +13,10 @@
             :rules="[required]"
           >
             <template v-slot:item="{ item }">
-              <span>{{ item.name }} - {{ item.uuid }}</span>
+              <span>{{ item.name }}</span>
             </template>
             <template v-slot:selection="{ item }">
-              <span>{{ item.name }} - {{ item.uuid }}</span>
+              <span>{{ item.name }}</span>
             </template>
           </v-select>
         </v-card-text>

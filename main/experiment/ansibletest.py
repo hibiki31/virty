@@ -8,7 +8,9 @@ from ansible.vars.manager import VariableManager
 from ansible.plugins.callback import CallbackBase
 import json
 
+
 loader = DataLoader()
+
 
 class ResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
