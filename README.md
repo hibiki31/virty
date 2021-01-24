@@ -135,3 +135,69 @@ ssh-copy-id user@host
 
 
 
+## 3. Open vSwitch(Option)
+
+##### 1. 構成
+
+物理インターフェイスに複数のVLAN Bridgeを作る
+
+| 設定項目               | 値            |
+| ---------------------- | ------------- |
+| Bridge名               | ovs-br0       |
+| Bridgeインターフェイス | eth0          |
+| Native VLAN            | 100           |
+| IPを設定するVLAN       | 200           |
+| IP                     | 192.168.200.1 |
+
+##### 2. パッケージ Ubuntu 18 & 20
+
+```bash
+sudo apt update
+sudo apt install openvswitch-common openvswitch-switch
+sudo systemctl status openvswitch-switch.service
+```
+
+##### 2. パッケージ CentOS 7 & 8
+
+```bash
+yum install -y openvswitch python-openvswitch
+systemctl start openvswitch
+systemctl enable openvswitch
+```
+
+##### 3. ブリッジの作成
+
+```bash
+# ブリッジの作成
+ovs-vsctl add-br ovs-br0
+# 物理インターフェイスを接続
+ovs-vsctl add-port ovs-br0 eth0
+# ブリッジ名と同名の自動作成されたポートにTAGを指定
+# IPを設定するインターフェイスになる
+ovs-vsctl set port ovs-br0 tag=200
+# 物理インターフェイスにNative VLANを指定
+ovs-vsctl set port eth0 tag=100 vlan_mode=native-untagged
+# 確認
+ovs-vsctl show
+```
+
+##### 4. IPを設定 Ubuntu 18 & 20
+
+```yaml
+network:
+  ethernets:
+    eth0:
+      dhcp4: false
+    ovs-br0:
+      dhcp4: false
+      addresses:
+        - 192.168.200.1/24
+      gateway4: 192.168.200.254
+      nameservers:
+        addresses: [ 192.168.200.254 ]
+  version: 2
+```
+
+##### 4. IPを設定 CentOS 7 & 8
+
+未検証
