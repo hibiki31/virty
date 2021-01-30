@@ -233,6 +233,24 @@ class XmlEditor():
                         ET.SubElement(disk, 'source') 
                     disk.find('source').set('file', path)
                     return ET.tostring(disk).decode()
+    
+    def domain_network(self, mac, network, port):
+        devices = self.xml.find('devices')
+        for interface in devices.iter('interface'):
+            if interface.find('mac').get('address') != mac:
+                continue
+            interface.set('type','network')
+            interface.find('source').set('network', network)
+            try:
+                interface.find('source').attrib.pop("portid", None)
+                interface.find('source').attrib.pop("bridge", None)
+                interface.remove(interface.find('virtualport'))
+            except:
+                pass
+
+            if port != None:
+                interface.find('source').set('portgroup', port)
+            return ET.tostring(interface).decode()
 
 
     def domain_parse(self):
@@ -299,7 +317,8 @@ class XmlEditor():
                 "mac":MAC,
                 "target":TARGET,
                 "source":SOURCE,
-                "network":NETWORK
+                "network":NETWORK,
+                "port": nic.find("source").get("portgroup")
                 })
 
         DATA['selinux'] = "off"

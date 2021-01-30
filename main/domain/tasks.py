@@ -133,6 +133,8 @@ def add_domain_base(db: Session, model: TaskModel):
     # libvirtでXMLを登録
     manager.domain_define(xml_str=editor.dump_str())
 
+    update_domain_list(db=db, model=TaskModel())
+
     return task_model
 
 
@@ -202,12 +204,7 @@ def change_domain_network(db: Session, model: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    
-    # CDROM 
-    if request.status == "mount":
-        manager.domain_cdrom(request.uuid, request.target, request.path)
-    elif request.status == "unmount":
-        manager.domain_cdrom(request.uuid, request.target)
+    manager.domain_network(uuid=request.uuid, network=request.network_name, port=request.port, mac=request.mac)
 
     update_domain_list(db=db, model=TaskModel())
 

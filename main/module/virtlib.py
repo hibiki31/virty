@@ -154,6 +154,18 @@ class VirtManager():
 
         xml = XmlEditor(type="str",obj=con.XMLDesc())
         con.updateDeviceFlags(xml.domain_cdrom(target=target,path=path))
+    
+    def domain_network(self, uuid, network, port, mac):
+        domain = self.node.lookupByUUIDString(uuid)
+
+        xml = XmlEditor(type="str",obj=domain.XMLDesc())
+        xml = xml.domain_network(mac=mac,network=network,port=port)
+        try:
+            domain.updateDeviceFlags(xml)
+        except libvirt.libvirtError as e:
+            raise Exception("起動中はOVSを切り替えることはできません: " + str(e))
+         
+        
 
     def storage_define(self,xml_str):
         sp = self.node.storagePoolDefineXML(xml_str,0)

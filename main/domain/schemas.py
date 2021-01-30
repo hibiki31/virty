@@ -39,6 +39,7 @@ class DomainDetailXmlInterface(CamelModel):
     target: str
     source: str
     netwrok: str = None
+    port: str = None
 
 class DomainDetailXmlDrive(CamelModel):
     device: str
