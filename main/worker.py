@@ -9,10 +9,10 @@ from mixin.database import SessionLocal
 from task.models import TaskModel
 from auth.models import UserModel
 from task.schemas import TaskSelect
-from domain.tasks import update_domain_list, add_domain_base, delete_domain_base, change_domain_base
-from node.tasks import post_node_base
-from storage.tasks import update_storage_list, add_storage_base, delete_storage_base
-from network.tasks import update_network_list, add_network_base, delete_network_base
+from domain.tasks import *
+from node.tasks import *
+from storage.tasks import *
+from network.tasks import *
 
 
 logger = setup_logger(__name__)
@@ -47,6 +47,9 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
                 res = delete_domain_base(db=db, model=model)
             elif model.method == "change":
                 res = change_domain_base(db=db, model=model)
+        elif model.object == "network":
+            if model.method == "change":
+                res = change_domain_network(db=db, model=model)
 
     elif model.resource == "node":
         if model.object == "base":
@@ -72,6 +75,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
                 res = add_network_base(db=db, model=model)
             elif model.method == "delete":
                 res = delete_network_base(db=db, model=model)
+        elif model.object == "ovs":
+            if model.method == "add":
+                res = add_network_ovs(db=db, model=model)
+            elif model.method == "delete":
+                res = delete_network_ovs(db=db, model=model)
 
     try:
         res

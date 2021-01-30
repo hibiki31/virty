@@ -101,20 +101,21 @@ class VirtManager():
     def network_data(self, token):
         networks = self.node.listAllNetworks()
         data = []
-        for net in networks:
-            xml = XmlEditor(type="str", obj=net.XMLDesc())
+        for network in networks:
+            xml = XmlEditor(type="str", obj=network.XMLDesc())
+            xml.dump_file("network")
             xml = xml.network_pase()
-            data.append(NetworkModel(
+            model = NetworkModel(
                 uuid = xml['uuid'],
                 name = xml['name'],
                 host_interface = xml['bridge'],
                 type = xml['type'],
-                active = net.isActive(),
-                auto_start = net.autostart(),
+                active = network.isActive(),
+                auto_start = network.autostart(),
                 dhcp = None,
                 update_token = token
-            ))
-            
+            )
+            data.append(model)
         return data
 
     def domain_define(self, xml_str):
@@ -139,7 +140,7 @@ class VirtManager():
         if con.state()[0] != 1:
             con.create()
 
-    def domain_autostart(self,is_enable):
+    def domain_autostart(self, uuid, is_enable):
         con = self.node.lookupByUUIDString(uuid)
         # Enable
         if  con.autostart() == 1 and is_enable:
@@ -177,3 +178,23 @@ class VirtManager():
         except:
             pass
         net.undefine()
+    
+    def network_ovs_add(self, uuid, name, vlan):
+        net = self.node.networkLookupByUUIDString(uuid)
+        xml = f'''
+        <portgroup name="{name}">
+            <vlan>
+            <tag id="{str(vlan)}" />
+            </vlan>
+        </portgroup>
+        '''
+        # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
+        net.update(command=3,section=9, xml=xml, parentIndex=1)
+
+    def network_ovs_delete(self, uuid, name):
+        net = self.node.networkLookupByUUIDString(uuid)
+        editor = XmlEditor(type="str",obj=net.XMLDesc())
+        xml = editor.network_ovs_find(name=name)
+
+        # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
+        net.update(command=2,section=9, xml=xml, parentIndex=1)

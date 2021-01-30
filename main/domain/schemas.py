@@ -84,3 +84,9 @@ class DomainInsert(CamelModel):
     cpu: int
     disks: List[DomainInsertDisk]
     interface: List[DomainInsertInterface]
+
+class DomainNetworkChange(CamelModel):
+    uuid: str
+    mac: str
+    network_name: str
+    port: str = None

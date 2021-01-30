@@ -11,6 +11,7 @@ from task.function import PostTask
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
+from mixin.exception import exception_notfund
 
 from module import virtlib
 from module import xmllib
@@ -20,10 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-exception_notfund = HTTPException(
-    status_code=404,
-    detail="Object not fund."
-)
+
 
 
 @app.put("/api/vms", tags=["vm"], response_model=TaskSelect)
@@ -59,7 +57,7 @@ async def get_api_domain(
     except:
         raise exception_notfund
 
-    editor = virtlib.XmlEditor("dom",domain.uuid)
+    editor = virtlib.XmlEditor("domain",domain.uuid)
     domain_xml_pase = editor.domain_parse()
 
     return {'db':domain, 'node': node, 'xml': domain_xml_pase}
@@ -100,5 +98,17 @@ async def patch_api_domains(
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
     task_model = post_task.commit("vm","base","change")
+   
+    return task_model
+
+@app.patch("/api/vm/network", tags=["vm"], response_model=TaskSelect)
+async def patch_api_vm_network(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: DomainNetworkChange = None
+    ):
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("vm","network","change")
    
     return task_model

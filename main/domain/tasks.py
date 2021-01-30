@@ -187,3 +187,28 @@ def change_domain_base(db: Session, model: TaskModel):
     update_domain_list(db=db, model=TaskModel())
 
     return model
+
+def change_domain_network(db: Session, model: TaskModel):
+    request: DomainNetworkChange = DomainNetworkChange(**model.request)
+
+    try:
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+    except:
+        raise Exception("domain not found")
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    manager = virtlib.VirtManager(node_model=node)
+    
+    # CDROM 
+    if request.status == "mount":
+        manager.domain_cdrom(request.uuid, request.target, request.path)
+    elif request.status == "unmount":
+        manager.domain_cdrom(request.uuid, request.target)
+
+    update_domain_list(db=db, model=TaskModel())
+
+    return model

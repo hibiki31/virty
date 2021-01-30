@@ -27,14 +27,14 @@ class XmlEditor():
             tree = ET.parse(virty_root + 'static/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif type == "dom":
+        elif type == "domain":
             os.chdir = virty_root
             tree = ET.parse(virty_root + 'data/xml/domain/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
-        elif type == "net":
+        elif type == "network":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + '/dump/net/'+ obj +'.xml') 
+            tree = ET.parse(virty_root + 'data/xml/network/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "str":
@@ -101,40 +101,66 @@ class XmlEditor():
         data = {}
         data['name'] = self.xml.find('name').text
         data['uuid'] = self.xml.find('uuid').text
-       
-        data['ip'] = []
-        data['dhcp'] = []
 
+        # タイプ判定
+        if self.xml.find('forward') is not None:
+            mode = self.xml.find('forward').get("mode")
+            data['type'] = mode
+            try:
+                if self.xml.find('virtualport').get("type") == "openvswitch":
+                    data['type'] = "openvswitch"
+            except:
+                pass
+        else:
+            data['type'] = "internal"
+
+        # ブリッジ先
+        data['bridge'] = self.xml.find('bridge').get("name")
+        
+        # MACアドレス
+        try:
+            data['mac'] = self.xml.find('mac').get("address",None)
+        except:
+            data['mac'] = None
+
+        # IP関係
         if self.xml.find('ip') is not None:
+            data['ip'] = []
+            data['dhcp'] = []
+            data['mac'] = None
             data['ip'].append(self.xml.find('ip').get("address",None))
             data['ip'].append(self.xml.find('ip').get("netmask",None))
             if self.xml.find('ip').find('dhcp') is not None:
                 DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
                 DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
                 data['dhcp'].append([DHCP_START,DHCP_END])
-
-        data['bridge'] = self.xml.find('bridge').get("name")
-
-        if self.xml.find('mac') is not None:
-            data['mac'] = self.xml.find('mac').get("address",None)
         else:
-            data['mac'] = None
+            data['ip'] = None
+            data['dhcp'] = None
 
-        if self.xml.find('forward') is not None:
-            data['forward'] = self.xml.find('forward').get("mode")
-        else:
-            data['forward'] = None
+        # OpenVswith
+        if data['type'] == 'openvswitch':
+            data['portgroup'] = []
+            for portgroup in self.xml.findall('portgroup'):
+                try:
+                    vlan_id = portgroup.find('vlan').find('tag').get('id')
+                except:
+                    vlan_id = None
+                data['portgroup'].append({
+                    'name': portgroup.get("name"),
+                    'isDefault': True if portgroup.get("default") == "yes" else False,
+                    'vlanId': vlan_id
+                })
 
-        if data['forward'] == "nat":
-            data['type'] = "NAT"
-        elif data['forward'] == None:
-            data['type'] = "internal"
-        elif data['forward'] == "bridge":
-            data['type'] = "Bridge"
         else:
-            data['type'] = "unknown"
-        
+            data['portgroup'] = None
+
         return data
+
+    def network_ovs_find(self, name):
+        for portgroup in self.xml.findall('portgroup'):
+            if portgroup.get("name") == name:
+                return ET.tostring(portgroup).decode()
 
 
     def domain_emulator_edit(self, os_like):
