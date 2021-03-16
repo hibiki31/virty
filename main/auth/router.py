@@ -32,7 +32,7 @@ class CurrentUser(BaseModel):
         if not role in self.role:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="権限が不正です",
+                detail="Illegal authority",
                 headers={"WWW-Authenticate": 'Bearer'}
             )
 
@@ -104,7 +104,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     except:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="認証情報が不正です",
+            detail="Illegal credentials",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
@@ -139,7 +139,7 @@ async def api_auth_setup(
     if not db.query(UserModel).all() == []:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="すでに初期化されています"
+            detail="Already initialized"
         )
     hashed_password = get_password_hash(user.password)
     user_id = user.user_id

@@ -10,6 +10,9 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
+from mixin.settings import virty_root
+
+
 
 class ResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
@@ -30,18 +33,17 @@ class ResultCallback(CallbackBase):
         host = result._host
         self.host_failed[host.get_name()] = result
 
-
-def test():
+def debug():
     play_source =  dict(
         name = "Ansible Play",
         hosts = 'all',
         gather_facts = 'no',
         tasks = [
-            dict(action=dict(module='shell', args='ls -l /'), register='shell_out')
+            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
         ]
     )
     
-    host_list = [ "user@192.168.0.1" ]
+    host_list = [ "akane@192.168.144.31" ]
 
     results = ansible_run(play_source=play_source, host_list=host_list)
 
@@ -56,6 +58,46 @@ def test():
     for host, result in results.host_unreachable.items():
         print(host)
         print(json.dumps(result._result, indent=4))
+
+def test():
+    play_source =  dict(
+        name = "Ansible Play",
+        hosts = 'all',
+        gather_facts = 'no',
+        tasks = [
+            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
+        ]
+    )
+
+    result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
+    print(json.dumps(result, indent=4))
+
+
+def ansible_runner(play_dict, host):
+    play_source =  play_dict
+    
+    host_list = [ host ]
+
+    results = ansible_run(play_source=play_source, host_list=host_list)
+
+    for host, result in results.host_ok.items():
+        return {
+            "status": "ok",
+            "host": host,
+            "result": result._result
+        }
+    for host, result in results.host_failed.items():
+        return {
+            "status": "failed",
+            "host": host,
+            "result": result._result
+        }
+    for host, result in results.host_unreachable.items():
+        return {
+            "status": "unreachable",
+            "host": host,
+            "result": result._result
+        }
     
 
 def ansible_run(play_source, host_list):
@@ -74,8 +116,8 @@ def ansible_run(play_source, host_list):
         ssh_extra_args=None, 
         sftp_extra_args=None, 
         scp_extra_args=None, 
-        become=False,
-        become_method='Sudo', 
+        become=True,
+        become_method='sudo', 
         become_user='root', 
         verbosity=True, 
         check=False, 
@@ -119,4 +161,4 @@ def ansible_run(play_source, host_list):
         return results_callback
 
 if __name__ == "__main__":
-    pass
+    test()

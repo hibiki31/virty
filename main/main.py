@@ -71,7 +71,7 @@ Base.metadata.create_all(bind=Engine)
 
 
 def worker_up():
-    worker_pool.append(subprocess.Popen(["python3", virty_root + "worker.py"]))
+    worker_pool.append(subprocess.Popen(["python3", virty_root + "/worker.py"]))
 
 
 def worker_down():

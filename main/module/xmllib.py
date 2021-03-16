@@ -24,17 +24,17 @@ class XmlEditor():
         """
         if type == "static":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + 'static/xml/'+ obj +'.xml') 
+            tree = ET.parse(virty_root + '/static/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "domain":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + 'data/xml/domain/'+ obj +'.xml') 
+            tree = ET.parse(virty_root + '/data/xml/domain/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "network":
             os.chdir = virty_root
-            tree = ET.parse(virty_root + 'data/xml/network/'+ obj +'.xml') 
+            tree = ET.parse(virty_root + '/data/xml/network/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "str":
@@ -330,7 +330,7 @@ class XmlEditor():
     
 
     def dump_file(self,type):
-        xml_dir = virty_root + 'data/xml/' +type+ '/'
+        xml_dir = virty_root + '/data/xml/' +type+ '/'
         os.chdir = virty_root
         os.makedirs(xml_dir, exist_ok=True)
         uuid = self.xml.find('uuid').text

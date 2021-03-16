@@ -7,7 +7,6 @@ import libvirt
 import pings
 import os
 import uuid
-from module import setting
 
 from module.xmllib import XmlEditor
 

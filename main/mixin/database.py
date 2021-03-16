@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from mixin.settings import virty_root
 
-DATABASE_PATH = virty_root + "data/app.db"
+DATABASE_PATH = virty_root + "/data/app.db"
 SQLALCHEMY_DATABASE_URL = "sqlite:///" + DATABASE_PATH
 
 

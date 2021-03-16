@@ -25,7 +25,7 @@ logger = setup_logger(__name__)
 
 
 @app.put("/api/vms", tags=["vm"], response_model=TaskSelect)
-async def put_api_domains(
+async def publish_task_to_update_vm_list(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
