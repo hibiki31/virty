@@ -5,6 +5,10 @@
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash"
 	},
+	"mounts": [
+		// sshの鍵を残すよう
+		"source=virty-develop-ssh-key,target=/root/.ssh,type=volume"
+	],
 	"extensions": [
 		"ms-python.python",
 		"donjayamanne.githistory",
