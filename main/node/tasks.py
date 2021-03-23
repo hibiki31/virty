@@ -10,6 +10,7 @@ from node.models import NodeModel
 from module import virtlib
 from module import xmllib
 from module import sshlib
+from module.ansiblelib import AnsibleManager
 
 
 logger = setup_logger(__name__)
@@ -22,6 +23,9 @@ def post_node_base(db: Session, model: TaskSelect):
     port = request.port
 
     ssh_manager = sshlib.SSHManager(user=user, domain=domain)
+    ansible_manager = AnsibleManager(user=user, domain=domain)
+    
+    node_infomation = ansible_manager.node_infomation()
 
     memory = ssh_manager.get_node_mem()
     core = ssh_manager.get_node_cpu_core()
@@ -40,10 +44,10 @@ def post_node_base(db: Session, model: TaskSelect):
         port = port,
         core = core,
         memory = memory,
-        cpu_gen = cpu,
-        os_like = os["ID_LIKE"],
-        os_name = os["NAME"],
-        os_version = os["VERSION"],
+        cpu_gen = node_infomation["result"]["ansible_facts"]["ansible_processor"][2],
+        os_like = node_infomation["result"]["ansible_facts"]["ansible_os_family"],
+        os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
+        os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
         status = 10,
         qemu_version = qemu,
         libvirt_version = libvirt,

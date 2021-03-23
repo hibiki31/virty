@@ -1,5 +1,6 @@
 import json
 import shutil
+import os
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
@@ -11,8 +12,41 @@ from ansible import context
 import ansible.constants as C
 
 from mixin.settings import virty_root
+from mixin.log import setup_logger
 
+logger = setup_logger(__name__)
 
+class AnsibleManager():
+    def __init__(self, user, domain):
+        self.user = user
+        self.domain = domain
+    
+    def node_test(self):
+        play_source = dict(
+            name = "Node test",
+            hosts = 'all',
+            gather_facts = 'yes',
+        )
+        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
+        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
+        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+            json.dump(result, f, indent=4)
+        logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
+    
+    def node_infomation(self):
+        play_source = dict(
+            name = "Node test",
+            hosts = 'all',
+            gather_facts = 'yes',
+        )
+        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
+        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
+        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+            json.dump(result, f, indent=4)
+        logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
+        return result
+    
+    
 
 class ResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):

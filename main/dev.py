@@ -4,7 +4,7 @@ from domain.tasks import *
 from domain.schemas import *
 from mixin.database import SessionLocal
 from task.models import TaskModel
-from module.ansiblelib import ansible_runner
+from module.ansiblelib import AnsibleManager
 
 from module import sshlib
 
@@ -51,8 +51,10 @@ def ansible_test():
         ]
     )
 
-    result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
-    print(json.dumps(result, indent=4))
+    # result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
+    # print(json.dumps(result, indent=4))
+    manager = AnsibleManager(user="akane", domain="192.168.144.31")
+    manager.node_test()
     
 
 if __name__ == "__main__":

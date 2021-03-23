@@ -38,7 +38,10 @@ def update_storage_list(db: Session, model: TaskModel):
             for image in storage["image"]:
                 image = ImageModel(**image.dict())
                 image.storage_uuid = storage["storage"].uuid
+                # イメージを登録
                 db.merge(image)
+            # ストレージを登録
+            db.add(StorageMetadataModel(rool="img", uuid=storage["storage"].uuid))
             db.merge(storage["storage"])
     db.commit()
     # トークンで除外

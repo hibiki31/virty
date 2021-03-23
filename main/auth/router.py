@@ -155,6 +155,17 @@ async def read_auth_validate(current_user: CurrentUser = Depends(get_current_use
     return {"access_token": current_user.token, "token_type": "bearer"}
 
 
+@app.get("/api/key", tags=["auth"])
+async def get_ssh_key_pear(current_user: CurrentUser = Depends(get_current_user)):
+    private_key = ""
+    publick_key = ""
+    with open("/root/.ssh/id_rsa") as f:
+        private_key = f.read()
+    with open("/root/.ssh/id_rsa.pub") as f:
+        publick_key = f.read()
+
+    return {"private_key": private_key, "publick_key": publick_key}
+
 ###########################
 # Users
 ###########################

@@ -164,7 +164,7 @@ class XmlEditor():
 
 
     def domain_emulator_edit(self, os_like):
-        if os_like == "debian":
+        if os_like == "Debian":
             self.xml.find('devices').find('emulator').text = "/usr/bin/kvm"
             self.xml.find('os').find('type').set('machine', "pc-i440fx-2.8")
         elif os_like == "rhel fedora":

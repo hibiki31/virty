@@ -18,6 +18,18 @@ class StorageModel(Base):
     status = Column(Integer)
     images = relationship('ImageModel')
     update_token = Column(String)
+    meta_data = relationship('StorageMetadataModel', lazy=False)
+
+
+
+
+class StorageMetadataModel(Base):
+    __tablename__ = "storages_metadata"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    rool = Column(String) # iso, img, cloud-init, template
+    storage = relationship("StorageModel", lazy=False) 
+
 
 
 

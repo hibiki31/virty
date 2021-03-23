@@ -28,6 +28,7 @@ class StorageSelect(CamelModel):
     node_name: str
     auto_start: bool
     path: str = None
+    meta_data: List
     update_token:str = None
     class Config:
         orm_mode  =  True

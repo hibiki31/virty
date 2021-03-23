@@ -13,7 +13,7 @@ from module.xmllib import XmlEditor
 from node.models import NodeModel
 from module.model import ImageModel
 from mixin.log import setup_logger
-from storage.models import StorageModel
+from storage.models import StorageModel, StorageMetadataModel
 from network.models import NetworkModel
 
 from typing import List, Optional
@@ -63,7 +63,7 @@ class VirtManager():
                     active = pool.isActive(),
                     auto_start = pool.autostart(),
                     status = pool.info()[0],
-                    update_token = token
+                    update_token = token,
                 )
                 data.append({"storage":storage, "image": []})
                 continue
@@ -86,7 +86,7 @@ class VirtManager():
                 active = pool.isActive(),
                 auto_start = pool.autostart(),
                 status = pool.info()[0],
-                update_token = token
+                update_token = token,
             )
             image = []
             for image_obj in pool.listAllVolumes():
