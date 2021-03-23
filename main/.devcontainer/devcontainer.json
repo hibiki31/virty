@@ -12,7 +12,8 @@
 	"extensions": [
 		"ms-python.python",
 		"donjayamanne.githistory",
-		"endormi.2077-theme"
+		"azemoh.one-monokai",
+		"eamodio.gitlens"
 	],
 	"forwardPorts": [
 		8000

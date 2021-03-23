@@ -9,6 +9,13 @@ from module.ansiblelib import AnsibleManager
 from module import sshlib
 
 
+from module import cloudinitlib
+def cloud_init_test():
+    manager = cloudinitlib.CloudInitManager("aaaaa","hostnameeeeeee")
+    manager.make_iso()
+
+
+
 def dev_update_storage_list():
     db = SessionLocal()
     update_storage_list(db=db, model=TaskModel())
@@ -51,10 +58,25 @@ def ansible_test():
         ]
     )
 
-    # result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
-    # print(json.dumps(result, indent=4))
+    play_source = dict(
+        name = "Ansible Play",
+        hosts = 'all',
+        gather_facts = 'no',
+        tasks = [
+            dict(
+                synchronize = dict(
+                    src = "/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",
+                    dest = "/",
+                    compress = "no"
+                ),
+                become = "yes"
+            )
+        ]
+    )
+
     manager = AnsibleManager(user="akane", domain="192.168.144.31")
-    manager.node_test()
+    #manager.run_playbook(play_source)
+    manager.file_copy_to_node(src="/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",dest="aaa.iso")
     
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ FROM python:3.8-buster
 
 RUN apt update -y
 RUN apt install -y \
-    make gcc wget openssh-client openssh-server genisoimage \
+    make gcc wget openssh-client openssh-server genisoimage rsync \
     libvirt-clients libvirt-dev
 
 COPY ./requirements.txt /tmp/

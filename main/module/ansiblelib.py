@@ -46,6 +46,31 @@ class AnsibleManager():
         logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
         return result
     
+    def run_playbook(self, book):
+        result = ansible_runner(play_dict=book, host=f"{self.user}@{self.domain}")
+        print(json.dumps(result, indent=4))
+        return result
+
+    def file_copy_to_node(self, src, dest):
+        play_source = dict(
+            name = "Ansible Play",
+            hosts = 'all',
+            gather_facts = 'no',
+            tasks = [
+                dict(
+                    synchronize = dict(
+                        src = src,
+                        dest = dest,
+                        compress = "no"
+                    ),
+                    become = "yes"
+                )
+            ]
+        )
+        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
+        print(json.dumps(result, indent=4))
+        return result
+    
     
 
 class ResultCallback(CallbackBase):
