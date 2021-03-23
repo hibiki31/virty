@@ -29,6 +29,14 @@
             :value="(item.capacity-item.available)/item.capacity*100"
           ></v-progress-linear>
         </template>
+        <template v-slot:[`item.metaData`]="{ item }" justify="right">
+          <template v-if="item.metaData">
+            {{item.metaData.rool}}
+          </template>
+          <template v-else>
+             -
+          </template>
+        </template>
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon small @click="openDeleteDialog(item)">mdi-delete</v-icon>
         </template>
@@ -62,6 +70,7 @@ export default {
         { text: 'active', value: 'active' },
         { text: 'auto', value: 'autoStart' },
         { text: 'Path', value: 'path' },
+        { text: 'Metadata', value: 'metaData' },
         { text: 'Actions', value: 'actions' }
       ]
     };

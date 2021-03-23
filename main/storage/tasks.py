@@ -41,7 +41,6 @@ def update_storage_list(db: Session, model: TaskModel):
                 # イメージを登録
                 db.merge(image)
             # ストレージを登録
-            db.add(StorageMetadataModel(rool="img", uuid=storage["storage"].uuid))
             db.merge(storage["storage"])
     db.commit()
     # トークンで除外

@@ -6,6 +6,7 @@
           <v-card-text>
             空ならアンマウント
             <v-text-field v-model="postData.path" label="iso file path" :rules="[]"></v-text-field>
+            <v-select v-model="postData.path" :items="isoImages" item-value="path" item-text="name"></v-select>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -30,14 +31,21 @@ export default {
         status: 'mount'
       },
       loadingSubmit: false,
-      dialogState: false
+      dialogState: false,
+      isoImages: []
     };
   },
   methods: {
-    openDialog(target, uuid) {
+    openDialog(target, uuid, node) {
       this.postData.uuid = uuid;
       this.postData.target = target;
       this.dialogState = true;
+      axios.get('/api/images', {
+        params: {
+          rool: 'iso',
+          nodeName: node
+        }
+      }).then((response) => (this.isoImages = response.data));
     },
     runMethod() {
       if (!this.$refs.nodeAddForm.validate()) {

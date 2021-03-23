@@ -292,7 +292,7 @@ export default {
   },
   methods: {
     openCDRomDialog(target) {
-      this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid);
+      this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid, this.data.node.name);
     },
     openDeleteDialog() {
       this.$refs.domainDeleteDialog.openDialog(this.data.db.uuid);

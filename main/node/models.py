@@ -2,6 +2,8 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
 
+from storage.models import StorageModel
+
 
 class NodeModel(Base):
     __tablename__ = "nodes"
@@ -19,3 +21,4 @@ class NodeModel(Base):
     status = Column(Integer)
     qemu_version = Column(String)
     libvirt_version = Column(String)
+    storages = relationship('StorageModel', uselist=True, lazy=False, backref="node")

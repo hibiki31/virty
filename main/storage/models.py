@@ -10,25 +10,23 @@ class StorageModel(Base):
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     capacity = Column(Integer)
     available = Column(Integer)
-    type = Column(String)
-    protocol = Column(String)
     path = Column(String)
     active = Column(Boolean)
     auto_start = Column(Boolean)
     status = Column(Integer)
-    images = relationship('ImageModel')
+    images = relationship('ImageModel', lazy=False, backref="storage")
     update_token = Column(String)
-    meta_data = relationship('StorageMetadataModel', lazy=False)
+    meta_data = relationship('StorageMetadataModel', uselist=False, lazy=False, backref="storages")
 
 
 
 
 class StorageMetadataModel(Base):
     __tablename__ = "storages_metadata"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    device_type = Column(String) # HDD, SSD, NVME...
+    protocol = Column(String) # NFS, Gluster, Ceph...
+    uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     rool = Column(String) # iso, img, cloud-init, template
-    storage = relationship("StorageModel", lazy=False) 
 
 
 
@@ -36,7 +34,7 @@ class StorageMetadataModel(Base):
 class ImageModel(Base):
     __tablename__ = "images"
     name = Column(String, primary_key=True)
-    storage_uuid = Column(String, ForeignKey('storages.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     capacity = Column(Integer)
     allocation = Column(Integer)
     path = Column(String)

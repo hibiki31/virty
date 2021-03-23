@@ -3,17 +3,23 @@ from typing import List, Optional
 
 from fastapi_camelcase import CamelModel
 
+from node.schemas import NodeSelect
+
 
 class ImageBase(CamelModel):
     pass
 
-class ImageRaw(ImageBase):
-    name:str
-    storage_uuid:str = None
-    capacity:int
-    allocation:int
-    path:str
-    update_token:str = None
+
+
+
+class StorageMetadataSelect(CamelModel):
+    rool: str
+    class Config:
+        orm_mode  =  True
+
+class StorageMetadataPatch(CamelModel):
+    uuid: str
+    rool: str
     class Config:
         orm_mode  =  True
 
@@ -26,9 +32,31 @@ class StorageSelect(CamelModel):
     available: int = None
     capacity: int = None
     node_name: str
+    node: NodeSelect
     auto_start: bool
     path: str = None
-    meta_data: List
+    meta_data: StorageMetadataSelect = None
+    update_token:str = None
+    class Config:
+        orm_mode  =  True
+
+class ImageRaw(ImageBase):
+    name:str
+    storage_uuid:str = None
+    capacity:int
+    allocation:int
+    path:str
+    update_token:str = None
+    class Config:
+        orm_mode  =  True
+
+class ImageSelect(ImageBase):
+    name:str
+    storage_uuid:str = None
+    capacity:int
+    storage: StorageSelect
+    allocation:int
+    path:str
     update_token:str = None
     class Config:
         orm_mode  =  True
