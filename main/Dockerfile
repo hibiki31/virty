@@ -1,8 +1,9 @@
-FROM centos:8
+FROM python:3.8-buster
 
-RUN dnf update -y && dnf upgrade -y && dnf clean packages
-RUN dnf install -y python38 python38-libs python38-devel python38-pip make gcc wget openssh-clients openssh-server
-RUN dnf install -y libvirt-client libvirt-devel libpq-devel
+RUN apt update -y
+RUN apt install -y \
+    make gcc wget openssh-client openssh-server genisoimage \
+    libvirt-clients libvirt-dev
 
 COPY ./requirements.txt /tmp/
 RUN pip3 install -r /tmp/requirements.txt
