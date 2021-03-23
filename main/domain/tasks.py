@@ -152,6 +152,7 @@ def delete_domain_base(db: Session, model: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
+    manager.domain_destroy(uuid=request.uuid)
     manager.domain_undefine(request.uuid)
 
     update_domain_list(db=db, model=TaskModel())
