@@ -113,7 +113,35 @@
                 ></v-select>
               </v-col>
             </v-row>
-          </div>
+            </div>
+            <!-- Init -->
+            <v-switch
+            dense
+            v-model="useCloudInit"
+            label="Use cloud-init"
+            ></v-switch>
+            <div v-if="useCloudInit">
+              <v-text-field
+                v-model="postData.cloudInit.hostname"
+                label="Host name"
+                dense
+                :rules="[$required, $limitLength64, $hostNameCharacter]"
+              >
+              </v-text-field>
+              <v-textarea
+                clearable
+                v-model="postData.cloudInit.userData"
+                clear-icon="mdi-close-circle"
+                label="User-data"
+              ></v-textarea>
+              <v-textarea
+                clearable
+                dense
+                v-model="postData.cloudInit.networkConfig"
+                clear-icon="mdi-close-circle"
+                label="User-data"
+              ></v-textarea>
+            </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -154,6 +182,7 @@ export default {
         { text: '16 Core', value: '16' },
         { text: '24 Core', value: '24' }
       ],
+      useCloudInit: false,
       postData: {
         name: '',
         nodeName: '',
@@ -175,7 +204,11 @@ export default {
             mac: null,
             networkName: ''
           }
-        ]
+        ],
+        cloudInit: {
+          userData: '#cloud-config',
+          networkConfig: 'network:\n  version: 2\n  ethernets: []'
+        }
       },
       dialogState: false
     };
@@ -187,6 +220,9 @@ export default {
     runMethod() {
       if (!this.$refs.domainAddforms.validate()) {
         return;
+      }
+      if (!this.useCloudInit) {
+        this.postData.cloudInit = null;
       }
       axios.request({
         method: 'post',

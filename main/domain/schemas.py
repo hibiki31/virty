@@ -78,6 +78,9 @@ class DomainInsertInterface(CamelModel):
     mac: str = None
     network_name: str
 
+class CloudInitInsert(CamelModel):
+    hostname: str
+    userData: str
 class DomainInsert(CamelModel):
     name: str
     node_name: str
@@ -85,6 +88,7 @@ class DomainInsert(CamelModel):
     cpu: int
     disks: List[DomainInsertDisk]
     interface: List[DomainInsertInterface]
+    cloud_init: CloudInitInsert = None
 
 class DomainNetworkChange(CamelModel):
     uuid: str

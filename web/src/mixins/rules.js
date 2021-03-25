@@ -20,6 +20,10 @@ Vue.mixin({
     $intValueRestrictions(value) {
       const regex = /^[0-9]*$/;
       return regex.test(value) || 'Only Int value';
+    },
+    $hostNameCharacter(value) {
+      const regex = /^[A-Za-z0-9-]*$/;
+      return regex.test(value) || 'Can use character A-Z, a-z, 0-9, -';
     }
   }
 });

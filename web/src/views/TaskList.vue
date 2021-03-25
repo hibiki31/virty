@@ -118,7 +118,7 @@ export default {
   methods: {
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {
-        this.$_pushNotice('An error occurred', 'error');
+        console.log(e);
       }, function(e) {
         console.log(e);
       });

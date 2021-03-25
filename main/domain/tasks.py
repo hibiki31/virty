@@ -6,12 +6,14 @@ from .schemas import *
 
 from task.models import TaskModel
 from node.models import NodeModel
-from storage.models import StorageModel
+from storage.models import StorageModel, ImageModel, StorageMetadataModel
 from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
 from module import sshlib
+from module import cloudinitlib
+from module import ansiblelib
 
 
 logger = setup_logger(__name__)
@@ -58,20 +60,22 @@ def update_domain_list(db: Session, model: TaskModel):
 
 
 def add_domain_base(db: Session, model: TaskModel):
+    # 受け取ったデータをモデルに型付け
     task_model:TaskModel = model
     model: DomainInsert = DomainInsert(**task_model.request)
 
+    # データベースから情報とってきて確認も行う
     domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==model.name).all()
-
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name==model.node_name).one()
     except:
         raise Exception("node not found")
-    
+
     if domains != []:
         raise Exception("domain name is duplicated")
 
-    manager = virtlib.VirtManager(node_model=node)
+
+    # XMLのベース読み込んで編集開始
     editor = xmllib.XmlEditor("static","domain_base")
 
     editor.domain_emulator_edit(node.os_like)
@@ -82,6 +86,8 @@ def add_domain_base(db: Session, model: TaskModel):
         vnc_port=0,
         vnc_passwd=None
     )
+
+    domain_uuid = editor.domain_uuid_generate()
     
     # ネットワークインターフェイス
     for interface in model.interface:
@@ -130,9 +136,33 @@ def add_domain_base(db: Session, model: TaskModel):
                 to_path=create_image_path
             )
 
-    # libvirtでXMLを登録
-    manager.domain_define(xml_str=editor.dump_str())
+    # Cloud-init
+    if model.cloud_init != None:
+        # iso作成
+        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,model.cloud_init.hostname)
+        cloudinit_manager.custom_user_data(model.cloud_init.userData)
+        iso_path = cloudinit_manager.make_iso()
 
+        # cloud-initのisoを保存するpoolを探す
+        try:
+            query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
+            query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
+            init_pool_model:StorageModel = query.one()
+        except:
+            raise Exception("cloud-init pool not found")
+
+        # 生成したisoをノードに転送
+        send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
+        ansible_manager = ansiblelib.AnsibleManager(user=node.user_name, domain=node.domain)
+        ansible_manager.file_copy_to_node(src=iso_path,dest=send_path)
+        editor.domain_cdrom(target=None,path=send_path)
+
+
+    # ノードに接続してlibvirtでXMLを登録
+    node = virtlib.VirtManager(node_model=node)
+    node.domain_define(xml_str=editor.dump_str())
+
+    # 情報の更新
     update_domain_list(db=db, model=TaskModel())
 
     return task_model

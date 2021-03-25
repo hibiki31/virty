@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 import xml.etree.ElementTree as ET
 
@@ -187,6 +188,16 @@ class XmlEditor():
 
         if vnc_passwd != None:
             self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)
+    
+    def domain_uuid_generate(self, domain_uuid=None):
+        if domain_uuid == None:
+            domain_uuid = str(uuid4())
+        if self.xml.find('uuid') == None:
+            uuid_xml = ET.SubElement(self.xml, 'uuid') 
+            uuid_xml.text = domain_uuid
+        else:
+            self.xml.find('uuid').text = domain_uuid
+        return domain_uuid
 
 
     def domain_interface_add(self, network_name, mac_address=None):
@@ -224,15 +235,20 @@ class XmlEditor():
         return ET.tostring(self.xml).decode()
     
 
-    def domain_cdrom(self, target, path=None):
-        devices = self.xml.find('devices')
-        for disk in devices.iter('disk'):
-            if disk.get('device') == "cdrom":
-                if disk.find('target').get('dev') == target:
-                    if disk.find('source') == None:
-                        ET.SubElement(disk, 'source') 
-                    disk.find('source').set('file', path)
-                    return ET.tostring(disk).decode()
+    def domain_cdrom(self, target=None, path=None):
+        '''
+        ターゲットの指定がない場合最初に発見したcdromデバイスに突っ込む
+        self.xmlを編集して，libvirtで使う該当部分を返す
+        '''
+        # デバイスリストでforを回す
+        for disk in self.xml.find('devices').iter('disk'):
+            # hddとcdromがいるのでcdromだけ
+            # ターゲットが指定されててかつ，違う場合はスキップ
+            if (disk.get('device') == "cdrom") and ((target == None) or (disk.find('target').get('dev') == target)) :    
+                if disk.find('source') == None:
+                    ET.SubElement(disk, 'source') 
+                disk.find('source').set('file', path)
+                return ET.tostring(disk).decode()
     
     def domain_network(self, mac, network, port):
         devices = self.xml.find('devices')
@@ -333,8 +349,8 @@ class XmlEditor():
         xml_dir = virty_root + '/data/xml/' +type+ '/'
         os.chdir = virty_root
         os.makedirs(xml_dir, exist_ok=True)
-        uuid = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(xml_dir + uuid + '.xml')
+        xml_uuid = self.xml.find('uuid').text
+        ET.ElementTree(self.xml).write(xml_dir + xml_uuid + '.xml')
 
 
     def storage_base_edit(self,name,path):
