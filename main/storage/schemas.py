@@ -14,12 +14,16 @@ class ImageBase(CamelModel):
 
 class StorageMetadataSelect(CamelModel):
     rool: str
+    protocol: str
+    device_type: str
     class Config:
         orm_mode  =  True
 
 class StorageMetadataPatch(CamelModel):
     uuid: str
     rool: str
+    protocol: str
+    device_type: str
     class Config:
         orm_mode  =  True
 
@@ -27,8 +31,7 @@ class StorageSelect(CamelModel):
     name: str
     uuid: str
     status: int
-    active: bool 
-    protocol: str = None
+    active: bool
     available: int = None
     capacity: int = None
     node_name: str

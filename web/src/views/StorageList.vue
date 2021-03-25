@@ -2,6 +2,7 @@
   <div>
     <StorageAddDialog ref="storageAddDialog" />
     <StorageDeleteDialog ref="storageDeleteDialog" />
+    <storage-metadata-edit ref="storageMetadataEditdialog" />
     <v-card>
       <v-card-actions>
         <v-btn v-on:click="this.storageReloadTask" small dark class="ma-2" color="primary">
@@ -22,23 +23,24 @@
         multi-sort
       >
         <template v-slot:[`item.capacity`]="{ item }" justify="right">
-          {{item.capacity}}  GB
+          {{item.capacity}} GB
+        </template>
+        <template v-slot:[`item.used`]="{ item }" justify="right">
+          {{item.capacity-item.available}} GB
+        </template>
+        <template v-slot:[`item.available`]="{ item }" justify="right">
           <v-progress-linear
             color="primary"
-            height="15"
+            height="20"
             :value="(item.capacity-item.available)/item.capacity*100"
-          ></v-progress-linear>
+          >
+            <strong>{{item.available}} GB</strong>
+          </v-progress-linear>
         </template>
-        <template v-slot:[`item.metaData`]="{ item }" justify="right">
-          <template v-if="item.metaData">
-            {{item.metaData.rool}}
-          </template>
-          <template v-else>
-             -
-          </template>
-        </template>
+
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon small @click="openDeleteDialog(item)">mdi-delete</v-icon>
+          <v-icon small @click="openMetadataEditDialog(item)">mdi-pen</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -49,12 +51,14 @@
 import axios from '@/axios/index';
 import StorageAddDialog from '../conponents/dialog/StorageAddDialog';
 import StorageDeleteDialog from '../conponents/dialog/StorageDeleteDialog';
+import StorageMetadataEdit from '../conponents/dialog/StorageMetadataEdit.vue';
 
 export default {
   name: 'StorageList',
   components: {
     StorageAddDialog,
-    StorageDeleteDialog
+    StorageDeleteDialog,
+    StorageMetadataEdit
   },
   data: function() {
     return {
@@ -64,13 +68,14 @@ export default {
         { text: 'Node', value: 'nodeName' },
         { text: 'UUID', value: 'uuid' },
         { text: 'Capacity', value: 'capacity' },
+        { text: 'Used', value: 'used' },
         { text: 'Available', value: 'available' },
-        { text: 'Device', value: 'device' },
-        { text: 'type', value: 'type' },
         { text: 'active', value: 'active' },
         { text: 'auto', value: 'autoStart' },
         { text: 'Path', value: 'path' },
-        { text: 'Metadata', value: 'metaData' },
+        { text: 'Device', value: 'metaData.deviceType' },
+        { text: 'Protocol', value: 'metaData.protocol' },
+        { text: 'Rool', value: 'metaData.rool' },
         { text: 'Actions', value: 'actions' }
       ]
     };
@@ -81,6 +86,9 @@ export default {
   methods: {
     openDeleteDialog(item) {
       this.$refs.storageDeleteDialog.openDialog(item);
+    },
+    openMetadataEditDialog(item) {
+      this.$refs.storageMetadataEditdialog.openDialog(item);
     },
     openAddDialog() {
       this.$refs.storageAddDialog.openDialog();

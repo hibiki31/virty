@@ -4,7 +4,7 @@
         <v-form ref="nodeAddForm">
           <v-card-title>CD Change</v-card-title>
           <v-card-text>
-            空ならアンマウント
+            Pathを空にするとアンマウントします．選択肢はストレージのロールがisoの内容が表示されます．
             <v-text-field v-model="postData.path" label="iso file path" :rules="[]"></v-text-field>
             <v-select v-model="postData.path" :items="isoImages" item-value="path" item-text="name"></v-select>
           </v-card-text>

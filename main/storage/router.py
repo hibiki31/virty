@@ -85,9 +85,9 @@ async def post_api_storage(
         db: Session = Depends(get_db),
         request_model: StorageMetadataPatch = None
     ):
-    db.merge(StorageMetadataModel(uuid=request_model.uuid, rool=request_model.rool))
+    db.merge(StorageMetadataModel(**request_model.dict()))
     db.commit()
-    return ""
+    return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
 @app.delete("/api/storages", tags=["storage"], response_model=TaskSelect)
