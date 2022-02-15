@@ -1,5 +1,5 @@
 # ビルド環境
-FROM node:lts-alpine as build-stage
+FROM node:14.19-alpine as build-stage
 WORKDIR /app
 ADD package*.json ./
 RUN npm install

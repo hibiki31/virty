@@ -13,9 +13,9 @@ class ImageBase(CamelModel):
 
 
 class StorageMetadataSelect(CamelModel):
-    rool: str
-    protocol: str
-    device_type: str
+    rool: str = None
+    protocol: str = None
+    device_type: str = None
     class Config:
         orm_mode  =  True
 

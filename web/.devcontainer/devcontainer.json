@@ -9,7 +9,7 @@
 	},
 	"mounts": [
 		// node_moduleは速くないと重いし残ってて欲しいから別マウント
-		"source=virty-develop-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+		"source=virty-develop-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
 	],
 	"extensions": [
 		"octref.vetur"

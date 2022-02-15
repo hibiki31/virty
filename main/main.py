@@ -27,18 +27,9 @@ logger = setup_logger(__name__)
 worker_pool = []
 
 tags_metadata = [
-    {
-        "name": "node",
-        "description": "",
-    },
-    {
-        "name": "user",
-        "description": "ユーザ",
-    },
-    {
-        "name": "auth",
-        "description": "認証",
-    }
+    {"name": "auth", "description": ""},
+    {"name": "user", "description": ""},
+    {"name": "node", "description": ""},
 ]
 
 app = FastAPI(

@@ -1,12 +1,12 @@
 FROM python:3.8-buster
 
-RUN apt update -y
-RUN apt install -y \
-    make gcc wget openssh-client openssh-server genisoimage rsync \
+RUN apt update -y && apt install -y \
+    make gcc wget openssh-client openssh-server \
+    genisoimage rsync \
     libvirt-clients libvirt-dev
 
 COPY ./requirements.txt /tmp/
-RUN pip3 install -r /tmp/requirements.txt
+RUN /usr/local/bin/python -m pip install --upgrade pip && pip3 install -r /tmp/requirements.txt
 
 RUN mkdir -p /opt/virty/app
 COPY . /opt/virty/app
