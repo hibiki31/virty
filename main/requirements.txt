@@ -1,7 +1,7 @@
 # Develop
 autopep8==1.5.4
 # Ansible
-ansible==2.9.6
+ansible==4.2.0
 aiosqlite==0.15.0
 # FastAPI
 fastapi==0.65.2
