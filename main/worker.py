@@ -2,12 +2,11 @@ import subprocess
 from time import time, sleep
 from sqlalchemy import desc
 
-from mixin.settings import virty_root
+from settings import APP_ROOT
 from mixin.log import setup_logger
 from mixin.database import SessionLocal
 
 from task.models import TaskModel
-from auth.models import UserModel
 from task.schemas import TaskSelect
 from domain.tasks import *
 from node.tasks import *

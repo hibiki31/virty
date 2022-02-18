@@ -11,7 +11,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
-from mixin.settings import virty_root
+from settings import APP_ROOT
 from mixin.log import setup_logger
 
 logger = setup_logger(__name__)
@@ -28,8 +28,8 @@ class AnsibleManager():
             gather_facts = 'yes',
         )
         result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
-        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
-        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+        os.makedirs(f'{APP_ROOT}/data/node/', exist_ok=True)
+        with open(f'{APP_ROOT}/data/node/{self.user}@{self.domain}.json', 'w') as f:
             json.dump(result, f, indent=4)
         logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
     
@@ -40,8 +40,8 @@ class AnsibleManager():
             gather_facts = 'yes',
         )
         result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
-        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
-        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+        os.makedirs(f'{APP_ROOT}/data/node/', exist_ok=True)
+        with open(f'{APP_ROOT}/data/node/{self.user}@{self.domain}.json', 'w') as f:
             json.dump(result, f, indent=4)
         logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
         return result

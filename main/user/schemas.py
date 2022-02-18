@@ -18,12 +18,6 @@ class UserBase(CamelModel):
     class Config:
         orm_mode = True
 
-class Setup(CamelModel):
-    user_id: str
-    password: str
-    class Config:
-        orm_mode = True
-
 class UserInsert(UserBase):
     password: str
 

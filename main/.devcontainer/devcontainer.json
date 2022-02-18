@@ -1,16 +1,12 @@
 {
-	"name": "API",
-	"context": "..",
-	"dockerFile": "../Dockerfile",
-	"mounts": [
-		// sshの鍵を残すよう
-		"source=virty-develop-ssh-key,target=/root/.ssh,type=volume"
-	],
+	"name": "virty-api",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace/main/",
 	"extensions": [
 		"ms-python.python",
 		"donjayamanne.githistory",
-		"azemoh.one-monokai",
-		"eamodio.gitlens"
+		"azemoh.one-monokai"
 	],
 	"forwardPorts": [
 		8000

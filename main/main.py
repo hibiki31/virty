@@ -16,10 +16,8 @@ from domain.router import app as domain_router
 from storage.router import app as storage_router
 from network.router import app as network_router
 
-from auth.models import UserModel
-
 from mixin.log import setup_logger
-from mixin.settings import virty_root
+from settings import APP_ROOT, API_VERSION
 
 
 logger = setup_logger(__name__)
@@ -35,7 +33,7 @@ tags_metadata = [
 app = FastAPI(
     title="VirtyAPI",
     description="",
-    version="1.6.1",
+    version=API_VERSION,
     openapi_tags=tags_metadata,
     docs_url="/api",
     redoc_url="/api/redoc",
@@ -58,11 +56,8 @@ app.include_router(storage_router)
 app.include_router(network_router)
 
 
-Base.metadata.create_all(bind=Engine)
-
-
 def worker_up():
-    worker_pool.append(subprocess.Popen(["python3", virty_root + "/worker.py"]))
+    worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py"]))
 
 
 def worker_down():

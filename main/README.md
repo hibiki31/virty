@@ -1,3 +1,12 @@
+## Alembic
+
+```bash
+alembic revision --autogenerate
+alembic upgrade head
+# データリセット
+alembic downgrade base
+```
+
 ## CODE
 ### Que
 0 sucsess
