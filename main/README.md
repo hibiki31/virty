@@ -36,6 +36,7 @@ alembic downgrade base
 
 
 ## Git運用メモ
+
 ローカルDevelopでこまめにコミット、スカッシュして正式なメッセージをつける。
 
 ```
@@ -63,3 +64,10 @@ Merge branch 'develop' v1.0.0
 
 バージョンのタグをつける
 GitHubでタグに対してリリースを作る
+
+fast-forwardは無効化すべし
+
+```
+git config --global --add merge.ff false
+git config --global --add pull.ff only
+```
