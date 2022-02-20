@@ -21,10 +21,11 @@ from group.router import app as group_router
 from mixin.log import setup_logger
 from settings import APP_ROOT, API_VERSION
 
+from task.function import worker_down, worker_up
+
 
 logger = setup_logger(__name__)
 
-worker_pool = []
 
 tags_metadata = [
     {"name": "auth", "description": ""},
@@ -58,15 +59,6 @@ app.include_router(storage_router)
 app.include_router(network_router)
 app.include_router(user_router)
 app.include_router(group_router)
-
-
-def worker_up():
-    worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py"]))
-
-
-def worker_down():
-    for w in worker_pool:
-        w.terminate()
 
 
 @app.on_event("startup")

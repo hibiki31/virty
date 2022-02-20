@@ -24,9 +24,15 @@ async def post_api_nodes(
         db: Session = Depends(get_db),
         request_model: NodeInsert = None
     ):
-    # タスクを追加
+    # ノード追加タスク
     post_task = PostTask(db=db, user=current_user, model=request_model)
     task_model = post_task.commit("node","base","add")
+
+    dependence_uuid = task_model.uuid
+
+    # ドメインリスト更新タスク
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("vm","list","update", status="wait",dependence_uuid=dependence_uuid)
 
     return task_model
 

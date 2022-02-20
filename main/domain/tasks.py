@@ -26,7 +26,7 @@ def update_domain_list(db: Session, model: TaskModel):
     for node in nodes:
         if node.status != 10:
             continue
-        logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
+        logger.info(f'connecting node: {node.user_name + "@" + node.domain}')
         try:
             manager = virtlib.VirtManager(node_model=node)
         except Exception as e:
@@ -34,8 +34,6 @@ def update_domain_list(db: Session, model: TaskModel):
             continue
 
         domains = manager.domain_data()
-
-        logger.info("ドメイン数：" + str(len(domains)))
 
         for domain in domains:
             editor = xmllib.XmlEditor("str",domain['xml'])
@@ -54,7 +52,7 @@ def update_domain_list(db: Session, model: TaskModel):
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()
-    db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
+    # db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
     db.commit()
     return model
 

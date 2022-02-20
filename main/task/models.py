@@ -10,9 +10,10 @@ class TaskModel(Base):
     post_time = Column(DateTime)
     run_time = Column(Float)
     user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
-    status = Column(String)
-    resource = Column(String)
-    object = Column(String)
-    method = Column(String)
+    dependence_uuid = Column(String, ForeignKey('tasks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    status = Column(String) # init, start, finish
+    resource = Column(String) # node, domain, network...
+    object = Column(String) # base, power...
+    method = Column(String) # delete, post, update...
     request = Column(JSON)
     message = Column(String)

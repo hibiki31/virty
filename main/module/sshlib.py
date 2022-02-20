@@ -10,7 +10,7 @@ class SSHManager():
         self.user = user
         self.domain = domain
         self.port = port
-        self.base_cmd = ["ssh" , f"{user}@{domain}:{port}"]
+        self.base_cmd = ["ssh" , f"{user}@{domain}", "-p", str(port)]
 
     def add_known_hosts(self):
         
