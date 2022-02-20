@@ -21,8 +21,8 @@ from auth.router import CurrentUser, get_current_user
 
 logger = setup_logger(__name__)
 app = APIRouter(
-    prefix="/api/users",
-    tags=["user"],
+    prefix="/api/groups",
+    tags=["group"],
 )
 
 
@@ -46,7 +46,7 @@ async def post_api_groups(
         current_user: CurrentUser = Depends(get_current_user)
     ):
 
-    group = GroupModel(group_id=request.group_id)
+    group = GroupModel(id=request.group_id)
 
     db.add(group)
     db.commit()
@@ -61,8 +61,8 @@ async def patch_api_groups(
         current_user: CurrentUser = Depends(get_current_user)
     ):
     try:
-        group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
-        user: UserModel = db.query(UserModel).filter(UserModel.user_id==request.user_id).one()
+        group: GroupModel = db.query(GroupModel).filter(GroupModel.id==request.group_id).one()
+        user: UserModel = db.query(UserModel).filter(UserModel.id==request.user_id).one()
     except:
         raise  HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,7 +74,7 @@ async def patch_api_groups(
     db.merge(group)
     db.commit()
 
-    group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
+    group: GroupModel = db.query(GroupModel).filter(GroupModel.id==request.group_id).one()
 
     return group
 

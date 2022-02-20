@@ -20,7 +20,7 @@
                 <v-text-field
                   v-model="formData.userId"
                   :rules="[rules.required]"
-                  label="userId"
+                  label="Username"
                   name="userId"
                   prepend-icon="mdi-account"
                   required
@@ -122,13 +122,19 @@ export default {
             return;
           }
           this.$store.dispatch('updateAuthState', res.data);
-          this.$_pushNotice('Login success', 'success');
+          this.$_pushNotice('Login successful', 'success');
           this.$router.push(this.$route.query.redirect || { name: 'VMList' });
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');
         });
       this.isLoadingLogin = false;
+    }
+  },
+  mounted: async function() {
+    await axios.get('/api/auth/version').then((response) => (this.apiVersion = response.data));
+    if (!this.apiVersion.initialized) {
+      this.$refs.setupVirtyDialog.openDialog();
     }
   }
 };

@@ -21,8 +21,8 @@ from auth.router import CurrentUser, get_current_user
 
 logger = setup_logger(__name__)
 app = APIRouter(
-    prefix="/api/groups",
-    tags=["group"],
+    prefix="/api/users",
+    tags=["user"],
 )
 
 
@@ -57,7 +57,7 @@ async def post_api_users(
     return user
 
 
-@app.get("/", tags=["user"],response_model=List[UserSelect])
+@app.get("/", tags=["user"])
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

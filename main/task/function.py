@@ -27,7 +27,7 @@ class PostTask():
     def commit(self, resource, object, method):
         uuid_str = str(uuid.uuid4())
         time = datetime.now()
-        user_id = self.user.user_id
+        user_id = self.user.id
 
         if self.model == None:
             self.model = BaseModel()

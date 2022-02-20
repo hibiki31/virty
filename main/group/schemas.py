@@ -2,34 +2,11 @@ from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
 
-# RFCでスネークケース指定あるやんけ
-class TokenRFC6749Response(BaseModel):
-    access_token: str
-    token_type: str
+from user.schemas import UserBase
 
-class TokenData(CamelModel):
-    user_id: Optional[str] = None
-    scopes: List[str] = []
-    role: List[str] = []
-    groups: List[str] = []
-
-class UserBase(CamelModel):
-    user_id: str = None
-    class Config:
-        orm_mode = True
-
-class UserInsert(UserBase):
-    password: str
-
-class UserInDB(UserBase):
-    hashed_password: str
-
-class UserResponse(CamelModel):
-    user_id: str
-    hashed_password: str
 
 class GroupBase(CamelModel):
-    group_id: str
+    id: str
     class Config:
         orm_mode = True
 
@@ -39,9 +16,6 @@ class GroupInsert(GroupBase):
 class GroupPatch(CamelModel):
     group_id: str
     user_id: str
-
-class UserSelect(UserBase):
-    groups: List[GroupBase]
 
 class GroupSelect(GroupBase):
     users: List[UserBase]

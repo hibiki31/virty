@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
 from mixin.database import get_db
-from settings import SECRET_KEY
+from settings import SECRET_KEY, API_VERSION
 
 from .schemas import *
 from user.models import UserModel
@@ -178,6 +178,15 @@ def api_auth_setup(
     db.commit()
 
     return model
+
+
+@app.get("/version")
+def get_version(
+        db: Session = Depends(get_db)
+    ):
+    initialized = (not db.query(UserModel).all() == [])
+
+    return {"initialized": initialized, "version": API_VERSION}
 
 
 @app.get("/validate", tags=["auth"])

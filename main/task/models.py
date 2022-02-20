@@ -1,6 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON, Float
-from sqlalchemy.orm import relationship
-from mixin.database import Base, Engine
+from mixin.database import Base
+
+from user.models import UserModel
 
 
 class TaskModel(Base):

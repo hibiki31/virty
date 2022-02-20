@@ -4,10 +4,10 @@
         <v-form ref="nodeAddForm">
           <v-card-title>Setup Virty</v-card-title>
           <v-card-text>
-            Virtyの初期設定を行います。管理者ユーザが存在する場合実行できません。
+            Create an administrative user. This will fail if a user with administrative privileges already exists.
             <v-text-field
               v-model="postData.userId"
-              label="Admin user name"
+              label="Admin username"
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
             ></v-text-field>
@@ -61,7 +61,7 @@ export default {
         data: this.postData
       })
         .then(res => {
-          this.$_pushNotice('Success setup', 'success');
+          this.$_pushNotice('Setup successful', 'success');
           this.dialogState = false;
         })
         .catch(error => {

@@ -4,15 +4,13 @@
 	"context": "..",
 	// ビルドするファイル、このjsonからの相対パス
 	"dockerFile": "../Dockerfile.dev",
-	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash"
-	},
 	"mounts": [
 		// node_moduleは速くないと重いし残ってて欲しいから別マウント
 		"source=virty-develop-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
 	],
 	"extensions": [
-		"octref.vetur"
+		"octref.vetur",
+		"dbaeumer.vscode-eslint"
 	],
 	"forwardPorts": [
 		8080

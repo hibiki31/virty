@@ -12,6 +12,8 @@ from module import xmllib
 from module import sshlib
 from module.ansiblelib import AnsibleManager
 
+from domain.tasks import update_domain_list
+
 
 logger = setup_logger(__name__)
 
@@ -22,7 +24,7 @@ def post_node_base(db: Session, model: TaskSelect):
     domain = request.domain
     port = request.port
 
-    ssh_manager = sshlib.SSHManager(user=user, domain=domain)
+    ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
     ansible_manager = AnsibleManager(user=user, domain=domain)
     
     node_infomation = ansible_manager.node_infomation()
@@ -53,9 +55,6 @@ def post_node_base(db: Session, model: TaskSelect):
         libvirt_version = libvirt,
     )
     db.add(row)
-    try:
-        db.commit()
-    except:
-        pass
-    db.close()
+    db.commit()
+
     return model

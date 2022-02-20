@@ -14,7 +14,7 @@ class TokenData(CamelModel):
     groups: List[str] = []
 
 class UserBase(CamelModel):
-    user_id: str = None
+    id: str = None
     class Config:
         orm_mode = True
 

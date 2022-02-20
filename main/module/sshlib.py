@@ -6,10 +6,11 @@ logger = setup_logger(__name__)
 
 
 class SSHManager():
-    def __init__(self, user, domain):
+    def __init__(self, user, domain, port):
         self.user = user
         self.domain = domain
-        self.base_cmd = ["ssh" , user+"@"+domain ]
+        self.port = port
+        self.base_cmd = ["ssh" , f"{user}@{domain}:{port}"]
 
     def add_known_hosts(self):
         
