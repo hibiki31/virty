@@ -15,6 +15,8 @@ from task.router import app as task_router
 from domain.router import app as domain_router
 from storage.router import app as storage_router
 from network.router import app as network_router
+from user.router import app as user_router
+from group.router import app as group_router
 
 from mixin.log import setup_logger
 from settings import APP_ROOT, API_VERSION
@@ -54,6 +56,8 @@ app.include_router(node_router)
 app.include_router(domain_router)
 app.include_router(storage_router)
 app.include_router(network_router)
+app.include_router(user_router)
+app.include_router(group_router)
 
 
 def worker_up():

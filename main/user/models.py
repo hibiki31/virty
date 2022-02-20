@@ -15,7 +15,7 @@ class UserModel(Base):
     id = Column(String, primary_key=True, index=True)
     hashed_password = Column(String)
     scopes = relationship('UserScope')
-    groups = relationship("GroupModel", secondary=association_table, back_populates="users")
+    groups = relationship("GroupModel", secondary=association_table, back_populates="users", lazy=False)
 
 
 class UserScope(Base):

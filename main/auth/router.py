@@ -24,12 +24,14 @@ app = APIRouter(
 )
 
 scopes_dict = {
-    "adm": {
+    "admin": {
         "storage": {},
         "network": {
             "delete": None,
             "create": None,
         }
+    },
+    "user": {
     }
 }
 
@@ -73,7 +75,7 @@ pwd_context = CryptContext(
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="api/auth",
     auto_error=False,
-    scopes={"adm": "Have all authority"},
+    scopes={"admin": "Have all authority", "user": "User authority"},
 )
 
 def create_access_token(data: dict, expires_delta: timedelta):
@@ -151,7 +153,7 @@ def login_for_access_token(
 
 
 @app.post("/setup", tags=["auth"])
-async def api_auth_setup(
+def api_auth_setup(
         model: Setup, 
         db: Session = Depends(get_db)
     ):
@@ -179,7 +181,7 @@ async def api_auth_setup(
 
 
 @app.get("/validate", tags=["auth"])
-async def read_auth_validate(
+def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["adm"])
     ):
     return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer", "scopes": scopes_list(scopes_dict)}
@@ -187,7 +189,7 @@ async def read_auth_validate(
 
 
 @app.get("/key", tags=["auth"])
-async def get_ssh_key_pear(current_user: CurrentUser = Depends(get_current_user)):
+def get_ssh_key_pear(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     publick_key = ""
     with open("/root/.ssh/id_rsa") as f:
