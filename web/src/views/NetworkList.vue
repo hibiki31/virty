@@ -18,7 +18,7 @@
         <v-icon left>mdi-server-plus</v-icon>Add
       </v-btn>
       <!-- 削除ボタン -->
-      <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="red">
+      <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="error">
         <v-icon left>mdi-server-remove</v-icon>Delete
       </v-btn>
     </v-card-actions>

@@ -119,7 +119,7 @@
             <v-card>
               <v-card-text>
                 <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="blue"
+                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="success"
                     >mdi-power-standby</v-icon
                   >
                 </div>
@@ -188,7 +188,7 @@ export default {
       this.$refs.domainAddDialog.openDialog();
     },
     getPowerColor(statusCode) {
-      if (statusCode === 1) return 'blue';
+      if (statusCode === 1) return 'primary';
       else if (statusCode === 5) return 'grey';
       else if (statusCode === 7) return 'purple';
       else if (statusCode === 10) return 'red';
@@ -196,7 +196,7 @@ export default {
       else return 'yellow';
     },
     vmListReload() {
-      this.reloadLoading = true;
+      // this.reloadLoading = true;
       axios
         .put('/api/vms')
         .then(res => {

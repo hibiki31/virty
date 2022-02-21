@@ -168,7 +168,7 @@
               small
               dark
               class="ma-2"
-              color="red"
+              color="error"
             >
               <v-icon left>mdi-server-plus</v-icon>Delete
             </v-btn>

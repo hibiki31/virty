@@ -7,7 +7,7 @@
         <v-btn v-on:click="this.openNodeAddDialog" small class="ma-2" color="primary">
           <v-icon left>mdi-server-plus</v-icon>JOIN
         </v-btn>
-        <v-btn v-on:click="this.openNodeDeleteDialog" small dark class="ma-2" color="red">
+        <v-btn v-on:click="this.openNodeDeleteDialog" small dark class="ma-2" color="error">
         <v-icon left>mdi-server-remove</v-icon>LEAVE
       </v-btn>
       </v-card-actions>

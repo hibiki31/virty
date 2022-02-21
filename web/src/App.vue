@@ -1,5 +1,20 @@
 <template>
   <v-app>
+    <notifications group="default" animation-type="velocity" position="top right" class="mt-13">
+      <template slot="body" slot-scope="props">
+        <v-alert
+          :type="props.item.type"
+          class="ma-3"
+          border="left"
+          elevation="7"
+          colored-border
+        >
+          <div class="d-flex align-center ml-3">
+            <div class="body-2 mr-auto">{{ props.item.text }}</div>
+          </div>
+        </v-alert>
+      </template>
+    </notifications>
     <v-navigation-drawer v-if="this.$store.state.userData.isAuthed" permanent floating app clipped>
       <v-list-item>
         <v-list-item-content>
@@ -20,42 +35,24 @@
         </v-list-item-group>
       </v-list>
       <v-divider class="pb-2"></v-divider>
-      <span class="subtitle-2 ml-3">Develop by <a href="https://github.com/hibiki31" class="blue--text">@hibiki31</a></span>
+      <span class="subtitle-2 ml-3">Develop by <a href="https://github.com/hibiki31" class="primary--text">@hibiki31</a></span>
       <span class="subtitle-2 ml-1">v{{this.version}}</span>
     </v-navigation-drawer>
     <v-app-bar color="primary" dark dense flat app clipped-left>
       <v-toolbar-title>Virty</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn @click="sendMessage('aaa')">
-        a
-      </v-btn>
-      <v-badge
-          color="green"
-          :content=taskCount
-          inline
-          v-if="taskCount !== 0"
-        >
-          <v-icon>mdi-domain</v-icon>
-        </v-badge>
+      <v-progress-circular
+        v-if="(taskCount != 0)"
+        indeterminate
+        size="24"
+        color="error"
+        :value=taskCount
+      ></v-progress-circular>
       <v-btn :to="{name: 'Logout'}" text>
         <v-icon>mdi-logout</v-icon>
       </v-btn>
     </v-app-bar>
     <v-main class="ma-5">
-      <notifications group="default" animation-type="velocity">
-        <template slot="body" slot-scope="props">
-          <v-alert
-            :type="props.item.type"
-            class="ma-3 mb-0"
-            border="left"
-            colored-border
-          >
-            <div class="d-flex align-center ml-3">
-              <div class="body-2 mr-auto">{{ props.item.text }}</div>
-            </div>
-          </v-alert>
-        </template>
-      </notifications>
       <router-view />
     </v-main>
   </v-app>
@@ -71,8 +68,9 @@ export default {
   data: () => ({
     version: require('../package.json').version,
     userId: '',
-    taskCount: 5,
+    taskCount: 0,
     taskHash: null,
+    taskChecking: false,
     navList: [
       {
         to: { name: 'VMList' },
@@ -108,17 +106,15 @@ export default {
   }),
   methods: {
     async task_check() {
-      await axios.get('/api/tasks', { params: { update_mode: true, update_hash: this.taskHash } }).then(async(response) => {
-        this.taskHash = response.data.task_hash;
-        this.taskCount = response.data.task_count;
-        console.log(this.taskCount);
-        await this.task_check();
-      });
-    },
-    sendMessage: function(message) {
-      console.log('Hello');
-      console.log(this.connection);
-      this.connection.send(message);
+      if (!this.taskChecking) {
+        this.taskChecking = true;
+        await axios.get('/api/tasks', { params: { update_mode: true, update_hash: this.taskHash } }).then(async(response) => {
+          this.taskHash = response.data.task_hash;
+          this.taskCount = response.data.task_count;
+          this.taskChecking = false;
+          await this.task_check();
+        });
+      }
     }
   },
   async mounted() {
@@ -132,16 +128,10 @@ export default {
         return Promise.reject(err);
       }
     );
-    this.connection = new WebSocket('ws://localhost:8000/ws');
-
-    this.connection.onmessage = function(event) {
-      console.log(event);
-    };
-
-    this.connection.onopen = function(event) {
-      console.log(event);
-      console.log('Successfully connected to the echo websocket server...');
-    };
+    await this.task_check();
+  },
+  async updated() {
+    await this.task_check();
   }
 };
 </script>
