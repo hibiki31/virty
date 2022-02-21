@@ -163,6 +163,7 @@ export default {
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'name', value: 'name' },
+        { text: 'node', value: 'nodeName' },
         { text: 'UUID', value: 'uuid' },
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
@@ -200,17 +201,17 @@ export default {
         .put('/api/vms')
         .then(res => {
           this.$_pushNotice('Added a task!', 'success');
-          axios
-            .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
-            .then(res => {
-              this.$_pushNotice('Finished a task!', 'success');
-              axios.get('/api/vms').then((response) => (this.list = response.data));
-              this.reloadLoading = false;
-            })
-            .catch(error => {
-              this.$_pushNotice(error.response.data.detail, 'error');
-              this.reloadLoading = false;
-            });
+          // axios
+          // .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
+          // .then(res => {
+          //   this.$_pushNotice('Finished a task!', 'success');
+          //   // axios.get('/api/vms').then((response) => (this.list = response.data));
+          //   this.reloadLoading = false;
+          // })
+          // .catch(error => {
+          //   this.$_pushNotice(error.response.data.detail, 'error');
+          //   this.reloadLoading = false;
+          // });
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

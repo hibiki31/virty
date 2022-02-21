@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - "../../:/workspace:cached"
-      - "../../data/:/data"
       - virty-develop-ssh-key:/root/.ssh
     command: sleep infinity
     network_mode: service:db
@@ -16,12 +15,12 @@ services:
     image: postgres:latest
     restart: unless-stopped
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - virty-postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
 
 volumes:
-  postgres-data:
+  virty-postgres-data:
   virty-develop-ssh-key:

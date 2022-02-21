@@ -1,7 +1,8 @@
 import logging
+from settings import DATA_ROOT
 
 
-def setup_logger(name, logfile='data/api.log'):
+def setup_logger(name, logfile=f'{DATA_ROOT}/api.log'):
     logger = logging.getLogger(name)
 
     # ファイル出力設定
@@ -20,7 +21,7 @@ def setup_logger(name, logfile='data/api.log'):
     # 全体のログレベル
     logger.setLevel(logging.DEBUG)
     # ファイル出力のログレベル
-    fh.setLevel(logging.INFO)
+    fh.setLevel(logging.DEBUG)
     # コンソール出力のログレベル
     ch.setLevel(logging.DEBUG)
 

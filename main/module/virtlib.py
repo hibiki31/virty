@@ -49,7 +49,6 @@ class VirtManager():
             return []
         data = []
         for pool in pools:
-            logger.info(f'プールのステータス{pool.info()}')
             if pool.info()[0] != 2 :
                 storage = StorageModel(
                     uuid = pool.UUIDString(),
@@ -66,10 +65,8 @@ class VirtManager():
                 data.append({"storage":storage, "image": []})
                 continue
                 
-            logger.debug("ストレージのリフレッシュを開始")
             # GlustorFSが遅い
             pool.refresh()
-            logger.debug("ストレージのリフレッシュが完了")
             storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
             storage_xml = storage_xml.storage_pase()
             storage = StorageModel(

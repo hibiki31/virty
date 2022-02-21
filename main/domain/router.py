@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from .models import *
 from .schemas import *
+from .tasks import update_domain_list
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
@@ -25,13 +26,16 @@ logger = setup_logger(__name__)
 
 
 @app.put("/api/vms", tags=["vm"], response_model=TaskSelect)
-async def publish_task_to_update_vm_list(
+def publish_task_to_update_vm_list(
+        background_tasks: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
+    
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=None)
     task_model = post_task.commit("vm","list","update")
+    background_tasks.add_task(update_domain_list, db=db, model=task_model)
    
     return task_model
 
@@ -39,7 +43,7 @@ async def publish_task_to_update_vm_list(
 @app.get("/api/vms", tags=["vm"],response_model=List[DomainSelect])
 async def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
     ):
 
     return db.query(DomainModel).all()

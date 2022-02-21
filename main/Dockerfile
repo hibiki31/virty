@@ -1,4 +1,4 @@
-FROM python:3.8-buster
+FROM python:3.10-buster
 
 RUN apt update -y && apt install -y \
     make gcc wget openssh-client openssh-server \

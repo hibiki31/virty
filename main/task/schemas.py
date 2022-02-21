@@ -17,6 +17,7 @@ class TaskBase(CamelModel):
     resource: str = None
     object: str = None
     method: str = None
+    dependence_uuid: str = None
     request: dict = None
     message: str = None
 

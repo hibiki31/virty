@@ -14,7 +14,7 @@ from mixin.database import get_db
 from settings import SECRET_KEY, API_VERSION
 
 from .schemas import *
-from user.models import UserModel
+from user.models import UserModel, UserScope
 
 
 logger = setup_logger(__name__)
@@ -35,32 +35,40 @@ scopes_dict = {
     }
 }
 
-result = []
+scopes_list = []
 
-def scopes_list(argd, scope=None):
+def scopes_list_generator(argd, scope=None):
     for k in sorted(argd.keys(), reverse=False):
         if scope == None:
             gen_scope = k
         else:
             gen_scope = scope + "." + k
-        result.append(gen_scope)
+        scopes_list.append(gen_scope)
         if (isinstance(argd[k],dict)):
-            scopes_list(argd[k], gen_scope)  
-    return result
+            scopes_list_generator(argd[k], gen_scope)  
+    return scopes_list
+
+scopes_list_generator(scopes_dict)
+
 
 
 class CurrentUser(BaseModel):
     id: str
     token: str
-    role: List[str] = []
-    group: List[str] = []
-    def is_joined(self, role):
-        if not role in self.role:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Illegal authority",
-                headers={"WWW-Authenticate": 'Bearer'}
-            )
+    scopes: List[str] = []
+    groups: List[str] = []
+    def verify_scope(self, scopes):
+        for request_scope in scopes:
+            match_scoped = False
+            for having_scope in self.scopes:
+                if request_scope in having_scope:
+                    match_scoped = True
+            if not match_scoped:
+                raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Not enough permissions",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
 
 # JWTトークンの設定
 ALGORITHM = "HS256"
@@ -144,7 +152,8 @@ def login_for_access_token(
     access_token = create_access_token(
         data={
             "sub": user.id,
-            "scopes": form_data.scopes,
+            # "scopes": form_data.scopes,
+            "scopes": [i.name for i in list(user.scopes)],
             "groups": user.groups
             },
         expires_delta=access_token_expires,
@@ -171,10 +180,17 @@ def api_auth_setup(
         )
 
     # ユーザ追加
-    db.add(UserModel(
+    user_model = UserModel(
         id=model.user_id, 
         hashed_password=pwd_context.hash(model.password)
-    ))
+    )
+
+    db.add(user_model)
+    db.commit()
+
+    db.add(UserScope(user_id=user_model.id,name="admin"))
+    db.add(UserScope(user_id=user_model.id,name="user"))
+
     db.commit()
 
     return model
@@ -191,9 +207,9 @@ def get_version(
 
 @app.get("/validate", tags=["auth"])
 def read_auth_validate(
-        current_user: CurrentUser = Security(get_current_user, scopes=["adm"])
+        current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):
-    return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer", "scopes": scopes_list(scopes_dict)}
+    return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}
 
 
 

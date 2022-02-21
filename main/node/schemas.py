@@ -1,6 +1,6 @@
 from fastapi_camelcase import CamelModel
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any
 
 
 class NodeBase(CamelModel):
@@ -28,5 +28,10 @@ class NodeSelect(NodeInsert):
     status: int
     qemu_version: str
     libvirt_version: str
+    roles: List[Any]
     class Config:
         orm_mode  =  True
+
+class NodeRolePatch(CamelModel):
+    node_name: str
+    role_name: str

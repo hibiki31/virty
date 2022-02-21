@@ -55,6 +55,9 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         if model.object == "base":
             if model.method == "add":
                 res = post_node_base(db=db, model=model)
+        elif model.object == "role":
+            if model.method == "change":
+                res = patch_node_role(db=db, model=model)
 
     elif model.resource == "storage":
         if model.object == "list":
@@ -88,53 +91,6 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
 
     return res
 
-
-def endless_eight():
-    
-    
-    db = SessionLocal()
-    while True:
-        query = db.query(TaskModel)
-        query = query.filter(TaskModel.status=="init")
-        query = query.order_by(desc(TaskModel.post_time))
-        tasks = query.all()
-        if tasks == []:
-            sleep(3)
-            continue
-
-        # 開始処理
-        for task in tasks:
-            task:TaskModel
-            logger.info(f'タスク開始: {task.resource}.{task.object}.{task.method} {task.uuid}')
-            task.status = "start"
-            db.merge(task)
-            db.commit()
-
-            # Model to Schemas
-            task:TaskSelect = TaskSelect().from_orm(task)
-
-            
-            start_time = time()
-
-            try:
-                task_swicher(model=task, db=db)
-            except Exception as e:
-                logger.error(e, exc_info=True)
-                task.status = "error"
-                task.message = str(e)
-            else:
-                task.status = "finish"
-                task.message = "finish"
-
-            end_time = time()
-            task.run_time = end_time - start_time
-
-            logger.info(f'タスク終了: {task.resource}.{task.object}.{task.method} {task.uuid} {task.run_time}s')
-
-            # Schemas to Model
-            db.merge(TaskModel(**task.dict()))
-            db.commit()
-
 def do_task(mode="init"):
     logger.info(f"looking for a {mode} task")
 
@@ -145,7 +101,7 @@ def do_task(mode="init"):
         .with_lockmode('update').all()
     
     if tasks == [] and mode == "wait":
-        logger.info("worker exit")
+        logger.info("task not found worker exit")
         return
     elif tasks == [] and mode == "init":
         do_task(mode="wait")
@@ -154,18 +110,47 @@ def do_task(mode="init"):
     # 開始処理
     task:TaskModel = tasks[0]
 
-    # 依存関係処理
-    depends_tasks = db.query(TaskModel)\
-        .filter(TaskModel.status!="finish")\
-        .filter(TaskModel.uuid==task.dependence_uuid)\
-        .with_lockmode('update').all()
-    if depends_tasks != []:
-        logger.info("find depend task, change wait task and exit")
-        task.status = "wait"
-        db.merge(task)
-        db.commit()
-        return
+    logger.info(f'find tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
 
+    # 依存関係取得
+    if task.dependence_uuid != None:
+        # 依存先のuuidが実在するかチェック
+        try:
+            depends_task:TaskModel = db.query(TaskModel)\
+                .filter(TaskModel.uuid==task.dependence_uuid)\
+                .with_lockmode('update').one()
+        except:
+            task.status = "error"
+            task.message = "not found depended task"
+            db.merge(task)
+            db.commit()
+            logger.error(f"not found depended task {task.uuid} => {task.dependence_uuid}")
+            return
+        
+        # 親タスクが死んだ場合エラーで停止
+        if depends_task.status == "error":
+            task.status = "error"
+            task.message = "depended task faile"
+            db.merge(task)
+            db.commit()
+            logger.error(f"depended task faile {task.uuid} => {task.dependence_uuid}")
+            return
+        
+        # 待機タスクを実行
+        elif depends_task.status == "finish" and task.status == "wait":
+            task.status = "init"
+            db.merge(task)
+            db.commit()
+            logger.error(f"init depended task {task.uuid} => {task.dependence_uuid}")
+            do_task()
+            return
+
+        # 親タスクが実行中の場合待機するため終了
+        elif depends_task.status != "finish":
+            logger.info(f"wait depended task. worker exit.")
+            return
+
+    
     logger.info(f'start tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
     task.status = "start"
     db.merge(task)
@@ -179,24 +164,23 @@ def do_task(mode="init"):
     start_time = time()
 
     try:
-        task_swicher(model=task, db=db)
+        res = task_swicher(model=task, db=db)
+        msg = str(res.message)
+        end_time = time()
+        task.run_time = end_time - start_time
     except Exception as e:
+        db.rollback()
         logger.error(e, exc_info=True)
         task.status = "error"
         task.message = str(e)
     else:
+        logger.info(f'task finished: {task.resource}.{task.object}.{task.method} {task.uuid} {task.run_time}s')
         task.status = "finish"
-        task.message = "finish"
-
-    end_time = time()
-    task.run_time = end_time - start_time
-
-    logger.info(f'task finished: {task.resource}.{task.object}.{task.method} {task.uuid} {task.run_time}s')
-
+        task.message = msg    
+    logger.debug(task)
     # Schemas to Model
     db.merge(TaskModel(**task.dict()))
     db.commit()
-
     do_task()
     
 

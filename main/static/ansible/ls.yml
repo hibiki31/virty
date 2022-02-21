@@ -3,4 +3,4 @@
   become: no
   tasks:
   - name: ls
-    command:  ls
+    command:  ls -la {{ ls_dir }}

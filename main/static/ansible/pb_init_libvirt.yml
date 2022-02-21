@@ -1,77 +1,39 @@
 - hosts: all
   become: yes
   tasks:
-# Ubuntu18
-    - name: apt update
-      apt:
-        update_cache: yes
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
+    - block:
+      - name: apt update
+        apt:
+          update_cache: yes
 
-    - name: apt upgrade
-      apt:
-        upgrade: yes
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
-      
-    - name: Install qemu
-      apt:
-        name: "{{ packages }}"
-      vars:
-        packages: 
-          - qemu-kvm
-          - qemu-utils
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
+      - name: apt upgrade
+        apt:
+          upgrade: yes
+  
+      - name: Install qemu
+        apt:
+          name: "{{ packages }}"
+        vars:
+          packages: 
+            - qemu
+            - qemu-kvm
+            - qemu-utils
+       
+      - name: Install libvirt
+        apt:
+          name: "{{ packages }}"
+        vars:
+          packages: 
+            - libvirt-daemon
+            - libvirt-clients
+            - libvirt-dev
+            - bridge-utils
+            - virt-manager
 
-    - name: Install libvirt
-      apt:
-        name: "{{ packages }}"
-      vars:
-        packages: 
-          - libvirt-bin
-          - libvirt-dev
-          - bridge-utils
-          - virt-manager
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
-
-    - name: restart libvirtd
-      systemd:
-        name: libvirtd
-        state: restarted
-        daemon_reload: yes
-        enabled: yes
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
-
-# CentOS7
-    - name: install libvirt
-      yum:
-        name: "{{ packages }}"
-      vars:
-        packages: 
-          - libvirt
-          - libvirt-client
-          - libvirt-devel
-        state: latest
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-    - name: install python3 rpm
-      yum:
-        name: https://centos7.iuscommunity.org/ius-release.rpm
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-    - name: install python3.5
-      yum:
-        name: "{{ pypackages }}"
-      vars:
-        pypackages:
-          - python35u 
-          - python35u-libs 
-          - python35u-devel 
-          - python35u-pip
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-    - name: upgrade all packages
-      yum: name=* state=latest
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-    - name: restart libvirtd
-      systemd:
-        name: libvirtd
-        state: restarted
-        daemon_reload: yes
-        enabled: yes
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"        
+      - name: restart libvirtd
+        systemd:
+          name: libvirtd
+          state: restarted
+          daemon_reload: yes
+          enabled: yes
+      when: ansible_distribution == "Ubuntu"

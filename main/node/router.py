@@ -25,16 +25,24 @@ async def post_api_nodes(
         request_model: NodeInsert = None
     ):
     # ノード追加タスク
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("node","base","add")
+    node_post_task = PostTask(db=db, user=current_user, model=request_model)
+    node_task_model = node_post_task.commit("node","base","add")
 
-    dependence_uuid = task_model.uuid
+    dependence_uuid = node_task_model.uuid
 
     # ドメインリスト更新タスク
     post_task = PostTask(db=db, user=current_user, model=None)
     task_model = post_task.commit("vm","list","update", status="wait",dependence_uuid=dependence_uuid)
 
-    return task_model
+    # ネットワーク更新タスク
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("network","list","update",dependence_uuid=dependence_uuid)
+
+    # ストレージ更新タスク
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("storage","list","update",dependence_uuid=dependence_uuid)
+
+    return node_task_model
 
 
 @app.get("/api/nodes", tags=["node"],response_model=List[NodeSelect])
@@ -58,3 +66,15 @@ async def delete_api_nodes(
     db.commit()
 
     return model
+
+
+@app.patch("/api/node/role", tags=["node"], response_model=TaskSelect)
+async def patch_api_node_role(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        model: NodeRolePatch = None
+    ):
+    post_task = PostTask(db=db, user=current_user, model=model)
+    task_model = post_task.commit("node","role","change")
+
+    return task_model

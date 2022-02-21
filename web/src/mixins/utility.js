@@ -45,7 +45,7 @@ Vue.mixin({
         group,
         text,
         type,
-        duration: 5000,
+        duration: 1000,
         data: { icon, color }
       });
     },

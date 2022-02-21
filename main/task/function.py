@@ -36,7 +36,7 @@ class PostTask():
             run_time = 0,
             user_id = user_id,
             status = status,
-            dependence_uuid = None,
+            dependence_uuid = dependence_uuid,
             resource = resource,
             object = object,
             method = method,
@@ -49,7 +49,7 @@ class PostTask():
         self.db.add(row)
         self.db.commit()
 
-        worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py", uuid_str]))
+        # worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py", uuid_str]))
         
         return res
 

@@ -24,14 +24,9 @@ def update_storage_list(db: Session, model: TaskModel):
     for node in nodes:
         if node.status != 10:
             continue
-        try:
-            logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
-            manager = virtlib.VirtManager(node_model=node)
-        except:
-            logger.error(f'ノードへの接続に失敗しました: {node.name}')
-            continue
 
-        logger.debug('ノードに接続しました')
+        logger.info(f'connectiong node: {node.user_name + "@" + node.domain}')
+        manager = virtlib.VirtManager(node_model=node)
 
         storages = manager.storage_data(token=token)
         for storage in storages:
@@ -44,8 +39,8 @@ def update_storage_list(db: Session, model: TaskModel):
             db.merge(storage["storage"])
     db.commit()
     # トークンで除外
-    db.query(StorageModel).filter(StorageModel.update_token!=token).delete()
-    db.query(ImageModel).filter(ImageModel.update_token!=token).delete()
+    db.query(StorageModel).filter(StorageModel.update_token!=str(token)).delete()
+    db.query(ImageModel).filter(ImageModel.update_token!=str(token)).delete()
     db.commit()
     return model
 

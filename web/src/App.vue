@@ -1,19 +1,5 @@
 <template>
   <v-app>
-    <notifications group="default" animation-type="velocity">
-      <template slot="body" slot-scope="props">
-        <v-alert
-          :type="props.item.type"
-          class="ma-3 mb-0"
-          border="left"
-          colored-border
-        >
-          <div class="d-flex align-center ml-3">
-            <div class="body-2 mr-auto">{{ props.item.text }}</div>
-          </div>
-        </v-alert>
-      </template>
-    </notifications>
     <v-navigation-drawer v-if="this.$store.state.userData.isAuthed" permanent floating app clipped>
       <v-list-item>
         <v-list-item-content>
@@ -40,11 +26,36 @@
     <v-app-bar color="primary" dark dense flat app clipped-left>
       <v-toolbar-title>Virty</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-btn @click="sendMessage('aaa')">
+        a
+      </v-btn>
+      <v-badge
+          color="green"
+          :content=taskCount
+          inline
+          v-if="taskCount !== 0"
+        >
+          <v-icon>mdi-domain</v-icon>
+        </v-badge>
       <v-btn :to="{name: 'Logout'}" text>
         <v-icon>mdi-logout</v-icon>
       </v-btn>
     </v-app-bar>
     <v-main class="ma-5">
+      <notifications group="default" animation-type="velocity">
+        <template slot="body" slot-scope="props">
+          <v-alert
+            :type="props.item.type"
+            class="ma-3 mb-0"
+            border="left"
+            colored-border
+          >
+            <div class="d-flex align-center ml-3">
+              <div class="body-2 mr-auto">{{ props.item.text }}</div>
+            </div>
+          </v-alert>
+        </template>
+      </notifications>
       <router-view />
     </v-main>
   </v-app>
@@ -60,6 +71,8 @@ export default {
   data: () => ({
     version: require('../package.json').version,
     userId: '',
+    taskCount: 5,
+    taskHash: null,
     navList: [
       {
         to: { name: 'VMList' },
@@ -93,7 +106,21 @@ export default {
       }
     ]
   }),
-  methods: {},
+  methods: {
+    async task_check() {
+      await axios.get('/api/tasks', { params: { update_mode: true, update_hash: this.taskHash } }).then(async(response) => {
+        this.taskHash = response.data.task_hash;
+        this.taskCount = response.data.task_count;
+        console.log(this.taskCount);
+        await this.task_check();
+      });
+    },
+    sendMessage: function(message) {
+      console.log('Hello');
+      console.log(this.connection);
+      this.connection.send(message);
+    }
+  },
   async mounted() {
     axios.interceptors.request.use(
       (config) => {
@@ -105,6 +132,16 @@ export default {
         return Promise.reject(err);
       }
     );
+    this.connection = new WebSocket('ws://localhost:8000/ws');
+
+    this.connection.onmessage = function(event) {
+      console.log(event);
+    };
+
+    this.connection.onopen = function(event) {
+      console.log(event);
+      console.log('Successfully connected to the echo websocket server...');
+    };
   }
 };
 </script>
