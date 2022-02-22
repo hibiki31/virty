@@ -1,0 +1,4 @@
+- hosts: all
+  gather_facts: yes
+  become: no
+  name: test

@@ -1,3 +1,12 @@
+## Alembic
+
+```bash
+alembic revision --autogenerate
+alembic upgrade head
+# データリセット
+alembic downgrade base
+```
+
 ## CODE
 ### Que
 0 sucsess
@@ -27,6 +36,7 @@
 
 
 ## Git運用メモ
+
 ローカルDevelopでこまめにコミット、スカッシュして正式なメッセージをつける。
 
 ```
@@ -46,6 +56,12 @@ changes.mdは以下のコマンドで該当コミットを記録する
 git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
 ```
 
+changelog等のコミットは以下
+
+```
+Update v2.0.0
+```
+
 マージするときは以下の規則で行う
 
 ```
@@ -54,3 +70,10 @@ Merge branch 'develop' v1.0.0
 
 バージョンのタグをつける
 GitHubでタグに対してリリースを作る
+
+fast-forwardは無効化すべし
+
+```
+git config --global --add merge.ff false
+git config --global --add pull.ff only
+```

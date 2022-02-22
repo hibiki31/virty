@@ -1,4 +1,4 @@
-FROM python:3.8-buster
+FROM python:3.10-buster
 
 RUN apt update -y && apt install -y \
     make gcc wget openssh-client openssh-server \
@@ -8,9 +8,9 @@ RUN apt update -y && apt install -y \
 COPY ./requirements.txt /tmp/
 RUN /usr/local/bin/python -m pip install --upgrade pip && pip3 install -r /tmp/requirements.txt
 
-RUN mkdir -p /opt/virty/app
-COPY . /opt/virty/app
-WORKDIR /opt/virty/app
+RUN mkdir -p /opt/app && mkdir -p /opt/data
+COPY . /opt/app
+WORKDIR /opt/app
 
 EXPOSE 8000
 

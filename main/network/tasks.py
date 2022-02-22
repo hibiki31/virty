@@ -25,7 +25,7 @@ def update_network_list(db: Session, model: TaskModel):
         if node.status != 10:
             continue
         try:
-            logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
+            logger.info(f'connectiong node: {node.user_name + "@" + node.domain}')
             manager = virtlib.VirtManager(node_model=node)
         except:
             logger.error(f'ノードへの接続に失敗しました: {node.name}')
@@ -40,7 +40,7 @@ def update_network_list(db: Session, model: TaskModel):
 
     db.commit()
     # トークンで削除
-    db.query(NetworkModel).filter(NetworkModel.update_token!=token).delete()
+    db.query(NetworkModel).filter(NetworkModel.update_token!=str(token)).delete()
     db.commit()
     return model
 

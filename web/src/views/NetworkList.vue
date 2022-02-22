@@ -1,7 +1,7 @@
 <template>
 <div>
-  <NetworkAddDialog ref="networkAddDialog" />
-  <NetworkDeleteDialog ref="networkDeleteDialog" />
+  <network-add-dialog ref="networkAddDialog" />
+  <network-delete-dialog ref="networkDeleteDialog" />
   <v-card>
     <v-card-actions>
       <v-btn
@@ -18,7 +18,7 @@
         <v-icon left>mdi-server-plus</v-icon>Add
       </v-btn>
       <!-- 削除ボタン -->
-      <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="red">
+      <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="error">
         <v-icon left>mdi-server-remove</v-icon>Delete
       </v-btn>
     </v-card-actions>
@@ -39,8 +39,9 @@
 
 <script>
 import axios from '@/axios/index';
-import NetworkDeleteDialog from '../conponents/dialog/NetworkDeleteDialog';
-import NetworkAddDialog from '../conponents/dialog/NetworkAddDialog';
+
+import NetworkDeleteDialog from '../conponents/networks/NetworkDeleteDialog.vue';
+import NetworkAddDialog from '../conponents/networks/NetworkAddDialog.vue';
 
 export default {
   name: 'NetworkList',
@@ -62,9 +63,12 @@ export default {
     };
   },
   mounted: async function() {
-    axios.get('/api/networks').then((response) => (this.list = response.data));
+    this.reload();
   },
   methods: {
+    reload() {
+      axios.get('/api/networks').then((response) => (this.list = response.data));
+    },
     openNetworkDeleteDialog() {
       this.$refs.networkDeleteDialog.openDialog(this.list);
     },

@@ -6,9 +6,9 @@
     >
       <v-card>
         <v-card-title class="headline">
-          ストレージを削除
+        Delete the storage
         </v-card-title>
-        <v-card-text>{{this.item.nodeName}}の{{this.item.name}}を削除します。イメージやVMに影響はありません</v-card-text>
+        <v-card-text>Delete a {{this.item.name}} of {{this.item.nodeName}}. Data will remain and VM will not be affected.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
@@ -16,14 +16,14 @@
             text
             @click="dialogState = false"
           >
-            キャンセル
+            chancel
           </v-btn>
           <v-btn
             color="error"
             text
             @click="runMethod()"
           >
-            削除
+            delete
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -59,7 +59,7 @@ export default {
         data: this.postData
       })
         .then(res => {
-          this.$_pushNotice('Delete success', 'success');
+          this.$_pushNotice('Please wait for task to complete', 'success');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

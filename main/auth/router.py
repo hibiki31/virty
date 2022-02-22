@@ -1,48 +1,87 @@
-import os
 import jwt
-import secrets
+import os
 
 from datetime import datetime, timedelta
 from typing import List, Optional
 from passlib.context import CryptContext
-from pydantic import BaseModel, ValidationError
-from fastapi import APIRouter, Depends, Request, HTTPException, Security, status
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Security, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
-from mixin.database import get_db
 from mixin.log import setup_logger
-from mixin import settings
+from mixin.database import get_db
+from settings import SECRET_KEY, API_VERSION
 
-from .models import *
 from .schemas import *
+from user.models import UserModel, UserScope
 
 
 logger = setup_logger(__name__)
-app = APIRouter()
+app = APIRouter(
+    prefix="/api/auth",
+    tags=["auth"]
+)
+
+scopes_dict = {
+    "admin": {
+        "storage": {},
+        "network": {
+            "delete": None,
+            "create": None,
+        }
+    },
+    "user": {
+    }
+}
+
+scopes_list = []
+
+def scopes_list_generator(argd, scope=None):
+    for k in sorted(argd.keys(), reverse=False):
+        if scope == None:
+            gen_scope = k
+        else:
+            gen_scope = scope + "." + k
+        scopes_list.append(gen_scope)
+        if (isinstance(argd[k],dict)):
+            scopes_list_generator(argd[k], gen_scope)  
+    return scopes_list
+
+scopes_list_generator(scopes_dict)
+
 
 
 class CurrentUser(BaseModel):
-    user_id: str
+    id: str
     token: str
-    role: List[str] = []
-    group: List[str] = []
-    def is_joined(self, role):
-        if not role in self.role:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Illegal authority",
-                headers={"WWW-Authenticate": 'Bearer'}
-            )
+    scopes: List[str] = []
+    groups: List[str] = []
+    def verify_scope(self, scopes, return_bool=False):
+        logger.debug(f"Permit scopes {self.scopes}, Requirement scopes {scopes}")
+        # 要求Scopeでループ
+        for request_scope in scopes:
+            match_scoped = False
+            # 持っているScopeでループ
+            for having_scope in self.scopes:
+                if having_scope in request_scope:
+                    match_scoped = True
+            # 持っているScopeが権限を持たない場合終了
+            if not match_scoped:
+                if return_bool:
+                    return False
+                else:
+                    raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Not enough permissions",
+                            headers={"WWW-Authenticate": "Bearer"},
+                        )
+        # すべての要求Scopeをクリア
+        return True
 
 # JWTトークンの設定
-if settings.is_dev:
-    SECRET_KEY = "virty-token"
-else:
-    SECRET_KEY = secrets.token_urlsafe(128)
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 28
 
 # パスワードハッシュ化の設定
 pwd_context = CryptContext(
@@ -52,243 +91,165 @@ pwd_context = CryptContext(
 # oAuth2の設定
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="api/auth",
-    auto_error=False
+    auto_error=False,
+    scopes={"admin": "Have all authority", "user": "User authority"},
 )
 
-# パスワード比較
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-# パスワードハッシュ化
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-# ユーザ取得
-def get_user(db: Session, user_id: str):
-    try:
-        user = db.query(UserModel).filter(UserModel.user_id==user_id).one()
-    except:
-        return None
-    return user
-
-# ユーザ認証
-def authenticate_user(db: Session, user_id: str, password: str):
-    user = get_user(db=db, user_id=user_id)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
-
-#  トークン生成
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(hours=24)
+    expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(
+        security_scopes: SecurityScopes, 
+        token: str = Depends(oauth2_scheme)
+    ):
     # ペイロード確認
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-        token_scopes = payload.get("scopes", [])
-        token_data = TokenData(scopes=token_scopes, user_id=user_id)
-    except:
+        scopes = payload.get("scopes", [])
+    except jwt.exceptions.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Illegal credentials",
+            detail="Signature has expired",
             headers={"WWW-Authenticate": "Bearer"}
         )
+    except:
+        # トークンがデコード出来なかった場合は認証失敗
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Illegal jwt",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    
+    for request_scope in security_scopes.scopes:
+        match_scoped = False
+        for having_scope in scopes:
+            if request_scope in having_scope:
+                match_scoped = True
+        if not match_scoped:
+            raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Not enough permissions",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
-    user = get_user(db, user_id=token_data.user_id)
-
-    return CurrentUser(user_id=token_data.user_id, token=token)
+    return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-@app.post("/api/auth", response_model=TokenRFC6749Response, tags=["auth"])
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+@app.post("/", response_model=TokenRFC6749Response, tags=["auth"])
+def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm = Depends(), 
+        db: Session = Depends(get_db)
+    ):
+
+    try:
+        user = db.query(UserModel).filter(UserModel.id==form_data.username).one()
+    except:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    
+    if not pwd_context.verify(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={
-            "sub": user.user_id,
-            "scopes": form_data.scopes,
-            "role": [],
-            "group": []
+            "sub": user.id,
+            # "scopes": form_data.scopes,
+            "scopes": [i.name for i in list(user.scopes)],
+            "groups": [i.id for i in list(user.groups)]
             },
         expires_delta=access_token_expires,
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.post("/api/auth/setup", tags=["auth"])
-async def api_auth_setup(
-        user: UserInsert, 
+@app.post("/setup", tags=["auth"])
+def api_auth_setup(
+        model: Setup, 
         db: Session = Depends(get_db)
     ):
+    if model.user_id == "":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Blanks are not allowed in id"
+        )
+
+    # ユーザがいる場合はセットアップ済みなのでイジェクト
     if not db.query(UserModel).all() == []:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Already initialized"
         )
-    hashed_password = get_password_hash(user.password)
-    user_id = user.user_id
 
-    db.add(UserModel(user_id=user_id, hashed_password=hashed_password))
+    # ユーザ追加
+    user_model = UserModel(
+        id=model.user_id, 
+        hashed_password=pwd_context.hash(model.password)
+    )
+
+    db.add(user_model)
     db.commit()
 
-    return user
+    db.add(UserScope(user_id=user_model.id,name="admin"))
+    db.add(UserScope(user_id=user_model.id,name="user"))
+
+    db.commit()
+
+    return model
 
 
-@app.get("/api/auth/validate", tags=["auth"])
-async def read_auth_validate(current_user: CurrentUser = Depends(get_current_user)):
-    return {"access_token": current_user.token, "token_type": "bearer"}
+@app.get("/version")
+def get_version(
+        db: Session = Depends(get_db)
+    ):
+    initialized = (not db.query(UserModel).all() == [])
+
+    return {"initialized": initialized, "version": API_VERSION}
 
 
-@app.get("/api/key", tags=["auth"])
-async def get_ssh_key_pear(current_user: CurrentUser = Depends(get_current_user)):
+@app.get("/validate", tags=["auth"])
+def read_auth_validate(
+        current_user: CurrentUser = Security(get_current_user, scopes=["user"])
+    ):
+    return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}
+
+
+
+@app.get("/key", tags=["auth"])
+def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     publick_key = ""
-    with open("/root/.ssh/id_rsa") as f:
-        private_key = f.read()
-    with open("/root/.ssh/id_rsa.pub") as f:
-        publick_key = f.read()
+    try: 
+        with open("/root/.ssh/id_rsa") as f:
+            private_key = f.read()
+        with open("/root/.ssh/id_rsa.pub") as f:
+            publick_key = f.read()
+    except:
+        pass
 
     return {"private_key": private_key, "publick_key": publick_key}
 
-###########################
-# Users
-###########################
-@app.get("/api/users/me/", tags=["user"])
-async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
-    current_user.is_joined("aaaa")
+@app.post("/key")
+def post_ssh_key_pair(
+        model: SSHKeyPair,
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    os.makedirs('/root/.ssh/', exist_ok=True)
     
-    print(current_user)
-    return ""
+    with open("/root/.ssh/id_rsa", "w") as f:
+        f.write(model.key.rstrip('\r\n') + '\n')
+    with open("/root/.ssh/id_rsa.pub", "w") as f:
+        f.write(model.pub)
+    
+    os.chmod('/root/.ssh/', 0o700)
+    os.chmod('/root/.ssh/id_rsa', 0o600)
+    os.chmod('/root/.ssh/id_rsa.pub', 0o600)
 
-
-@app.post("/api/users", tags=["user"])
-async def post_api_users(
-        user: UserInsert, 
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    hashed_password = get_password_hash(user.password)
-    user_id = user.user_id
-
-    db.add(UserModel(user_id=user_id, hashed_password=hashed_password))
-
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request user already exists"
-        )
-
-    return user
-
-
-@app.get("/api/users", tags=["user"],response_model=List[UserSelect])
-async def get_api_users(
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    users = []
-    for user in db.query(UserModel).all():
-        user.groups
-        users.append(user)
-    return users
-
-
-@app.get("/api/groups", tags=["groups"],response_model=List[GroupSelect])
-async def get_api_groups(
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    groups = []
-    for group in db.query(GroupModel).all():
-        group.users
-        groups.append(group)
-    return groups
-
-
-@app.post("/api/groups", tags=["groups"])
-async def post_api_groups(
-        request: GroupInsert, 
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-
-    group = GroupModel(group_id=request.group_id)
-
-    db.add(group)
-    db.commit()
-
-    return
-
-
-@app.patch("/api/groups", tags=["groups"])
-async def patch_api_groups(
-        request: GroupPatch, 
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    try:
-        group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
-        user: UserModel = db.query(UserModel).filter(UserModel.user_id==request.user_id).one()
-    except:
-        raise  HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The specified value is invalid"
-        )
-
-    group.users.append(user)
-
-    db.merge(group)
-    db.commit()
-
-    group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
-
-    return group
-
-
-@app.delete("/api/groups", tags=["groups"])
-async def delete_api_groups(
-        request: GroupPatch, 
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    try:
-        group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
-        users = []
-    except:
-        raise  HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The specified value is invalid"
-        )
-
-    for user in group.users:
-        if user.user_id == request.user_id:
-            continue
-        else:
-            users.append(user)
-        
-    group.users = users
-    db.merge(group)
-    db.commit()
-
-    group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
-
-    return group
+    return {}

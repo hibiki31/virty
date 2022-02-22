@@ -26,7 +26,7 @@ def update_domain_list(db: Session, model: TaskModel):
     for node in nodes:
         if node.status != 10:
             continue
-        logger.info(f'ノードへ接続します: {node.user_name + "@" + node.domain}')
+        logger.info(f'connecting node: {node.user_name + "@" + node.domain}')
         try:
             manager = virtlib.VirtManager(node_model=node)
         except Exception as e:
@@ -34,8 +34,6 @@ def update_domain_list(db: Session, model: TaskModel):
             continue
 
         domains = manager.domain_data()
-
-        logger.info("ドメイン数：" + str(len(domains)))
 
         for domain in domains:
             editor = xmllib.XmlEditor("str",domain['xml'])
@@ -54,7 +52,7 @@ def update_domain_list(db: Session, model: TaskModel):
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()
-    db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
+    db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
     db.commit()
     return model
 
@@ -104,7 +102,7 @@ def add_domain_base(db: Session, model: TaskModel):
         try:
             new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.save_pool_uuid).one()
         except:
-            raise Exception("request pool uuid not found")
+            raise Exception("request storage pool uuid not found")
         # ファイル名決めてる
         create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
         # XMLに追加
@@ -113,7 +111,7 @@ def add_domain_base(db: Session, model: TaskModel):
         # 新規ディスクの場合
         if device.type == "empty":
             # 空のディスク作成
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
             ssh_manager.qemu_create(
                 size_giga_byte=device.size_giga_byte,
                 path=create_image_path
@@ -130,7 +128,7 @@ def add_domain_base(db: Session, model: TaskModel):
             from_image_path = pool_path + '/' + file_name
 
             logger.info(f'{from_image_path}を{create_image_path}へコピーします')
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
             ssh_manager.file_copy(
                 from_path=from_image_path,
                 to_path=create_image_path
@@ -164,6 +162,10 @@ def add_domain_base(db: Session, model: TaskModel):
 
     # 情報の更新
     update_domain_list(db=db, model=TaskModel())
+
+    domain = db.query(DomainModel).filter(DomainModel.uuid==domain_uuid).one()
+    domain.owner_user_id = task_model.user_id
+    db.commit()
 
     return task_model
 

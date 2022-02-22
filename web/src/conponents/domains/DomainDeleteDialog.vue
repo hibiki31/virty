@@ -6,9 +6,9 @@
     >
       <v-card>
         <v-card-title class="headline">
-          VMを削除
+          Delete the VM
         </v-card-title>
-        <v-card-text>実行中であっても消されます。ディスクイメージは残ります。</v-card-text>
+        <v-card-text>Fails if VM is running. The disk image will remain.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
@@ -16,7 +16,7 @@
             text
             @click="dialogState = false"
           >
-            キャンセル
+            chance
           </v-btn>
           <v-btn
             :loading="this.loading"
@@ -24,7 +24,7 @@
             text
             @click="runMethod()"
           >
-            削除
+            Delete
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -57,19 +57,10 @@ export default {
         data: { uuid: this.uuid }
       })
         .then(res => {
-          this.$_pushNotice('Added a task!', 'success');
-          axios
-            .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
-            .then(res => {
-              this.$_pushNotice('Finished a task!', 'success');
-              this.dialogState = false;
-              this.loading = false;
-              this.$router.push({ name: 'VMList' });
-            })
-            .catch(error => {
-              this.$_pushNotice(error.response.data.detail, 'error');
-              this.loading = false;
-            });
+          this.$_pushNotice('Please wait for task to complete', 'success');
+          this.$router.push({ name: 'VMList' });
+          this.dialogState = false;
+          this.loading = false;
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

@@ -1,5 +1,7 @@
+from urllib import request
 from storage.tasks import update_storage_list
 from network.tasks import update_network_list
+from node.tasks import patch_node_role
 from domain.tasks import *
 from domain.schemas import *
 from mixin.database import SessionLocal
@@ -32,6 +34,13 @@ def dev_ssh_copy():
     ssh_manager = sshlib.SSHManager(user="user", domain="192.168.0.1")
     ssh_manager.file_copy(from_path="",to_path="")
 
+def dev_patch_node_role():
+    db = SessionLocal()
+    model = TaskModel(request={
+        "node_name": "shiori",
+        "role_name": "libvirt"
+    })
+    patch_node_role(db=db, model=model)
 
 import json
 def ansible_test():
@@ -80,4 +89,4 @@ def ansible_test():
     
 
 if __name__ == "__main__":
-    ansible_test()
+    dev_patch_node_role()

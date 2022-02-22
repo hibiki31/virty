@@ -1,9 +1,9 @@
 # ビルド環境
 FROM node:14.19-alpine as build-stage
 WORKDIR /app
-ADD package*.json ./
+COPY package*.json ./
 RUN npm install
-ADD . .
+COPY . .
 RUN npm run build
 
 # 本番環境

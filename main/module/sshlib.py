@@ -6,17 +6,18 @@ logger = setup_logger(__name__)
 
 
 class SSHManager():
-    def __init__(self, user, domain):
+    def __init__(self, user, domain, port):
         self.user = user
         self.domain = domain
-        self.base_cmd = ["ssh" , user+"@"+domain ]
+        self.port = port
+        self.base_cmd = ["ssh" , f"{user}@{domain}", "-p", str(port)]
 
     def add_known_hosts(self):
         
         cmd = ["ssh-keygen", "-R", self.domain ]
         print(subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, ))
 
-        fo = open('/root/.ssh/known_hosts', 'wb')
+        fo = open('/root/.ssh/known_hosts', 'ab')
 
         cmd = [ "ssh-keyscan", self.domain, ">> " ]
         

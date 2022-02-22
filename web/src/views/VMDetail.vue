@@ -168,7 +168,7 @@
               small
               dark
               class="ma-2"
-              color="red"
+              color="error"
             >
               <v-icon left>mdi-server-plus</v-icon>Delete
             </v-btn>
@@ -181,8 +181,8 @@
 
 <script>
 import axios from '@/axios/index';
-import DomainCDRomDialog from '../conponents/dialog/DomainCDRomDialog';
-import DomainDeleteDialog from '../conponents/dialog/DomainDeleteDialog';
+import DomainCDRomDialog from '../conponents/domains/DomainCDRomDialog';
+import DomainDeleteDialog from '../conponents/domains/DomainDeleteDialog';
 
 export default {
   name: 'VMDetail',

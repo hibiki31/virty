@@ -1,6 +1,6 @@
-import json
-import shutil
-import os
+import json, yaml, shutil, os
+from pytest import console_main
+
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
@@ -11,7 +11,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
-from mixin.settings import virty_root
+from settings import APP_ROOT
 from mixin.log import setup_logger
 
 logger = setup_logger(__name__)
@@ -21,35 +21,39 @@ class AnsibleManager():
         self.user = user
         self.domain = domain
     
-    def node_test(self):
-        play_source = dict(
-            name = "Node test",
-            hosts = 'all',
-            gather_facts = 'yes',
-        )
-        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
-        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
-        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
-            json.dump(result, f, indent=4)
-        logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
+    def run_playbook(self, book, extra_vars={}):
+        result = ansible_run(play_source=book, host_list=[f"{self.user}@{self.domain}"], extra_vars=extra_vars)
+        summary = {
+            "ok": 0,
+            "failed": 0,
+            "unreachable": 0
+        }
+        for i in result:
+            if i["status"] == "ok":
+                summary["ok"] += 1
+            elif i["status"] == "failed":
+                summary["failed"] += 1
+            elif i["status"] == "unreachable":
+                summary["unreachable"] += 1
+        
+        return {"summary": summary, "result": result}
     
     def node_infomation(self):
-        play_source = dict(
-            name = "Node test",
-            hosts = 'all',
-            gather_facts = 'yes',
-        )
-        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
-        os.makedirs(f'{virty_root}/data/node/', exist_ok=True)
-        with open(f'{virty_root}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+        result = self.run_playbook_file(yaml="test")["result"][0]
+        if result["status"] != "ok":
+            raise Exception(result)
+
+        # Gather_factsをjsonとして保存
+        os.makedirs(f'{APP_ROOT}/data/node/', exist_ok=True)
+        with open(f'{APP_ROOT}/data/node/{self.user}@{self.domain}.json', 'w') as f:
             json.dump(result, f, indent=4)
-        logger.info(f'{self.user}@{self.domain} SSH: {result["status"]}')
+        
+        logger.info(f'Get node infomation successfull{self.user}@{self.domain}')
         return result
     
-    def run_playbook(self, book):
-        result = ansible_runner(play_dict=book, host=f"{self.user}@{self.domain}")
-        print(json.dumps(result, indent=4))
-        return result
+    def run_playbook_file(self, yaml, extra_vars=[{}]):
+        book = self.load_playbook_file(yaml_name=yaml)
+        return self.run_playbook(book=book, extra_vars=extra_vars)
 
     def file_copy_to_node(self, src, dest):
         play_source = dict(
@@ -67,11 +71,12 @@ class AnsibleManager():
                 )
             ]
         )
-        result = ansible_runner(play_dict=play_source, host=f"{self.user}@{self.domain}")
-        print(json.dumps(result, indent=4))
-        return result
+        return self.run_playbook(book=play_source)
     
-    
+    def load_playbook_file(self, yaml_name):
+        with open(f'{APP_ROOT}/static/ansible/{yaml_name}.yml', 'r') as yml:
+            config = yaml.safe_load(yml)
+        return config[0]
 
 class ResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
@@ -79,87 +84,46 @@ class ResultCallback(CallbackBase):
         self.host_ok = {}
         self.host_unreachable = {}
         self.host_failed = {}
+        self.res = []
 
     def v2_runner_on_unreachable(self, result):
         host = result._host
+        res = {
+            "status": "unreachable",
+            "host": host.name,
+            "task_name": result.task_name,
+            "result": result._result
+        }
+        logger.debug(json.dumps(res, indent=4))
+        self.res.append(res)
         self.host_unreachable[host.get_name()] = result
 
     def v2_runner_on_ok(self, result, *args, **kwargs):
         host = result._host
+        res = {
+            "status": "ok",
+            "host": host.name,
+            "task_name": result.task_name,
+            "result": result._result
+        }
+        logger.debug(json.dumps(res, indent=4))
+        self.res.append(res)
         self.host_ok[host.get_name()] = result
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         host = result._host
-        self.host_failed[host.get_name()] = result
-
-def debug():
-    play_source =  dict(
-        name = "Ansible Play",
-        hosts = 'all',
-        gather_facts = 'no',
-        tasks = [
-            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
-        ]
-    )
-    
-    host_list = [ "akane@192.168.144.31" ]
-
-    results = ansible_run(play_source=play_source, host_list=host_list)
-
-    for host, result in results.host_ok.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_failed.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_unreachable.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-
-def test():
-    play_source =  dict(
-        name = "Ansible Play",
-        hosts = 'all',
-        gather_facts = 'no',
-        tasks = [
-            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
-        ]
-    )
-
-    result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
-    print(json.dumps(result, indent=4))
-
-
-def ansible_runner(play_dict, host):
-    play_source =  play_dict
-    
-    host_list = [ host ]
-
-    results = ansible_run(play_source=play_source, host_list=host_list)
-
-    for host, result in results.host_ok.items():
-        return {
-            "status": "ok",
-            "host": host,
-            "result": result._result
-        }
-    for host, result in results.host_failed.items():
-        return {
+        res = {
             "status": "failed",
-            "host": host,
+            "host": host.name,
+            "task_name": result.task_name,
             "result": result._result
         }
-    for host, result in results.host_unreachable.items():
-        return {
-            "status": "unreachable",
-            "host": host,
-            "result": result._result
-        }
+        logger.debug(json.dumps(res, indent=4))
+        self.res.append(res)
+        self.host_failed[host.get_name()] = result
     
 
-def ansible_run(play_source, host_list):
+def ansible_run(play_source, host_list, extra_vars={}):
     # ansible-playbookで指定できる引数と同じ
     context.CLIARGS = ImmutableDict(
         tags={}, 
@@ -167,6 +131,7 @@ def ansible_run(play_source, host_list):
         listtasks=False, 
         listhosts=False, 
         syntax=False, 
+        extra_vars=extra_vars,
         connection='ssh',                
         module_path=None, 
         forks=100, 
@@ -217,7 +182,48 @@ def ansible_run(play_source, host_list):
             tqm.cleanup()
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
-        return results_callback
+        return results_callback.res
+
+
+def debug():
+    play_source =  dict(
+        name = "Ansible Play",
+        hosts = 'all',
+        gather_facts = 'no',
+        tasks = [
+            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
+        ]
+    )
+    
+    host_list = [ "akane@192.168.144.31" ]
+
+    results = ansible_run(play_source=play_source, host_list=host_list)
+
+    for host, result in results.host_ok.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+    
+    for host, result in results.host_failed.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+    
+    for host, result in results.host_unreachable.items():
+        print(host)
+        print(json.dumps(result._result, indent=4))
+
+def test():
+    play_source =  dict(
+        name = "Ansible Play",
+        hosts = 'all',
+        gather_facts = 'no',
+        tasks = [
+            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
+        ]
+    )
+
+    result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
+    print(json.dumps(result, indent=4))
+
 
 if __name__ == "__main__":
     test()

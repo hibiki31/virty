@@ -12,6 +12,7 @@ const stateDefault = {
   isLoaded: false,
   isAuthed: false,
   isAdmin: false,
+  adminMode: false,
   token: null,
   userId: null,
   timeOffcet: 0
@@ -24,6 +25,9 @@ const mutations = {
   resetAuthState(state) {
     Object.assign(state, stateDefault);
     Cookies.remove('token');
+  },
+  toggleAdminMode(state) {
+    state.adminMode = !state.adminMode;
   },
   updateAuthState(state, responseData) {
     Object.assign(state, stateDefault);
@@ -39,7 +43,8 @@ const mutations = {
       state.isAuthed = true;
       state.token = responseData.access_token;
       state.userId = token.sub;
-      state.isAdmin = true;
+      state.isAdmin = token.scopes.includes('admin');
+      state.adminMode = state.isAdmin;
       Cookies.set('token', responseData.access_token);
     }
   },
@@ -55,6 +60,9 @@ const actions = {
   },
   setTimeOffcet(context, timeOffcet) {
     context.commit('setTimeOffcet', timeOffcet);
+  },
+  toggleAdminMode(context) {
+    context.commit('toggleAdminMode');
   }
 };
 

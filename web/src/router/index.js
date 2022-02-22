@@ -12,6 +12,9 @@ import StorageList from '../views/StorageList.vue';
 import QueueDetail from '../views/QueueDetail.vue';
 import ImageList from '../views/ImageList.vue';
 import Empty from '../views/EmptyView.vue';
+import Develop from '../views/Develop.vue';
+import UserList from '../views/UserList.vue';
+import GroupList from '../views/GroupList.vue';
 
 Vue.use(VueRouter);
 
@@ -102,6 +105,21 @@ const routes = [
     path: '/empty',
     name: 'Empty',
     component: Empty
+  },
+  {
+    path: '/develop',
+    name: 'Develop',
+    component: Develop
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    component: UserList
+  },
+  {
+    path: '/groups',
+    name: 'Groups',
+    component: GroupList
   },
   {
     path: '*',

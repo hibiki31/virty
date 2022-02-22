@@ -1,4 +1,7 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
+
+from settings import APP_ROOT
 
 from .models import *
 from .schemas import *
@@ -6,11 +9,13 @@ from .schemas import *
 from task.schemas import TaskSelect
 from mixin.log import setup_logger
 
-from node.models import NodeModel
+from node.models import NodeModel, NodeRoleModel
 from module import virtlib
 from module import xmllib
 from module import sshlib
 from module.ansiblelib import AnsibleManager
+
+from domain.tasks import update_domain_list
 
 
 logger = setup_logger(__name__)
@@ -22,7 +27,9 @@ def post_node_base(db: Session, model: TaskSelect):
     domain = request.domain
     port = request.port
 
-    ssh_manager = sshlib.SSHManager(user=user, domain=domain)
+    ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
+    ssh_manager.add_known_hosts()
+    
     ansible_manager = AnsibleManager(user=user, domain=domain)
     
     node_infomation = ansible_manager.node_infomation()
@@ -53,9 +60,33 @@ def post_node_base(db: Session, model: TaskSelect):
         libvirt_version = libvirt,
     )
     db.add(row)
+    db.commit()
+
+    return model
+
+
+def patch_node_role(db: Session, model: TaskSelect):
+    request = NodeRolePatch(**model.request)
+    node_name = request.node_name
+    add_role_name = request.role_name
+    
+    node:NodeModel = db.query(NodeModel).filter(NodeModel.name==node_name).one()
+    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+
+    # res = ansible_manager.run_playbook_file("pb_init_libvirt")
+
+    # model.message = "ansible run successfull " + str(res["summary"])
+
     try:
+        role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="libvirt").one()
+    except NoResultFound as e:
+        role_model = NodeRoleModel(name="libvirt")
+        db.add(role_model)
         db.commit()
-    except:
-        pass
-    db.close()
+
+    node.roles.append(role_model)
+
+    db.merge(node)
+    db.commit()
+
     return model

@@ -1,6 +1,7 @@
 <template>
   <div>
     <DomainAddDialog ref="domainAddDialog"/>
+    <domain-group-put ref="domainGroupPut" @reload="reload"/>
     <v-dialog width="300" v-model="dialog">
       <v-card>
         <v-card-title>Change VM owner</v-card-title>
@@ -70,34 +71,27 @@
         </template>
 
         <!-- ユーザカラム -->
-        <template v-slot:[`item.userId`]="{ item }" justify="right">
+        <template v-slot:[`item.ownerUserId`]="{ item }" justify="right">
           <v-icon
-            v-if="item.userId !== null"
             left
             v-on:click="
               uuid = item.uuid;
               dialog = true;
             "
-            color="primary"
+            :color="item.ownerUserId === null ? '' : 'primary'"
             >mdi-account</v-icon
           >
-          <v-icon
-            v-else
-            left
-            v-on:click="
-              uuid = item.uuid;
-              dialog = true;
-            "
-            >mdi-account</v-icon
-          >
-          <span v-if="item.userId !== null">{{ item.userId }}</span>
-          <span v-else>N/A</span>
+          <span>{{ item.ownerUserId === null ? "" : item.ownerUserId }}</span>
         </template>
 
-        <template v-slot:[`item.groupId`]="{ item }" justify="right">
-          <v-icon left>mdi-account-multiple</v-icon>
-          <span v-if="item.groupId !== null">{{ item.groupId }}</span>
-          <span v-else>N/A</span>
+        <template v-slot:[`item.ownerGroupId`]="{ item }" justify="right">
+          <v-icon
+            left
+            v-on:click="$refs.domainGroupPut.openDialog(item)"
+            :color="item.ownerGroupId === null ? '' : 'primary'"
+            >mdi-account</v-icon
+          >
+          <span>{{ item.ownerGroupId === null ? "" : item.ownerGroupId }}</span>
         </template>
 
         <template v-slot:[`item.status`]="{ item }">
@@ -119,7 +113,7 @@
             <v-card>
               <v-card-text>
                 <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="blue"
+                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="success"
                     >mdi-power-standby</v-icon
                   >
                 </div>
@@ -145,12 +139,14 @@
 
 <script>
 import axios from '@/axios/index';
-import DomainAddDialog from '../conponents/dialog/DomainAddDialog';
+import DomainAddDialog from '../conponents/domains/DomainAddDialog';
+import DomainGroupPut from '../conponents/domains/DomainGroupPut.vue';
 
 export default {
   name: 'VMList',
   components: {
-    DomainAddDialog
+    DomainAddDialog,
+    DomainGroupPut
   },
   data: function() {
     return {
@@ -163,31 +159,35 @@ export default {
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'name', value: 'name' },
+        { text: 'node', value: 'nodeName' },
         { text: 'UUID', value: 'uuid' },
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
-        { text: 'userId', value: 'userId' },
-        { text: 'groupId', value: 'groupId' }
+        { text: 'userId', value: 'ownerUserId' },
+        { text: 'groupId', value: 'ownerGroupId' }
       ],
       user: [],
       group: []
     };
   },
   mounted: async function() {
-    this.tableLoading = true;
-    axios.get('/api/vms').then((response) => {
-      this.list = response.data;
-      this.tableLoading = false;
-    });
+    this.reload();
     axios.get('/api/users').then((response) => (this.user = response.data));
     axios.get('/api/groups').then((response) => (this.group = response.data));
   },
   methods: {
+    reload() {
+      this.tableLoading = true;
+      axios.get('/api/vms', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => {
+        this.list = response.data;
+        this.tableLoading = false;
+      });
+    },
     openDomainAddDialog() {
       this.$refs.domainAddDialog.openDialog();
     },
     getPowerColor(statusCode) {
-      if (statusCode === 1) return 'blue';
+      if (statusCode === 1) return 'primary';
       else if (statusCode === 5) return 'grey';
       else if (statusCode === 7) return 'purple';
       else if (statusCode === 10) return 'red';
@@ -195,22 +195,11 @@ export default {
       else return 'yellow';
     },
     vmListReload() {
-      this.reloadLoading = true;
+      // this.reloadLoading = true;
       axios
         .put('/api/vms')
         .then(res => {
-          this.$_pushNotice('Added a task!', 'success');
-          axios
-            .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
-            .then(res => {
-              this.$_pushNotice('Finished a task!', 'success');
-              axios.get('/api/vms').then((response) => (this.list = response.data));
-              this.reloadLoading = false;
-            })
-            .catch(error => {
-              this.$_pushNotice(error.response.data.detail, 'error');
-              this.reloadLoading = false;
-            });
+          this.$_pushNotice('Added a task. Please wait for it to complete.', 'success');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');
@@ -250,21 +239,20 @@ export default {
     },
     vmOwnerChange() {
       axios
-        .put('/api/vm/' + this.uuid, {
+        .patch('/api/vms/user', {
           userId: this.selectUserId,
-          action: 'changeUser'
+          uuid: this.uuid
         })
         .then((res) => {
           if (res.status !== 200) {
             this.$_pushNotice('An error occurred', 'error');
-            return;
+          } else {
+            this.$_pushNotice('Change user successfull', 'success');
           }
-          this.$_pushNotice('Change user', 'success');
-          axios.get('/api/vm').then((response) => (this.list = response.data));
+          this.reload();
         })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
+        .catch(error => {
+          this.$_pushNotice(error.response.data.detail, 'error');
         });
     }
   }

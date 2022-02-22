@@ -1,29 +1,30 @@
 # Virty
 
-低コスト・即時展開を目的としたLibvirt-APIのWEBインターフェイスです．SSH経由でLibvirt-API,Ansible,コマンド実行(qemu-img)などを実行します．
+低コスト・即時展開を目的としたLibvirt-APIのWEBインターフェイス
+
+SSH経由でLibvirt-API,Ansible,コマンド実行(qemu-img)などを実行
 
 ![2022-02-16 023805](https://user-images.githubusercontent.com/35087924/154118366-c61572bc-ee45-4a97-a825-2e5f95cc5cd5.png)
 
-> 現段階ではWEBインターフェイスをグローバルなど，信用できないネットワークに設置しないでください．
+> 現段階ではWEBインターフェイスをグローバルなど、信用できないネットワークに設置しない
 
 ### 特徴
 
-- Virtyは全てのノード操作をSSHを経由して行います．よってSSH接続できる全てのノードを管理できます．
-- ノードの最小構成はlibvirtデーモンのインストールのみです．
-- ユーザはWEBインターフェイスを利用して操作を行えます．
+- Virtyは全てのノード操作をSSHを経由して行います。よってSSH接続できる全てのノードを管理可能
+- ノードの最小構成はlibvirtデーモンのインストールのみ
 
 ### サポートOS
 
-　Virtyはdockerで動くので制約はありません、管理対象ノードのサポートOSは以下になります．確認していませんが他のOSでも動くかもしれません．
+Virtyはdocker-composeが利用できるx86_amd64環境で動作
 
-- Ubuntu 20, 18
-- CentOS 8, 7
+管理対象ノードのサポートOS
+
+- Ubuntu 18, 20
+- CentOS 7, 8
 
 ## クイックスタート
 
-Virtyを構築し，ノードを管理対象に追加するまでを示します．
-
-現時点ではDocker-composeでの構築のみサポートしています．
+現時点ではDocker-composeでの構築のみサポート
 
 ### 1.Virtyの構築
 
@@ -42,35 +43,40 @@ docker-compose build
 docker-compose up -d
 ```
 
-＊イメージのビルド中でエラーが発生する場合
+##### 3.データベースの初期化
 
 ```
-docker image rm centos:8 
-docker image prune -a
+docker-compose run main alembic upgrade head
 ```
 
-##### 3.管理ユーザの作成
 
-http://localhost:80 へアクセスするとログイン画面が表示されます．
-ログインボタンの隣のセットアップボタンをクリックします．
-管理ユーザを登録できます，ユーザが存在しない時のみ実行できます．
+##### 4.管理ユーザの作成
 
+http://localhost:80 
+
+へアクセスするとログイン画面が表示される
+
+回起動時はセットアップダイアログが表示される
+
+表示されない場合は何らかのエラーが発生している
+
+ブラウザコンソールログとDockerログを確認する
 
 
 ### 2.ノード追加
 
 ##### 1.内容
 
-OSによらず以下の状態を構築します．
+OSによらず以下の状態を構築
 
-- コンテナ内からSSHが可能
-- パスワード入力なしでsudoが可能
+- SSH公開鍵の設置
+- パスワードレスsudo
 - libvirtデーモンの起動
 - qemu-imgコマンドが使用可能
 
 ##### 2. パッケージ Ubuntu 18 & 20
 
-以下のパッケージをインストールします
+以下のパッケージをインストール
 
 ```
 sudo apt update
@@ -79,12 +85,12 @@ sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 ```
 
 ```
-systemcltf enable libvritd
+systemcltl enable libvritd
 ```
 
 ##### 2. パッケージ CentOS 7 & 8
 
-以下のパッケージをインストールします
+以下のパッケージをインストール
 
 ```
 yum -y install libvirt libvirt-client qemu-kvm virt-manager bridge-utils
@@ -94,15 +100,15 @@ yum -y install libvirt libvirt-client qemu-kvm virt-manager bridge-utils
 sudo systemctl status libvirtd.service
 ```
 
-##### 3.パスワード入力なしでsudo
+##### 3.パスワードレスsudo
 
-使用するテキストエディタを選択します
+使用するテキストエディタを選択
 
 ```
 sudo update-alternatives --config editor
 ```
 
-Virty管理用のユーザーにNOPASSWD権限を与えます
+Virty管理用のユーザーにNOPASSWD権限を付与
 
 ```
 sudo visudo
@@ -110,38 +116,22 @@ sudo visudo
 username ALL=(ALL) NOPASSWD: ALL
 ```
 
-##### 4.コンテナからSSHアクセス
+##### 4.SSH公開鍵の設置
 
-既存の鍵を使用する場合以下のホストディレクトリに設置してください
-コンテナ内の.sshにマウントされます
-
-```
-./data/key
-```
-
-コンテナに接続します
-
-```
-docker exec -it virty_virty-main_1 bash
-```
-
-コンテナ内からSSH接続し、パスワード入力無しでSSHが可能か確認
+何らかの方法で管理対象ノードに公開鍵を設置
 
 ```
 ssh-copy-id user@host
 ```
 
-##### 5.ダッシュボードで追加
-
-ダッシュボードにアクセス > サイドバー > Node > Add で入力し追加
-
+> この後、ダッシュボードから鍵を登録すると`./data/key`に格納される
 
 
 ## 3. Open vSwitch(Option)
 
 ##### 1. 構成
 
-物理インターフェイスに複数のVLAN Bridgeを作る
+物理インターフェイスに複数のVLAN Bridgeを作成
 
 | 設定項目               | 値            |
 | ---------------------- | ------------- |

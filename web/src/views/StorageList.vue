@@ -80,10 +80,13 @@ export default {
       ]
     };
   },
-  mounted: async function() {
-    axios.get('/api/storages').then((response) => (this.list = response.data));
+  mounted: function() {
+    this.reload();
   },
   methods: {
+    reload() {
+      axios.get('/api/storages').then((response) => (this.list = response.data));
+    },
     openDeleteDialog(item) {
       this.$refs.storageDeleteDialog.openDialog(item);
     },

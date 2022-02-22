@@ -1,11 +1,12 @@
 <template>
   <v-app>
-    <notifications group="default" animation-type="velocity">
+    <notifications group="default" animation-type="velocity" position="top right" class="mt-13">
       <template slot="body" slot-scope="props">
         <v-alert
           :type="props.item.type"
-          class="ma-3 mb-0"
+          class="ma-3"
           border="left"
+          elevation="7"
           colored-border
         >
           <div class="d-flex align-center ml-3">
@@ -18,7 +19,16 @@
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title class="title">{{userId}}</v-list-item-title>
-          <v-list-item-subtitle>Administrator</v-list-item-subtitle>
+          <div>
+            <v-btn
+              :color="this.$store.state.userData.adminMode ? 'error' : 'primary'"
+              outlined depressed small class="mt-2"
+              :disabled="!this.$store.state.userData.isAdmin"
+              @click="toggleAdminMode"
+            >
+              {{ this.$store.state.userData.adminMode ? "Administrator" : "General user" }}
+            </v-btn>
+          </div>
         </v-list-item-content>
       </v-list-item>
       <v-divider></v-divider>
@@ -34,18 +44,25 @@
         </v-list-item-group>
       </v-list>
       <v-divider class="pb-2"></v-divider>
-      <span class="subtitle-2 ml-3">Develop by <a href="https://github.com/hibiki31" class="blue--text">@hibiki31</a></span>
+      <span class="subtitle-2 ml-3">Develop by <a href="https://github.com/hibiki31" class="primary--text">@hibiki31</a></span>
       <span class="subtitle-2 ml-1">v{{this.version}}</span>
     </v-navigation-drawer>
     <v-app-bar color="primary" dark dense flat app clipped-left>
       <v-toolbar-title>Virty</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-progress-circular
+        v-if="(taskCount != 0)"
+        indeterminate
+        size="24"
+        color="error"
+        :value=taskCount
+      ></v-progress-circular>
       <v-btn :to="{name: 'Logout'}" text>
         <v-icon>mdi-logout</v-icon>
       </v-btn>
     </v-app-bar>
     <v-main class="ma-5">
-      <router-view />
+      <router-view ref="view"/>
     </v-main>
   </v-app>
 </template>
@@ -56,10 +73,12 @@ import Cookies from 'js-cookie';
 
 export default {
   name: 'App',
-
   data: () => ({
     version: require('../package.json').version,
     userId: '',
+    taskCount: 0,
+    taskHash: null,
+    taskChecking: false,
     navList: [
       {
         to: { name: 'VMList' },
@@ -77,14 +96,24 @@ export default {
         icon: 'mdi-wan'
       },
       {
+        to: { name: 'StorageList' },
+        title: 'Storage',
+        icon: 'mdi-database'
+      },
+      {
         to: { name: 'ImageList' },
         title: 'Image',
         icon: 'mdi-harddisk'
       },
       {
-        to: { name: 'StorageList' },
-        title: 'Storage',
-        icon: 'mdi-database'
+        to: { name: 'Users' },
+        title: 'Users',
+        icon: 'mdi-account'
+      },
+      {
+        to: { name: 'Groups' },
+        title: 'Group',
+        icon: 'mdi-account-group'
       },
       {
         to: { name: 'TaskList' },
@@ -93,7 +122,35 @@ export default {
       }
     ]
   }),
-  methods: {},
+  methods: {
+    async task_check() {
+      if (!this.taskChecking) {
+        this.taskChecking = true;
+        await axios.get('/api/tasks/incomplete', {
+          params: {
+            update_hash: this.taskHash,
+            admin: this.$store.state.userData.adminMode
+          }
+        }).then(async(response) => {
+          if (this.taskHash !== response.data.task_hash && this.taskHash !== null && response.data.task_count < this.taskCount) {
+            if ('reload' in this.$refs.view === true) {
+              this.$refs.view.reload();
+            }
+          }
+          this.taskHash = response.data.task_hash;
+          this.taskCount = response.data.task_count;
+          this.taskChecking = false;
+          await this.task_check();
+        });
+      }
+    },
+    toggleAdminMode() {
+      this.$store.dispatch('toggleAdminMode');
+      if ('reload' in this.$refs.view === true) {
+        this.$refs.view.reload();
+      }
+    }
+  },
   async mounted() {
     axios.interceptors.request.use(
       (config) => {
@@ -105,6 +162,10 @@ export default {
         return Promise.reject(err);
       }
     );
+    await this.task_check();
+  },
+  async updated() {
+    await this.task_check();
   }
 };
 </script>

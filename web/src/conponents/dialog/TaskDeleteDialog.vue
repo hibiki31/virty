@@ -6,9 +6,9 @@
     >
       <v-card>
         <v-card-title class="headline">
-          タスク履歴を削除
+        Delete the task
         </v-card-title>
-        <v-card-text>実行中、終了分も含め全て削除します</v-card-text>
+        <v-card-text>Delete everything, including the running and finished portions. Tasks in progress may be executed incompletely.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
@@ -16,14 +16,14 @@
             text
             @click="dialogState = false"
           >
-            キャンセル
+            Cancel
           </v-btn>
           <v-btn
             color="error"
             text
             @click="runMethod()"
           >
-            削除
+            Delete
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -51,7 +51,8 @@ export default {
       })
         .then(res => {
           const len = res.data.length;
-          this.$_pushNotice(len + '件の履歴を削除しました', 'success');
+          this.$_pushNotice(len + ' tasks history deleted.', 'success');
+          this.$emit('reload');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

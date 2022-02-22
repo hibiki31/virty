@@ -13,35 +13,12 @@ class TokenData(CamelModel):
     role: List[str] = []
     groups: List[str] = []
 
-class UserBase(CamelModel):
-    user_id: str = None
-    class Config:
-        orm_mode = True
-
-class UserInsert(UserBase):
+class Setup(CamelModel):
+    user_id: str
     password: str
-
-class UserInDB(UserBase):
-    hashed_password: str
-
-class UserResponse(CamelModel):
-    user_id: str
-    hashed_password: str
-
-class GroupBase(CamelModel):
-    group_id: str
     class Config:
         orm_mode = True
 
-class GroupInsert(GroupBase):
-    pass
-
-class GroupPatch(CamelModel):
-    group_id: str
-    user_id: str
-
-class UserSelect(UserBase):
-    groups: List[GroupBase]
-
-class GroupSelect(GroupBase):
-    users: List[UserBase]
+class SSHKeyPair(CamelModel):
+    pub: str
+    key: str
