@@ -206,6 +206,7 @@ export default {
           }
         ],
         cloudInit: {
+          hostname: '',
           userData: '#cloud-config',
           networkConfig: 'network:\n  version: 2\n  ethernets: []'
         }
@@ -230,7 +231,7 @@ export default {
         data: this.postData
       })
         .then(res => {
-          this.$_pushNotice('Success add task', 'success');
+          this.$_pushNotice('Please wait for task to complete', 'success');
           this.dialogState = false;
         })
         .catch(error => {

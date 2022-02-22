@@ -53,7 +53,7 @@
       </v-btn>
     </v-app-bar>
     <v-main class="ma-5">
-      <router-view />
+      <router-view ref="view"/>
     </v-main>
   </v-app>
 </template>
@@ -108,7 +108,12 @@ export default {
     async task_check() {
       if (!this.taskChecking) {
         this.taskChecking = true;
-        await axios.get('/api/tasks', { params: { update_mode: true, update_hash: this.taskHash } }).then(async(response) => {
+        await axios.get('/api/tasks/incomplete', { params: { update_hash: this.taskHash } }).then(async(response) => {
+          if (this.taskHash !== response.data.task_hash && this.taskHash !== null && response.data.task_count < this.taskCount) {
+            if ('reload' in this.$refs.view === true) {
+              this.$refs.view.reload();
+            }
+          }
           this.taskHash = response.data.task_hash;
           this.taskCount = response.data.task_count;
           this.taskChecking = false;

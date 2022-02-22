@@ -58,7 +58,7 @@ export default {
         data: this.postData
       })
         .then(res => {
-          this.$_pushNotice('Added a task!', 'success');
+          this.$_pushNotice('Added a task. Please wait for it to complete.', 'success');
           axios
             .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
             .then(res => {

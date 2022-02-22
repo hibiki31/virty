@@ -1,6 +1,6 @@
 <template>
 <div class="task-list">
-  <TaskDeleteDialog ref="taskDeleteDialog" />
+  <TaskDeleteDialog ref="taskDeleteDialog" @reload="reload"/>
   <v-card>
     <v-card-actions>
       <v-btn v-on:click="this.openTaskDeleteDialog" small dark class="ma-2" color="error">
@@ -112,10 +112,13 @@ export default {
       ]
     };
   },
-  mounted: async function() {
-    axios.get('/api/tasks').then((response) => (this.list = response.data));
+  mounted: function() {
+    this.reload();
   },
   methods: {
+    reload() {
+      axios.get('/api/tasks').then((response) => (this.list = response.data));
+    },
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {
         console.log(e);
@@ -129,13 +132,13 @@ export default {
     getStatusColor(statusCode) {
       if (statusCode === 'finish') return 'primary';
       else if (statusCode === 'init') return 'grey lighten-1';
-      else if (statusCode === 'error') return 'red';
+      else if (statusCode === 'error') return 'error';
       else return 'yellow';
     },
     getMethodColor(statusCode) {
-      if (statusCode === 'add') return 'primary';
-      else if (statusCode === 'update') return 'blue';
-      else if (statusCode === 'delete') return 'red';
+      if (statusCode === 'add') return 'success';
+      else if (statusCode === 'update') return 'primary';
+      else if (statusCode === 'delete') return 'error';
       else return 'yellow';
     },
     getResourceIcon(resource) {

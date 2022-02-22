@@ -175,15 +175,18 @@ export default {
     };
   },
   mounted: async function() {
-    this.tableLoading = true;
-    axios.get('/api/vms').then((response) => {
-      this.list = response.data;
-      this.tableLoading = false;
-    });
+    this.reload();
     axios.get('/api/users').then((response) => (this.user = response.data));
     axios.get('/api/groups').then((response) => (this.group = response.data));
   },
   methods: {
+    reload() {
+      this.tableLoading = true;
+      axios.get('/api/vms').then((response) => {
+        this.list = response.data;
+        this.tableLoading = false;
+      });
+    },
     openDomainAddDialog() {
       this.$refs.domainAddDialog.openDialog();
     },
@@ -200,18 +203,7 @@ export default {
       axios
         .put('/api/vms')
         .then(res => {
-          this.$_pushNotice('Added a task!', 'success');
-          // axios
-          // .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
-          // .then(res => {
-          //   this.$_pushNotice('Finished a task!', 'success');
-          //   // axios.get('/api/vms').then((response) => (this.list = response.data));
-          //   this.reloadLoading = false;
-          // })
-          // .catch(error => {
-          //   this.$_pushNotice(error.response.data.detail, 'error');
-          //   this.reloadLoading = false;
-          // });
+          this.$_pushNotice('Added a task. Please wait for it to complete.', 'success');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');
