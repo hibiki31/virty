@@ -1,33 +1,5 @@
 <template>
   <div>
-    <DomainAddDialog ref="domainAddDialog"/>
-    <v-dialog width="300" v-model="dialog">
-      <v-card>
-        <v-card-title>Change VM owner</v-card-title>
-        <v-card-text>
-          <v-select
-            :items="user"
-            item-text="id"
-            item-value="id"
-            v-model="selectUserId"
-            label="Select userid"
-            dense
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue darken-1"
-            text
-            v-on:click="
-              dialog = false;
-              vmOwnerChange();
-            "
-            >Change</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-card>
       <v-card-actions>
         <v-btn
@@ -70,17 +42,28 @@
         </template>
 
         <!-- ユーザカラム -->
-        <template v-slot:[`item.ownerUserId`]="{ item }" justify="right">
+        <template v-slot:[`item.userId`]="{ item }" justify="right">
           <v-icon
+            v-if="item.userId !== null"
             left
             v-on:click="
               uuid = item.uuid;
               dialog = true;
             "
-            :color="item.ownerUserId === null ? '' : 'primary'"
+            color="primary"
             >mdi-account</v-icon
           >
-          <span>{{ item.ownerUserId === null ? "" : item.ownerUserId }}</span>
+          <v-icon
+            v-else
+            left
+            v-on:click="
+              uuid = item.uuid;
+              dialog = true;
+            "
+            >mdi-account</v-icon
+          >
+          <span v-if="item.userId !== null">{{ item.userId }}</span>
+          <span v-else>N/A</span>
         </template>
 
         <template v-slot:[`item.groupId`]="{ item }" justify="right">
@@ -134,13 +117,9 @@
 
 <script>
 import axios from '@/axios/index';
-import DomainAddDialog from '../conponents/dialog/DomainAddDialog';
 
 export default {
   name: 'VMList',
-  components: {
-    DomainAddDialog
-  },
   data: function() {
     return {
       tableLoading: true,
@@ -156,7 +135,7 @@ export default {
         { text: 'UUID', value: 'uuid' },
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
-        { text: 'userId', value: 'ownerUserId' },
+        { text: 'userId', value: 'userId' },
         { text: 'groupId', value: 'groupId' }
       ],
       user: [],
@@ -232,20 +211,21 @@ export default {
     },
     vmOwnerChange() {
       axios
-        .patch('/api/vms/user', {
+        .put('/api/vm/' + this.uuid, {
           userId: this.selectUserId,
-          uuid: this.uuid
+          action: 'changeUser'
         })
         .then((res) => {
           if (res.status !== 200) {
             this.$_pushNotice('An error occurred', 'error');
-          } else {
-            this.$_pushNotice('Change user successfull', 'success');
+            return;
           }
-          this.reload();
+          this.$_pushNotice('Change user', 'success');
+          axios.get('/api/vm').then((response) => (this.list = response.data));
         })
-        .catch(error => {
-          this.$_pushNotice(error.response.data.detail, 'error');
+        .catch(async() => {
+          await this.$_sleep(500);
+          this.$_pushNotice('An error occurred', 'error');
         });
     }
   }

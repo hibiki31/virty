@@ -12,6 +12,8 @@ from auth.router import CurrentUser, get_current_user
 from mixin.log import setup_logger
 from settings import APP_ROOT
 
+from worker import do_task
+
 
 logger = setup_logger(__name__)
 
@@ -22,7 +24,7 @@ class PostTask():
         self.user = user
         self.model = model
     
-    def commit(self, resource, object, method, status="init", dependence_uuid=None):
+    def commit(self, resource, object, method, bg, status="init", dependence_uuid=None):
         uuid_str = str(uuid.uuid4())
         time = datetime.now()
         user_id = self.user.id
@@ -49,15 +51,6 @@ class PostTask():
         self.db.add(row)
         self.db.commit()
 
-        # worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py", uuid_str]))
+        bg.add_task(do_task)
         
         return res
-
-worker_pool = []
-
-def worker_up():
-    worker_pool.append(subprocess.Popen(["python3", APP_ROOT + "/worker.py"]))
-
-def worker_down():
-    for w in worker_pool:
-        w.terminate()

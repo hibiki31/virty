@@ -39,13 +39,7 @@ class AnsibleManager():
         return {"summary": summary, "result": result}
     
     def node_infomation(self):
-        play_source = dict(
-            name = "Node test",
-            hosts = 'all',
-            gather_facts = 'yes',
-        )
-        result = self.run_playbook(book=play_source)["result"][0]
-
+        result = self.run_playbook_file(yaml="test")["result"][0]
         if result["status"] != "ok":
             raise Exception(result)
 
@@ -77,9 +71,7 @@ class AnsibleManager():
                 )
             ]
         )
-        result = ansible_run(play_source=play_source, host=f"{self.user}@{self.domain}")
-        print(json.dumps(result, indent=4))
-        return result
+        return self.run_playbook(book=play_source)
     
     def load_playbook_file(self, yaml_name):
         with open(f'{APP_ROOT}/static/ansible/{yaml_name}.yml', 'r') as yml:

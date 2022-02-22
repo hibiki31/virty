@@ -1,8 +1,3 @@
-import yaml
-
-from statistics import mode
-from urllib import request
-
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 

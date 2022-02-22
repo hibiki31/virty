@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -56,25 +56,27 @@ async def get_api_images(
 
 @app.put("/api/images", tags=["storage"])
 async def put_api_images(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("storage","list","update")
+    task_model = post_task.commit("storage","list","update", bg)
    
     return task_model
 
 
 @app.post("/api/storages", tags=["storage"], response_model=TaskSelect)
 async def post_api_storage(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: StorageInsert = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("storage","base","add")
+    task_model = post_task.commit("storage","base","add", bg)
 
     return task_model
 
@@ -92,12 +94,13 @@ async def post_api_storage(
 
 @app.delete("/api/storages", tags=["storage"], response_model=TaskSelect)
 async def delete_api_storages(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: StorageDelete = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("storage","base","delete")
+    task_model = post_task.commit("storage","base","delete", bg)
 
     return task_model

@@ -17,7 +17,7 @@ from settings import IS_DEV
 
 from .models import *
 from .schemas import *
-from auth.router import CurrentUser, get_current_user
+from auth.router import CurrentUser, get_current_user, pwd_context
 
 logger = setup_logger(__name__)
 app = APIRouter(
@@ -34,30 +34,35 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     return ""
 
 
-@app.post("/", tags=["user"])
+@app.post("", tags=["user"])
 async def post_api_users(
-        user: UserInsert, 
+        model: UserInsert, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    hashed_password = get_password_hash(user.password)
-    user_id = user.user_id
-
-    db.add(UserModel(user_id=user_id, hashed_password=hashed_password))
-
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+    print(model)
+    if model.user_id == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request user already exists"
+            detail="Blanks are not allowed in id"
         )
 
-    return user
+    # ユーザ追加
+    user_model = UserModel(
+        id=model.user_id, 
+        hashed_password=pwd_context.hash(model.password)
+    )
 
+    db.add(user_model)
+    db.commit()
 
-@app.get("/", tags=["user"])
+    db.add(UserScope(user_id=user_model.id,name="user"))
+
+    db.commit()
+
+    return user_model
+
+@app.get("", tags=["user"])
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

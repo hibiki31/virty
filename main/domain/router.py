@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -9,47 +10,73 @@ from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
 from task.schemas import TaskSelect
 from task.function import PostTask
+from user.models import GroupModel, UserModel
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import exception_notfund
 
 from module import virtlib
-from module import xmllib
 
 
-app = APIRouter()
+app = APIRouter(
+    prefix="/api/vms",
+    tags=["vms"]
+)
+
 logger = setup_logger(__name__)
 
 
 
-
-
-@app.put("/api/vms", tags=["vm"], response_model=TaskSelect)
+@app.put("", response_model=TaskSelect)
 def publish_task_to_update_vm_list(
-        background_tasks: BackgroundTasks,
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
     
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("vm","list","update")
-    background_tasks.add_task(update_domain_list, db=db, model=task_model)
-   
+    task_model = post_task.commit("vm","list","update", bg)
     return task_model
 
 
-@app.get("/api/vms", tags=["vm"],response_model=List[DomainSelect])
-async def get_api_domain(
+@app.patch("/user")
+def path_vms_user(
+        model: DomainPatchUser,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
 
-    return db.query(DomainModel).all()
+    vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+    vm.owner_user_id = model.user_id
+    db.commit()
+
+    return vm
 
 
-@app.get("/api/vms/{uuid}", tags=["vm"],response_model=DomainDetailSelect)
+@app.get("",response_model=List[DomainSelect])
+async def get_api_domain(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        admin: bool = False
+    ):
+
+    if not admin:
+        vms = db.query(DomainModel)\
+            .order_by(DomainModel.node_name,DomainModel.name)\
+            .filter(or_(
+                DomainModel.owner_user_id==current_user.id,
+                DomainModel.owner_group.has(GroupModel.users.any(id=current_user.id))
+            )).all()
+    else:
+        vms = db.query(DomainModel)\
+            .order_by(DomainModel.node_name,DomainModel.name).all()
+
+    return vms
+
+
+@app.get("/{uuid}",response_model=DomainDetailSelect)
 async def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -67,52 +94,56 @@ async def get_api_domain(
     return {'db':domain, 'node': node, 'xml': domain_xml_pase}
 
 
-@app.delete("/api/vms", tags=["vm"], response_model=TaskSelect)
+@app.delete("", response_model=TaskSelect)
 async def delete_api_domains(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: DomainDelete = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","delete")
+    task_model = post_task.commit("vm","base","delete", bg)
 
     return task_model
 
 
-@app.post("/api/vms", tags=["vm"], response_model=TaskSelect)
+@app.post("", response_model=TaskSelect)
 async def post_api_vms(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: DomainInsert = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","add")
+    task_model = post_task.commit("vm","base","add", bg)
 
     return task_model
 
 
-@app.patch("/api/vms", tags=["vm"], response_model=TaskSelect)
+@app.patch("", response_model=TaskSelect)
 async def patch_api_domains(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: DomainPatch = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","change")
+    task_model = post_task.commit("vm","base","change", bg)
    
     return task_model
 
-@app.patch("/api/vm/network", tags=["vm"], response_model=TaskSelect)
+@app.patch("/api/vm/network", response_model=TaskSelect)
 async def patch_api_vm_network(
+        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: DomainNetworkChange = None
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","network","change")
+    task_model = post_task.commit("vm","network","change", bg)
    
     return task_model

@@ -9,6 +9,9 @@ from node.schemas import NodeSelect
 class DomainBase(CamelModel):
     uuid: str
 
+class DomainPatchUser(CamelModel):
+    uuid: str
+    user_id: str
 
 class DomainDelete(DomainBase):
     pass
@@ -28,7 +31,7 @@ class DomainSelect(DomainInsert):
     memory: int
     status: int
     node_name: str
-    user_id: str = None
+    owner_user_id: str = None
     group_id: str = None
     class Config:
         orm_mode  =  True

@@ -27,4 +27,4 @@ class UserScope(Base):
 class GroupModel(Base):
     __tablename__ = "groups"
     id = Column(String, primary_key=True, index=True)
-    users = relationship("UserModel", secondary=association_table, back_populates="groups")
+    users = relationship("UserModel", secondary=association_table, back_populates="groups", lazy=False)

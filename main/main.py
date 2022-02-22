@@ -2,7 +2,6 @@ import uvicorn
 
 from fastapi import FastAPI, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.routing import WebSocketRoute
 
 from auth.router import app as auth_router
 from node.router import app as node_router
@@ -15,8 +14,6 @@ from group.router import app as group_router
 
 from mixin.log import setup_logger
 from settings import API_VERSION
-
-from task.router import WebSocketApp
 
 
 logger = setup_logger(__name__)
@@ -35,8 +32,7 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     docs_url="/api",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
-    routes=[WebSocketRoute("/ws", WebSocketApp)]
+    openapi_url="/api/openapi.json"
 )
 
 app.add_middleware(

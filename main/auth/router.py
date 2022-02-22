@@ -58,10 +58,11 @@ class CurrentUser(BaseModel):
     scopes: List[str] = []
     groups: List[str] = []
     def verify_scope(self, scopes):
+        logger.debug(f"Permit scopes {self.scopes}, Requirement scopes {scopes}")
         for request_scope in scopes:
             match_scoped = False
             for having_scope in self.scopes:
-                if request_scope in having_scope:
+                if having_scope in request_scope:
                     match_scoped = True
             if not match_scoped:
                 raise HTTPException(
@@ -130,7 +131,7 @@ def get_current_user(
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-    return CurrentUser(id=user_id, token=token)
+    return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
 

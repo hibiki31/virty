@@ -88,14 +88,24 @@ export default {
         icon: 'mdi-wan'
       },
       {
+        to: { name: 'StorageList' },
+        title: 'Storage',
+        icon: 'mdi-database'
+      },
+      {
         to: { name: 'ImageList' },
         title: 'Image',
         icon: 'mdi-harddisk'
       },
       {
-        to: { name: 'StorageList' },
-        title: 'Storage',
-        icon: 'mdi-database'
+        to: { name: 'Users' },
+        title: 'Users',
+        icon: 'mdi-account'
+      },
+      {
+        to: { name: 'Groups' },
+        title: 'Group',
+        icon: 'mdi-account-group'
       },
       {
         to: { name: 'TaskList' },

@@ -52,8 +52,9 @@ def update_domain_list(db: Session, model: TaskModel):
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()
-    # db.query(DomainModel).filter(DomainModel.update_token!=token).delete()
+    db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
     db.commit()
+    return model
 
 
 def add_domain_base(db: Session, model: TaskModel):
@@ -127,7 +128,7 @@ def add_domain_base(db: Session, model: TaskModel):
             from_image_path = pool_path + '/' + file_name
 
             logger.info(f'{from_image_path}を{create_image_path}へコピーします')
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
             ssh_manager.file_copy(
                 from_path=from_image_path,
                 to_path=create_image_path
