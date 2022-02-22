@@ -57,7 +57,7 @@ def get_tasks_incomplete(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         update_hash: str = None,
-        admin: bool = True
+        admin: bool = False
     ):
 
     task_hash = None
@@ -66,7 +66,7 @@ def get_tasks_incomplete(
     if admin:
         current_user.verify_scope(["admin.tasks"])
  
-    for i in range(0,10):
+    for i in range(0,20):
         if admin:
             task = db.query(TaskModel)\
                 .filter(TaskModel.status!="error")\
@@ -81,6 +81,6 @@ def get_tasks_incomplete(
         task_hash = str(hashlib.md5(str([i.uuid for i in task]).encode()).hexdigest())
         if task_hash != update_hash:
             return {"task_hash": task_hash, "task_count": task_count}
-        time.sleep(1)
+        time.sleep(0.5)
 
     return {"task_hash": task_hash, "task_count": task_count}

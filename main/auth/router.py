@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Security, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
+from sqlalchemy import true
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
@@ -57,19 +58,27 @@ class CurrentUser(BaseModel):
     token: str
     scopes: List[str] = []
     groups: List[str] = []
-    def verify_scope(self, scopes):
+    def verify_scope(self, scopes, return_bool=False):
         logger.debug(f"Permit scopes {self.scopes}, Requirement scopes {scopes}")
+        # 要求Scopeでループ
         for request_scope in scopes:
             match_scoped = False
+            # 持っているScopeでループ
             for having_scope in self.scopes:
                 if having_scope in request_scope:
                     match_scoped = True
+            # 持っているScopeが権限を持たない場合終了
             if not match_scoped:
-                raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Not enough permissions",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+                if return_bool:
+                    return False
+                else:
+                    raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Not enough permissions",
+                            headers={"WWW-Authenticate": "Bearer"},
+                        )
+        # すべての要求Scopeをクリア
+        return True
 
 # JWTトークンの設定
 ALGORITHM = "HS256"
@@ -155,7 +164,7 @@ def login_for_access_token(
             "sub": user.id,
             # "scopes": form_data.scopes,
             "scopes": [i.name for i in list(user.scopes)],
-            "groups": user.groups
+            "groups": [i.id for i in list(user.groups)]
             },
         expires_delta=access_token_expires,
     )

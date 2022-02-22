@@ -39,9 +39,9 @@ async def get_api_groups(
     return groups
 
 
-@app.post("/", tags=["groups"])
+@app.post("", tags=["groups"])
 async def post_api_groups(
-        request: GroupInsert, 
+        request: GroupPost, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -54,8 +54,8 @@ async def post_api_groups(
     return
 
 
-@app.patch("", tags=["groups"])
-async def patch_api_groups(
+@app.put("")
+async def put_api_groups(
         request: GroupPatch, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

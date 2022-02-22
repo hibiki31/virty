@@ -1,19 +1,11 @@
 <template>
   <div>
+    <group-add-dialog ref="userAddDialog" @reload="reload"/>
+    <group-put-dialog ref="userPutDialog" @reload="reload"/>
     <v-card>
       <v-card-actions>
         <v-btn
-          v-on:click="this.vmListReload"
-          small
-          dark
-          class="ma-2"
-          color="primary"
-          :loading="this.reloadLoading"
-        >
-          <v-icon left>mdi-cached</v-icon>Reload
-        </v-btn>
-        <v-btn
-          v-on:click="this.openDomainAddDialog"
+          v-on:click="$refs.userAddDialog.openDialog()"
           small
           dark
           class="ma-2"
@@ -25,7 +17,7 @@
       <v-data-table
         :loading="tableLoading"
         :headers="headers"
-        :items="list"
+        :items="group"
         :items-per-page="20"
         :footer-props="{
           'items-per-page-options': [10, 20, 50, 100, 200, 300, 400, 500],
@@ -33,82 +25,28 @@
         }"
         multi-sort
       >
-        <template v-slot:[`item.uuid`]="{ item }" justify="right">
-          <router-link
-            :to="{ name: 'VMDetail', params: { uuid: item.uuid } }"
-            style="font-family: monospace;"
-            >{{ item.uuid }}</router-link
+        <template v-slot:[`item.users`]="{ item }" justify="right">
+          <v-chip
+            v-for="user in item.users"
+            :key="user.id"
+            class="ma-2"
+            close
+            small
           >
+            {{ user.id }}
+          </v-chip>
         </template>
-
-        <!-- ユーザカラム -->
-        <template v-slot:[`item.userId`]="{ item }" justify="right">
-          <v-icon
-            v-if="item.userId !== null"
-            left
-            v-on:click="
-              uuid = item.uuid;
-              dialog = true;
-            "
+        <template v-slot:[`item.actions`]="{ item }" justify="right">
+          <v-btn
+            v-on:click="$refs.userPutDialog.openDialog(item)"
+            small
+            dark
+            class="ma-2"
             color="primary"
-            >mdi-account</v-icon
+            icon
           >
-          <v-icon
-            v-else
-            left
-            v-on:click="
-              uuid = item.uuid;
-              dialog = true;
-            "
-            >mdi-account</v-icon
-          >
-          <span v-if="item.userId !== null">{{ item.userId }}</span>
-          <span v-else>N/A</span>
-        </template>
-
-        <template v-slot:[`item.groupId`]="{ item }" justify="right">
-          <v-icon left>mdi-account-multiple</v-icon>
-          <span v-if="item.groupId !== null">{{ item.groupId }}</span>
-          <span v-else>N/A</span>
-        </template>
-
-        <template v-slot:[`item.status`]="{ item }">
-          <v-menu>
-            <template v-slot:activator="{ on: menu, attrs }">
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <v-icon
-                    left
-                    v-bind="attrs"
-                    v-on="{ ...tooltip, ...menu }"
-                    :color="getPowerColor(item.status)"
-                    >mdi-power-standby</v-icon
-                  >
-                </template>
-                <span>Power control</span>
-              </v-tooltip>
-            </template>
-            <v-card>
-              <v-card-text>
-                <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="success"
-                    >mdi-power-standby</v-icon
-                  >
-                </div>
-                <v-icon v-on:click="vmPowerOff(item.uuid)" color="grey"
-                  >mdi-power-standby</v-icon
-                >
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </template>
-        <template v-slot:[`item.memory`]="{ item }" justify="right">
-          <v-icon left>mdi-memory</v-icon>
-          {{ item.memory / 1024 }} G
-        </template>
-        <template v-slot:[`item.core`]="{ item }" justify="right">
-          <v-icon left>mdi-cpu-64-bit</v-icon>
-          {{ item.core }}
+            <v-icon left>mdi-account-multiple-plus</v-icon>
+          </v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -117,26 +55,22 @@
 
 <script>
 import axios from '@/axios/index';
+import GroupAddDialog from '../conponents/groups/GroupAddDialog.vue';
+import GroupPutDialog from '../conponents/groups/GroupPutDialog.vue';
 
 export default {
   name: 'VMList',
+  components: {
+    GroupAddDialog,
+    GroupPutDialog
+  },
   data: function() {
     return {
       tableLoading: true,
-      list: [],
-      dialog: false,
-      uuid: '',
-      reloadLoading: false,
-      selectUserId: '',
       headers: [
-        { text: 'Status', value: 'status' },
-        { text: 'name', value: 'name' },
-        { text: 'node', value: 'nodeName' },
-        { text: 'UUID', value: 'uuid' },
-        { text: 'RAM', value: 'memory' },
-        { text: 'CPU', value: 'core' },
-        { text: 'userId', value: 'userId' },
-        { text: 'groupId', value: 'groupId' }
+        { text: 'id', value: 'id' },
+        { text: 'users', value: 'users' },
+        { text: 'actions', value: 'actions' }
       ],
       user: [],
       group: []
@@ -144,89 +78,13 @@ export default {
   },
   mounted: async function() {
     this.reload();
-    axios.get('/api/users').then((response) => (this.user = response.data));
-    axios.get('/api/groups').then((response) => (this.group = response.data));
   },
   methods: {
-    reload() {
+    async reload() {
       this.tableLoading = true;
-      axios.get('/api/vms').then((response) => {
-        this.list = response.data;
-        this.tableLoading = false;
-      });
-    },
-    openDomainAddDialog() {
-      this.$refs.domainAddDialog.openDialog();
-    },
-    getPowerColor(statusCode) {
-      if (statusCode === 1) return 'primary';
-      else if (statusCode === 5) return 'grey';
-      else if (statusCode === 7) return 'purple';
-      else if (statusCode === 10) return 'red';
-      else if (statusCode === 20) return 'purple';
-      else return 'yellow';
-    },
-    vmListReload() {
-      // this.reloadLoading = true;
-      axios
-        .put('/api/vms')
-        .then(res => {
-          this.$_pushNotice('Added a task. Please wait for it to complete.', 'success');
-        })
-        .catch(error => {
-          this.$_pushNotice(error.response.data.detail, 'error');
-        });
-    },
-    vmPowerOff(uuid) {
-      axios
-        .patch('/api/vms', { uuid: uuid, status: 'off' })
-        .then((res) => {
-          if (res.status === 401) {
-            this.$_pushNotice('Wrong userID or password', 'error');
-          } else if (res.status !== 200) {
-            this.$_pushNotice('An error occurred', 'error');
-            return;
-          }
-          this.$_pushNotice('Queueing powewrOff task', 'success');
-        })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
-        });
-    },
-    vmPowerOn(uuid) {
-      axios
-        .patch('/api/vms', { uuid: uuid, status: 'on' })
-        .then((res) => {
-          if (res.status !== 200) {
-            this.$_pushNotice('An error occurred', 'error');
-            return;
-          }
-          this.$_pushNotice('Queueing powewrOn task', 'success');
-        })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
-        });
-    },
-    vmOwnerChange() {
-      axios
-        .put('/api/vm/' + this.uuid, {
-          userId: this.selectUserId,
-          action: 'changeUser'
-        })
-        .then((res) => {
-          if (res.status !== 200) {
-            this.$_pushNotice('An error occurred', 'error');
-            return;
-          }
-          this.$_pushNotice('Change user', 'success');
-          axios.get('/api/vm').then((response) => (this.list = response.data));
-        })
-        .catch(async() => {
-          await this.$_sleep(500);
-          this.$_pushNotice('An error occurred', 'error');
-        });
+      await axios.get('/api/users').then((response) => (this.user = response.data));
+      await axios.get('/api/groups').then((response) => (this.group = response.data));
+      this.tableLoading = false;
     }
   }
 };

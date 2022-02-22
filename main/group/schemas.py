@@ -10,8 +10,8 @@ class GroupBase(CamelModel):
     class Config:
         orm_mode = True
 
-class GroupInsert(GroupBase):
-    pass
+class GroupPost(CamelModel):
+    group_id: str
 
 class GroupPatch(CamelModel):
     group_id: str

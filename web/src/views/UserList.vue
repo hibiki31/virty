@@ -30,6 +30,7 @@
             :key="scope.name"
             class="ma-2"
             close
+            small
           >
             {{ scope.name }}
           </v-chip>
@@ -40,79 +41,10 @@
             :key="group.id"
             class="ma-2"
             close
+            small
           >
             {{ group.id }}
           </v-chip>
-        </template>
-
-        <!-- ユーザカラム -->
-        <template v-slot:[`item.userId`]="{ item }" justify="right">
-          <v-icon
-            v-if="item.userId !== null"
-            left
-            v-on:click="
-              uuid = item.uuid;
-              dialog = true;
-            "
-            color="primary"
-            >mdi-account</v-icon
-          >
-          <v-icon
-            v-else
-            left
-            v-on:click="
-              uuid = item.uuid;
-              dialog = true;
-            "
-            >mdi-account</v-icon
-          >
-          <span v-if="item.userId !== null">{{ item.userId }}</span>
-          <span v-else>N/A</span>
-        </template>
-
-        <template v-slot:[`item.groupId`]="{ item }" justify="right">
-          <v-icon left>mdi-account-multiple</v-icon>
-          <span v-if="item.groupId !== null">{{ item.groupId }}</span>
-          <span v-else>N/A</span>
-        </template>
-
-        <template v-slot:[`item.status`]="{ item }">
-          <v-menu>
-            <template v-slot:activator="{ on: menu, attrs }">
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <v-icon
-                    left
-                    v-bind="attrs"
-                    v-on="{ ...tooltip, ...menu }"
-                    :color="getPowerColor(item.status)"
-                    >mdi-power-standby</v-icon
-                  >
-                </template>
-                <span>Power control</span>
-              </v-tooltip>
-            </template>
-            <v-card>
-              <v-card-text>
-                <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="success"
-                    >mdi-power-standby</v-icon
-                  >
-                </div>
-                <v-icon v-on:click="vmPowerOff(item.uuid)" color="grey"
-                  >mdi-power-standby</v-icon
-                >
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </template>
-        <template v-slot:[`item.memory`]="{ item }" justify="right">
-          <v-icon left>mdi-memory</v-icon>
-          {{ item.memory / 1024 }} G
-        </template>
-        <template v-slot:[`item.core`]="{ item }" justify="right">
-          <v-icon left>mdi-cpu-64-bit</v-icon>
-          {{ item.core }}
         </template>
       </v-data-table>
     </v-card>
@@ -121,7 +53,7 @@
 
 <script>
 import axios from '@/axios/index';
-import UserAddDialog from '../conponents/dialog/UserAddDialog.vue';
+import UserAddDialog from '../conponents/users/UserAddDialog.vue';
 
 export default {
   name: 'VMList',

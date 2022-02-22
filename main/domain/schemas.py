@@ -13,6 +13,10 @@ class DomainPatchUser(CamelModel):
     uuid: str
     user_id: str
 
+class DomainGroupPatch(CamelModel):
+    uuid: str
+    group_id: str
+
 class DomainDelete(DomainBase):
     pass
 
@@ -32,7 +36,7 @@ class DomainSelect(DomainInsert):
     status: int
     node_name: str
     owner_user_id: str = None
-    group_id: str = None
+    owner_group_id: str = None
     class Config:
         orm_mode  =  True
 

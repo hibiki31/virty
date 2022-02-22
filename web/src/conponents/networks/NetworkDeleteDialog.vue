@@ -2,7 +2,7 @@
 <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="networkDeleteForm">
-        <v-card-text>起動中のVMに影響はありません</v-card-text>
+        <v-card-text>Running VMs will not be affected.</v-card-text>
         <v-card-text>
           <v-select
             :items="items"
@@ -54,7 +54,7 @@ export default {
         data: { uuid: this.uuid }
       })
         .then(res => {
-          this.$_pushNotice('Delete success', 'success');
+          this.$_pushNotice('Please wait for task to complete', 'success');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

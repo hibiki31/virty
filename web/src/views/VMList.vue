@@ -1,6 +1,7 @@
 <template>
   <div>
     <DomainAddDialog ref="domainAddDialog"/>
+    <domain-group-put ref="domainGroupPut" @reload="reload"/>
     <v-dialog width="300" v-model="dialog">
       <v-card>
         <v-card-title>Change VM owner</v-card-title>
@@ -83,10 +84,14 @@
           <span>{{ item.ownerUserId === null ? "" : item.ownerUserId }}</span>
         </template>
 
-        <template v-slot:[`item.groupId`]="{ item }" justify="right">
-          <v-icon left>mdi-account-multiple</v-icon>
-          <span v-if="item.groupId !== null">{{ item.groupId }}</span>
-          <span v-else>N/A</span>
+        <template v-slot:[`item.ownerGroupId`]="{ item }" justify="right">
+          <v-icon
+            left
+            v-on:click="$refs.domainGroupPut.openDialog(item)"
+            :color="item.ownerGroupId === null ? '' : 'primary'"
+            >mdi-account</v-icon
+          >
+          <span>{{ item.ownerGroupId === null ? "" : item.ownerGroupId }}</span>
         </template>
 
         <template v-slot:[`item.status`]="{ item }">
@@ -134,12 +139,14 @@
 
 <script>
 import axios from '@/axios/index';
-import DomainAddDialog from '../conponents/dialog/DomainAddDialog';
+import DomainAddDialog from '../conponents/domains/DomainAddDialog';
+import DomainGroupPut from '../conponents/domains/DomainGroupPut.vue';
 
 export default {
   name: 'VMList',
   components: {
-    DomainAddDialog
+    DomainAddDialog,
+    DomainGroupPut
   },
   data: function() {
     return {
@@ -157,7 +164,7 @@ export default {
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
         { text: 'userId', value: 'ownerUserId' },
-        { text: 'groupId', value: 'groupId' }
+        { text: 'groupId', value: 'ownerGroupId' }
       ],
       user: [],
       group: []
@@ -171,7 +178,7 @@ export default {
   methods: {
     reload() {
       this.tableLoading = true;
-      axios.get('/api/vms').then((response) => {
+      axios.get('/api/vms', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => {
         this.list = response.data;
         this.tableLoading = false;
       });

@@ -3,25 +3,16 @@
   <v-dialog width="400" v-model="dialogState">
     <v-card>
       <v-form ref="dialogForm">
-        <v-card-title>User add</v-card-title>
+        <v-card-title>Add {{ requestData.groupId }} member</v-card-title>
         <v-card-text>
-          <v-text-field
-            v-model="postData.userId"
-            label="Username"
-            :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
-            counter="64"
-          ></v-text-field>
-          <v-text-field
-            v-model="postData.password"
-            :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-            :rules="[$required]"
-            :type="show1 ? 'text' : 'password'"
-            name="input-10-1"
-            label="Password"
-            hint="At least 1 characters"
-            counter
-            @click:append="show1 = !show1"
-          ></v-text-field>
+          <v-select
+            :items="users"
+            item-text="id"
+            item-value="id"
+            v-model="requestData.userId"
+            label="Select userid"
+            dense
+          ></v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -37,20 +28,24 @@
 import axios from '@/axios/index';
 
 export default {
-  name: 'UserAddDialog',
+  name: 'GroupAddDialog',
   data: function() {
     return {
-      postData: {
-        userId: '',
-        password: ''
+      requestData: {
+        groupId: '',
+        userId: ''
       },
-      show1: false,
+      users: [],
+      groups: [],
+      importData: {},
       dialogState: false,
       submitting: false
     };
   },
   methods: {
-    openDialog() {
+    openDialog(importData) {
+      this.importData = importData;
+      this.requestData.groupId = importData.id;
       this.dialogState = true;
     },
     runMethod() {
@@ -59,12 +54,12 @@ export default {
       }
       this.submitting = true;
       axios.request({
-        method: 'post',
-        url: '/api/users',
-        data: this.postData
+        method: 'put',
+        url: '/api/groups',
+        data: this.requestData
       })
         .then(res => {
-          this.$_pushNotice('Create successful', 'success');
+          this.$_pushNotice('Add successful', 'success');
           this.submitting = false;
           this.$emit('reload');
           this.dialogState = false;
@@ -73,6 +68,10 @@ export default {
           this.$_pushNotice(error.response.data.detail, 'error');
         });
     }
+  },
+  mounted: async function() {
+    axios.get('/api/users').then((response) => (this.users = response.data));
+    axios.get('/api/groups').then((response) => (this.groups = response.data));
   }
 };
 </script>

@@ -102,7 +102,7 @@ def add_domain_base(db: Session, model: TaskModel):
         try:
             new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.save_pool_uuid).one()
         except:
-            raise Exception("request pool uuid not found")
+            raise Exception("request storage pool uuid not found")
         # ファイル名決めてる
         create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
         # XMLに追加
@@ -111,7 +111,7 @@ def add_domain_base(db: Session, model: TaskModel):
         # 新規ディスクの場合
         if device.type == "empty":
             # 空のディスク作成
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain)
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
             ssh_manager.qemu_create(
                 size_giga_byte=device.size_giga_byte,
                 path=create_image_path
@@ -162,6 +162,10 @@ def add_domain_base(db: Session, model: TaskModel):
 
     # 情報の更新
     update_domain_list(db=db, model=TaskModel())
+
+    domain = db.query(DomainModel).filter(DomainModel.uuid==domain_uuid).one()
+    domain.owner_user_id = task_model.user_id
+    db.commit()
 
     return task_model
 

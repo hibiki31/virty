@@ -19,7 +19,16 @@
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title class="title">{{userId}}</v-list-item-title>
-          <v-list-item-subtitle>Administrator</v-list-item-subtitle>
+          <div>
+            <v-btn
+              :color="this.$store.state.userData.adminMode ? 'error' : 'primary'"
+              outlined depressed small class="mt-2"
+              :disabled="!this.$store.state.userData.isAdmin"
+              @click="toggleAdminMode"
+            >
+              {{ this.$store.state.userData.adminMode ? "Administrator" : "General user" }}
+            </v-btn>
+          </div>
         </v-list-item-content>
       </v-list-item>
       <v-divider></v-divider>
@@ -64,7 +73,6 @@ import Cookies from 'js-cookie';
 
 export default {
   name: 'App',
-
   data: () => ({
     version: require('../package.json').version,
     userId: '',
@@ -118,7 +126,12 @@ export default {
     async task_check() {
       if (!this.taskChecking) {
         this.taskChecking = true;
-        await axios.get('/api/tasks/incomplete', { params: { update_hash: this.taskHash } }).then(async(response) => {
+        await axios.get('/api/tasks/incomplete', {
+          params: {
+            update_hash: this.taskHash,
+            admin: this.$store.state.userData.adminMode
+          }
+        }).then(async(response) => {
           if (this.taskHash !== response.data.task_hash && this.taskHash !== null && response.data.task_count < this.taskCount) {
             if ('reload' in this.$refs.view === true) {
               this.$refs.view.reload();
@@ -129,6 +142,12 @@ export default {
           this.taskChecking = false;
           await this.task_check();
         });
+      }
+    },
+    toggleAdminMode() {
+      this.$store.dispatch('toggleAdminMode');
+      if ('reload' in this.$refs.view === true) {
+        this.$refs.view.reload();
       }
     }
   },

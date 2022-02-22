@@ -181,8 +181,8 @@
 
 <script>
 import axios from '@/axios/index';
-import DomainCDRomDialog from '../conponents/dialog/DomainCDRomDialog';
-import DomainDeleteDialog from '../conponents/dialog/DomainDeleteDialog';
+import DomainCDRomDialog from '../conponents/domains/DomainCDRomDialog';
+import DomainDeleteDialog from '../conponents/domains/DomainDeleteDialog';
 
 export default {
   name: 'VMDetail',

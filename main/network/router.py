@@ -12,7 +12,7 @@ from task.function import PostTask
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-from mixin.exception import exception_notfund
+from mixin.exception import notfound_exception
 
 from module import virtlib
 from module import xmllib

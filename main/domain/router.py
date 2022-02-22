@@ -14,7 +14,7 @@ from user.models import GroupModel, UserModel
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-from mixin.exception import exception_notfund
+from mixin.exception import notfound_exception
 
 from module import virtlib
 
@@ -47,9 +47,31 @@ def path_vms_user(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
-
-    vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        db.query(UserModel).filter(UserModel.id==model.user_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or user")
+    
     vm.owner_user_id = model.user_id
+    db.commit()
+
+    return vm
+
+
+@app.patch("/group")
+def path_vms_group(
+        model: DomainGroupPatch,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        db.query(GroupModel).filter(GroupModel.id==model.group_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or group")
+    
+    vm.owner_group_id = model.group_id
     db.commit()
 
     return vm
@@ -86,7 +108,7 @@ async def get_api_domain(
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
         node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
     except:
-        raise exception_notfund
+        raise not_found_exception(msg="not found domain or node")
 
     editor = virtlib.XmlEditor("domain",domain.uuid)
     domain_xml_pase = editor.domain_parse()
