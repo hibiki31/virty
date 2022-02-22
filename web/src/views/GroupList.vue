@@ -11,7 +11,7 @@
           class="ma-2"
           color="primary"
         >
-          <v-icon left>mdi-server-plus</v-icon>ADD
+          <v-icon left>mdi-account-multiple-plus</v-icon>ADD
         </v-btn>
       </v-card-actions>
       <v-data-table

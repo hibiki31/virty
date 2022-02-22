@@ -1,5 +1,5 @@
 import jwt
-import secrets
+import os
 
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -7,7 +7,6 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Security, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
-from sqlalchemy import true
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
@@ -224,12 +223,33 @@ def read_auth_validate(
 
 
 @app.get("/key", tags=["auth"])
-def get_ssh_key_pear(current_user: CurrentUser = Depends(get_current_user)):
+def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     publick_key = ""
-    with open("/root/.ssh/id_rsa") as f:
-        private_key = f.read()
-    with open("/root/.ssh/id_rsa.pub") as f:
-        publick_key = f.read()
+    try: 
+        with open("/root/.ssh/id_rsa") as f:
+            private_key = f.read()
+        with open("/root/.ssh/id_rsa.pub") as f:
+            publick_key = f.read()
+    except:
+        pass
 
     return {"private_key": private_key, "publick_key": publick_key}
+
+@app.post("/key")
+def post_ssh_key_pair(
+        model: SSHKeyPair,
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    os.makedirs('/root/.ssh/', exist_ok=True)
+    
+    with open("/root/.ssh/id_rsa", "w") as f:
+        f.write(model.key.rstrip('\r\n') + '\n')
+    with open("/root/.ssh/id_rsa.pub", "w") as f:
+        f.write(model.pub)
+    
+    os.chmod('/root/.ssh/', 0o700)
+    os.chmod('/root/.ssh/id_rsa', 0o600)
+    os.chmod('/root/.ssh/id_rsa.pub', 0o600)
+
+    return {}

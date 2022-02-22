@@ -28,6 +28,8 @@ def post_node_base(db: Session, model: TaskSelect):
     port = request.port
 
     ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
+    ssh_manager.add_known_hosts()
+    
     ansible_manager = AnsibleManager(user=user, domain=domain)
     
     node_infomation = ansible_manager.node_infomation()
