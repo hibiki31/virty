@@ -56,6 +56,12 @@ changes.mdは以下のコマンドで該当コミットを記録する
 git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
 ```
 
+changelog等のコミットは以下
+
+```
+Update v2.0.0
+```
+
 マージするときは以下の規則で行う
 
 ```

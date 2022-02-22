@@ -1,3 +1,18 @@
+### Ver 2.0.0
+- 2022-02-22 Fix known_hostsのバグ 3436a82 (@hibiki131) 
+- 2022-02-23 Add SSH鍵の登録 19216d4 (@hibiki131) 
+- 2022-02-23 Fix docker build e87adaa (@hibiki31) 
+- 2022-02-22 Add admin mode dc5cd66 (@hibiki131) 
+- 2022-02-22 Fix ユーザ変更周りを修正 36bf365 (@hibiki131) 
+- 2022-02-22 Fix タスク状況のポーリング処理追加 7ecddac (@hibiki131) 
+- 2022-02-21 Fix タスク状況取得 0504531 (@hibiki131) 
+- 2022-02-21 Add websoccketの仮対応とバックグラウンド処理の変更 42d8c84 (@hibiki131) 
+- 2022-02-20 Add タスクに依存関係を追加 a4dfe99 (@hibiki131) 
+- 2022-02-20 Fix taskの外部キー a9aa700 (@hibiki131) 
+- 2022-02-20 Add scopeの雛形作成 6fafe5f (@hibiki31) 
+- 2022-02-19 Add docker-compose 189d144 (@hibiki131) 
+- 2022-02-18 Add alembic 977833f (@hibiki131) 
+
 ### Ver 1.6.1
 - 2022-02-15 Fix パッケージの更新 1c16836 (@hibiki131) 
 - 2022-02-15 Bump postcss from 7.0.35 to 7.0.39 in /web 04b0fe9 (@GitHub) 
