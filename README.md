@@ -2,7 +2,7 @@
 
 低コスト・即時展開を目的としたLibvirt-APIのWEBインターフェイス
 
-SSH経由でLibvirt-API,Ansible,コマンド実行(qemu-img)などを実行
+SSH経由でLibvirt-API,Ansible,コマンド(qemu-img)などを実行
 
 ![2022-02-16 023805](https://user-images.githubusercontent.com/35087924/154118366-c61572bc-ee45-4a97-a825-2e5f95cc5cd5.png)
 
@@ -10,7 +10,8 @@ SSH経由でLibvirt-API,Ansible,コマンド実行(qemu-img)などを実行
 
 ### 特徴
 
-- Virtyは全てのノード操作をSSHを経由して行います。よってSSH接続できる全てのノードを管理可能
+- Virtyは全てのノード操作をSSHを経由して実行
+- よってSSH接続できる全てのノードを管理可能
 - ノードの最小構成はlibvirtデーモンのインストールのみ
 
 ### サポートOS
