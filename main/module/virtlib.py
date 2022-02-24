@@ -155,7 +155,7 @@ class VirtManager():
         try:
             domain.updateDeviceFlags(xml)
         except libvirt.libvirtError as e:
-            raise Exception("起動中はOVSを切り替えることはできません: " + str(e))
+            raise Exception("Cannot switch the OVS while the VM is running" + str(e))
          
         
 
@@ -193,7 +193,12 @@ class VirtManager():
         </portgroup>
         '''
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        net.update(command=3,section=9, xml=xml, parentIndex=1)
+        # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
+        # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
+        # parentIndex: 1先頭, -1適当末尾
+        res = net.update(command=3,section=9, xml=xml, parentIndex=1)
+        if res == -1:
+            raise Exception("An error occurred after updating the network with libvirt")
 
     def network_ovs_delete(self, uuid, name):
         net = self.node.networkLookupByUUIDString(uuid)

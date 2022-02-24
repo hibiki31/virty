@@ -152,6 +152,12 @@ export default {
     }
   },
   async mounted() {
+    // ログイン後タスクチェック
+    this.$store.subscribe((mutation, state) => {
+      if (mutation.type === 'updateAuthState' && this.$store.state.userData.isAuthed) {
+        this.task_check();
+      }
+    });
     axios.interceptors.request.use(
       (config) => {
         config.headers.Authorization = 'Bearer ' + Cookies.get('token');
@@ -162,10 +168,6 @@ export default {
         return Promise.reject(err);
       }
     );
-    await this.task_check();
-  },
-  async updated() {
-    await this.task_check();
   }
 };
 </script>

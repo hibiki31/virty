@@ -1,3 +1,4 @@
+from time import sleep
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -108,7 +109,7 @@ async def get_api_domain(
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
         node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
     except:
-        raise not_found_exception(msg="not found domain or node")
+        raise notfound_exception(msg="not found domain or node")
 
     editor = virtlib.XmlEditor("domain",domain.uuid)
     domain_xml_pase = editor.domain_parse()
@@ -141,6 +142,11 @@ async def post_api_vms(
     post_task = PostTask(db=db, user=current_user, model=request_model)
     task_model = post_task.commit("vm","base","add", bg)
 
+    # ストレージ更新タスク
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("storage","list","update", bg, status="wait",dependence_uuid=task_model.uuid)
+
+
     return task_model
 
 
@@ -157,7 +163,7 @@ async def patch_api_domains(
    
     return task_model
 
-@app.patch("/api/vm/network", response_model=TaskSelect)
+@app.patch("/network", response_model=TaskSelect)
 async def patch_api_vm_network(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),

@@ -1,13 +1,10 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import store from '../store';
+
 import VMList from '../views/VMList.vue';
 import Login from '../views/Login.vue';
 import Logout from '../views/Logout.vue';
-import VMDetail from '../views/VMDetail.vue';
-import TaskList from '../views/TaskList.vue';
-import NetworkList from '../views/NetworkList.vue';
-import NodeList from '../views/NodeList.vue';
 import StorageList from '../views/StorageList.vue';
 import QueueDetail from '../views/QueueDetail.vue';
 import ImageList from '../views/ImageList.vue';
@@ -15,10 +12,14 @@ import Empty from '../views/EmptyView.vue';
 import Develop from '../views/Develop.vue';
 import UserList from '../views/UserList.vue';
 import GroupList from '../views/GroupList.vue';
+import NetworkDetail from '@/views/NetworkDetail';
+
+import ListRouter from '@/router/listRouter.js';
 
 Vue.use(VueRouter);
 
 const routes = [
+  ...ListRouter.routes,
   {
     path: '/vm',
     name: 'VMList',
@@ -31,14 +32,6 @@ const routes = [
     path: '/',
     name: 'Root',
     component: VMList,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/task',
-    name: 'TaskList',
-    component: TaskList,
     meta: {
       requiresAuth: true
     }
@@ -60,25 +53,9 @@ const routes = [
     }
   },
   {
-    path: '/network',
-    name: 'NetworkList',
-    component: NetworkList,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/node',
-    name: 'NodeList',
-    component: NodeList,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/vm/:uuid',
-    name: 'VMDetail',
-    component: VMDetail,
+    path: '/networks/:uuid',
+    name: 'NetworkDetail',
+    component: NetworkDetail,
     meta: {
       requiresAuth: true
     }

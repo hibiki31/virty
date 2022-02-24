@@ -2,9 +2,9 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>CD Change</v-card-title>
+          <v-card-title>ISO Image mount</v-card-title>
           <v-card-text>
-            Pathを空にするとアンマウントします．選択肢はストレージのロールがisoの内容が表示されます．
+            Emptying the Path will unmount it.
             <v-text-field v-model="postData.path" label="iso file path" :rules="[]"></v-text-field>
             <v-select v-model="postData.path" :items="isoImages" item-value="path" item-text="name"></v-select>
           </v-card-text>
@@ -59,17 +59,8 @@ export default {
       })
         .then(res => {
           this.$_pushNotice('Added a task. Please wait for it to complete.', 'success');
-          axios
-            .get(`/api/tasks/${res.data.uuid}`, { params: { polling: true, timeout: 30000 } })
-            .then(res => {
-              this.$_pushNotice('Finished a task!', 'success');
-              this.dialogState = false;
-              this.loadingSubmit = false;
-            })
-            .catch(error => {
-              this.$_pushNotice(error.response.data.detail, 'error');
-              this.loadingSubmit = false;
-            });
+          this.dialogState = false;
+          this.loadingSubmit = false;
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

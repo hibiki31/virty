@@ -23,52 +23,22 @@ Virtyはdocker-composeが利用できるx86_amd64環境で動作
 - Ubuntu 18, 20
 - CentOS 7, 8
 
-## クイックスタート
+### Virtyの構築
 
-現時点ではDocker-composeでの構築のみサポート
-
-### 1.Virtyの構築
-
-##### 1.リポジトリのクローン（最新のみ取得）
+現時点ではDocker-composeでの構築のみサポート。`localhost:80`で起動する。
 
 ```
-git clone --branch master --depth 1 https://github.com/hibiki31/virty.git
-```
-
-##### 2.Dockerイメージのビルドと起動
-
-```
+mkdir virty
 cd virty
-cp docker-compose.example.yml docker-compose.yml
-docker-compose build
+wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml
+mv docker-compose.example.yml docker-compose.yml
 docker-compose up -d
-```
-
-##### 3.データベースの初期化
-
-```
 docker-compose run main alembic upgrade head
 ```
 
+### 管理対象ノードの準備
 
-##### 4.管理ユーザの作成
-
-http://localhost:80 
-
-へアクセスするとログイン画面が表示される
-
-回起動時はセットアップダイアログが表示される
-
-表示されない場合は何らかのエラーが発生している
-
-ブラウザコンソールログとDockerログを確認する
-
-
-### 2.ノード追加
-
-##### 1.内容
-
-OSによらず以下の状態を構築
+##### 1.要求
 
 - SSH公開鍵の設置
 - パスワードレスsudo
@@ -128,7 +98,7 @@ ssh-copy-id user@host
 > この後、ダッシュボードから鍵を登録すると`./data/key`に格納される
 
 
-## 3. Open vSwitch(Option)
+### Open vSwitch(Option)
 
 ##### 1. 構成
 
@@ -165,6 +135,7 @@ systemctl enable openvswitch
 ovs-vsctl add-br ovs-br0
 # 物理インターフェイスを接続
 ovs-vsctl add-port ovs-br0 eth0
+ovs-vsctl add-port ovs-br0 manage -- set interface manage type=internal
 # ブリッジ名と同名の自動作成されたポートにTAGを指定
 # IPを設定するインターフェイスになる
 ovs-vsctl set port ovs-br0 tag=200

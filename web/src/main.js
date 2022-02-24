@@ -14,6 +14,7 @@ import velocity from 'velocity-animate';
 import VueClipboard from 'vue-clipboard2';
 
 Vue.config.productionTip = false;
+Vue.config.devtools = true;
 Vue.use(Notifications, { velocity });
 Vue.use(VueClipboard);
 

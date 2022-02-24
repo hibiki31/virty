@@ -1,3 +1,8 @@
+### Ver 2.1.0
+- 2022-02-24 Add oVSを利用したVLANネットワークに対応 0326bc2 (@hibiki131) 
+- 2022-02-23 Update README.md f05af13 (@GitHub) 
+- 2022-02-23 Update README.md 8d6ad70 (@GitHub)
+
 ### Ver 2.0.0
 - 2022-02-22 Fix known_hostsのバグ 3436a82 (@hibiki131) 
 - 2022-02-23 Add SSH鍵の登録 19216d4 (@hibiki131) 
