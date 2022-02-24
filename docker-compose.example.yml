@@ -1,9 +1,9 @@
 version: "3"
 services:
   main:
-    build: ./main
+    image: hibiki131/virty-api:2.1.0
     volumes:
-      - ./data/data:/opt/data
+      - ./data/app:/opt/data
       - ./data/key:/root/.ssh/
     environment:
       APP_ROOT: "/opt/app"
@@ -11,7 +11,7 @@ services:
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
   web:
-    build: ./web
+    image: hibiki131/virty-web:2.1.0
     volumes:
       - ./data/nginx:/var/log/nginx/
     ports:
