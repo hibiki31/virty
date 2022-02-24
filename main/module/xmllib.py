@@ -1,13 +1,17 @@
 import os
+from statistics import mode
 from uuid import uuid4
 
 import xml.etree.ElementTree as ET
+
+from sqlalchemy import false
 
 from settings import APP_ROOT
 from mixin.log import setup_logger
 from module.model import AttributeDict
 
 from storage.schemas import ImageRaw
+from domain.schemas import *
 
 
 logger = setup_logger(__name__)
@@ -200,7 +204,7 @@ class XmlEditor():
         return domain_uuid
 
 
-    def domain_interface_add(self, network_name, mac_address=None):
+    def domain_interface_add(self, network_name, mac_address=None, port=None):
         if mac_address == None:
             mac_address = macaddress_generator()
     
@@ -209,6 +213,9 @@ class XmlEditor():
         ET.SubElement(add_interface, 'mac').set('address', mac_address)
         ET.SubElement(add_interface, 'source').set('network', network_name)
         ET.SubElement(add_interface, 'model').set('type', 'virtio')
+
+        if port:
+            add_interface.find('source').set('portgroup', port)
     
 
     def domain_device_image_add(self,image_path, target_device):
@@ -270,79 +277,53 @@ class XmlEditor():
 
 
     def domain_parse(self):
-        DATA = {}
-        DATA['name'] = self.xml.find('name').text
-        DATA['memory'] = self.xml.find('memory').text
-        DATA['memory-unit'] = self.xml.find('memory').get("unit")
-        DATA['vcpu'] = self.xml.find('vcpu').text
-        DATA['uuid'] = self.xml.find('uuid').text
-        DATA['disk'] = []
-        DATA['interface'] = []
-        DATA['boot'] = []
+        vnc_xml = self.xml.find('devices').find('graphics')
 
-        DATA['memory'] = unit_convertor(DATA['memory-unit'],"M",DATA['memory'])
-        DATA['memory-unit'] = "G"
+        memory_unit = self.xml.find('memory').get("unit")
+        memory = self.xml.find('memory').text
 
-        Count = 1
+        model = DomainDetailXml(
+            name=self.xml.find('name').text,
+            memory=unit_convertor(memory_unit,"M",memory),
+            memoryUnit="M",
+            vcpu=self.xml.find('vcpu').text,
+            uuid=self.xml.find('uuid').text,
+            selinux=False,
+            vnc_port=vnc_xml.get("port"),
+            vnc_auto_port=vnc_xml.get("autoport"),
+            vnc_listen=vnc_xml.get("listen"),
+            vnc_password=vnc_xml.get("passwd", "none"),
+            disk=[],
+            interface=[],
+            boot=[],
+        )
+
         for boot in self.xml.find('os').findall('boot'):
-            DATA['boot'].append([Count,boot.get('dev')])
-            Count = Count + 1
-        vnc = self.xml.find('devices').find('graphics')        
-    
-        DATA['vnc_port'] = vnc.get("port")
-        # DATA['vnc'].append(vnc.get("autoport"))
-        # DATA['vnc'].append(vnc.get("listen"))
-        # DATA['vnc'].append(vnc.get("passwd", "none"))
+            model.boot.append(boot.get('dev'))
 
         for disk in self.xml.find('devices').findall('disk'):
-            if disk.find("source") is not None:
-                DATA['disk'].append({
-                    "device": disk.get("device"),
-                    "type": disk.get("type"),
-                    "file": disk.find("source").get("file","none"),
-                    "target": disk.find("target").get("dev")
-                })
-            else:
-                DATA['disk'].append({
-                    "device": disk.get("device"),
-                    "type": disk.get("type"),
-                    "file": None,
-                    "target": disk.find("target").get("dev")
-                })
+            model.disk.append(DomainDetailXmlDrive(
+                device=disk.get("device"),
+                type=disk.get("type"),
+                target=disk.find("target").get("dev") if disk.find("target") != None else None,
+                source=disk.find("source").get("file") if disk.find("source") != None else None
+            ))
             
         for nic in self.xml.find('devices').findall('interface'):
-            TYPE = nic.get("type")
-            MAC = nic.find("mac").get("address")
+            model.interface.append(DomainDetailXmlInterface(
+                type=nic.get("type"),
+                mac=nic.find("mac").get("address"),
+                bridge=nic.find("source").get("bridge", None),
+                network=nic.find("source").get("network", None),
+                target=nic.find("target").get("dev",None) if nic.find("target") != None else None,
+                port=nic.find("source").get("portgroup")
+            ))
 
-            if TYPE == "bridge":
-                SOURCE = nic.find("source").get("bridge")
-            else:
-                SOURCE = nic.find("source").get("network")
-
-            NETWORK = nic.find("source").get("network",None)
-            if NETWORK != None:
-                TYPE = "network"
-
-            if nic.find("target") == None:
-                TARGET = "none"
-            else:
-                TARGET = nic.find("target").get("dev","none")
-    
-            DATA['interface'].append({
-                "type":TYPE,
-                "mac":MAC,
-                "target":TARGET,
-                "source":SOURCE,
-                "network":NETWORK,
-                "port": nic.find("source").get("portgroup")
-                })
-
-        DATA['selinux'] = "off"
         for seclabel in self.xml.findall('seclabel'):
             if seclabel.get('model','None') == 'selinux':
-                DATA['selinux']
+                model.selinux = True
 
-        return DATA
+        return model
     
 
     def dump_file(self,type):
@@ -364,17 +345,15 @@ class XmlEditor():
         self.xml.find('bridge').set('name', bridge)
 
     
-def unit_convertor(EC,DC,DATA):
-    if EC == "bytes":
-        if DC == "G":
-            DATA = float(DATA)/1024
-            DATA = float(DATA)/1024
-            DATA = float(DATA)/1024
-            return round(DATA,1)
-    if EC == "KiB":
-        if DC == "M":
-            DATA = float(DATA)/1024
-            return round(DATA,1)
+def unit_convertor(from_unit, to_unit, value):
+    if from_unit == "bytes" and to_unit == "G":
+        return round(float(value)/1024/1024/1024,1)
+    elif from_unit == "bytes" and to_unit == "M":
+        return round(float(value)/1024/1024,1)
+    elif from_unit == "KiB" and to_unit == "M":
+        return round(float(value)/1024,1)
+ 
+    return value
 
 
 def macaddress_generator():

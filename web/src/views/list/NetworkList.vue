@@ -32,6 +32,13 @@
           }"
       multi-sort
     >
+      <template v-slot:[`item.uuid`]="{ item }" justify="right">
+        <router-link
+          :to="{ name: 'NetworkDetail', params: { uuid: item.uuid } }"
+          style="font-family: monospace;"
+          >{{ item.uuid }}</router-link
+        >
+      </template>
     </v-data-table>
   </v-card>
 </div>
@@ -40,8 +47,8 @@
 <script>
 import axios from '@/axios/index';
 
-import NetworkDeleteDialog from '../conponents/networks/NetworkDeleteDialog.vue';
-import NetworkAddDialog from '../conponents/networks/NetworkAddDialog.vue';
+import NetworkDeleteDialog from '@/conponents/networks/NetworkDeleteDialog.vue';
+import NetworkAddDialog from '@/conponents/networks/NetworkAddDialog.vue';
 
 export default {
   name: 'NetworkList',

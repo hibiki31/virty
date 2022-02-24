@@ -41,10 +41,10 @@ def update_domain_list(db: Session, model: TaskModel):
             temp = editor.domain_parse()
             
             row = DomainModel(
-                uuid = temp["uuid"],
-                name = temp['name'],
-                core = temp['vcpu'],
-                memory = temp['memory'],
+                uuid = temp.uuid,
+                name = temp.name,
+                core = temp.vcpu,
+                memory = temp.memory,
                 status = domain['status'],
                 node_name = node.name,
                 update_token = token
@@ -90,7 +90,11 @@ def add_domain_base(db: Session, model: TaskModel):
     # ネットワークインターフェイス
     for interface in model.interface:
         interface: DomainInsertInterface
-        editor.domain_interface_add(network_name=interface.network_name, mac_address=None)
+        editor.domain_interface_add(
+            network_name=interface.network_name, 
+            mac_address=None, 
+            port=interface.port
+        )
 
     img_device_names = ["vda","vdb","vdc"]
     

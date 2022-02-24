@@ -43,26 +43,27 @@ class DomainSelect(DomainInsert):
 class DomainDetailXmlInterface(CamelModel):
     type: str
     mac: str
-    target: str
-    source: str
-    netwrok: str = None
+    target: str = None
+    bridge: str = None
+    network: str = None
     port: str = None
 
 class DomainDetailXmlDrive(CamelModel):
     device: str
     type: str
-    file: str = None
-    target: str
+    source: str = None
+    target: str = None
 
 class DomainDetailXml(CamelModel):
     name:str
     memory: int
+    memoryUnit: str
     vcpu: int
     uuid: str
     vnc_port: int = None
     disk: List[DomainDetailXmlDrive]
     interface: List[DomainDetailXmlInterface]
-    boot: List[list]
+    boot: List[str]
     selinux: bool
 
 class DomainDetailSelect(CamelModel):
@@ -84,6 +85,7 @@ class DomainInsertInterface(CamelModel):
     type: str
     mac: str = None
     network_name: str
+    port: str = None
 
 class CloudInitInsert(CamelModel):
     hostname: str

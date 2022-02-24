@@ -1,3 +1,4 @@
+from time import sleep
 from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -76,14 +77,14 @@ async def get_api_networks_uuid(
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
     except NoResultFound:
-        raise exception_notfund
+        raise notfound_exception()
 
     editor = virtlib.XmlEditor("network",network.uuid)
     xml = editor.network_pase()
 
     return {'db':network, 'xml': xml}
 
-@app.post("/api/network/ovs", tags=["network"], response_model=TaskSelect)
+@app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
 async def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -93,10 +94,13 @@ async def post_api_networks_uuid_ovs(
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
     task_model = post_task.commit("network","ovs","add", bg)
+
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("network","list","update", bg=bg, status="wait", dependence_uuid=task_model.uuid)
    
     return task_model
 
-@app.delete("/api/network/ovs", tags=["network"], response_model=TaskSelect)
+@app.delete("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
 async def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -105,6 +109,6 @@ async def post_api_networks_uuid_ovs(
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("network","ovs","delete", bg)
+    task_model = post_task.commit("network","ovs","delete", bg=bg, status="wait", dependence_uuid=task_model.uuid)
    
     return task_model

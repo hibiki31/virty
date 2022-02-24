@@ -2,6 +2,7 @@
   <div class="VMDetail">
     <DomainCDRomDialog ref="domainCDRomDialog" />
     <DomainDeleteDialog ref="domainDeleteDialog" />
+    <domain-network-change ref="domainNetworkChange" />
     <v-dialog width="300" v-model="memoryDialog">
       <v-card>
         <v-card-title>Change Memory</v-card-title>
@@ -42,8 +43,21 @@
     <span class="title">{{ data.db.name }}</span>
     <span class="body ml-10">{{ data.db.uuid }}</span>
     <v-row>
-      <v-col cols="12" sm="6" md="4" lg="3">
+      <v-col cols="12" sm="6" md="6" lg="3">
         <v-card>
+          <v-card-actions>
+            <v-btn
+              v-on:click="this.openDeleteDialog"
+              small
+              dark
+              class="ma-2"
+              color="error"
+            >
+              <v-icon left>mdi-server-plus</v-icon>Delete
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+        <v-card class="mt-5">
           <v-card-title class="subheading font-weight-bold">
             About
           </v-card-title>
@@ -70,7 +84,7 @@
           </v-list>
         </v-card>
       </v-col>
-      <v-col cols="12" sm="6" md="4" lg="3">
+      <v-col cols="12" sm="6" md="6" lg="3">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
             Node
@@ -98,7 +112,7 @@
           </v-list>
         </v-card>
       </v-col>
-      <v-col cols="12" sm="6" md="4" lg="6">
+      <v-col cols="12" sm="12" md="12" lg="6">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
             <v-icon>mdi-router-network</v-icon>Network
@@ -109,25 +123,31 @@
                 <tr>
                   <th class="text-left">Type</th>
                   <th class="text-left">MAC address</th>
-                  <th class="text-left">Terget</th>
-                  <th class="text-left">Source</th>
                   <th class="text-left">Network Name</th>
+                  <th class="text-left">Bridge Device</th>
+                  <th class="text-left">oVS Port</th>
+                  <th class="text-left">Target</th>
+                  <th class="text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in data.xml.interface" :key="item.mac">
+                <tr v-for="item in data.xml.interface" :key="`second-${item.target}`">
                   <td>{{ item.type }}</td>
                   <td>{{ item.mac }}</td>
-                  <td>{{ item.terget }}</td>
-                  <td>{{ item.source }}</td>
                   <td>{{ item.network }}</td>
+                  <td>{{ item.bridge }}</td>
+                  <td>{{ item.port }}</td>
+                  <td>{{ item.target }}</td>
+                  <td>
+                    <v-icon @click="$refs.domainNetworkChange.openDialog(data.db.uuid, item.mac, data.db.nodeName)">mdi-pencil</v-icon>
+                  </td>
                 </tr>
               </tbody>
             </template>
           </v-simple-table>
         </v-card>
       </v-col>
-      <v-col cols="12" sm="6" md="4" lg="6">
+      <v-col cols="12" sm="12" md="12" lg="6">
         <v-card>
           <v-card-title class="subheading font-weight-bold">
             <v-icon>mdi-database</v-icon>Storage
@@ -138,41 +158,25 @@
                 <tr>
                   <th class="text-left">Device</th>
                   <th class="text-left">Type</th>
-                  <th class="text-left">File</th>
+                  <th class="text-left">Source</th>
                   <th class="text-left">Target</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in data.xml.disk" :key="item.path">
-                  <td v-if="item.device=='cdrom'" >
-                    {{ item.device }}
-                    <v-btn icon v-on:click="openCDRomDialog(item.target)">
+                <tr v-for="itemDisk in data.xml.disk" :key="`first${itemDisk.target}`">
+                  <td>
+                    {{ itemDisk.device }}
+                    <v-btn v-if="itemDisk.device=='cdrom'" icon v-on:click="openCDRomDialog(itemDisk.target)">
                       <v-icon>mdi-pen</v-icon>
                     </v-btn>
                   </td>
-                  <td v-else>{{ item.device }}</td>
-                  <td>{{ item.type }}</td>
-                  <td>{{ item.file }}</td>
-                  <td>{{ item.target }}</td>
+                  <td>{{ itemDisk.type }}</td>
+                  <td>{{ itemDisk.source }}</td>
+                  <td>{{ itemDisk.target }}</td>
                 </tr>
               </tbody>
             </template>
           </v-simple-table>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="4" lg="4">
-        <v-card>
-          <v-card-actions>
-            <v-btn
-              v-on:click="this.openDeleteDialog"
-              small
-              dark
-              class="ma-2"
-              color="error"
-            >
-              <v-icon left>mdi-server-plus</v-icon>Delete
-            </v-btn>
-          </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
@@ -183,12 +187,14 @@
 import axios from '@/axios/index';
 import DomainCDRomDialog from '../conponents/domains/DomainCDRomDialog';
 import DomainDeleteDialog from '../conponents/domains/DomainDeleteDialog';
+import DomainNetworkChange from '@/conponents/domains/DomainNetworkChange';
 
 export default {
   name: 'VMDetail',
   components: {
     DomainCDRomDialog,
-    DomainDeleteDialog
+    DomainDeleteDialog,
+    DomainNetworkChange
   },
   data: () => ({
     memoryDialog: false,

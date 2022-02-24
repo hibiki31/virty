@@ -49,9 +49,9 @@
 
 <script>
 import axios from '@/axios/index';
-import StorageAddDialog from '../conponents/dialog/StorageAddDialog';
-import StorageDeleteDialog from '../conponents/dialog/StorageDeleteDialog';
-import StorageMetadataEdit from '../conponents/dialog/StorageMetadataEdit.vue';
+import StorageAddDialog from '../conponents/storages/StorageAddDialog';
+import StorageDeleteDialog from '../conponents/storages/StorageDeleteDialog';
+import StorageMetadataEdit from '../conponents/storages/StorageMetadataEdit.vue';
 
 export default {
   name: 'StorageList',

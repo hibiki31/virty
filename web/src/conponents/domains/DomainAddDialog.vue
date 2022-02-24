@@ -94,7 +94,7 @@
 
             <!-- インターフェイス -->
             <v-row v-for="(nic, index) in postData.interface" :key="index">
-              <v-col cols="12" md="5">
+              <v-col cols="12" md="3">
                 <v-select
                   :items="[{ text: 'Network', value: 'network' }]"
                   :rules="[$required]"
@@ -102,7 +102,7 @@
                   label="Network Type"
                 ></v-select>
               </v-col>
-              <v-col cols="12" md="7">
+              <v-col cols="12" md="3">
                 <v-select
                   :items="itemsNetworks.filter(x => x.nodeName===postData.nodeName)"
                   item-text="name"
@@ -110,9 +110,22 @@
                   :rules="[$required]"
                   v-model="nic.networkName"
                   label="Network"
+                  @change="getNetworkDetail(returnUUID(nic.networkName), nic)"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3" v-if="checkOVS(nic.networkName)">
+                <v-select
+                  :loading="nic.selectPort === null"
+                  :items="nic.selectPort"
+                  item-text="name"
+                  item-value=""
+                  :rules="[$required]"
+                  v-model="nic.port"
+                  label="Port"
                 ></v-select>
               </v-col>
             </v-row>
+            <v-icon @click="addInterface">mdi-plus</v-icon>
             </div>
             <!-- Init -->
             <v-switch
@@ -163,6 +176,7 @@ export default {
       itemsNetworks: [],
       itemsImages: [],
       itemsNodes: [],
+      networkDetail: [],
       itemsMemory: [
         { text: '512MB', value: '512' },
         { text: '1GB', value: '1024' },
@@ -202,7 +216,8 @@ export default {
           {
             type: 'network',
             mac: null,
-            networkName: ''
+            networkName: '',
+            selectPort: null
           }
         ],
         cloudInit: {
@@ -217,6 +232,29 @@ export default {
   methods: {
     openDialog() {
       this.dialogState = true;
+    },
+    checkOVS(networkName) {
+      const net = this.itemsNetworks.filter(x => x.nodeName===this.postData.nodeName && x.name === networkName);
+      if (net.length === 1) {
+        return (net[0].type==='openvswitch');
+      }
+    },
+    returnUUID(networkName) {
+      const net = this.itemsNetworks.filter(x => x.nodeName===this.postData.nodeName && x.name === networkName);
+      if (net.length === 1) {
+        return net[0].uuid;
+      }
+    },
+    getNetworkDetail(uuid, nic) {
+      axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.xml.portgroup));
+    },
+    addInterface() {
+      this.postData.interface.push({
+        type: 'network',
+        mac: null,
+        networkName: '',
+        selectPort: null
+      });
     },
     runMethod() {
       if (!this.$refs.domainAddforms.validate()) {
@@ -247,3 +285,9 @@ export default {
   }
 };
 </script>
+
+<style>
+.row + .row {
+  margin-top: 0px;
+}
+</style>
