@@ -1,3 +1,6 @@
+### Ver 2.1.1
+- 2022-02-25 Fix authのリダイレクト問題 ea5984b (@hibiki31) 
+
 ### Ver 2.1.0
 - 2022-02-24 Add oVSを利用したVLANネットワークに対応 0326bc2 (@hibiki131) 
 - 2022-02-23 Update README.md f05af13 (@GitHub) 

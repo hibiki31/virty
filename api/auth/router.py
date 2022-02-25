@@ -143,7 +143,7 @@ def get_current_user(
 
 
 
-@app.post("/", response_model=TokenRFC6749Response, tags=["auth"])
+@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
 def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
