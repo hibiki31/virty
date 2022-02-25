@@ -77,3 +77,16 @@ fast-forwardは無効化すべし
 git config --global --add merge.ff false
 git config --global --add pull.ff only
 ```
+
+docker build
+
+
+```
+ls -la ./api/data
+
+VER=2.1.0
+docker build -t hibiki131/virty-api:$VER ./api/
+docker push hibiki131/virty-api:$VER
+docker build -t hibiki131/virty-web:$VER ./web/
+docker push hibiki131/virty-web:$VER
+```

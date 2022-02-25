@@ -1,7 +1,7 @@
 version: "3"
 services:
   api:
-    image: hibiki131/virty-api:2.1.0
+    build: ./api
     hostname: virty-api
     volumes:
       - ./data/app:/opt/data
@@ -13,7 +13,7 @@ services:
     restart: always
   web:
     hostname: virty-web
-    image: hibiki131/virty-web:2.1.0
+    build: ./web
     volumes:
       - ./data/nginx:/var/log/nginx/
     ports:
