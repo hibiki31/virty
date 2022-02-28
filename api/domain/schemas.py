@@ -70,6 +70,7 @@ class DomainDetailSelect(CamelModel):
     db: DomainSelect
     node: NodeSelect
     xml: DomainDetailXml
+    token: str
     class Config:
         orm_mode  =  True
 

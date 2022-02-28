@@ -11,7 +11,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
-from settings import APP_ROOT
+from settings import APP_ROOT, DATA_ROOT
 from mixin.log import setup_logger
 
 logger = setup_logger(__name__)
@@ -44,8 +44,8 @@ class AnsibleManager():
             raise Exception(result)
 
         # Gather_factsをjsonとして保存
-        os.makedirs(f'{APP_ROOT}/data/node/', exist_ok=True)
-        with open(f'{APP_ROOT}/data/node/{self.user}@{self.domain}.json', 'w') as f:
+        os.makedirs(f'{DATA_ROOT}/node/', exist_ok=True)
+        with open(f'{DATA_ROOT}/node/{self.user}@{self.domain}.json', 'w') as f:
             json.dump(result, f, indent=4)
         
         logger.info(f'Get node infomation successfull{self.user}@{self.domain}')
@@ -212,17 +212,7 @@ def debug():
         print(json.dumps(result._result, indent=4))
 
 def test():
-    play_source =  dict(
-        name = "Ansible Play",
-        hosts = 'all',
-        gather_facts = 'no',
-        tasks = [
-            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
-        ]
-    )
-
-    result = ansible_runner(play_dict=play_source, host="akane@192.168.144.31")
-    print(json.dumps(result, indent=4))
+    pass
 
 
 if __name__ == "__main__":
