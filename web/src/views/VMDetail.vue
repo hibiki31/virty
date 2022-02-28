@@ -55,6 +55,7 @@
             >
               <v-icon left>mdi-server-plus</v-icon>Delete
             </v-btn>
+            <v-btn small color="primary" @click="openVNC()">Console</v-btn>
           </v-card-actions>
         </v-card>
         <v-card class="mt-5">
@@ -287,16 +288,22 @@ export default {
     }
   }),
   async mounted() {
-    await axios
-      .get(`/api/vms/${this.$route.params.uuid}`)
-      .then((res) => {
-        this.data = res.data;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    this.reload();
   },
   methods: {
+    reload() {
+      axios
+        .get(`/api/vms/${this.$route.params.uuid}`)
+        .then((res) => {
+          this.data = res.data;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    },
+    openVNC() {
+      window.open(`/novnc/vnc.html?resize=remote&path=novnc/websockify?token=${this.data.token}`);
+    },
     openCDRomDialog(target) {
       this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid, this.data.node.name);
     },
