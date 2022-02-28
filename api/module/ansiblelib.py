@@ -39,7 +39,9 @@ class AnsibleManager():
         return {"summary": summary, "result": result}
     
     def node_infomation(self):
-        result = self.run_playbook_file(yaml="test")["result"][0]
+        run = self.run_playbook_file(yaml="test")
+        logger.debug(run)
+        result = run["result"][0]
         if result["status"] != "ok":
             raise Exception(result)
 
