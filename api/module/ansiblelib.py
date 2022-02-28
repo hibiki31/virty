@@ -126,6 +126,7 @@ class ResultCallback(CallbackBase):
     
 
 def ansible_run(play_source, host_list, extra_vars={}):
+    logger.info(json.dumps([play_source, host_list, extra_vars], indent=4))
     # ansible-playbookで指定できる引数と同じ
     context.CLIARGS = ImmutableDict(
         tags={}, 
