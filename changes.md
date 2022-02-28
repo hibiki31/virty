@@ -1,3 +1,11 @@
+### Ver 2.2.0
+- 2022-02-28 Fix test playbook e57a2de (@hibiki31) 
+- 2022-02-28 Fix gather factsを特権で実行 5763eee (@hibiki31) 
+- 2022-02-28 Add debug用ログの追加 73f0a9d (@hibiki31) 
+- 2022-02-28 Add VNC proxy 1d55a68 (@hibiki31) 
+- 2022-02-28 Add vncをviewに反映 5d87e42 (@hibiki131) 
+- 2022-02-28 Add novnc用token f2f49d5 (@hibiki131) 
+
 ### Ver 2.1.1
 - 2022-02-25 Fix authのリダイレクト問題 ea5984b (@hibiki31) 
 

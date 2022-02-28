@@ -302,7 +302,7 @@ export default {
         });
     },
     openVNC() {
-      window.open(`/novnc/vnc.html?resize=remote&path=novnc/websockify?token=${this.data.token}`);
+      window.open(`/novnc/vnc.html?resize=remote&autoconnect=true&path=novnc/websockify?token=${this.data.token}`);
     },
     openCDRomDialog(target) {
       this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid, this.data.node.name);

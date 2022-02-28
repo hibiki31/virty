@@ -35,12 +35,11 @@ class AnsibleManager():
                 summary["failed"] += 1
             elif i["status"] == "unreachable":
                 summary["unreachable"] += 1
-        
+        logger.info(summary)
         return {"summary": summary, "result": result}
     
     def node_infomation(self):
         run = self.run_playbook_file(yaml="test")
-        logger.debug(run)
         result = run["result"][0]
         if result["status"] != "ok":
             raise Exception(result)
