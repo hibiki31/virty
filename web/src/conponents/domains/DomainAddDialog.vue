@@ -152,7 +152,7 @@
                 dense
                 v-model="postData.cloudInit.networkConfig"
                 clear-icon="mdi-close-circle"
-                label="User-data"
+                label="Network-config"
               ></v-textarea>
             </div>
           </v-card-text>
@@ -222,7 +222,7 @@ export default {
         ],
         cloudInit: {
           hostname: '',
-          userData: '#cloud-config',
+          userData: '#cloud-config\nssh_authorized_keys:\n- ssh-rsa AAAA...',
           networkConfig: 'network:\n  version: 2\n  ethernets: []'
         }
       },
@@ -289,5 +289,9 @@ export default {
 <style>
 .row + .row {
   margin-top: 0px;
+}
+.v-textarea textarea {
+  line-height: 1.1rem !important;
+  font-family:monospace, serif;
 }
 </style>

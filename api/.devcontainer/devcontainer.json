@@ -2,7 +2,7 @@
 	"name": "virty-api",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
-	"workspaceFolder": "/workspace/main/",
+	"workspaceFolder": "/workspace/api/",
 	"extensions": [
 		"ms-python.python",
 		"donjayamanne.githistory",

@@ -29,6 +29,11 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
     restart: unless-stopped
+  proxy:
+    hostname: virty-proxy
+    build: ./proxy
+    restart: always
+    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://virty-api:8000/api/vms/vnc/%s" 5999
 
 volumes:
   virty-postgres-data:

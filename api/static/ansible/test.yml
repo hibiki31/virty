@@ -1,4 +1,6 @@
 - hosts: all
   gather_facts: yes
-  become: no
+  become: yes
   name: test
+  - name: ls
+    command:  ls

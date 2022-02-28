@@ -1,4 +1,4 @@
-from time import sleep
+import string, random
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -114,7 +114,14 @@ async def get_api_domain(
     editor = virtlib.XmlEditor("domain",domain.uuid)
     domain_xml_pase = editor.domain_parse()
 
-    return {'db':domain, 'node': node, 'xml': domain_xml_pase}
+    token = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(9))
+    vnc_node = node.domain
+    vnc_port = domain_xml_pase.vnc_port
+    if vnc_port != -1:
+        db.merge(DomainVNCTokenModel(token=token, node_port=vnc_port, node_domain=vnc_node, domain_uuid=uuid))
+        db.commit()
+
+    return {'db':domain, 'node': node, 'xml': domain_xml_pase, 'token': token}
 
 
 @app.delete("", response_model=TaskSelect)
@@ -175,3 +182,13 @@ async def patch_api_vm_network(
     task_model = post_task.commit("vm","network","change", bg)
    
     return task_model
+
+@app.get("/vnc/{token}")
+async def get_api_domain(
+        token: str,
+        db: Session = Depends(get_db),
+    ):
+
+    token_model = db.query(DomainVNCTokenModel).filter(DomainVNCTokenModel.token==token).one()
+
+    return { "host": token_model.node_domain, "port": token_model.node_port }

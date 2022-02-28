@@ -17,7 +17,16 @@ class DomainModel(Base):
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     interface = relationship('DomainInterfaceModel')
     drive = relationship('DomainDriveModel')
+    vnc_token = relationship('DomainVNCTokenModel')
     update_token = Column(String)
+
+class DomainVNCTokenModel(Base):
+    __tablename__ = "domain_vnc_token"
+    domain_uuid = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    token = Column(String)
+    node_domain = Column(String, primary_key=True)
+    node_port = Column(Integer, primary_key=True)
+
 
 
 class DomainInterfaceModel(Base):

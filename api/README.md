@@ -84,9 +84,11 @@ docker build
 ```
 ls -la ./api/data
 
-VER=2.1.0
-docker build -t hibiki131/virty-api:$VER ./api/
+VER=2.2.0
+docker build --no-cache --pull -t hibiki131/virty-api:$VER ./api/
 docker push hibiki131/virty-api:$VER
-docker build -t hibiki131/virty-web:$VER ./web/
+docker build --no-cache --pull -t hibiki131/virty-web:$VER ./web/
 docker push hibiki131/virty-web:$VER
+docker build --no-cache --pull -t hibiki131/virty-proxy:$VER ./proxy/
+docker push hibiki131/virty-proxy:$VER
 ```

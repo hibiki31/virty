@@ -33,7 +33,7 @@ cd virty
 wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml
 mv docker-compose.example.yml docker-compose.yml
 docker-compose up -d
-docker-compose run main alembic upgrade head
+docker-compose run api alembic upgrade head
 ```
 
 ### 管理対象ノードの準備

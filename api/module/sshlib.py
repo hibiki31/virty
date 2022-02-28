@@ -13,10 +13,6 @@ class SSHManager():
         self.base_cmd = ["ssh" , f"{user}@{domain}", "-p", str(port)]
 
     def add_known_hosts(self):
-        
-        cmd = ["ssh-keygen", "-R", self.domain ]
-        print(subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, ))
-
         fo = open('/root/.ssh/known_hosts', 'ab')
 
         cmd = [ "ssh-keyscan", self.domain, ">> " ]
