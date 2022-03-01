@@ -14,5 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Check workdir
+      run: ls /home/runner/work/virty
     - name: Build the Docker image
       run: docker build ./api/ --file Dockerfile --tag my-image-name:$(date +%s)
