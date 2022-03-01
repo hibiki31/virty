@@ -16,5 +16,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Check workdir
       run: ls -la /home/runner/work/virty/virty
-    - name: Build the Docker image
+    - name: Build the Docker image api
       run: docker build ./api --file ./api/Dockerfile --tag hibiki131/virty-api
+    - name: Build the Docker image web
+      run: docker build ./web --file ./web/Dockerfile --tag hibiki131/virty-web
+    - name: Build the Docker image proxy
+      run: docker build ./proxy --file ./proxy/Dockerfile --tag hibiki131/virty-api
