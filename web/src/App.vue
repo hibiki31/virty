@@ -57,7 +57,7 @@
         color="error"
         :value=taskCount
       ></v-progress-circular>
-      <v-btn :to="{name: 'Logout'}" text>
+      <v-btn v-if="$store.state.userData.isAuthed" :to="{name: 'Logout'}" text>
         <v-icon>mdi-logout</v-icon>
       </v-btn>
     </v-app-bar>
@@ -124,6 +124,9 @@ export default {
   }),
   methods: {
     async task_check() {
+      if (!this.$store.state.userData.isAuthed) {
+        return;
+      }
       if (!this.taskChecking) {
         this.taskChecking = true;
         await axios.get('/api/tasks/incomplete', {

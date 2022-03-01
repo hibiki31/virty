@@ -40,22 +40,58 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+      <v-menu>
+            <template v-slot:activator="{ on: menu, attrs }">
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on: tooltip }">
+                  <v-icon
+                    left
+                    v-bind="attrs"
+                    v-on="{ ...tooltip, ...menu }"
+                    class="ma-3"
+                    :color="getPowerColor(data.db.status)"
+                    >mdi-power-standby</v-icon
+                  >
+                </template>
+                <span>Power control</span>
+              </v-tooltip>
+            </template>
+            <v-card>
+              <v-card-text>
+                <div class="mb-3">
+                  <v-icon v-on:click="vmPowerOn(item.db.uuid)" color="primary"
+                    >mdi-power-standby</v-icon
+                  >
+                </div>
+                <v-icon v-on:click="vmPowerOff(item.db.uuid)" color="grey"
+                  >mdi-power-standby</v-icon
+                >
+              </v-card-text>
+            </v-card>
+          </v-menu>
     <span class="title">{{ data.db.name }}</span>
-    <span class="body ml-10">{{ data.db.uuid }}</span>
+    <span class="body ml-5">{{ data.db.uuid }}</span>
     <v-row>
       <v-col cols="12" sm="6" md="6" lg="3">
         <v-card>
           <v-card-actions>
             <v-btn
-              v-on:click="this.openDeleteDialog"
+              small
+              class="ma-2"
+              color="primary"
+              @click="openVNC()"
+            >
+              <v-icon left>mdi-console</v-icon>Console
+            </v-btn>
+            <v-btn
+              @click="this.openDeleteDialog"
               small
               dark
               class="ma-2"
               color="error"
             >
-              <v-icon left>mdi-server-plus</v-icon>Delete
+              <v-icon left>mdi-delete</v-icon>Delete
             </v-btn>
-            <v-btn small color="primary" @click="openVNC()">Console</v-btn>
           </v-card-actions>
         </v-card>
         <v-card class="mt-5">
@@ -164,7 +200,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="itemDisk in data.xml.disk" :key="`first${itemDisk.target}`">
+                <tr v-for="(itemDisk, index) in data.xml.disk" :key="`itemDisk-${index}`">
                   <td>
                     {{ itemDisk.device }}
                     <v-btn v-if="itemDisk.device=='cdrom'" icon v-on:click="openCDRomDialog(itemDisk.target)">
@@ -309,6 +345,46 @@ export default {
     },
     openDeleteDialog() {
       this.$refs.domainDeleteDialog.openDialog(this.data.db.uuid);
+    },
+    vmPowerOff(uuid) {
+      axios
+        .patch('/api/vms', { uuid: uuid, status: 'off' })
+        .then((res) => {
+          if (res.status === 401) {
+            this.$_pushNotice('Wrong userID or password', 'error');
+          } else if (res.status !== 200) {
+            this.$_pushNotice('An error occurred', 'error');
+            return;
+          }
+          this.$_pushNotice('Queueing powewrOff task', 'success');
+        })
+        .catch(async() => {
+          await this.$_sleep(500);
+          this.$_pushNotice('An error occurred', 'error');
+        });
+    },
+    getPowerColor(statusCode) {
+      if (statusCode === 1) return 'primary';
+      else if (statusCode === 5) return 'grey';
+      else if (statusCode === 7) return 'purple';
+      else if (statusCode === 10) return 'red';
+      else if (statusCode === 20) return 'purple';
+      else return 'yellow';
+    },
+    vmPowerOn(uuid) {
+      axios
+        .patch('/api/vms', { uuid: uuid, status: 'on' })
+        .then((res) => {
+          if (res.status !== 200) {
+            this.$_pushNotice('An error occurred', 'error');
+            return;
+          }
+          this.$_pushNotice('Queueing powewrOn task', 'success');
+        })
+        .catch(async() => {
+          await this.$_sleep(500);
+          this.$_pushNotice('An error occurred', 'error');
+        });
     },
     memoryChangeMethod() {
       axios

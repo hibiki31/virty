@@ -113,7 +113,7 @@
             <v-card>
               <v-card-text>
                 <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="success"
+                  <v-icon v-on:click="vmPowerOn(item.uuid)" color="primary"
                     >mdi-power-standby</v-icon
                   >
                 </div>

@@ -1,16 +1,15 @@
 <template>
  <v-dialog width="400" v-model="dialogState">
       <v-card>
-        <v-form ref="nodeAddForm">
+        <v-form ref="dialogForm">
           <v-card-title>ISO Image mount</v-card-title>
           <v-card-text>
-            Emptying the Path will unmount it.
-            <v-text-field v-model="postData.path" label="iso file path" :rules="[]"></v-text-field>
             <v-select v-model="postData.path" :items="isoImages" item-value="path" item-text="name"></v-select>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn :loading="this.loadingSubmit" color="primary" v-on:click="runMethod">Change</v-btn>
+            <v-btn :loading="this.loadingSubmit" color="error" v-on:click="runMethod(true)">unmount</v-btn>
+            <v-btn :loading="this.loadingSubmit" color="primary" v-on:click="runMethod">mount</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -47,9 +46,12 @@ export default {
         }
       }).then((response) => (this.isoImages = response.data));
     },
-    runMethod() {
-      if (!this.$refs.nodeAddForm.validate()) {
+    runMethod(unmount) {
+      if (!this.$refs.dialogForm.validate()) {
         return;
+      }
+      if (unmount) {
+        this.postData.path = '';
       }
       this.loadingSubmit = true;
       axios.request({
