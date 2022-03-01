@@ -7,7 +7,7 @@ SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql://pos
 APP_ROOT = os.getenv('APP_ROOT', str(pathlib.Path('./').resolve()))
 DATA_ROOT = os.getenv('DATA_ROOT', str(pathlib.Path('./data').resolve()))
 IS_DEV = (APP_ROOT == str(pathlib.Path('./').resolve()))
-API_VERSION = '2.2.0'
+API_VERSION = '2.2.1'
 SECRET_KEY = 'DEV_KEY' if IS_DEV else os.getenv('SECRET_KEY', secrets.token_urlsafe(128))
 
 # Ansible用のパスを指定
