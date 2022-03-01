@@ -16,7 +16,7 @@
             text
             @click="dialogState = false"
           >
-            chance
+            Cancel
           </v-btn>
           <v-btn
             :loading="this.loading"

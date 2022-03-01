@@ -1,7 +1,7 @@
 version: "3"
 services:
   api:
-    image: hibiki131/virty-api:2.2.0
+    image: hibiki131/virty-api:latest
     hostname: virty-api
     volumes:
       - ./data/app:/opt/data
@@ -13,7 +13,7 @@ services:
     restart: always
   web:
     hostname: virty-web
-    image: hibiki131/virty-web:2.2.0
+    image: hibiki131/virty-web:latest
     volumes:
       - ./data/nginx:/var/log/nginx/
     ports:
@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
   proxy:
     hostname: virty-proxy
-    build: hibiki131/virty-proxy:2.2.0
+    image: hibiki131/virty-proxy:latest
     restart: always
     command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://virty-api:8000/api/vms/vnc/%s" 5999
 

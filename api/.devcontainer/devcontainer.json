@@ -6,9 +6,10 @@
 	"extensions": [
 		"ms-python.python",
 		"donjayamanne.githistory",
+		"mhutchie.git-graph",
 		"azemoh.one-monokai",
 		"mtxr.sqltools",
-		"mtxr.sqltools-driver-pg"
+		"mtxr.sqltools-driver-pg",
 	],
 	"forwardPorts": [
 		8000
