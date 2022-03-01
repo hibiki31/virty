@@ -1,3 +1,5 @@
+# Thanks Seita https://zenn.dev/seita/articles/d1dba77043be8fd50eeb
+
 name: Create Release
 
 on:
@@ -23,7 +25,7 @@ jobs:
         run: |
           PREVIOUS_TAG=$(git tag --sort=-creatordate | sed -n 2p)
           echo "PREVIOUS_TAG: $PREVIOUS_TAG"
-          COMMIT_SUMMARY="- $(git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn)" $PREVIOUS_TAG..${{ github.ref }})"
+          COMMIT_SUMMARY="$(git log --date=short --no-merges --pretty=format:"%h %cd %s (@%cn)" $PREVIOUS_TAG..${{ github.ref }})"
           COMMIT_SUMMARY="${COMMIT_SUMMARY//$'\n'/'%0A'}"
           echo ::set-output name=COMMIT_SUMMARY::$COMMIT_SUMMARY
 
