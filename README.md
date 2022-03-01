@@ -1,5 +1,7 @@
 # Virty
 
+[![Docker Image CI](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml/badge.svg)](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml)
+
 低コスト・即時展開を目的としたLibvirt-APIのWEBインターフェイス
 
 SSH経由でLibvirt-API,Ansible,コマンド(qemu-img)などを実行
