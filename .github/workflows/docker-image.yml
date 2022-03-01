@@ -17,4 +17,4 @@ jobs:
     - name: Check workdir
       run: ls -la /home/runner/work/virty/virty
     - name: Build the Docker image
-      run: docker build /home/runner/work/virty/virty/api --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build ./api --file ./api/Dockerfile --tag hibiki131/virty-api
