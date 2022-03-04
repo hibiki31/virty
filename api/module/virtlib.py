@@ -24,8 +24,9 @@ logger = setup_logger(__name__)
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):
-        conn_ip = node_model.user_name + "@" + node_model.domain
-        self.node = libvirt.open('qemu+ssh://' + conn_ip + '/system')
+        conn_ip = f'{node_model.user_name}@{node_model.domain}'
+        self.node = libvirt.open(f'qemu+ssh://{conn_ip}/system')
+        logger.info(f"Connected: {f'qemu+ssh://{conn_ip}/system'}")
         self.node_model:NodeModel = node_model
 
     ### DATA
