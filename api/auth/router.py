@@ -58,7 +58,6 @@ class CurrentUser(BaseModel):
     scopes: List[str] = []
     groups: List[str] = []
     def verify_scope(self, scopes, return_bool=False):
-        logger.debug(f"Permit scopes {self.scopes}, Requirement scopes {scopes}")
         # 要求Scopeでループ
         for request_scope in scopes:
             match_scoped = False

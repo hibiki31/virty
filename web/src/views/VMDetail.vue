@@ -96,27 +96,27 @@
         </v-card>
         <v-card class="mt-5">
           <v-card-title class="subheading font-weight-bold">
-            About
+            Spec
           </v-card-title>
           <v-list class="body-2" dense>
             <v-list-item>
               <v-list-item-content>Memory</v-list-item-content>
               <v-list-item-content class="align-end">{{ data.db.memory / 1024 }} GB</v-list-item-content>
-              <v-list-item-icon>
+              <!-- <v-list-item-icon>
                 <v-btn v-on:click="memoryDialog=true" small icon color="primary">
                   <v-icon>mdi-circle-edit-outline</v-icon>
                 </v-btn>
-              </v-list-item-icon>
+              </v-list-item-icon> -->
             </v-list-item>
 
             <v-list-item>
               <v-list-item-content>CPU</v-list-item-content>
               <v-list-item-content class="align-end">{{ data.db.core }} Core</v-list-item-content>
-              <v-list-item-icon>
+              <!-- <v-list-item-icon>
                 <v-btn v-on:click="cpuDialog=true" small icon color="primary">
                   <v-icon>mdi-circle-edit-outline</v-icon>
                 </v-btn>
-              </v-list-item-icon>
+              </v-list-item-icon> -->
             </v-list-item>
           </v-list>
         </v-card>
@@ -197,19 +197,20 @@
                   <th class="text-left">Type</th>
                   <th class="text-left">Source</th>
                   <th class="text-left">Target</th>
+                  <th class="text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(itemDisk, index) in data.xml.disk" :key="`itemDisk-${index}`">
+                  <td>{{ itemDisk.device }}</td>
+                  <td>{{ itemDisk.type }}</td>
+                  <td>{{ itemDisk.source }}</td>
+                  <td>{{ itemDisk.target }}</td>
                   <td>
-                    {{ itemDisk.device }}
                     <v-btn v-if="itemDisk.device=='cdrom'" icon v-on:click="openCDRomDialog(itemDisk.target)">
                       <v-icon>mdi-pen</v-icon>
                     </v-btn>
                   </td>
-                  <td>{{ itemDisk.type }}</td>
-                  <td>{{ itemDisk.source }}</td>
-                  <td>{{ itemDisk.target }}</td>
                 </tr>
               </tbody>
             </template>

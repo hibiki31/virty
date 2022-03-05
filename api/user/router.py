@@ -27,7 +27,7 @@ app = APIRouter(
 
 
 @app.get("/me", tags=["user"])
-async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
+def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     current_user.is_joined("aaaa")
     
     print(current_user)
@@ -35,7 +35,7 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
 
 
 @app.post("", tags=["user"])
-async def post_api_users(
+def post_api_users(
         model: UserInsert, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

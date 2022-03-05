@@ -16,9 +16,15 @@ class NodeInsert(NodeBase):
     domain: str
     user_name: str
     port: int
+    libvirt_role: bool
 
 
-class NodeSelect(NodeInsert):
+class NodeSelect(CamelModel):
+    name: str
+    description: str
+    domain: str
+    user_name: str
+    port: int
     core: int
     memory: int
     cpu_gen: str
@@ -26,8 +32,8 @@ class NodeSelect(NodeInsert):
     os_name: str
     os_version: str
     status: int
-    qemu_version: str
-    libvirt_version: str
+    qemu_version: str = None
+    libvirt_version: str = None
     roles: List[Any]
     class Config:
         orm_mode  =  True

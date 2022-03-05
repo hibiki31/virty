@@ -3,41 +3,19 @@
 ```bash
 alembic revision --autogenerate
 alembic upgrade head
-# データリセット
 alembic downgrade base
 ```
 
-## CODE
-### Que
-0 sucsess
-1 error
-2 skip
-3 running
-4 init
+## マージ手順
 
-### Domain
-1 ON
-5 OFF
-7 node is maintenance mode
-10 deleted domain
-20 lost node
+- APIとWEBのバージョンを更新して`Update v2.0.0`でコミット
+- masterブランチでマージする`Merge branch 'develop' v2.0.0`
+- バージョンタグをつけてリモートにもpush`v2.0.0`
+- masterブランチをpushする
 
+## コミット手順
 
-
-### Node
-10 Up
-20 Maintenance
-30 Down
-40 Error
-50 Lost
-
-## 概念メモ
-
-
-
-## Git運用メモ
-
-ローカルDevelopでこまめにコミット、スカッシュして正式なメッセージをつける。
+タイトルの先頭には以下をつける
 
 ```
 Fix バグ修正
@@ -49,37 +27,22 @@ Revert 変更取り消し
 Move ファイルの移動
 ```
 
-バージョンアップ時は過去の例に従ってchangesの記述とwebとapiのバージョンを上げる
-changes.mdは以下のコマンドで該当コミットを記録する
+## Git設定
 
-```
-git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
-```
-
-changelog等のコミットは以下
-
-```
-Update v2.0.0
-```
-
-マージするときは以下の規則で行う
-
-```
-Merge branch 'develop' v1.0.0
-```
-
-バージョンのタグをつける
-GitHubでタグに対してリリースを作る
-
-fast-forwardは無効化すべし
+fast-forwardは無効化
 
 ```
 git config --global --add merge.ff false
 git config --global --add pull.ff only
 ```
 
-docker build
+ログ確認
 
+```
+git log --date=short --no-merges --pretty=format:"%cd %s %h (@%cn) "
+```
+
+## Docker image 公開
 
 ```
 ls -la ./api/data
@@ -92,3 +55,27 @@ docker push hibiki131/virty-web:$VER
 docker build --no-cache --pull -t hibiki131/virty-proxy:$VER ./proxy/
 docker push hibiki131/virty-proxy:$VER
 ```
+
+
+## 定数一覧
+
+### task
+0 sucsess
+1 error
+2 skip
+3 running
+4 init
+
+### domain
+1 ON
+5 OFF
+7 node is maintenance mode
+10 deleted domain
+20 lost node
+
+### node
+10 Up
+20 Maintenance
+30 Down
+40 Error
+50 Lost

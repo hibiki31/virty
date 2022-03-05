@@ -21,7 +21,7 @@ logger = setup_logger(__name__)
 
 
 @app.get("/api/storages", tags=["storage"], response_model=List[StorageSelect])
-async def get_api_storages(
+def get_api_storages(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -30,7 +30,7 @@ async def get_api_storages(
 
 
 @app.get("/api/images", tags=["storage"], response_model=List[ImageSelect])
-async def get_api_images(
+def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         node_name: str = None,
@@ -48,14 +48,11 @@ async def get_api_images(
     if rool != None:
         query = query.filter(StorageMetadataModel.rool==rool)
 
-    
-    logger.debug("Qerydebug\n"+str(query.statement.compile(compile_kwargs={"literal_binds": True}))+"\n")
-
     return query.all()
 
 
 @app.put("/api/images", tags=["storage"])
-async def put_api_images(
+def put_api_images(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -68,7 +65,7 @@ async def put_api_images(
 
 
 @app.post("/api/storages", tags=["storage"], response_model=TaskSelect)
-async def post_api_storage(
+def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -82,7 +79,7 @@ async def post_api_storage(
 
 
 @app.patch("/api/storages", tags=["storage"])
-async def post_api_storage(
+def post_api_storage(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: StorageMetadataPatch = None
@@ -93,7 +90,7 @@ async def post_api_storage(
 
 
 @app.delete("/api/storages", tags=["storage"], response_model=TaskSelect)
-async def delete_api_storages(
+def delete_api_storages(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

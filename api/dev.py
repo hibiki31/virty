@@ -1,4 +1,8 @@
+from pprint import pprint
+import libvirt
+
 from urllib import request
+from module.virtlib import VirtManager
 from storage.tasks import update_storage_list
 from network.tasks import update_network_list
 from node.tasks import patch_node_role
@@ -41,6 +45,22 @@ def dev_patch_node_role():
         "role_name": "libvirt"
     })
     patch_node_role(db=db, model=model)
+
+def dev_libvirt():
+    db = SessionLocal()
+    nodes = db.query(NodeModel).all()
+    for node in nodes:
+        con = VirtManager(node)
+        # con: libvirt.virConnect
+        pprint(dir(con.node))
+        for dom in con.node.listAllDomains():
+            dom: libvirt.virDomain
+            # dom.getHostname()
+            "https://libvirt.org/html/libvirt-libvirt-domain.html#virDomainMetadataType"
+            dom.setMetadata(key="virty", metadata="<data user='akane'/>", type=2, uri="aaaa")
+            # dom.virDomainGetMetadata()
+            # pprint(dom.XMLDesc())
+            # pprint(dom.rename)
 
 import json
 def ansible_test():
@@ -89,4 +109,4 @@ def ansible_test():
     
 
 if __name__ == "__main__":
-    dev_patch_node_role()
+    dev_libvirt()

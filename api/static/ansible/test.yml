@@ -2,5 +2,6 @@
   gather_facts: yes
   become: yes
   name: test
-  - name: ls
-    command:  ls
+  tasks:
+    - name: ls
+      command:  ls

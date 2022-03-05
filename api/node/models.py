@@ -5,8 +5,8 @@ from mixin.database import Base, Engine
 from storage.models import StorageModel
 
 node_to_noderole_table = Table('node_to_noderole', Base.metadata,
-    Column('node_name', String, ForeignKey('nodes.name')),
-    Column('role_id', String, ForeignKey('nodesrole.name'))
+    Column('node_name', String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('role_id', String, ForeignKey('nodesrole.name', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 

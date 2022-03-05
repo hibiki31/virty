@@ -24,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 @app.get("/api/networks", tags=["network"], response_model=List[NetworkSelect])
-async def get_api_networks(
+def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -32,7 +32,7 @@ async def get_api_networks(
 
 
 @app.put("/api/networks", tags=["network"])
-async def put_api_networks(
+def put_api_networks(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -43,7 +43,7 @@ async def put_api_networks(
     return task_model
 
 @app.post("/api/networks", tags=["network"], response_model=TaskSelect)
-async def post_api_storage(
+def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -56,7 +56,7 @@ async def post_api_storage(
     return task_model
 
 @app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
-async def post_api_storage(
+def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -69,7 +69,7 @@ async def post_api_storage(
     return task_model
 
 @app.get("/api/networks/{uuid}", tags=["network"])
-async def get_api_networks_uuid(
+def get_api_networks_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = ""
@@ -85,7 +85,7 @@ async def get_api_networks_uuid(
     return {'db':network, 'xml': xml}
 
 @app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
-async def post_api_networks_uuid_ovs(
+def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -101,14 +101,14 @@ async def post_api_networks_uuid_ovs(
     return task_model
 
 @app.delete("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
-async def post_api_networks_uuid_ovs(
+def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
+        request_model: NetworkOVSDelete,
         db: Session = Depends(get_db),
-        request_model: NetworkOVSDelete = None,
+        current_user: CurrentUser = Depends(get_current_user),
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("network","ovs","delete", bg=bg, status="wait", dependence_uuid=task_model.uuid)
+    task_model = post_task.commit("network","ovs","delete", bg=bg, status="wait")
    
     return task_model

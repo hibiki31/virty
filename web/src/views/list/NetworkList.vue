@@ -26,6 +26,7 @@
       :headers="headers"
       :items="list"
       :items-per-page="10"
+      :loading="loading"
       :footer-props="{
         'items-per-page-options': [10, 20, 50, 100],
         showFirstLastPage: true,
@@ -59,6 +60,7 @@ export default {
   data: function() {
     return {
       list: [],
+      loading: false,
       headers: [
         { text: 'Name', value: 'name' },
         { text: 'HostInterface', value: 'hostInterface' },
@@ -73,8 +75,10 @@ export default {
     this.reload();
   },
   methods: {
-    reload() {
-      axios.get('/api/networks').then((response) => (this.list = response.data));
+    async reload() {
+      this.loading = true;
+      await axios.get('/api/networks').then((response) => (this.list = response.data));
+      this.loading = false;
     },
     openNetworkDeleteDialog() {
       this.$refs.networkDeleteDialog.openDialog(this.list);

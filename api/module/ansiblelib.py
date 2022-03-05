@@ -36,6 +36,9 @@ class AnsibleManager():
             elif i["status"] == "unreachable":
                 summary["unreachable"] += 1
         logger.info(summary)
+        if summary["failed"] != 0:
+            raise Exception("ansible run failed " + str(summary))
+        
         return {"summary": summary, "result": result}
     
     def node_infomation(self):
