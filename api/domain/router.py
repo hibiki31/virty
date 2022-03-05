@@ -1,11 +1,12 @@
 import string, random
+import uu
+import uuid
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .models import *
 from .schemas import *
-from .tasks import update_domain_list
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
@@ -17,7 +18,7 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
-from module import virtlib
+from module.virtlib import VirtManager, XmlEditor
 
 
 app = APIRouter(
@@ -26,56 +27,6 @@ app = APIRouter(
 )
 
 logger = setup_logger(__name__)
-
-
-
-@app.put("", response_model=TaskSelect)
-def publish_task_to_update_vm_list(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("vm","list","update", bg)
-    return task_model
-
-
-@app.patch("/user")
-def path_vms_user(
-        model: DomainPatchUser,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
-    try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
-        db.query(UserModel).filter(UserModel.id==model.user_id).one()
-    except:
-        raise notfound_exception(msg="not found vm or user")
-    
-    vm.owner_user_id = model.user_id
-    db.commit()
-
-    return vm
-
-
-@app.patch("/group")
-def path_vms_group(
-        model: DomainGroupPatch,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
-    try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
-        db.query(GroupModel).filter(GroupModel.id==model.group_id).one()
-    except:
-        raise notfound_exception(msg="not found vm or group")
-    
-    vm.owner_group_id = model.group_id
-    db.commit()
-
-    return vm
 
 
 @app.get("",response_model=List[DomainSelect])
@@ -111,7 +62,7 @@ async def get_api_domain(
     except:
         raise notfound_exception(msg="not found domain or node")
 
-    editor = virtlib.XmlEditor("domain",domain.uuid)
+    editor = XmlEditor("domain",domain.uuid)
     domain_xml_pase = editor.domain_parse()
 
     token = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(9))
@@ -122,6 +73,19 @@ async def get_api_domain(
         db.commit()
 
     return {'db':domain, 'node': node, 'xml': domain_xml_pase, 'token': token}
+
+
+@app.put("", response_model=TaskSelect)
+def publish_task_to_update_vm_list(
+        bg: BackgroundTasks,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("vm","list","update", bg)
+    return task_model
 
 
 @app.delete("", response_model=TaskSelect)
@@ -170,6 +134,83 @@ async def patch_api_domains(
    
     return task_model
 
+
+@app.patch("/name")
+def path_vms_name(
+        model: DomainPatchName,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+    except:
+        raise notfound_exception(msg="not found vm")
+    
+    if model.name != vm.name:
+        virt = VirtManager(vm.node)
+        virt.domain_rename(uuid=vm.uuid, new_name=model.name)
+        vm.name = model.name
+        db.commit()
+
+    return True
+
+
+@app.patch("/core")
+def path_vms_core(
+        model: DomainPatchCore,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+    except:
+        raise notfound_exception(msg="not found vm")
+    
+    if model.core != vm.core:
+        virt = VirtManager(vm.node)
+        virt.domain_core(uuid=model.uuid, core=model.core)
+        vm.core = model.core
+        db.commit()
+
+    return True
+
+
+@app.patch("/user")
+def path_vms_user(
+        model: DomainPatchUser,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        db.query(UserModel).filter(UserModel.id==model.user_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or user")
+    
+    vm.owner_user_id = model.user_id
+    db.commit()
+
+    return vm
+
+
+@app.patch("/group")
+def path_vms_group(
+        model: DomainGroupPatch,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        db.query(GroupModel).filter(GroupModel.id==model.group_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or group")
+    
+    vm.owner_group_id = model.group_id
+    db.commit()
+
+    return vm
+
+
 @app.patch("/network", response_model=TaskSelect)
 async def patch_api_vm_network(
         bg: BackgroundTasks,
@@ -182,6 +223,7 @@ async def patch_api_vm_network(
     task_model = post_task.commit("vm","network","change", bg)
    
     return task_model
+
 
 @app.get("/vnc/{token}")
 async def get_api_domain(

@@ -1,19 +1,63 @@
 <template>
- <v-dialog width="700" v-model="dialogState">
-      <v-card>
-        <v-form ref="domainAddforms">
-          <v-card-title>Create VM</v-card-title>
-          <v-card-text>
-            <!-- 名前 -->
+  <v-dialog width="700" v-model="dialogState" color="black">
+    <v-stepper v-model="stepCount">
+      <v-stepper-header>
+        <v-stepper-step
+          :complete="stepCount > 1"
+          :rules="[() => true]"
+          step="1"
+        >
+          Spec
+        </v-stepper-step>
+
+        <v-divider></v-divider>
+
+        <v-stepper-step
+          :complete="stepCount > 2"
+          step="2"
+        >
+          Storage
+        </v-stepper-step>
+
+        <v-divider></v-divider>
+
+        <v-stepper-step
+          :complete="stepCount > 3"
+          step="3"
+        >
+          Network
+        </v-stepper-step>
+
+        <v-divider></v-divider>
+
+        <v-stepper-step
+          :complete="stepCount > 4"
+          step="4"
+        >
+          Cloud-init
+        </v-stepper-step>
+
+        <v-divider></v-divider>
+
+        <v-stepper-step
+          :complete="stepCount > 5"
+          step="5"
+        >
+          Confirmation
+        </v-stepper-step>
+      </v-stepper-header>
+
+      <v-stepper-items>
+        <v-stepper-content step="1">
+          <v-form class="form-box" ref="step1Form">
             <v-text-field
               v-model="postData.name"
               label="Name"
+              small
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
             ></v-text-field>
-
             <v-row>
-              <!-- メモリ -->
               <v-col cols="12" md="6">
                 <v-select
                   :items="itemsMemory"
@@ -22,7 +66,6 @@
                   label="Memory"
                 ></v-select>
               </v-col>
-              <!-- CPU -->
               <v-col cols="12" md="6">
                 <v-select
                   :items="itemsCpu"
@@ -32,8 +75,6 @@
                 ></v-select>
               </v-col>
             </v-row>
-
-            <!-- ノード -->
             <v-select
               :items="itemsNodes"
               :rules="[$required]"
@@ -42,9 +83,18 @@
               v-model="postData.nodeName"
               label="Node"
             ></v-select>
+          </v-form>
+          <v-btn color="primary" @click="validateStep1" class="mr-2">
+            Next
+          </v-btn>
+          <v-btn text @click="dialogState = false">
+            Cancel
+          </v-btn>
+        </v-stepper-content>
 
-            <div v-if="postData.nodeName != ''">
-              <v-row v-for="disk in postData.disks" :key="disk.id">
+        <v-stepper-content step="2">
+          <v-form class="form-box" ref="step2Form">
+            <v-row v-for="disk in postData.disks" :key="disk.id">
               <v-col cols="12" md="3">
                 <v-select
                   :items="[{ text: 'Empty', value: 'empty' }, { text: 'Copy', value: 'copy' }]"
@@ -91,8 +141,17 @@
                 ></v-select>
               </v-col>
             </v-row>
+          </v-form>
+          <v-btn color="primary" @click="validateStep2" class="mr-2">
+            Next
+          </v-btn>
+          <v-btn text @click="stepCount = 1">
+            Back
+          </v-btn>
+        </v-stepper-content>
 
-            <!-- インターフェイス -->
+        <v-stepper-content step="3">
+          <v-form class="form-box" ref="step3Form">
             <v-row v-for="(nic, index) in postData.interface" :key="index">
               <v-col cols="12" md="3">
                 <v-select
@@ -125,13 +184,25 @@
                 ></v-select>
               </v-col>
             </v-row>
-            <v-icon @click="addInterface">mdi-plus</v-icon>
+            <div>
+              <v-icon class="ma-1 mb-3" @click="addInterface">mdi-plus</v-icon>
             </div>
-            <!-- Init -->
+          </v-form>
+          <v-btn color="primary" @click="validateStep3" class="mr-2">
+            Next
+          </v-btn>
+          <v-btn text @click="stepCount = 2">
+            Back
+          </v-btn>
+        </v-stepper-content>
+
+        <v-stepper-content step="4">
+          <v-form class="form-box" ref="step4Form">
             <v-switch
-            dense
-            v-model="useCloudInit"
-            label="Use cloud-init"
+              dense
+              v-model="useCloudInit"
+              label="Use cloud-init"
+              class="ma-2"
             ></v-switch>
             <div v-if="useCloudInit">
               <v-text-field
@@ -143,26 +214,42 @@
               </v-text-field>
               <v-textarea
                 clearable
+                class="text-caption"
+                outlined
+                auto-grow
                 v-model="postData.cloudInit.userData"
                 clear-icon="mdi-close-circle"
                 label="User-data"
               ></v-textarea>
               <v-textarea
+                class="text-caption"
+                outlined
                 clearable
-                dense
+                auto-grow
                 v-model="postData.cloudInit.networkConfig"
                 clear-icon="mdi-close-circle"
                 label="Network-config"
               ></v-textarea>
             </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" v-on:click="runMethod">CREATE</v-btn>
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-dialog>
+          </v-form>
+          <v-btn color="primary" @click="validateStep4" class="mr-2">
+            Next
+          </v-btn>
+          <v-btn text @click="stepCount = 3">
+            Back
+          </v-btn>
+        </v-stepper-content>
+        <v-stepper-content step="5">
+          <div class="form-box text-caption">
+          </div>
+          <v-btn color="primary" class="mr-2" @click="runMethod">CREATE</v-btn>
+          <v-btn text @click="stepCount = 4">
+            Back
+          </v-btn>
+        </v-stepper-content>
+      </v-stepper-items>
+    </v-stepper>
+  </v-dialog>
 </template>
 
 <script>
@@ -196,6 +283,7 @@ export default {
         { text: '16 Core', value: '16' },
         { text: '24 Core', value: '24' }
       ],
+      stepCount: 1,
       useCloudInit: false,
       postData: {
         name: '',
@@ -222,7 +310,13 @@ export default {
         ],
         cloudInit: {
           hostname: '',
-          userData: '#cloud-config\nssh_authorized_keys:\n- ssh-rsa AAAA...',
+          userData: `#cloud-config
+password: password
+chpasswd: {expire: False}
+ssh_pwauth: True
+ssh_authorized_keys:
+  - ssh-rsa AAA...fHQ== sample@example.com
+          `,
           networkConfig: 'network:\n  version: 2\n  ethernets: []'
         }
       },
@@ -256,10 +350,31 @@ export default {
         selectPort: null
       });
     },
-    runMethod() {
-      if (!this.$refs.domainAddforms.validate()) {
+    validateStep1() {
+      if (!this.$refs.step1Form.validate()) {
         return;
       }
+      this.stepCount = 2;
+    },
+    validateStep2() {
+      if (!this.$refs.step2Form.validate()) {
+        return;
+      }
+      this.stepCount = 3;
+    },
+    validateStep3() {
+      if (!this.$refs.step3Form.validate()) {
+        return;
+      }
+      this.stepCount = 4;
+    },
+    validateStep4() {
+      if (!this.$refs.step4Form.validate()) {
+        return;
+      }
+      this.stepCount = 5;
+    },
+    runMethod() {
       if (!this.useCloudInit) {
         this.postData.cloudInit = null;
       }
@@ -287,11 +402,23 @@ export default {
 </script>
 
 <style>
-.row + .row {
-  margin-top: 0px;
-}
 .v-textarea textarea {
   line-height: 1.1rem !important;
-  font-family:monospace, serif;
+  font-family: monospace, serif;
+}
+.theme--dark.v-stepper {
+  background: #1E1E1E !important;
+}
+.v-stepper__step {
+  padding: 15px !important;
+}
+.v-stepper__header {
+  height: 50px !important;
+}
+.form-box {
+  min-height: 300px;
+}
+.v-stepper__label {
+  text-shadow: 0px 0px 0px #1E1E1E !important;
 }
 </style>

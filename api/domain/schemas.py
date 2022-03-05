@@ -13,6 +13,14 @@ class DomainPatchUser(CamelModel):
     uuid: str
     user_id: str
 
+class DomainPatchName(CamelModel):
+    uuid: str
+    name: str
+
+class DomainPatchCore(CamelModel):
+    uuid: str
+    core: int
+
 class DomainGroupPatch(CamelModel):
     uuid: str
     group_id: str

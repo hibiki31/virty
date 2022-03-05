@@ -15,6 +15,7 @@ class DomainModel(Base):
     owner_group_id = Column(String, ForeignKey('groups.id', onupdate='CASCADE', ondelete='CASCADE'))
     owner_group = relationship("GroupModel")
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
+    node = relationship('NodeModel')
     interface = relationship('DomainInterfaceModel')
     drive = relationship('DomainDriveModel')
     vnc_token = relationship('DomainVNCTokenModel')
