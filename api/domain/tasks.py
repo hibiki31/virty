@@ -20,7 +20,7 @@ logger = setup_logger(__name__)
 
 
 def update_domain_list(db: Session, model: TaskModel):
-    nodes:NodeModel = db.query(NodeModel).all()
+    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(name="libvirt"))
     token = time()
 
     for node in nodes:

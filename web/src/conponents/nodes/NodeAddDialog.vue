@@ -24,7 +24,10 @@
               :rules="[$required]"
               counter="128"
             ></v-text-field>
-
+            <v-checkbox
+              v-model="postData.libvirtRole"
+              label='Provisioning as kvm host'
+            ></v-checkbox>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -47,7 +50,8 @@ export default {
         userName: '',
         domain: '',
         port: 0,
-        description: ''
+        description: '',
+        libvirtRole: true
       },
       dialogState: false
     };

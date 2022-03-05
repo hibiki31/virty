@@ -24,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 @app.get("/api/networks", tags=["network"], response_model=List[NetworkSelect])
-async def get_api_networks(
+def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -32,7 +32,7 @@ async def get_api_networks(
 
 
 @app.put("/api/networks", tags=["network"])
-async def put_api_networks(
+def put_api_networks(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -43,7 +43,7 @@ async def put_api_networks(
     return task_model
 
 @app.post("/api/networks", tags=["network"], response_model=TaskSelect)
-async def post_api_storage(
+def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -56,7 +56,7 @@ async def post_api_storage(
     return task_model
 
 @app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
-async def post_api_storage(
+def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -69,7 +69,7 @@ async def post_api_storage(
     return task_model
 
 @app.get("/api/networks/{uuid}", tags=["network"])
-async def get_api_networks_uuid(
+def get_api_networks_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = ""

@@ -93,29 +93,35 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
 
 def do_task(mode="init"):
     logger.info(f"looking for a {mode} task")
-
     db = SessionLocal()
+    # 指定された状態のタスクを取得
     tasks = db.query(TaskModel)\
         .filter(TaskModel.status==mode)\
         .order_by(desc(TaskModel.post_time))\
         .with_lockmode('update').all()
     
     if tasks == [] and mode == "wait":
+        # 待機中のタスクもないため終了
         logger.info("task not found worker exit")
         return
     elif tasks == [] and mode == "init":
+        # 待機中のタスク実施へ
         do_task(mode="wait")
         return
 
-    # 開始処理
-    task:TaskModel = tasks[0]
-
-    logger.info(f'find tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
-
-    # 依存関係取得
-    if task.dependence_uuid != None:
+    # 新規タスク処理
+    if mode == "init":
+        task:TaskModel = tasks[0]
+        logger.info(f'find tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
+        exec_task(db=db, task=task)
+        do_task()
+        return
+    
+    for task in tasks:
         # 依存先のuuidが実在するかチェック
         try:
+            if task.dependence_uuid == None:
+                raise Exception()
             depends_task:TaskModel = db.query(TaskModel)\
                 .filter(TaskModel.uuid==task.dependence_uuid)\
                 .with_lockmode('update').one()
@@ -125,8 +131,8 @@ def do_task(mode="init"):
             db.merge(task)
             db.commit()
             logger.error(f"not found depended task {task.uuid} => {task.dependence_uuid}")
-            return
-        
+            continue
+  
         # 親タスクが死んだ場合エラーで停止
         if depends_task.status == "error":
             task.status = "error"
@@ -134,23 +140,25 @@ def do_task(mode="init"):
             db.merge(task)
             db.commit()
             logger.error(f"depended task faile {task.uuid} => {task.dependence_uuid}")
-            return
+            continue
         
-        # 待機タスクを実行
+        # 親タスクが実行中の場合待機
+        elif depends_task.status != "finish":
+            logger.info(f"wait depended task. {task.uuid} => {task.dependence_uuid}")
+            continue
+        
+        # 実行可能なタスクは初期化
         elif depends_task.status == "finish" and task.status == "wait":
             task.status = "init"
             db.merge(task)
             db.commit()
             logger.error(f"init depended task {task.uuid} => {task.dependence_uuid}")
             do_task()
-            return
+        
+    do_task()
 
-        # 親タスクが実行中の場合待機するため終了
-        elif depends_task.status != "finish":
-            logger.info(f"wait depended task. worker exit.")
-            return
 
-    
+def exec_task(db, task):
     logger.info(f'start tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
     task.status = "start"
     db.merge(task)
@@ -181,7 +189,6 @@ def do_task(mode="init"):
     # Schemas to Model
     db.merge(TaskModel(**task.dict()))
     db.commit()
-    do_task()
     
 
 

@@ -16,6 +16,7 @@
         :headers="headers"
         :items="list"
         :items-per-page="10"
+        :loading="loading"
         :footer-props="{
           'items-per-page-options': [10, 20, 50, 100],
           showFirstLastPage: true,
@@ -63,6 +64,7 @@ export default {
   data: function() {
     return {
       list: [],
+      loading: false,
       headers: [
         { text: 'Name', value: 'name' },
         { text: 'Node', value: 'nodeName' },
@@ -84,8 +86,10 @@ export default {
     this.reload();
   },
   methods: {
-    reload() {
-      axios.get('/api/storages').then((response) => (this.list = response.data));
+    async reload() {
+      this.loading = true;
+      await axios.get('/api/storages').then((response) => (this.list = response.data));
+      this.loading = false;
     },
     openDeleteDialog(item) {
       this.$refs.storageDeleteDialog.openDialog(item);

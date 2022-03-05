@@ -52,7 +52,8 @@ export default {
         data: { name: this.nodeName }
       })
         .then(res => {
-          this.$_pushNotice('Please wait for task to complete', 'success');
+          this.$_pushNotice('Node delete successfull', 'success');
+          this.$emit('reload');
         })
         .catch(error => {
           this.$_pushNotice(error.response.data.detail, 'error');

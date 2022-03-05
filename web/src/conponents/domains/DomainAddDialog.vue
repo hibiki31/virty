@@ -53,7 +53,6 @@
             <v-text-field
               v-model="postData.name"
               label="Name"
-              small
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
             ></v-text-field>

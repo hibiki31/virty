@@ -1,3 +1,4 @@
+from os import name
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -38,10 +39,11 @@ def post_node_base(db: Session, model: TaskSelect):
     core = ssh_manager.get_node_cpu_core()
     cpu = ssh_manager.get_node_cpu_name()
     os = ssh_manager.get_node_os_release()
-    qemu = ssh_manager.get_node_qemu_version()
-    libvirt = ssh_manager.get_node_libvirt_version()
 
-    print(os)
+    ssh_role = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ssh").one_or_none()
+    if ssh_role == None:
+        ssh_role = NodeRoleModel(name="ssh")
+        db.add(ssh_role)
 
     row = NodeModel(
         name = request.name,
@@ -56,9 +58,10 @@ def post_node_base(db: Session, model: TaskSelect):
         os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
         os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
         status = 10,
-        qemu_version = qemu,
-        libvirt_version = libvirt,
+        qemu_version = None,
+        libvirt_version = None,
     )
+    row.roles.append(ssh_role)
     db.add(row)
     db.commit()
 
@@ -73,20 +76,23 @@ def patch_node_role(db: Session, model: TaskSelect):
     node:NodeModel = db.query(NodeModel).filter(NodeModel.name==node_name).one()
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
-    # res = ansible_manager.run_playbook_file("pb_init_libvirt")
-
-    # model.message = "ansible run successfull " + str(res["summary"])
-
-    try:
-        role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="libvirt").one()
-    except NoResultFound as e:
+    res = ansible_manager.run_playbook_file("pb_init_libvirt")
+    model.message = "ansible run successfull " + str(res["summary"])
+    
+    role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="libvirt").one_or_none()
+    
+    if role_model == None:
         role_model = NodeRoleModel(name="libvirt")
         db.add(role_model)
-        db.commit()
+    
+    ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
+    ssh_manager.add_known_hosts()
+
+    node.qemu_version = ssh_manager.get_node_qemu_version()
+    node.libvirt_version = ssh_manager.get_node_libvirt_version()
 
     node.roles.append(role_model)
 
-    db.merge(node)
     db.commit()
 
     return model

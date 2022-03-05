@@ -30,7 +30,7 @@ logger = setup_logger(__name__)
 
 
 @app.get("",response_model=List[DomainSelect])
-async def get_api_domain(
+def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         admin: bool = False
@@ -51,7 +51,7 @@ async def get_api_domain(
 
 
 @app.get("/{uuid}",response_model=DomainDetailSelect)
-async def get_api_domain(
+def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = None
@@ -89,7 +89,7 @@ def publish_task_to_update_vm_list(
 
 
 @app.delete("", response_model=TaskSelect)
-async def delete_api_domains(
+def delete_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -103,7 +103,7 @@ async def delete_api_domains(
 
 
 @app.post("", response_model=TaskSelect)
-async def post_api_vms(
+def post_api_vms(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -122,7 +122,7 @@ async def post_api_vms(
 
 
 @app.patch("", response_model=TaskSelect)
-async def patch_api_domains(
+def patch_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -212,7 +212,7 @@ def path_vms_group(
 
 
 @app.patch("/network", response_model=TaskSelect)
-async def patch_api_vm_network(
+def patch_api_vm_network(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -226,7 +226,7 @@ async def patch_api_vm_network(
 
 
 @app.get("/vnc/{token}")
-async def get_api_domain(
+def get_api_domain(
         token: str,
         db: Session = Depends(get_db),
     ):

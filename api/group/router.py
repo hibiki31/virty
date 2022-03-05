@@ -28,7 +28,7 @@ app = APIRouter(
 
 
 @app.get("", tags=["groups"],response_model=List[GroupSelect])
-async def get_api_groups(
+def get_api_groups(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -40,7 +40,7 @@ async def get_api_groups(
 
 
 @app.post("", tags=["groups"])
-async def post_api_groups(
+def post_api_groups(
         request: GroupPost, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -55,7 +55,7 @@ async def post_api_groups(
 
 
 @app.put("")
-async def put_api_groups(
+def put_api_groups(
         request: GroupPatch, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -80,7 +80,7 @@ async def put_api_groups(
 
 
 @app.delete("", tags=["groups"])
-async def delete_api_groups(
+def delete_api_groups(
         request: GroupPatch, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
