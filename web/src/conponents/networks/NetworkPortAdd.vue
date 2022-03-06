@@ -40,17 +40,15 @@ export default {
         vlanId: '',
         default: false
       },
-      xmlData: {},
-      dbData: {},
+      data: {},
       dialogState: false
     };
   },
   methods: {
-    openDialog(xmlData, dbData) {
+    openDialog(data) {
       this.dialogState = true;
-      this.xmlData = xmlData;
-      this.dbData = dbData;
-      this.sendData.uuid = dbData.uuid;
+      this.data = data;
+      this.sendData.uuid = data.uuid;
     },
     runMethod() {
       if (!this.$refs.dialogForm.validate()) {

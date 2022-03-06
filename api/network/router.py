@@ -16,14 +16,13 @@ from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
 from module import virtlib
-from module import xmllib
 
 
 app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/networks", tags=["network"], response_model=List[NetworkSelect])
+@app.get("/api/networks", tags=["network"], response_model=List[GetNetwork])
 def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -68,21 +67,18 @@ def post_api_storage(
 
     return task_model
 
-@app.get("/api/networks/{uuid}", tags=["network"])
+@app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
 def get_api_networks_uuid(
+        uuid:str,
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        uuid:str = ""
+        db: Session = Depends(get_db)
     ):
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
     except NoResultFound:
         raise notfound_exception()
 
-    editor = virtlib.XmlEditor("network",network.uuid)
-    xml = editor.network_pase()
-
-    return {'db':network, 'xml': xml}
+    return network
 
 @app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
 def post_api_networks_uuid_ovs(
@@ -109,6 +105,9 @@ def post_api_networks_uuid_ovs(
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("network","ovs","delete", bg=bg, status="wait")
+    task_model = post_task.commit("network","ovs","delete", bg=bg)
+
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("network","list","update", bg=bg, status="wait", dependence_uuid=task_model.uuid)
    
     return task_model

@@ -13,6 +13,5 @@
 		"dbaeumer.vscode-eslint"
 	],
 	"forwardPorts": [
-		56124
 	],
 }

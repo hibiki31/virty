@@ -1,3 +1,4 @@
+from os import name
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -19,7 +20,7 @@ logger = setup_logger(__name__)
 def update_network_list(db: Session, model: TaskModel):
     nodes = db.query(NodeModel).all()
 
-    token = time()
+    token = str(time())
 
     for node in nodes:
         if node.status != 10:
@@ -31,17 +32,34 @@ def update_network_list(db: Session, model: TaskModel):
             logger.error(f'ノードへの接続に失敗しました: {node.name}')
             continue
 
-        for network in manager.network_data(token=token):
-            network: NetworkModel
-            network.node_name = node.name
-            db.merge(network)
-        # ノードが変わる前に一度コミット
-        db.commit()
+        for network in manager.network_data():
+            network:PaseNetwork
+            merge_model = NetworkModel(
+                uuid = network.uuid,
+                name = network.name,
+                type = network.type,
+                bridge = network.bridge,
+                update_token = token,
+                node_name = node.name,
+            )
+            for port in network.portgroups:
+                port_model = NetworkPortgroupModel(**port.dict(), network_uuid = network.uuid, update_token=token)
+                db.merge(port_model)
+            
+            db.commit()
+            db.query(NetworkPortgroupModel).filter(
+                NetworkPortgroupModel.network_uuid==network.uuid, 
+                NetworkPortgroupModel.update_token!=token
+            ).delete()
+            db.merge(merge_model)
+            db.commit()
 
-    db.commit()
-    # トークンで削除
-    db.query(NetworkModel).filter(NetworkModel.update_token!=str(token)).delete()
-    db.commit()
+        db.query(NetworkModel).filter(
+            NetworkModel.node_name==node.name,
+            NetworkModel.update_token!=token
+        ).delete()
+        
+        db.commit()
     return model
 
 def add_network_base(db: Session, model: TaskModel):

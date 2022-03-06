@@ -1,7 +1,3 @@
-import queue
-import string, random
-import uu
-import uuid
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -10,16 +6,14 @@ from .models import *
 from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
 from task.schemas import TaskSelect
 from task.function import PostTask
 from user.models import GroupModel, UserModel
-from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
-from module.virtlib import VirtManager, XmlEditor
+from module.virtlib import VirtManager
 
 
 app = APIRouter(

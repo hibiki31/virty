@@ -12,6 +12,6 @@
 		"mtxr.sqltools-driver-pg",
 	],
 	"forwardPorts": [
-		8000
+		28000
 	]
 }

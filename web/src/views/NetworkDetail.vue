@@ -9,7 +9,7 @@
             <v-icon>mdi-router-network</v-icon>Virtual Port
           </v-card-title>
           <v-card-actions>
-            <v-btn @click="$refs.networkPortAdd.openDialog(xmlData,dbData)" small color="primary">
+            <v-btn @click="$refs.networkPortAdd.openDialog(data)" small color="primary">
               <v-icon left>mdi-server-plus</v-icon>Add
             </v-btn>
           </v-card-actions>
@@ -24,14 +24,14 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in xmlData.portgroup" :key="`${item.vlanId}`">
+                <tr v-for="item in data.portgroups" :key="`${item.vlanId}`">
                   <td>{{ item.name }}</td>
                   <td>{{ item.vlanId }}</td>
                   <td><v-icon v-if="item.isDefault">mdi-check-bold</v-icon></td>
                   <td>
                     <v-icon
                       small
-                      @click="$refs.networkPortDelete.openDialog(item.name, dbData.uuid)"
+                      @click="$refs.networkPortDelete.openDialog(item.name, data.uuid)"
                     >
                       mdi-delete
                     </v-icon>
@@ -58,18 +58,16 @@ export default {
     NetworkPortDelete
   },
   data: () => ({
-    dbData: {},
-    xmlData: {}
+    data: {}
   }),
   async mounted() {
-    this.reload();
+    await this.reload();
   },
   methods: {
     async reload() {
       await axios.get(`/api/networks/${this.$route.params.uuid}`)
         .then((res) => {
-          this.dbData = res.data.db;
-          this.xmlData = res.data.xml;
+          this.data = res.data;
         });
     }
   }

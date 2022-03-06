@@ -93,24 +93,14 @@ class VirtManager():
         return data
 
 
-    def network_data(self, token):
+    def network_data(self):
         networks = self.node.listAllNetworks()
         data = []
         for network in networks:
             xml = XmlEditor(type="str", obj=network.XMLDesc())
             xml.dump_file("network")
             xml = xml.network_pase()
-            model = NetworkModel(
-                uuid = xml['uuid'],
-                name = xml['name'],
-                host_interface = xml['bridge'],
-                type = xml['type'],
-                active = network.isActive(),
-                auto_start = network.autostart(),
-                dhcp = None,
-                update_token = token
-            )
-            data.append(model)
+            data.append(xml)
         return data
 
 

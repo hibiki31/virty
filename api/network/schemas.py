@@ -5,19 +5,35 @@ from pydantic import BaseModel
 from fastapi_camelcase import CamelModel
 
 
-class NetworkSelect(CamelModel):
+class PaseNetworkPortgroup(CamelModel):
+    name: str
+    vlan_id: str = None
+    is_default: bool
+    class Config:
+        orm_mode  =  True
+
+
+class PaseNetwork(CamelModel):
     name: str
     uuid: str
-    node_name: str
     type: str
     dhcp: bool = None
     description: str = None
     active: bool = None
-    host_interface: str = None
+    bridge: str = None
     auto_start: bool = None
+    portgroups: List[PaseNetworkPortgroup]
+    class Config:
+        orm_mode  =  True
+
+
+class GetNetwork(PaseNetwork):
+    node_name: str
+    description: str = None
     update_token: str = None
     class Config:
         orm_mode  =  True
+
 
 class NetworkInsert(CamelModel):
     name: str
