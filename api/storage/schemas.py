@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from fastapi_camelcase import CamelModel
 
-from node.schemas import NodeSelect
+from node.schemas import GetNode
 
 
 class ImageBase(CamelModel):
@@ -35,7 +35,7 @@ class StorageSelect(CamelModel):
     available: int = None
     capacity: int = None
     node_name: str
-    node: NodeSelect
+    node: GetNode
     auto_start: bool
     path: str = None
     meta_data: StorageMetadataSelect = None

@@ -19,7 +19,7 @@ class NodeInsert(NodeBase):
     libvirt_role: bool
 
 
-class NodeSelect(CamelModel):
+class GetNode(CamelModel):
     name: str
     description: str
     domain: str

@@ -1,3 +1,4 @@
+import queue
 import string, random
 import uu
 import uuid
@@ -29,50 +30,38 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.get("",response_model=List[DomainSelect])
+@app.get("",response_model=List[GetDomain])
 def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        admin: bool = False
+        admin: bool = False,
     ):
+    
+    query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)\
 
-    if not admin:
-        vms = db.query(DomainModel)\
-            .order_by(DomainModel.node_name,DomainModel.name)\
-            .filter(or_(
+    if admin:
+        current_user.verify_scope(scopes=["admin"])
+    else:
+        query = query.filter(or_(
                 DomainModel.owner_user_id==current_user.id,
                 DomainModel.owner_group.has(GroupModel.users.any(id=current_user.id))
-            )).all()
-    else:
-        vms = db.query(DomainModel)\
-            .order_by(DomainModel.node_name,DomainModel.name).all()
+        ))
 
-    return vms
+    return query.all()
 
 
-@app.get("/{uuid}",response_model=DomainDetailSelect)
-def get_api_domain(
+@app.get("/{uuid}",response_model=GetDomainDetail)
+def get_api_domain_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = None
     ):
     try:
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
-        node:NodeModel = db.query(NodeModel).filter(NodeModel.name==domain.node_name).one()
     except:
-        raise notfound_exception(msg="not found domain or node")
+        raise notfound_exception(msg="not found domain")
 
-    editor = XmlEditor("domain",domain.uuid)
-    domain_xml_pase = editor.domain_parse()
-
-    token = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(9))
-    vnc_node = node.domain
-    vnc_port = domain_xml_pase.vnc_port
-    if vnc_port != -1:
-        db.merge(DomainVNCTokenModel(token=token, node_port=vnc_port, node_domain=vnc_node, domain_uuid=uuid))
-        db.commit()
-
-    return {'db':domain, 'node': node, 'xml': domain_xml_pase, 'token': token}
+    return domain
 
 
 @app.put("", response_model=TaskSelect)
@@ -231,6 +220,6 @@ def get_api_domain(
         db: Session = Depends(get_db),
     ):
 
-    token_model = db.query(DomainVNCTokenModel).filter(DomainVNCTokenModel.token==token).one()
+    domain_model = db.query(DomainModel).filter(DomainModel.uuid==token).one()
 
-    return { "host": token_model.node_domain, "port": token_model.node_port }
+    return { "host": domain_model.node.domain, "port": domain_model.vnc_port }

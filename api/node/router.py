@@ -50,7 +50,7 @@ def post_api_nodes(
     return node_post_model
 
 
-@app.get("/api/nodes", tags=["node"],response_model=List[NodeSelect])
+@app.get("/api/nodes", tags=["node"],response_model=List[GetNode])
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -59,7 +59,7 @@ def get_api_nodes(
     return db.query(NodeModel).all()
 
 
-@app.delete("/api/nodes", tags=["node"], response_model=List[NodeSelect])
+@app.delete("/api/nodes", tags=["node"], response_model=List[GetNode])
 def delete_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

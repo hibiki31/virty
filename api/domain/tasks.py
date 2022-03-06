@@ -21,7 +21,7 @@ logger = setup_logger(__name__)
 
 def update_domain_list(db: Session, model: TaskModel):
     nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(name="libvirt"))
-    token = time()
+    token = str(time())
 
     for node in nodes:
         if node.status != 10:
@@ -47,8 +47,14 @@ def update_domain_list(db: Session, model: TaskModel):
                 memory = temp.memory,
                 status = domain['status'],
                 node_name = node.name,
-                update_token = token
+                update_token = token,
+                vnc_port = temp.vnc_port
             )
+            for interface in temp.interface:
+                row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
+            
+            for disk in temp.disk:
+                row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()

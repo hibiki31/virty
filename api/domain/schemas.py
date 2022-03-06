@@ -1,10 +1,51 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel
 
 from fastapi_camelcase import CamelModel
 
-from node.schemas import NodeSelect
+from node.schemas import GetNode
+
+
+class GetDomainDrives(CamelModel):
+    device: str = None
+    type: str = None
+    source: str = None
+    target: str = None
+    class Config:
+        orm_mode  =  True
+
+class GetDomainInterfaces(CamelModel):
+    type: str =None
+    mac: str = None
+    target: str = None
+    bridge: str = None
+    network: str = None
+    port: str = None
+    class Config:
+        orm_mode  =  True
+
+class GetDomain(CamelModel):
+    uuid: str
+    name: str
+    core: int
+    memory: int
+    status: int
+    description: str = None
+    node_name: str
+    owner_user_id: str = None
+    owner_group_id: str = None
+    vnc_port: int = None
+    vnc_password: str = None
+    drives: list[GetDomainDrives] | None = None
+    interfaces: list[GetDomainInterfaces] | None = None
+    class Config:
+        orm_mode  =  True
+
+
+class GetDomainDetail(GetDomain):
+    node: GetNode
+
 
 class DomainBase(CamelModel):
     uuid: str
@@ -37,17 +78,6 @@ class DomainInsert(DomainBase):
     description: str = None
 
 
-class DomainSelect(DomainInsert):
-    name: str
-    core: int
-    memory: int
-    status: int
-    node_name: str
-    owner_user_id: str = None
-    owner_group_id: str = None
-    class Config:
-        orm_mode  =  True
-
 class DomainDetailXmlInterface(CamelModel):
     type: str
     mac: str
@@ -75,8 +105,8 @@ class DomainDetailXml(CamelModel):
     selinux: bool
 
 class DomainDetailSelect(CamelModel):
-    db: DomainSelect
-    node: NodeSelect
+    db: GetDomain
+    node: GetNode
     xml: DomainDetailXml
     token: str
     class Config:
