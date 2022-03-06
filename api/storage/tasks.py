@@ -1,3 +1,5 @@
+from enum import auto
+import uuid
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -30,13 +32,30 @@ def update_storage_list(db: Session, model: TaskModel):
 
         storages = manager.storage_data(token=token)
         for storage in storages:
-            for image in storage["image"]:
-                image = ImageModel(**image.dict())
-                image.storage_uuid = storage["storage"].uuid
-                # イメージを登録
-                db.merge(image)
+            storage_model = StorageModel(
+                uuid=storage.uuid,
+                name=storage.name,
+                node_name=storage.node_name,
+                capacity=storage.capacity,
+                available=storage.available,
+                path=storage.path,
+                active=storage.active,
+                auto_start=storage.auto_start,
+                status=storage.status,
+                update_token=storage.update_token
+            )
+            for image in storage.images:
+                image_model = ImageModel(
+                    name=image.name,
+                    storage_uuid=image.storage_uuid,
+                    capacity=image.capacity,
+                    allocation=image.allocation,
+                    path=image.path,
+                    update_token=image.update_token
+                )
+                db.merge(image_model)
             # ストレージを登録
-            db.merge(storage["storage"])
+            db.merge(storage_model)
     db.commit()
     # トークンで除外
     db.query(StorageModel).filter(StorageModel.update_token!=str(token)).delete()

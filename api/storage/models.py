@@ -14,9 +14,11 @@ class StorageModel(Base):
     active = Column(Boolean)
     auto_start = Column(Boolean)
     status = Column(Integer)
-    images = relationship('ImageModel', lazy=False, backref="storage")
+    images = relationship('ImageModel', backref="storage")
     update_token = Column(String)
-    meta_data = relationship('StorageMetadataModel', uselist=False, lazy=False, backref="storages")
+    meta_data = relationship('StorageMetadataModel', uselist=False, backref="storages")
+    allocation_commit = 0
+    capacity_commit = 0
 
 
 
@@ -34,7 +36,7 @@ class StorageMetadataModel(Base):
 class ImageModel(Base):
     __tablename__ = "images"
     name = Column(String, primary_key=True)
-    storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    storage_uuid = Column(String, ForeignKey('storages.uuid'), primary_key=True)
     capacity = Column(Integer)
     allocation = Column(Integer)
     path = Column(String)

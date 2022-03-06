@@ -14,6 +14,7 @@ from node.models import NodeModel
 from module.model import ImageModel
 from mixin.log import setup_logger
 from storage.models import StorageModel, StorageMetadataModel
+from storage.schemas import PaseStorage
 from network.models import NetworkModel
 
 from typing import List, Optional
@@ -51,27 +52,27 @@ class VirtManager():
             return []
         data = []
         for pool in pools:
-            if pool.info()[0] != 2 :
-                storage = StorageModel(
-                    uuid = pool.UUIDString(),
-                    name = pool.name(),
-                    node_name = self.node_model.name,
-                    capacity = None,
-                    available = None,
-                    path = None,
-                    active = pool.isActive(),
-                    auto_start = pool.autostart(),
-                    status = pool.info()[0],
-                    update_token = token,
-                )
-                data.append({"storage":storage, "image": []})
-                continue
+            # if pool.info()[0] != 2 :
+            #     storage = StorageModel(
+            #         uuid = pool.UUIDString(),
+            #         name = pool.name(),
+            #         node_name = self.node_model.name,
+            #         capacity = None,
+            #         available = None,
+            #         path = None,
+            #         active = pool.isActive(),
+            #         auto_start = pool.autostart(),
+            #         status = pool.info()[0],
+            #         update_token = token,
+            #     )
+            #     data.append({"storage":storage, "image": []})
+            #     continue
                 
             # GlustorFSが遅い
             pool.refresh()
             storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
             storage_xml = storage_xml.storage_pase()
-            storage = StorageModel(
+            storage = PaseStorage(
                 uuid = pool.UUIDString(),
                 name = pool.name(),
                 node_name = self.node_model.name,
@@ -82,14 +83,15 @@ class VirtManager():
                 auto_start = pool.autostart(),
                 status = pool.info()[0],
                 update_token = token,
+                images= []
             )
-            image = []
             for image_obj in pool.listAllVolumes():
                 xml_pace = XmlEditor(type="str", obj=image_obj.XMLDesc())
                 xml_pace = xml_pace.image_pase()
                 xml_pace.update_token = token
-                image.append(xml_pace)
-            data.append({"storage":storage, "image": image})
+                xml_pace.storage_uuid = pool.UUIDString()
+                storage.images.append(xml_pace)
+            data.append(storage)
         return data
 
 

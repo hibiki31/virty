@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi_camelcase import CamelModel
 
@@ -40,10 +40,13 @@ class StorageSelect(CamelModel):
     path: str = None
     meta_data: StorageMetadataSelect = None
     update_token:str = None
+    allocation_commit: int = None
+    capacity_commit: int = None
     class Config:
         orm_mode  =  True
 
-class ImageRaw(ImageBase):
+
+class PaseImage(ImageBase):
     name:str
     storage_uuid:str = None
     capacity:int
@@ -52,6 +55,23 @@ class ImageRaw(ImageBase):
     update_token:str = None
     class Config:
         orm_mode  =  True
+
+
+class PaseStorage(CamelModel):
+    uuid: str
+    name: str
+    node_name: str = None
+    capacity: int = None
+    available: int = None
+    path: str = None
+    active: bool
+    auto_start: bool
+    status: int
+    update_token:str = None
+    images: List[PaseImage]
+    class Config:
+        orm_mode  =  True
+
 
 class ImageSelect(ImageBase):
     name:str

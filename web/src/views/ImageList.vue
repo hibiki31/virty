@@ -26,8 +26,8 @@ export default {
       loading: false,
       headers: [
         { text: 'Name', value: 'name' },
-        { text: 'Node', value: 'nodeName' },
-        { text: 'Pool', value: 'pool' },
+        { text: 'Node', value: 'storage.node.name' },
+        { text: 'Pool', value: 'storage.name' },
         { text: 'Capacity', value: 'capacity' },
         { text: 'Allocation', value: 'allocation' },
         { text: 'Path', value: 'path' },

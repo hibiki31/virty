@@ -38,6 +38,14 @@
             <strong>{{item.available}} GB</strong>
           </v-progress-linear>
         </template>
+        <template v-slot:[`item.overcommit`]="{ item }">
+          <strong v-if='(item.capacityCommit - item.allocationCommit - item.available) > 0' class="error--text">
+            {{ item.capacityCommit - item.allocationCommit - item.available}} GB
+          </strong>
+          <strong v-else class="primary--text">
+            {{ item.capacityCommit - item.allocationCommit - item.available}} GB
+          </strong>
+        </template>
 
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon small @click="openDeleteDialog(item)">mdi-delete</v-icon>
@@ -72,6 +80,7 @@ export default {
         { text: 'Capacity', value: 'capacity' },
         { text: 'Used', value: 'used' },
         { text: 'Available', value: 'available' },
+        { text: 'OverCommit', value: 'overcommit', align: 'right' },
         { text: 'active', value: 'active' },
         { text: 'auto', value: 'autoStart' },
         { text: 'Path', value: 'path' },

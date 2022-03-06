@@ -10,7 +10,7 @@ from settings import APP_ROOT
 from mixin.log import setup_logger
 from module.model import AttributeDict
 
-from storage.schemas import ImageRaw
+from storage.schemas import PaseImage, PaseStorage
 from domain.schemas import *
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
 from network.models import NetworkModel
@@ -49,14 +49,6 @@ class XmlEditor():
 
 
     def storage_pase(self):
-        """
-        ストレージのXMLをパースする
-        Returns
-        -------
-        AttributeDict()
-        """
-        logger.debug("ストレージのパースを開始")
-
         data = AttributeDict()
         
         data.name = self.xml.find('name').text
@@ -91,7 +83,7 @@ class XmlEditor():
         AttributeDict()
         """
 
-        data = ImageRaw(
+        data = PaseImage(
             name = self.xml.find('name').text,
             capacity = unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text),
             allocation = unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text),

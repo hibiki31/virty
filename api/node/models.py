@@ -1,3 +1,4 @@
+from math import fabs
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
@@ -34,3 +35,18 @@ class NodeRoleModel(Base):
     __tablename__ = "nodesrole"
     name = Column(String, primary_key=True, index=True)
     nodes = relationship("NodeModel", secondary=node_to_noderole_table, back_populates="roles",lazy=False)
+
+
+class AssociationPoolsCpu(Base):
+    __tablename__ = 'association_pools_cpu'
+    pool_id = Column(Integer, ForeignKey('pools_cpu.id'), primary_key=True)
+    node_name = Column(String, ForeignKey('nodes.name'), primary_key=True)
+    core = Column(Integer, default=0)
+    nodes = relationship("NodeModel", lazy=False)
+
+
+class PoolCpu(Base):
+    __tablename__ = "pools_cpu"
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    name = Column(String)
+    nodes = relationship("AssociationPoolsCpu", lazy=False)

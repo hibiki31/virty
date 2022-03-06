@@ -1,3 +1,4 @@
+from os import name
 from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 
@@ -84,3 +85,18 @@ def patch_api_node_role(
     task_model = post_task.commit("node","role","change", bg=bg)
 
     return task_model
+
+
+@app.get("/api/nodes/pools", tags=["node"])
+def get_api_nodes_pools(
+        db: Session = Depends(get_db)
+    ):
+
+    # pool_model = PoolCpu(name="Any cpu!")
+    # db.add(pool_model)
+    # db.commit()
+    # ass = AssociationPoolsCpu(pool_id=1, node_id="shiori")
+    # db.add(ass)
+    # db.commit()
+
+    return db.query(PoolCpu).all()

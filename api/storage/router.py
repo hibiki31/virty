@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from .models import *
 from .schemas import *
@@ -26,7 +27,30 @@ def get_api_storages(
         db: Session = Depends(get_db)
     ):
 
-    return db.query(StorageModel).all()
+    image_sum = db.query(
+        ImageModel.storage_uuid, 
+        func.sum(ImageModel.capacity).label('sum_capacity'),
+        func.sum(ImageModel.allocation).label('sum_allocation')
+    ).group_by(ImageModel.storage_uuid).subquery('image_sum')
+
+    models = db.query(
+        StorageModel,
+        image_sum.c.sum_capacity,
+        image_sum.c.sum_allocation
+    ).outerjoin(
+        image_sum,
+        StorageModel.uuid==image_sum.c.storage_uuid
+    ).order_by(StorageModel.node_name,StorageModel.name).all()
+
+    res = []
+
+    for model in models:
+        tmp = model[0]
+        tmp.capacity_commit = model[1]
+        tmp.allocation_commit = model[2]
+        res.append(tmp)
+
+    return res
 
 
 @app.get("/api/images", tags=["storage"], response_model=List[ImageSelect])
