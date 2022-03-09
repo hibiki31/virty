@@ -67,6 +67,38 @@ def post_api_storage(
 
     return task_model
 
+@app.get("/api/networks/pools", tags=["network"])
+def get_api_networks_pools(
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+
+    return db.query(NetworkPoolModel).all()
+
+
+@app.post("/api/networks/pools", tags=["network"])
+def post_api_networks_pools(
+        model: PostNetworkPool,
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    pool_model = NetworkPoolModel(name=model.name)
+    db.add(pool_model)
+    db.commit()
+    return True
+
+
+@app.patch("/api/networks/pools", tags=["network"])
+def patch_api_networks_pools(
+        model: PatchNetworkPool,
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    ass = AssociationNetworkPool(pool_id=model.pool_id, network_uuid=model.network_uuid, port_name=model.port_name)
+    db.add(ass)
+    db.commit()
+    return True
+
 @app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
 def get_api_networks_uuid(
         uuid:str,
@@ -111,3 +143,5 @@ def post_api_networks_uuid_ovs(
     task_model = post_task.commit("network","list","update", bg=bg, status="wait", dependence_uuid=task_model.uuid)
    
     return task_model
+
+

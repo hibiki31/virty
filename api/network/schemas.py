@@ -5,6 +5,14 @@ from pydantic import BaseModel
 from fastapi_camelcase import CamelModel
 
 
+class PostNetworkPool(CamelModel):
+    name: str
+
+class PatchNetworkPool(CamelModel):
+    pool_id: int
+    network_uuid: str
+    port_name: str
+
 class PaseNetworkPortgroup(CamelModel):
     name: str
     vlan_id: str = None

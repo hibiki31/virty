@@ -27,3 +27,20 @@ class NetworkPortgroupModel(Base):
     vlan_id = Column(String)
     is_default = Column(Boolean)
     update_token = Column(String)
+
+
+class AssociationNetworkPool(Base):
+    __tablename__ = 'associations_networks_pools'
+    pool_id = Column(Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    port_name = Column(String, primary_key=True)
+    # network = relationship("NetworkModel", lazy=False)
+    # port = relationship("NetworkPortgroupModel", lazy=False)
+
+
+# プール内のネットワークはいかなるノードでも同じセグメントとなる
+class NetworkPoolModel(Base):
+    __tablename__ = "networks_pools"
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    name = Column(String)
+    networks = relationship("AssociationNetworkPool", lazy=False)

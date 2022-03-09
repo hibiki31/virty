@@ -19,6 +19,12 @@ class NodeInsert(NodeBase):
     libvirt_role: bool
 
 
+class PatchNodePool(CamelModel):
+    pool_id:int
+    node_name:str
+    core: int
+
+
 class GetNode(CamelModel):
     name: str
     description: str

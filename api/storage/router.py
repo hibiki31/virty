@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, true
 
 from .models import *
 from .schemas import *
@@ -15,6 +15,7 @@ from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
+from module.sshlib import SSHManager
 
 
 app = APIRouter()
@@ -125,3 +126,53 @@ def delete_api_storages(
     task_model = post_task.commit("storage","base","delete", bg)
 
     return task_model
+
+
+@app.get("/api/storages/pools", tags=["storage"])
+def get_api_storages_pools(
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+
+    return db.query(StoragePoolModel).all()
+
+
+@app.post("/api/storages/pools", tags=["storage"])
+def post_api_storages_pools(
+        request_model: PostStoragePool,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    storage_pool_model = StoragePoolModel(name=request_model.name)
+    db.add(storage_pool_model)
+    for storage_uuid in request_model.storage_uuids:
+        storage_pool_model.storages.append(
+            AssociationStoragePool(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
+        )
+    db.commit()
+    return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
+
+
+
+@app.put("/api/images/scp", tags=["storage"])
+def put_api_images_scp(
+        bg: BackgroundTasks,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        request_model: ImageSCP = None
+    ):
+
+    to_node = db.query(NodeModel).filter(NodeModel.name==request_model.to_node_name).one()
+    from_node = db.query(NodeModel).filter(NodeModel.name==request_model.from_node_name).one()
+
+
+    sshl = SSHManager("user","domain","port")
+    sshl.scp_other_node(
+        to_node=to_node,
+        from_node=from_node,
+        to_path=request_model.to_file_path,
+        from_path=request_model.from_file_path
+    )
+    
+
+    return True

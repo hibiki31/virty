@@ -94,3 +94,13 @@ class StorageInsert(CamelModel):
 class StorageDelete(CamelModel):
     uuid: str
     node_name: str
+
+class ImageSCP(CamelModel):
+    from_node_name: str
+    to_node_name: str
+    from_file_path: str
+    to_file_path: str
+
+class PostStoragePool(CamelModel):
+    name:str
+    storage_uuids: List[str]

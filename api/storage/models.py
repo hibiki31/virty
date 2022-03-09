@@ -31,6 +31,18 @@ class StorageMetadataModel(Base):
     rool = Column(String) # iso, img, cloud-init, template
 
 
+class AssociationStoragePool(Base):
+    __tablename__ = 'associations_storages_pools'
+    pool_id = Column(Integer, ForeignKey('storages_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+
+
+# プール内のネットワークはいかなるノードでも同じセグメントとなる
+class StoragePoolModel(Base):
+    __tablename__ = "storages_pools"
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    name = Column(String)
+    storages = relationship("AssociationStoragePool", lazy=False)
 
 
 class ImageModel(Base):
@@ -41,3 +53,4 @@ class ImageModel(Base):
     allocation = Column(Integer)
     path = Column(String)
     update_token = Column(String)
+    flavor_id = Column(Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='SET NULL'))

@@ -1,5 +1,6 @@
 from os import name
 from fastapi import APIRouter, Depends, BackgroundTasks, Request
+from sqlalchemy import true
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -92,11 +93,25 @@ def get_api_nodes_pools(
         db: Session = Depends(get_db)
     ):
 
-    # pool_model = PoolCpu(name="Any cpu!")
-    # db.add(pool_model)
-    # db.commit()
-    # ass = AssociationPoolsCpu(pool_id=1, node_id="shiori")
-    # db.add(ass)
-    # db.commit()
-
     return db.query(PoolCpu).all()
+
+
+@app.post("/api/nodes/pools", tags=["node"])
+def post_api_nodes_pools(
+        model: NodeBase,
+        db: Session = Depends(get_db),
+    ):
+    pool_model = PoolCpu(name=model.name)
+    db.add(pool_model)
+    db.commit()
+    return True
+
+@app.patch("/api/nodes/pools", tags=["node"])
+def patch_api_nodes_pools(
+        model: PatchNodePool,
+        db: Session = Depends(get_db),
+    ):
+    ass = AssociationPoolsCpu(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
+    db.add(ass)
+    db.commit()
+    return True
