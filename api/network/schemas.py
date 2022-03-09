@@ -1,17 +1,10 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
+import uuid
 from pydantic import BaseModel
 
 from fastapi_camelcase import CamelModel
 
-
-class PostNetworkPool(CamelModel):
-    name: str
-
-class PatchNetworkPool(CamelModel):
-    pool_id: int
-    network_uuid: str
-    port_name: str
 
 class PaseNetworkPortgroup(CamelModel):
     name: str
@@ -65,5 +58,40 @@ class NetworkOVSAdd(CamelModel):
 class NetworkOVSDelete(CamelModel):
     uuid: str
     name: str
+    class Config:
+        orm_mode  =  True
+
+
+class PostNetworkPool(CamelModel):
+    name: str
+
+
+class PatchNetworkPool(CamelModel):
+    pool_id: int
+    network_uuid: str
+    port_name: str
+
+
+class GetNEtworkPoolNetworksNetwork(CamelModel):
+    name: str
+    uuid: str
+    node_name: str
+    bridge: str
+    type: str
+    class Config:
+        orm_mode  =  True
+
+
+class GetNetworkPoolNetworks(CamelModel):
+    port_name: str = None
+    network: GetNEtworkPoolNetworksNetwork
+    class Config:
+        orm_mode  =  True
+
+
+class GetNetworkPool(CamelModel):
+    id: int = None
+    name: str = None
+    networks: List[GetNetworkPoolNetworks]
     class Config:
         orm_mode  =  True

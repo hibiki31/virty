@@ -29,7 +29,7 @@ def post_api_flavors(
     return db.query(FlavorModel).filter(FlavorModel.id==flavor_model.id).all()
 
 
-@app.get("")
+@app.get("", response_model=List[GetFlavor])
 def get_api_flavors(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)

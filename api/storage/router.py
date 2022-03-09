@@ -128,7 +128,7 @@ def delete_api_storages(
     return task_model
 
 
-@app.get("/api/storages/pools", tags=["storage"])
+@app.get("/api/storages/pools", tags=["storage"], response_model=List[GetStoragePool])
 def get_api_storages_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

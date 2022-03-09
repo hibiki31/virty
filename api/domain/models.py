@@ -27,7 +27,7 @@ class DomainModel(Base):
     owner_user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
     owner_group = relationship("GroupModel")
     owner_group_id = Column(String, ForeignKey('groups.id', onupdate='CASCADE', ondelete='CASCADE'))
-    ticket_id = Column(Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE'))
+    issuance_id = Column(Integer, ForeignKey('issuances.id', onupdate='CASCADE', ondelete='SET NULL'))
 
 
 class DomainInterfaceModel(Base):

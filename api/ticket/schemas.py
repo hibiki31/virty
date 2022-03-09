@@ -1,7 +1,13 @@
+from datetime import datetime
 from decimal import Clamped
 from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
+
+from network.schemas import GetNetworkPool
+from storage.schemas import GetStoragePool
+from flavor.schemas import GetFlavor
+
 
 class PostTicket(CamelModel):
     core:int
@@ -11,3 +17,28 @@ class PostTicket(CamelModel):
     flavors: List[int]
     user_installable: bool
     isolated_networks: int
+    class Config:
+        orm_mode  =  True
+
+class GetTicket(PostTicket):
+    id: int
+    network_pools: List[GetNetworkPool]
+    storage_pools: List[GetStoragePool]
+    flavors: List[GetFlavor]
+    class Config:
+        orm_mode  =  True
+
+class PostIssuance(CamelModel):
+    user_id: str
+    ticket_id: str
+    class Config:
+        orm_mode  =  True
+
+
+class GetIssuance(PostIssuance):
+    id: int
+    issued_by: str
+    date: datetime
+    ticket: GetTicket
+    class Config:
+        orm_mode  =  True

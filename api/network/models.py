@@ -34,7 +34,7 @@ class AssociationNetworkPool(Base):
     pool_id = Column(Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     port_name = Column(String, primary_key=True)
-    # network = relationship("NetworkModel", lazy=False)
+    network = relationship("NetworkModel")
     # port = relationship("NetworkPortgroupModel", lazy=False)
 
 

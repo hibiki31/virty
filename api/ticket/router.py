@@ -1,3 +1,4 @@
+from datetime import datetime
 from distutils import core
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -53,9 +54,50 @@ def post_api_tickets(
     return db.query(TicketModel).filter(TicketModel.id==ticket_model.id).all()
 
 
-@app.get("")
+@app.get("",response_model=List[GetTicket])
 def get_api_tickets(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        admin: bool = False
+    ):
+    query = db.query(TicketModel)
+
+    if admin:
+        current_user.verify_scope(scopes=["admin"])
+    else:
+        query = query.filter(TicketModel.users.any(id=current_user.id))
+
+    return query.all()
+
+
+@app.post("/issuances")
+def post_api_issuances(
+        request_model: PostIssuance,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    return db.query(FlavorModel).all()
+    model = IssuanceModel(
+        date = datetime.now(),
+        issued_by = current_user.id,
+        user_id = request_model.user_id,
+        ticket_id = request_model.ticket_id
+    )
+
+    db.add(model)
+    db.commit()
+    return db.query(IssuanceModel).filter(IssuanceModel.id==model.id).one()
+
+@app.get("/issuances",response_model=List[GetIssuance])
+def get_api_tickets(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        admin: bool = False
+    ):
+    query = db.query(IssuanceModel)
+
+    if admin:
+        current_user.verify_scope(scopes=["admin"])
+    else:
+        query = query.filter(IssuanceModel.user_id==current_user.id)
+
+    return query.all()

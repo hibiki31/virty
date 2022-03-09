@@ -35,9 +35,10 @@ class AssociationStoragePool(Base):
     __tablename__ = 'associations_storages_pools'
     pool_id = Column(Integer, ForeignKey('storages_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    storage = relationship("StorageModel")
 
 
-# プール内のネットワークはいかなるノードでも同じセグメントとなる
+
 class StoragePoolModel(Base):
     __tablename__ = "storages_pools"
     id = Column(Integer, autoincrement=True, primary_key=True)

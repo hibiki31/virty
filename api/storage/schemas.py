@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import strftime
 from typing import Any, List, Optional
 
 from fastapi_camelcase import CamelModel
@@ -104,3 +105,23 @@ class ImageSCP(CamelModel):
 class PostStoragePool(CamelModel):
     name:str
     storage_uuids: List[str]
+
+
+class GetStoragePoolStoragesStorage(CamelModel):
+    name: str
+    uuid: str
+    node_name: str
+    class Config:
+        orm_mode  =  True
+
+class GetStoragePoolStorages(CamelModel):
+    storage: GetStoragePoolStoragesStorage
+    class Config:
+        orm_mode  =  True
+
+class GetStoragePool(CamelModel):
+    id: int
+    name: str
+    storages: List[GetStoragePoolStorages]
+    class Config:
+        orm_mode  =  True

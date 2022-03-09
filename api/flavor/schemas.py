@@ -9,3 +9,10 @@ class PostFlavor(CamelModel):
     icon: str
     cloud_init_ready: bool
     description: str
+    class Config:
+        orm_mode  =  True
+        
+class GetFlavor(PostFlavor):
+    id: int
+    class Config:
+        orm_mode  =  True

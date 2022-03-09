@@ -67,7 +67,7 @@ def post_api_storage(
 
     return task_model
 
-@app.get("/api/networks/pools", tags=["network"])
+@app.get("/api/networks/pools", tags=["network"], response_model=List[GetNetworkPool])
 def get_api_networks_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
