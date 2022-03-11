@@ -1,3 +1,4 @@
+from urllib import request
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -102,6 +103,25 @@ def post_api_vms(
 
 
     return task_model
+
+
+@app.post("/ticket")
+def post_api_vms(
+        bg: BackgroundTasks,
+        request_model: PostDomainTicket,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    # タスクを追加
+    post_task = PostTask(db=db, user=current_user, model=request_model)
+    task_model = post_task.commit("vm","base","add", bg)
+
+    # ストレージ更新タスク
+    post_task = PostTask(db=db, user=current_user, model=None)
+    task_model = post_task.commit("storage","list","update", bg, status="wait",dependence_uuid=task_model.uuid)
+
+    return request_model
 
 
 @app.patch("", response_model=TaskSelect)

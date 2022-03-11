@@ -1,4 +1,5 @@
 from datetime import datetime
+from importlib.resources import path
 from time import strftime
 from typing import Any, List, Optional
 
@@ -25,6 +26,14 @@ class StorageMetadataPatch(CamelModel):
     rool: str
     protocol: str
     device_type: str
+    class Config:
+        orm_mode  =  True
+
+class PatchImageFlavor(CamelModel):
+    storage_uuid: str
+    path: str
+    node_name: str
+    flavor_id: int
     class Config:
         orm_mode  =  True
 

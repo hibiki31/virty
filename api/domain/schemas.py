@@ -143,3 +143,23 @@ class DomainNetworkChange(CamelModel):
     mac: str
     network_name: str
     port: str = None
+
+
+class PostDomainTicketInterface(CamelModel):
+    id: int
+    mac: str = None
+
+
+class PostDomainTicket(CamelModel):
+    type: str
+    issuance_id: int
+    name: str
+    memory: int
+    core: int
+    flavor_id: int
+    flavor_size_g: int
+    storage_pool_id: int
+    interfaces: list[PostDomainTicketInterface]
+    cloud_init: CloudInitInsert = None
+    class Config:
+        orm_mode  =  True

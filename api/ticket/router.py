@@ -28,8 +28,10 @@ def post_api_tickets(
         db: Session = Depends(get_db)
     ):
     ticket_model = TicketModel(
+        name=request_model.name,
         core=request_model.core,
         memory=request_model.memory,
+        storage_capacity_g=request_model.storage_capacity_g,
         user_installable=request_model.user_installable,
         isolated_networks=request_model.isolated_networks
     )
@@ -77,7 +79,7 @@ def post_api_issuances(
         db: Session = Depends(get_db)
     ):
     model = IssuanceModel(
-        date = datetime.now(),
+        issued_date = datetime.now(),
         issued_by = current_user.id,
         user_id = request_model.user_id,
         ticket_id = request_model.ticket_id

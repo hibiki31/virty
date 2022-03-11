@@ -54,8 +54,8 @@ Vue.mixin({
     required: (value) => !!value || 'Required.',
     limitLength64: (value) => value.length <= 64 || '64 characters maximum.',
     characterRestrictions(value) {
-      const regex = /^[A-Za-z0-9-_]*$/;
-      return regex.test(value) || 'Can use character A-Z, a-z, 0-9, -, _';
+      const regex = /^[A-Za-z0-9-]*$/;
+      return regex.test(value) || 'Can use character A-Z, a-z, 0-9, -';
     },
     firstCharacterRestrictions(value) {
       const regex = /^[A-Za-z].*/;

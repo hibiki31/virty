@@ -1,6 +1,7 @@
 <template>
   <div>
     <DomainAddDialog ref="domainAddDialog"/>
+    <domain-add-tickets-dialog ref="domainAddTicketsDialog"/>
     <domain-group-put ref="domainGroupPut" @reload="reload"/>
     <v-dialog width="300" v-model="dialog">
       <v-card>
@@ -49,6 +50,15 @@
           color="primary"
         >
           <v-icon left>mdi-server-plus</v-icon>ADD
+        </v-btn>
+        <v-btn
+          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-server-plus</v-icon>TICKETS
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -141,12 +151,14 @@
 import axios from '@/axios/index';
 import DomainAddDialog from '../conponents/domains/DomainAddDialog';
 import DomainGroupPut from '../conponents/domains/DomainGroupPut.vue';
+import DomainAddTicketsDialog from '../conponents/domains/DomainAddTicketsDialog.vue';
 
 export default {
   name: 'VMList',
   components: {
     DomainAddDialog,
-    DomainGroupPut
+    DomainGroupPut,
+    DomainAddTicketsDialog
   },
   data: function() {
     return {

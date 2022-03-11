@@ -10,8 +10,10 @@ from flavor.schemas import GetFlavor
 
 
 class PostTicket(CamelModel):
+    name: str
     core:int
     memory:int
+    storage_capacity_g:int = None
     network_pools: List[int]
     storage_pools: List[int]
     flavors: List[int]
@@ -38,7 +40,7 @@ class PostIssuance(CamelModel):
 class GetIssuance(PostIssuance):
     id: int
     issued_by: str
-    date: datetime
+    issued_date: datetime
     ticket: GetTicket
     class Config:
         orm_mode  =  True

@@ -1,12 +1,20 @@
+from distutils import core
+from doctest import FAIL_FAST
+import uuid
+from pydantic import create_model_from_namedtuple
+from sqlalchemy import func, nullsfirst
 from sqlalchemy.orm import Session
 from time import time
+from network.models import AssociationNetworkPool, NetworkModel, NetworkPoolModel
+
+from ticket.models import IssuanceModel, TicketModel
 
 from .models import *
 from .schemas import *
 
 from task.models import TaskModel
 from node.models import NodeModel
-from storage.models import StorageModel, ImageModel, StorageMetadataModel
+from storage.models import AssociationStoragePool, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
 from mixin.log import setup_logger
 
 from module import virtlib
@@ -63,15 +71,115 @@ def update_domain_list(db: Session, model: TaskModel):
     return model
 
 
+def add_domain_base_ticket(db: Session, model: TaskModel):
+    req = PostDomainTicket(**model.request)
+    issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
+
+    # メモリのアサインが少ない順で行く
+    nodes = db.query(
+        NodeModel.name.label('node_name'),
+        func.sum(DomainModel.memory).label('memory'),
+    ).outerjoin(DomainModel).group_by(NodeModel.name).order_by(
+        nullsfirst(func.sum(DomainModel.memory).asc())
+    ).all()
+    
+    found_node = False
+
+    for node in nodes:
+        logger.debug(f'{node.node_name} commit memory: {node.memory}')
+
+        flavor_image_model = db.query(ImageModel).filter(
+            ImageModel.flavor_id==req.flavor_id,
+            StorageModel.node_name==node.node_name
+        ).outerjoin(StorageModel).first()
+        # flavorがnodeにないため次へ
+        if flavor_image_model == None:
+            logger.debug(f'{node.node_name} not found flavor {req.flavor_id}')
+            continue
+
+        logger.debug(f'{node.node_name} has flavor {req.flavor_id}')
+
+        storage_pool = db.query(StorageModel).filter(
+            StoragePoolModel.id==req.storage_pool_id,
+            StorageModel.node_name==node.node_name
+        ).outerjoin(
+            AssociationStoragePool
+        ).outerjoin(
+            StoragePoolModel
+        ).first()
+
+        if storage_pool == None:
+            logger.debug(f'{node.node_name} not found {storage_pool.name} in pool {req.storage_pool_id}')
+            continue
+        
+        logger.debug(f'{node.node_name} has {storage_pool.name} in pool {req.storage_pool_id}')
+
+        network_models = {}
+        network_notfound_flag = False
+
+        for interface in req.interfaces:
+            network_model = db.query(AssociationNetworkPool).filter(
+                AssociationNetworkPool.pool_id==interface.id,
+                NetworkModel.node_name==node.node_name
+            ).outerjoin(
+                NetworkModel
+            ).first()
+            if network_model == None:
+                network_notfound_flag = True
+                logger.debug(f'{node.node_name} not found {network_model.network.name} port {network_model.port_name} in pool {interface.id}')
+                break 
+            else:
+                logger.debug(f'{node.node_name} has {network_model.network.name} port {network_model.port_name} in pool {interface.id}')
+                network_models[interface.id] = network_model
+        if network_notfound_flag:
+            continue
+
+        logger.info(f'{node.node_name} is scheduling pass !! ')
+
+        ## 情報がそろった
+
+        disk = DomainInsertDisk(
+            type="copy",
+            save_pool_uuid=storage_pool.uuid,
+            original_pool_uuid=flavor_image_model.storage_uuid,
+            original_name=flavor_image_model.name,
+            size_giga_byte=req.flavor_size_g
+        )
+
+        interfaces = []
+
+        for i in req.interfaces:
+            interfaces.append(DomainInsertInterface(
+                type="network",
+                mac=i.mac,
+                network_name=network_models[i.id].network.name,
+                port=network_models[i.id].port_name
+            ))
+
+        res = DomainInsert(
+            name=req.name,
+            node_name=node.node_name,
+            memory_mega_byte=req.memory,
+            cpu=req.core,
+            disks=[disk],
+            interface=interfaces,
+            cloud_init=req.cloud_init
+        )
+        return res
+
+    raise Exception("avalilabel node not found")
+
+
 def add_domain_base(db: Session, model: TaskModel):
-    # 受け取ったデータをモデルに型付け
-    task_model:TaskModel = model
-    model: DomainInsert = DomainInsert(**task_model.request)
+    if model.request['type'] == "ticket":
+        req = add_domain_base_ticket(db=db, model=model)
+    else:
+        req: DomainInsert = DomainInsert(**model.request)
 
     # データベースから情報とってきて確認も行う
-    domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==model.name).all()
+    domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name==model.node_name).one()
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name==req.node_name).one()
     except:
         raise Exception("node not found")
 
@@ -84,9 +192,9 @@ def add_domain_base(db: Session, model: TaskModel):
 
     editor.domain_emulator_edit(node.os_like)
     editor.domain_base_edit(
-        domain_name=model.name,
-        memory_mega_byte=model.memory_mega_byte,
-        core=model.cpu,
+        domain_name=f'{req.name}@{model.user_id}',
+        memory_mega_byte=req.memory_mega_byte,
+        core=req.cpu,
         vnc_port=0,
         vnc_passwd=None
     )
@@ -94,7 +202,7 @@ def add_domain_base(db: Session, model: TaskModel):
     domain_uuid = editor.domain_uuid_generate()
     
     # ネットワークインターフェイス
-    for interface in model.interface:
+    for interface in req.interface:
         interface: DomainInsertInterface
         editor.domain_interface_add(
             network_name=interface.network_name, 
@@ -105,7 +213,7 @@ def add_domain_base(db: Session, model: TaskModel):
     img_device_names = ["vda","vdb","vdc"]
     
     # ブロックデバイス
-    for device, device_name in zip(model.disks, img_device_names):
+    for device, device_name in zip(req.disks, img_device_names):
         # 型定義
         device: DomainInsertDisk
         # 作成先のプールを参照
@@ -114,7 +222,7 @@ def add_domain_base(db: Session, model: TaskModel):
         except:
             raise Exception("request storage pool uuid not found")
         # ファイル名決めてる
-        create_image_path = new_pool.path +"/"+ model.name + "_" + device_name + '.img'
+        create_image_path = f'{new_pool.path}/{model.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
         # XMLに追加
         editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
 
@@ -145,10 +253,10 @@ def add_domain_base(db: Session, model: TaskModel):
             )
 
     # Cloud-init
-    if model.cloud_init != None:
+    if req.cloud_init != None:
         # iso作成
-        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,model.cloud_init.hostname)
-        cloudinit_manager.custom_user_data(model.cloud_init.userData)
+        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,req.cloud_init.hostname)
+        cloudinit_manager.custom_user_data(req.cloud_init.userData)
         iso_path = cloudinit_manager.make_iso()
 
         # cloud-initのisoを保存するpoolを探す

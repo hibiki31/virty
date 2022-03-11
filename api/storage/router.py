@@ -1,6 +1,9 @@
+from email.mime import image
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, true
+
+from flavor.models import FlavorModel
 
 from .models import *
 from .schemas import *
@@ -87,6 +90,28 @@ def put_api_images(
     task_model = post_task.commit("storage","list","update", bg)
    
     return task_model
+
+
+@app.patch("/api/images", tags=["storage"])
+def patch_api_images(
+        req: PatchImageFlavor,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    image_model = db.query(ImageModel).filter(
+        ImageModel.storage_uuid==req.storage_uuid,
+        ImageModel.path==req.path
+        ).one()
+    db.query(FlavorModel.id==req.flavor_id).one()
+    image_model.flavor_id = req.flavor_id
+    db.commit()
+
+    res = image_model = db.query(ImageModel).filter(
+        ImageModel.storage_uuid==req.storage_uuid,
+        ImageModel.path==req.path
+        ).one()
+    return res
+
 
 
 @app.post("/api/storages", tags=["storage"], response_model=TaskSelect)

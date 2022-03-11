@@ -24,8 +24,10 @@ association_tickets_to_flavors_pools = Table('tickets_to_flavors_pools', Base.me
 class TicketModel(Base):
     __tablename__ = "tickets"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
     core = Column(Integer, nullable=False, default=1)
     memory = Column(Integer, nullable=False, default=1024)
+    storage_capacity_g = Column(Integer, default=0)
     network_pools = relationship("NetworkPoolModel", secondary=association_tickets_to_networks_pools, lazy=False)
     storage_pools = relationship("StoragePoolModel", secondary=association_tickets_to_storages_pools, lazy=False)
     flavors = relationship("FlavorModel", secondary=association_tickets_to_flavors_pools, lazy=False)
@@ -36,7 +38,7 @@ class TicketModel(Base):
 class IssuanceModel(Base):
     __tablename__ = "issuances"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    date = Column(DateTime, nullable=False)
+    issued_date = Column(DateTime, nullable=False)
     issued_by = Column(String, ForeignKey('users.id'))
     user_id = Column(String, ForeignKey('users.id'))
     ticket_id = Column(Integer, ForeignKey('tickets.id'))

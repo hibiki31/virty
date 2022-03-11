@@ -80,6 +80,7 @@
               class="ma-2"
               color="primary"
               @click="openVNC()"
+              :disabled="data.vncPort === -1"
             >
               <v-icon left>mdi-console</v-icon>Console
             </v-btn>

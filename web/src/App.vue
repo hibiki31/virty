@@ -106,6 +106,11 @@ export default {
         icon: 'mdi-harddisk'
       },
       {
+        to: { name: 'TicketList' },
+        title: 'Ticket',
+        icon: 'mdi-ticket'
+      },
+      {
         to: { name: 'Users' },
         title: 'Users',
         icon: 'mdi-account'
