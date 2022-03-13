@@ -2,36 +2,15 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>Add Storage</v-card-title>
+          <v-card-title>Add Storage Pool
+          </v-card-title>
           <v-card-text>
             <v-text-field
               v-model="postData.name"
               label="Name"
-              :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
+              :rules="[$required, $limitLength64]"
               counter="64"
             ></v-text-field>
-            <v-select
-              :items="itemsNodes"
-              item-text="name"
-              item-value="name"
-              v-model="postData.nodeName"
-              label="Select node name"
-              :rules="[required]"
-            >
-              <template v-slot:item="{ item }">
-                <span>{{ item.name }} - {{ item.domain }}</span>
-              </template>
-              <template v-slot:selection="{ item }">
-                <span>{{ item.name }} - {{ item.domain }}</span>
-              </template>
-            </v-select>
-            <v-text-field
-              v-model="postData.path"
-              label="Path"
-              :rules="[$required]"
-              counter="128"
-            ></v-text-field>
-
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -49,11 +28,10 @@ export default {
   name: 'NodeAddDialog',
   data: function() {
     return {
-      itemsNodes: [],
+      itemsStorages: [],
       postData: {
         name: '',
-        path: '',
-        nodeName: ''
+        storageUuids: []
       },
       dialogState: false
     };
@@ -68,7 +46,7 @@ export default {
       }
       axios.request({
         method: 'post',
-        url: '/api/storages',
+        url: '/api/storages/pools',
         data: this.postData
       })
         .then(res => {
@@ -81,7 +59,6 @@ export default {
     }
   },
   mounted: function() {
-    axios.get('/api/nodes').then((response) => (this.itemsNodes = response.data));
   }
 };
 </script>

@@ -1,11 +1,7 @@
 <template>
 <div class="ticket-list">
-  <TaskDeleteDialog ref="taskDeleteDialog" @reload="reload"/>
   <v-card>
     <v-card-actions>
-      <v-btn v-on:click="this.openTaskDeleteDialog" small dark class="ma-2" color="error">
-        <v-icon left>mdi-server-remove</v-icon>Delete
-      </v-btn>
     </v-card-actions>
     <v-data-table
       :headers="headers"
@@ -17,9 +13,6 @@
         }"
       multi-sort
     >
-      <template v-slot:[`item.id`]="{ item }" justify="right">
-        <router-link :to="{name: 'QueueDetail',params: {uuid: item.id}}">{{ item.id}}</router-link>
-      </template>
       <template v-slot:[`item.name`]="{ item }" justify="right">
         <router-link
           :to="{
@@ -101,6 +94,7 @@ export default {
     return {
       list: [],
       headers: [
+        { text: 'ID', value: 'id' },
         { text: 'Date', value: 'date' },
         { text: 'name', value: 'ticket.name' },
         { text: 'core', value: 'ticket.core' },

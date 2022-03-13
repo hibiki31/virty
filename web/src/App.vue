@@ -107,7 +107,7 @@ export default {
       },
       {
         to: { name: 'TicketList' },
-        title: 'Ticket',
+        title: 'My Ticket',
         icon: 'mdi-ticket'
       },
       {

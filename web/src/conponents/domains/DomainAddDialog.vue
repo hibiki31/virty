@@ -209,7 +209,7 @@
                 v-model="postData.cloudInit.hostname"
                 label="Host name"
                 dense
-                :rules="[$required, $limitLength64, $hostNameCharacter]"
+                :rules="[$required, $limitLength64, $characterRestrictions]"
               >
               </v-text-field>
               <v-textarea
@@ -286,6 +286,7 @@ export default {
       stepCount: 1,
       useCloudInit: false,
       postData: {
+        type: 'manual',
         name: '',
         nodeName: '',
         memoryMegaByte: null,

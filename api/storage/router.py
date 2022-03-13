@@ -178,6 +178,20 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
+@app.patch("/api/storages/pools", tags=["storage"])
+def post_api_storages_pools(
+        request_model: PatchStoragePool,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    storage_pool_model = db.query(StoragePoolModel).filter(StoragePoolModel.id==request_model.id).one()
+    for storage_uuid in request_model.storage_uuids:
+        storage_pool_model.storages.append(
+            AssociationStoragePool(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
+        )
+    db.commit()
+    return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
+
 
 @app.put("/api/images/scp", tags=["storage"])
 def put_api_images_scp(

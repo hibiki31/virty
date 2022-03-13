@@ -282,10 +282,10 @@ def add_domain_base(db: Session, model: TaskModel):
     update_domain_list(db=db, model=TaskModel())
 
     domain = db.query(DomainModel).filter(DomainModel.uuid==domain_uuid).one()
-    domain.owner_user_id = task_model.user_id
+    domain.owner_user_id = model.user_id
     db.commit()
 
-    return task_model
+    return model
 
 
 def delete_domain_base(db: Session, model: TaskModel):

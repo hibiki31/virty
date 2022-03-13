@@ -19,7 +19,7 @@ Vue.mixin({
     },
     // 数字だけ
     $intValueRestrictions(value) {
-      return Number.isInteger(value) || 'Only Int value';
+      return Number.isInteger(Number(value)) || 'Only Int value';
     }
   }
 });

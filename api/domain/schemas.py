@@ -130,6 +130,7 @@ class CloudInitInsert(CamelModel):
     hostname: str
     userData: str
 class DomainInsert(CamelModel):
+    type: str
     name: str
     node_name: str
     memory_mega_byte: int

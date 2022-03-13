@@ -69,7 +69,7 @@ class PostNetworkPool(CamelModel):
 class PatchNetworkPool(CamelModel):
     pool_id: int
     network_uuid: str
-    port_name: str
+    port_name: str = None
 
 
 class GetNEtworkPoolNetworksNetwork(CamelModel):

@@ -116,6 +116,11 @@ class PostStoragePool(CamelModel):
     storage_uuids: List[str]
 
 
+class PatchStoragePool(CamelModel):
+    id:str
+    storage_uuids: List[str]
+
+
 class GetStoragePoolStoragesStorage(CamelModel):
     name: str
     uuid: str

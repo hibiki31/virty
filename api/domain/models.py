@@ -7,7 +7,7 @@ class DomainModel(Base):
     __tablename__ = "domains"
     uuid = Column(String, primary_key=True, index=True)
     # name@user
-    name = Column(String, unique=True)
+    name = Column(String)
     core = Column(Integer)
     memory = Column(Integer)
     status = Column(Integer)
