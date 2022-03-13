@@ -1,9 +1,9 @@
 <template>
-<div class="ticket-list">
-  <ticket-add ref="ticketAdd" />
+<div class="flavor-list">
+  <flavor-add ref="flavorAdd" />
   <v-card>
     <v-card-actions>
-        <v-btn v-on:click="$refs.ticketAdd.openDialog()" small class="ma-2" color="primary">
+        <v-btn v-on:click="$refs.flavorAdd.openDialog()" small class="ma-2" color="primary">
           <v-icon left>mdi-server-plus</v-icon>ADD
         </v-btn>
     </v-card-actions>
@@ -17,39 +17,6 @@
         }"
       multi-sort
     >
-      <template v-slot:[`item.networkPools`]="{ item }">
-        <v-chip
-          v-for="network in item.networkPools"
-          :key="network.id"
-          class="ma-2"
-          label
-          small
-        >
-          {{ network.name }}
-        </v-chip>
-      </template>
-      <template v-slot:[`item.storagePools`]="{ item }">
-        <v-chip
-          v-for="storage in item.storagePools"
-          :key="storage.id"
-          class="ma-2"
-          label
-          small
-        >
-          {{ storage.name }}
-        </v-chip>
-      </template>
-      <template v-slot:[`item.flavors`]="{ item }">
-        <v-chip
-          v-for="flavor in item.flavors"
-          :key="flavor.id"
-          class="ma-2"
-          label
-          small
-        >
-          {{ flavor.name }}
-        </v-chip>
-      </template>
     </v-data-table>
   </v-card>
 </div>
@@ -58,12 +25,12 @@
 <script>
 import axios from '@/axios/index';
 import moment from 'moment';
-import TicketAdd from '@/conponents/tickets/TicketAdd.vue';
+import FlavorAdd from '@/conponents/flavors/FlavorAdd.vue';
 
 export default {
-  name: 'TicketList',
+  name: 'FlavorList',
   components: {
-    TicketAdd
+    FlavorAdd
   },
   data: function() {
     return {
@@ -71,12 +38,10 @@ export default {
       headers: [
         { text: 'ID', value: 'id' },
         { text: 'name', value: 'name' },
-        { text: 'core', value: 'core' },
-        { text: 'memory', value: 'memory' },
-        { text: 'storage', value: 'storageCapacityG' },
-        { text: 'Network', value: 'networkPools' },
-        { text: 'Storage', value: 'storagePools' },
-        { text: 'Flavors', value: 'flavors' }
+        { text: 'os', value: 'os' },
+        { text: 'manualUrl', value: 'manualUrl' },
+        { text: 'icon', value: 'icon' },
+        { text: 'cloudInitReady', value: 'cloudInitReady' }
       ]
     };
   },
@@ -85,7 +50,7 @@ export default {
   },
   methods: {
     reload() {
-      axios.get('/api/tickets').then((response) => (this.list = response.data));
+      axios.get('/api/flavors').then((response) => (this.list = response.data));
     },
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {

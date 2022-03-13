@@ -35,11 +35,71 @@
       <v-list nav dense>
         <v-list-item-group active-class="primary--text text--primary">
           <!-- メニュー描画 -->
-          <v-list-item v-for="item in navList" :key="item.title" :to="item.to">
+          <v-list-item :to="{ name: 'VMList' }">
             <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
+              <v-icon>mdi-cube-outline</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-title>VM</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'NodeList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-server</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Node</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'NetworkList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-wan</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Network</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'StorageList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-database</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Storage</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'ImageList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-harddisk</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Image</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'FlavorList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-tag-multiple</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Flavor</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'TicketList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-ticket-confirmation</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Ticket</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'IssueanceList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-ticket</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Issuance</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'Users' }">
+            <v-list-item-icon>
+              <v-icon>mdi-account</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Users</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'Groups' }">
+            <v-list-item-icon>
+              <v-icon>mdi-account-group</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Groups</v-list-item-title>
+          </v-list-item>
+          <v-list-item :to="{ name: 'TaskList' }">
+            <v-list-item-icon>
+              <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Task</v-list-item-title>
           </v-list-item>
         </v-list-item-group>
       </v-list>
@@ -78,54 +138,7 @@ export default {
     userId: '',
     taskCount: 0,
     taskHash: null,
-    taskChecking: false,
-    navList: [
-      {
-        to: { name: 'VMList' },
-        title: 'VM',
-        icon: 'mdi-cube-outline'
-      },
-      {
-        to: { name: 'NodeList' },
-        title: 'Node',
-        icon: 'mdi-server'
-      },
-      {
-        to: { name: 'NetworkList' },
-        title: 'Network',
-        icon: 'mdi-wan'
-      },
-      {
-        to: { name: 'StorageList' },
-        title: 'Storage',
-        icon: 'mdi-database'
-      },
-      {
-        to: { name: 'ImageList' },
-        title: 'Image',
-        icon: 'mdi-harddisk'
-      },
-      {
-        to: { name: 'TicketList' },
-        title: 'My Ticket',
-        icon: 'mdi-ticket'
-      },
-      {
-        to: { name: 'Users' },
-        title: 'Users',
-        icon: 'mdi-account'
-      },
-      {
-        to: { name: 'Groups' },
-        title: 'Group',
-        icon: 'mdi-account-group'
-      },
-      {
-        to: { name: 'TaskList' },
-        title: 'Task',
-        icon: 'mdi-checkbox-multiple-marked-outline'
-      }
-    ]
+    taskChecking: false
   }),
   methods: {
     async task_check() {

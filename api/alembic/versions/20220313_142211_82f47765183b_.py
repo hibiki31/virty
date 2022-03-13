@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: be2f1c4858f7
+Revision ID: 82f47765183b
 Revises: 
-Create Date: 2022-03-09 17:44:43.574017
+Create Date: 2022-03-13 14:22:11.400837
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'be2f1c4858f7'
+revision = '82f47765183b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -79,6 +79,7 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('core', sa.Integer(), nullable=False),
     sa.Column('memory', sa.Integer(), nullable=False),
+    sa.Column('storage_capacity_g', sa.Integer(), nullable=True),
     sa.Column('user_installable', sa.Boolean(), nullable=False),
     sa.Column('isolated_networks', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
@@ -169,20 +170,20 @@ def upgrade():
     op.create_table('tickets_to_flavors_pools',
     sa.Column('tickets_id', sa.Integer(), nullable=True),
     sa.Column('flavors_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['flavors_id'], ['flavors.id'], ),
-    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], )
+    sa.ForeignKeyConstraint(['flavors_id'], ['flavors.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('tickets_to_networks_pools',
     sa.Column('tickets_id', sa.Integer(), nullable=True),
     sa.Column('networks_pools_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['networks_pools_id'], ['networks_pools.id'], ),
-    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], )
+    sa.ForeignKeyConstraint(['networks_pools_id'], ['networks_pools.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('tickets_to_storages_pools',
     sa.Column('tickets_id', sa.Integer(), nullable=True),
     sa.Column('storages_pools_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['storages_pools_id'], ['storages_pools.id'], ),
-    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], )
+    sa.ForeignKeyConstraint(['storages_pools_id'], ['storages_pools.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['tickets_id'], ['tickets.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('users_scope',
     sa.Column('user_id', sa.String(), nullable=False),
@@ -196,13 +197,11 @@ def upgrade():
     sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], )
     )
-    op.create_table('associations_networks_pools',
-    sa.Column('pool_id', sa.Integer(), nullable=False),
-    sa.Column('network_uuid', sa.String(), nullable=False),
-    sa.Column('port_name', sa.String(), nullable=False),
+    op.create_table('associations_networks',
+    sa.Column('pool_id', sa.Integer(), nullable=True),
+    sa.Column('network_uuid', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['network_uuid'], ['networks.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['pool_id'], ['networks_pools.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('pool_id', 'network_uuid', 'port_name')
+    sa.ForeignKeyConstraint(['pool_id'], ['networks_pools.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('associations_storages_pools',
     sa.Column('pool_id', sa.Integer(), nullable=False),
@@ -229,8 +228,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['owner_group_id'], ['groups.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['owner_user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('uuid'),
-    sa.UniqueConstraint('name')
+    sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_domains_uuid'), 'domains', ['uuid'], unique=False)
     op.create_table('images',
@@ -246,13 +244,14 @@ def upgrade():
     sa.PrimaryKeyConstraint('name', 'storage_uuid')
     )
     op.create_table('networks_portgroups',
-    sa.Column('network_uuid', sa.String(), nullable=False),
-    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('network_uuid', sa.String(), nullable=True),
+    sa.Column('name', sa.String(), nullable=True),
     sa.Column('vlan_id', sa.String(), nullable=True),
     sa.Column('is_default', sa.Boolean(), nullable=True),
     sa.Column('update_token', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['network_uuid'], ['networks.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('network_uuid', 'name')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('storages_metadata',
     sa.Column('device_type', sa.String(), nullable=True),
@@ -261,6 +260,12 @@ def upgrade():
     sa.Column('rool', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['uuid'], ['storages.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('uuid')
+    )
+    op.create_table('associations_networks_pools',
+    sa.Column('pool_id', sa.Integer(), nullable=True),
+    sa.Column('port_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['pool_id'], ['networks_pools.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['port_id'], ['networks_portgroups.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('domains_drives',
     sa.Column('domain_uuid', sa.String(), nullable=False),
@@ -291,13 +296,14 @@ def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('domains_interfaces')
     op.drop_table('domains_drives')
+    op.drop_table('associations_networks_pools')
     op.drop_table('storages_metadata')
     op.drop_table('networks_portgroups')
     op.drop_table('images')
     op.drop_index(op.f('ix_domains_uuid'), table_name='domains')
     op.drop_table('domains')
     op.drop_table('associations_storages_pools')
-    op.drop_table('associations_networks_pools')
+    op.drop_table('associations_networks')
     op.drop_table('users_to_groups')
     op.drop_table('users_scope')
     op.drop_table('tickets_to_storages_pools')

@@ -63,6 +63,7 @@ def get_api_images(
         db: Session = Depends(get_db),
         node_name: str = None,
         pool_uuid: str = None,
+        name:str = None,
         rool:str = None,
     ):
     query = db.query(ImageModel).join(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
@@ -72,6 +73,9 @@ def get_api_images(
 
     if node_name != None:
         query = query.filter(NodeModel.name==node_name)
+    
+    if name != None:
+        query = query.filter(ImageModel.name.like(f'%{name}%'))
     
     if rool != None:
         query = query.filter(StorageMetadataModel.rool==rool)

@@ -11,6 +11,7 @@ class PostFlavor(CamelModel):
     description: str
     class Config:
         orm_mode  =  True
+
         
 class GetFlavor(PostFlavor):
     id: int

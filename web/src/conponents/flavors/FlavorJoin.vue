@@ -2,29 +2,17 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="joinForm">
-          <v-card-title>Join Pool</v-card-title>
+          <v-card-title>Join Flavor</v-card-title>
           <v-card-text>
-            {{ item.name }}
-              <v-checkbox
-              v-model="selectPort"
-              label="Select port"
-            ></v-checkbox>
+            <div>{{ item.name }}</div>
+            <div>{{ item.storage.name }}</div>
+            <div>{{ item.storage.node.name }}</div>
              <v-select
-              v-if="selectPort"
-              :items="networkDetail.portgroups"
+              :items="itemsFlavors"
               item-text="name"
               item-value="id"
-              v-model="postData.portId"
-              label="Select port"
-            >
-            </v-select>
-            <v-select
-              :items="itemsPools"
-              item-text="name"
-              item-value="id"
-              v-model="postData.poolId"
-              label="Select Pool"
-              :rules="[required]"
+              v-model="postData.flavorId"
+              label="Select flavor"
             >
             </v-select>
           </v-card-text>
@@ -41,25 +29,36 @@
 import axios from '@/axios/index';
 
 export default {
-  name: 'StoragePoolJoinDialog',
+  name: 'FlavorJoin',
   data: function() {
     return {
-      selectPort: true,
-      itemsPools: [],
-      networkDetail: {},
+      itemsFlavors: [{
+        name: ''
+      }],
       postData: {
-        id: '',
-        portId: []
+        storageUuid: 'string',
+        path: 'string',
+        nodeName: 'string',
+        flavorId: 0
       },
       dialogState: false,
-      item: {}
+      item: {
+        name: '',
+        storage: {
+          name: '',
+          node: {
+            name: ''
+          }
+        }
+      }
     };
   },
   methods: {
     openDialog(item) {
       this.item = item;
-      this.postData.networkUuid = item.uuid;
-      axios.get('/api/networks/' + item.uuid).then((response) => (this.networkDetail = response.data));
+      this.postData.storageUuid = item.storageUuid;
+      this.postData.path = item.path;
+      // this.postData.nodeName = item.storage.node.name;
       this.dialogState = true;
     },
     runMethod() {
@@ -68,7 +67,7 @@ export default {
       }
       axios.request({
         method: 'patch',
-        url: '/api/networks/pools',
+        url: '/api/images',
         data: this.postData
       })
         .then(res => {
@@ -82,7 +81,7 @@ export default {
     }
   },
   mounted: function() {
-    axios.get('/api/networks/pools').then((response) => (this.itemsPools = response.data));
+    axios.get('/api/flavors').then((response) => (this.itemsFlavors = response.data));
   }
 };
 </script>

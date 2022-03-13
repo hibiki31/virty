@@ -4,8 +4,10 @@ from time import strftime
 from typing import Any, List, Optional
 
 from fastapi_camelcase import CamelModel
+from flavor.models import FlavorModel
 
 from node.schemas import GetNode
+from flavor.schemas import GetFlavor
 
 
 class ImageBase(CamelModel):
@@ -88,6 +90,7 @@ class ImageSelect(ImageBase):
     storage_uuid:str = None
     capacity:int
     storage: StorageSelect
+    flavor: GetFlavor = None
     allocation:int
     path:str
     update_token:str = None

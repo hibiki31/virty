@@ -64,11 +64,6 @@ def get_api_tickets(
     ):
     query = db.query(TicketModel)
 
-    if admin:
-        current_user.verify_scope(scopes=["admin"])
-    else:
-        query = query.filter(TicketModel.users.any(id=current_user.id))
-
     return query.all()
 
 

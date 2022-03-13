@@ -94,8 +94,13 @@ def patch_api_networks_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    ass = AssociationNetworkPool(pool_id=model.pool_id, network_uuid=model.network_uuid, port_name=model.port_name)
-    db.add(ass)
+    pool_model = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==model.pool_id).one()
+    if model.port_id != None:
+        port_model = db.query(NetworkPortgroupModel).filter(NetworkPortgroupModel.id==model.pool_id).one()
+        pool_model.ports.append(port_model)
+    else:
+        network_model = db.query(NetworkModel).filter(NetworkModel.uuid==model.network_uuid).one()
+        pool_model.networks.append(network_model)
     db.commit()
     return True
 

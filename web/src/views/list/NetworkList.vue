@@ -67,12 +67,23 @@
       <template v-slot:[`item.networks`]="{ item }">
             <v-chip
               v-for="network in item.networks"
-              :key="network.network.uuid"
+              :key="network.uuid"
               class="ma-2"
               label
               small
             >
-              {{ network.network.name }} @{{ network.network.nodeName }} #{{ network.portName }}
+              {{ network.name }} @{{ network.nodeName }}
+            </v-chip>
+        </template>
+         <template v-slot:[`item.ports`]="{ item }">
+            <v-chip
+              v-for="port in item.ports"
+              :key="port.name"
+              class="ma-2"
+              label
+              small
+            >
+              {{ port.name }}
             </v-chip>
         </template>
     </v-data-table>
@@ -113,7 +124,8 @@ export default {
       headersPools: [
         { text: 'id', value: 'id' },
         { text: 'name', value: 'name' },
-        { text: 'networks', value: 'networks' }
+        { text: 'networks', value: 'networks' },
+        { text: 'ports', value: 'ports' }
       ]
     };
   },

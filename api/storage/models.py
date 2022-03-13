@@ -55,3 +55,4 @@ class ImageModel(Base):
     path = Column(String)
     update_token = Column(String)
     flavor_id = Column(Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='SET NULL'))
+    flavor = relationship("FlavorModel")

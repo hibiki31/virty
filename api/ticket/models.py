@@ -6,18 +6,18 @@ from network.models import NetworkPoolModel
 from mixin.database import Base
 
 association_tickets_to_networks_pools = Table('tickets_to_networks_pools', Base.metadata,
-    Column('tickets_id', Integer, ForeignKey('tickets.id')),
-    Column('networks_pools_id', Integer, ForeignKey('networks_pools.id'))
+    Column('tickets_id', Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('networks_pools_id', Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 association_tickets_to_storages_pools = Table('tickets_to_storages_pools', Base.metadata,
-    Column('tickets_id', Integer, ForeignKey('tickets.id')),
-    Column('storages_pools_id', Integer, ForeignKey('storages_pools.id'))
+    Column('tickets_id', Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('storages_pools_id', Integer, ForeignKey('storages_pools.id', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 association_tickets_to_flavors_pools = Table('tickets_to_flavors_pools', Base.metadata,
-    Column('tickets_id', Integer, ForeignKey('tickets.id')),
-    Column('flavors_id', Integer, ForeignKey('flavors.id'))
+    Column('tickets_id', Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('flavors_id', Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 

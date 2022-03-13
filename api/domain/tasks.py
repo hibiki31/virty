@@ -1,11 +1,11 @@
 from distutils import core
 from doctest import FAIL_FAST
-import uuid
+import re
 from pydantic import create_model_from_namedtuple
 from sqlalchemy import func, nullsfirst
 from sqlalchemy.orm import Session
 from time import time
-from network.models import AssociationNetworkPool, NetworkModel, NetworkPoolModel
+from network.models import NetworkModel, NetworkPoolModel
 
 from ticket.models import IssuanceModel, TicketModel
 
@@ -50,7 +50,7 @@ def update_domain_list(db: Session, model: TaskModel):
             
             row = DomainModel(
                 uuid = temp.uuid,
-                name = temp.name,
+                name = re.sub(r'(.*)@.*',r'\1', temp.name),
                 core = temp.vcpu,
                 memory = temp.memory,
                 status = domain['status'],

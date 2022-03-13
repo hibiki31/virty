@@ -14,6 +14,10 @@ class PaseNetworkPortgroup(CamelModel):
         orm_mode  =  True
 
 
+class NetworkPortgroup(PaseNetworkPortgroup):
+    id: int
+
+
 class PaseNetwork(CamelModel):
     name: str
     uuid: str
@@ -23,7 +27,7 @@ class PaseNetwork(CamelModel):
     active: bool = None
     bridge: str = None
     auto_start: bool = None
-    portgroups: List[PaseNetworkPortgroup]
+    portgroups: List[NetworkPortgroup]
     class Config:
         orm_mode  =  True
 
@@ -69,7 +73,7 @@ class PostNetworkPool(CamelModel):
 class PatchNetworkPool(CamelModel):
     pool_id: int
     network_uuid: str
-    port_name: str = None
+    port_id:int = None
 
 
 class GetNEtworkPoolNetworksNetwork(CamelModel):
@@ -82,9 +86,9 @@ class GetNEtworkPoolNetworksNetwork(CamelModel):
         orm_mode  =  True
 
 
-class GetNetworkPoolNetworks(CamelModel):
-    port_name: str = None
-    network: GetNEtworkPoolNetworksNetwork
+class GetNetworkPoolPort(CamelModel):
+    id: int = None
+    name: str= None
     class Config:
         orm_mode  =  True
 
@@ -92,6 +96,7 @@ class GetNetworkPoolNetworks(CamelModel):
 class GetNetworkPool(CamelModel):
     id: int = None
     name: str = None
-    networks: List[GetNetworkPoolNetworks]
+    networks: List[GetNEtworkPoolNetworksNetwork] = None
+    ports: List[GetNetworkPoolPort] = None
     class Config:
         orm_mode  =  True

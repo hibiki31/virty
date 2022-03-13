@@ -2,7 +2,9 @@ import VMDetail from '@/views/VMDetail.vue';
 import TaskList from '@/views/TaskList.vue';
 import NetworkList from '@/views/list/NetworkList.vue';
 import NodeList from '@/views/NodeList.vue';
+import IssueanceList from '@/views/list/IssueanceList.vue';
 import TicketList from '@/views/list/TicketList.vue';
+import FlavorList from '@/views/list/FlavorList.vue';
 
 export default {
   routes: [
@@ -10,6 +12,22 @@ export default {
       path: '/task',
       name: 'TaskList',
       component: TaskList,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/issuances',
+      name: 'IssueanceList',
+      component: IssueanceList,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/flavors',
+      name: 'FlavorList',
+      component: FlavorList,
       meta: {
         requiresAuth: true
       }

@@ -1,6 +1,17 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 from mixin.database import Base
+
+
+associations_networks_pools = Table('associations_networks_pools', Base.metadata,
+    Column('pool_id', Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('port_id', Integer, ForeignKey('networks_portgroups.id', onupdate='CASCADE', ondelete='CASCADE'))
+)
+
+associations_networks = Table('associations_networks', Base.metadata,
+    Column('pool_id', Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('network_uuid', String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+)
 
 
 class NetworkModel(Base):
@@ -22,25 +33,17 @@ class NetworkModel(Base):
 
 class NetworkPortgroupModel(Base):
     __tablename__ = "networks_portgroups"
-    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    name = Column(String, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    name = Column(String)
     vlan_id = Column(String)
     is_default = Column(Boolean)
     update_token = Column(String)
 
 
-class AssociationNetworkPool(Base):
-    __tablename__ = 'associations_networks_pools'
-    pool_id = Column(Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    port_name = Column(String, primary_key=True)
-    network = relationship("NetworkModel")
-    # port = relationship("NetworkPortgroupModel", lazy=False)
-
-
-# プール内のネットワークはいかなるノードでも同じセグメントとなる
 class NetworkPoolModel(Base):
     __tablename__ = "networks_pools"
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String)
-    networks = relationship("AssociationNetworkPool", lazy=False)
+    networks = relationship("NetworkModel", secondary=associations_networks, lazy=False)
+    ports = relationship("NetworkPortgroupModel", secondary=associations_networks_pools, lazy=False)
