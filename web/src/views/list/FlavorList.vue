@@ -1,6 +1,6 @@
 <template>
 <div class="flavor-list">
-  <flavor-add ref="flavorAdd" />
+  <flavor-add ref="flavorAdd" @reload="reload"/>
   <v-card>
     <v-card-actions>
         <v-btn v-on:click="$refs.flavorAdd.openDialog()" small class="ma-2" color="primary">

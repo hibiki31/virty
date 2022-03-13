@@ -1,7 +1,7 @@
 <template>
 <div>
-  <network-add-dialog ref="networkAddDialog" />
-  <network-delete-dialog ref="networkDeleteDialog" />
+  <network-add-dialog ref="networkAddDialog" @reload="reload"/>
+  <network-delete-dialog ref="networkDeleteDialog" @reload="reload"/>
   <network-pool-add-dialog ref="networkPortAddDialog" @reload="reload"/>
   <network-pool-join-dialog ref="networkPortJoinDialog" @reload="reload"/>
   <v-card>

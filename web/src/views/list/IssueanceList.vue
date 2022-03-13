@@ -1,7 +1,11 @@
 <template>
 <div class="ticket-list">
+  <issueance-add ref="issuanceAdd" @reload="reload"/>
   <v-card>
     <v-card-actions>
+           <v-btn v-on:click="$refs.issuanceAdd.openDialog()" small class="ma-2" color="primary">
+          <v-icon left>mdi-server-plus</v-icon>ADD
+        </v-btn>
     </v-card-actions>
     <v-data-table
       :headers="headers"
@@ -85,10 +89,12 @@
 <script>
 import axios from '@/axios/index';
 import moment from 'moment';
+import IssueanceAdd from '../../conponents/tickets/IssueanceAdd.vue';
 
 export default {
   name: 'TicketList',
   components: {
+    IssueanceAdd
   },
   data: function() {
     return {

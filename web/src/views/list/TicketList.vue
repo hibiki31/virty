@@ -1,6 +1,6 @@
 <template>
 <div class="ticket-list">
-  <ticket-add ref="ticketAdd" />
+  <ticket-add ref="ticketAdd" @reload="reload"/>
   <v-card>
     <v-card-actions>
         <v-btn v-on:click="$refs.ticketAdd.openDialog()" small class="ma-2" color="primary">

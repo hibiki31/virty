@@ -35,6 +35,7 @@ class NetworkPortgroupModel(Base):
     __tablename__ = "networks_portgroups"
     id = Column(Integer, autoincrement=True, primary_key=True)
     network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    network = relationship("NetworkModel")
     name = Column(String)
     vlan_id = Column(String)
     is_default = Column(Boolean)

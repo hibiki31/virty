@@ -1,3 +1,4 @@
+from ast import Raise
 from distutils import core
 from doctest import FAIL_FAST
 import re
@@ -5,7 +6,7 @@ from pydantic import create_model_from_namedtuple
 from sqlalchemy import func, nullsfirst
 from sqlalchemy.orm import Session
 from time import time
-from network.models import NetworkModel, NetworkPoolModel
+from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
 
 from ticket.models import IssuanceModel, TicketModel
 
@@ -117,22 +118,39 @@ def add_domain_base_ticket(db: Session, model: TaskModel):
         network_models = {}
         network_notfound_flag = False
 
-        for interface in req.interfaces:
-            network_model = db.query(AssociationNetworkPool).filter(
-                AssociationNetworkPool.pool_id==interface.id,
+        for net_pool_id in req.interfaces:
+            network_model = db.query(NetworkModel).filter(
+                NetworkPoolModel.id==net_pool_id.id,
                 NetworkModel.node_name==node.node_name
             ).outerjoin(
-                NetworkModel
+                associations_networks
+            ).outerjoin(
+                NetworkPoolModel
             ).first()
-            if network_model == None:
-                network_notfound_flag = True
-                logger.debug(f'{node.node_name} not found {network_model.network.name} port {network_model.port_name} in pool {interface.id}')
-                break 
+
+            port_model = db.query(NetworkPortgroupModel).filter(
+                NetworkPoolModel.id==net_pool_id.id,
+                NetworkPortgroupModel.network.has(node_name=node.node_name)
+            ).outerjoin(
+                associations_networks_pools
+            ).outerjoin(
+                NetworkPoolModel
+            ).first()
+
+            if network_model != None:
+                logger.debug(f'{node.node_name} has {network_model.name} in pool {net_pool_id.id}')
+                network_models[net_pool_id.id] = network_model
+            elif port_model != None:
+                logger.debug(f'{node.node_name} has {port_model.network.name} port {port_model.name} in pool {net_pool_id.id}')
+                network_models[net_pool_id.id] = port_model           
             else:
-                logger.debug(f'{node.node_name} has {network_model.network.name} port {network_model.port_name} in pool {interface.id}')
-                network_models[interface.id] = network_model
+                network_notfound_flag = True
+                logger.debug(f'{node.node_name} not found {net_pool_id.id}')
+                break 
         if network_notfound_flag:
             continue
+
+        logger.debug(network_models)
 
         logger.info(f'{node.node_name} is scheduling pass !! ')
 
@@ -149,14 +167,25 @@ def add_domain_base_ticket(db: Session, model: TaskModel):
         interfaces = []
 
         for i in req.interfaces:
-            interfaces.append(DomainInsertInterface(
+            if  isinstance(network_models[i.id], NetworkModel):
+                interfaces.append(DomainInsertInterface(
+                type="network",
+                mac=i.mac,
+                network_name=network_models[i.id].name,
+                port=None
+                ))
+            elif isinstance(network_models[i.id], NetworkPortgroupModel):
+                interfaces.append(DomainInsertInterface(
                 type="network",
                 mac=i.mac,
                 network_name=network_models[i.id].network.name,
-                port=network_models[i.id].port_name
-            ))
+                port=network_models[i.id].name
+                ))
+            else:
+                raise Exception("Network class not found")
 
         res = DomainInsert(
+            type="ticket",
             name=req.name,
             node_name=node.node_name,
             memory_mega_byte=req.memory,
