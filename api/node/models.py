@@ -39,8 +39,8 @@ class NodeRoleModel(Base):
 
 class AssociationPoolsCpu(Base):
     __tablename__ = 'association_pools_cpu'
-    pool_id = Column(Integer, ForeignKey('pools_cpu.id'), primary_key=True)
-    node_name = Column(String, ForeignKey('nodes.name'), primary_key=True)
+    pool_id = Column(Integer, ForeignKey('pools_cpu.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     core = Column(Integer, default=0)
     nodes = relationship("NodeModel", lazy=False)
 

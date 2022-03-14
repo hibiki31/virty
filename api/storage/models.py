@@ -49,7 +49,7 @@ class StoragePoolModel(Base):
 class ImageModel(Base):
     __tablename__ = "images"
     name = Column(String, primary_key=True)
-    storage_uuid = Column(String, ForeignKey('storages.uuid'), primary_key=True)
+    storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     capacity = Column(Integer)
     allocation = Column(Integer)
     path = Column(String)

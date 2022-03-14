@@ -5,8 +5,8 @@ from mixin.database import Base
 
 
 association_table = Table('users_to_groups', Base.metadata,
-    Column('user_id', String, ForeignKey('users.id')),
-    Column('group_id', String, ForeignKey('groups.id'))
+    Column('user_id', String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE')),
+    Column('group_id', String, ForeignKey('groups.id', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 

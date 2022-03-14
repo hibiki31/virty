@@ -39,7 +39,7 @@ class IssuanceModel(Base):
     __tablename__ = "issuances"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     issued_date = Column(DateTime, nullable=False)
-    issued_by = Column(String, ForeignKey('users.id'))
-    user_id = Column(String, ForeignKey('users.id'))
-    ticket_id = Column(Integer, ForeignKey('tickets.id'))
+    issued_by = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
+    user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
+    ticket_id = Column(Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE'))
     ticket = relationship("TicketModel")
