@@ -13,8 +13,8 @@
               v-if="selectPort"
               :items="networkDetail.portgroups"
               item-text="name"
-              item-value="id"
-              v-model="postData.portId"
+              item-value="name"
+              v-model="postData.portName"
               label="Select port"
             >
             </v-select>
@@ -48,7 +48,8 @@ export default {
       itemsPools: [],
       networkDetail: {},
       postData: {
-        id: '',
+        networkUuid: '',
+        portName: '',
         portId: []
       },
       dialogState: false,

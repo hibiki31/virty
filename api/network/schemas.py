@@ -15,7 +15,7 @@ class PaseNetworkPortgroup(CamelModel):
 
 
 class NetworkPortgroup(PaseNetworkPortgroup):
-    id: int
+    pass
 
 
 class PaseNetwork(CamelModel):
@@ -73,7 +73,7 @@ class PostNetworkPool(CamelModel):
 class PatchNetworkPool(CamelModel):
     pool_id: int
     network_uuid: str
-    port_id:int = None
+    port_name:str = None
 
 
 class GetNEtworkPoolNetworksNetwork(CamelModel):
@@ -87,7 +87,6 @@ class GetNEtworkPoolNetworksNetwork(CamelModel):
 
 
 class GetNetworkPoolPort(CamelModel):
-    id: int = None
     name: str= None
     class Config:
         orm_mode  =  True

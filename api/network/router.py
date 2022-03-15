@@ -95,8 +95,10 @@ def patch_api_networks_pools(
         current_user: CurrentUser = Depends(get_current_user)
     ):
     pool_model = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==model.pool_id).one()
-    if model.port_id != None:
-        port_model = db.query(NetworkPortgroupModel).filter(NetworkPortgroupModel.id==model.pool_id).one()
+    if model.port_name != None:
+        port_model = db.query(NetworkPortgroupModel).filter(
+            NetworkPortgroupModel.network_uuid==model.network_uuid,
+            NetworkPortgroupModel.name==model.port_name).one()
         pool_model.ports.append(port_model)
     else:
         network_model = db.query(NetworkModel).filter(NetworkModel.uuid==model.network_uuid).one()

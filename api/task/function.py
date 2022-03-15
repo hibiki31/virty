@@ -51,6 +51,6 @@ class PostTask():
         self.db.add(row)
         self.db.commit()
 
-        bg.add_task(do_task)
+        bg.add_task(do_task,db=self.db)
         
         return res

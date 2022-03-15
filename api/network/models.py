@@ -1,11 +1,13 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from mixin.database import Base
 
 
 associations_networks_pools = Table('associations_networks_pools', Base.metadata,
     Column('pool_id', Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE')),
-    Column('port_id', Integer, ForeignKey('networks_portgroups.id', onupdate='CASCADE', ondelete='CASCADE'))
+    Column('port_network_uuid', String),
+    Column('port_name', String),
+    ForeignKeyConstraint(['port_network_uuid', 'port_name'], ['networks_portgroups.network_uuid', 'networks_portgroups.name']),
 )
 
 associations_networks = Table('associations_networks', Base.metadata,
@@ -33,10 +35,9 @@ class NetworkModel(Base):
 
 class NetworkPortgroupModel(Base):
     __tablename__ = "networks_portgroups"
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    network_uuid = Column(String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    name = Column(String, primary_key=True)
     network = relationship("NetworkModel")
-    name = Column(String)
     vlan_id = Column(String)
     is_default = Column(Boolean)
     update_token = Column(String)

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 82f47765183b
+Revision ID: 4a99a45ddab1
 Revises: 
-Create Date: 2022-03-13 14:22:11.400837
+Create Date: 2022-03-15 10:29:11.524547
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '82f47765183b'
+revision = '4a99a45ddab1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -96,8 +96,8 @@ def upgrade():
     sa.Column('pool_id', sa.Integer(), nullable=False),
     sa.Column('node_name', sa.String(), nullable=False),
     sa.Column('core', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], ),
-    sa.ForeignKeyConstraint(['pool_id'], ['pools_cpu.id'], ),
+    sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['pool_id'], ['pools_cpu.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('pool_id', 'node_name')
     )
     op.create_table('issuances',
@@ -106,9 +106,9 @@ def upgrade():
     sa.Column('issued_by', sa.String(), nullable=True),
     sa.Column('user_id', sa.String(), nullable=True),
     sa.Column('ticket_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['issued_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['ticket_id'], ['tickets.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['issued_by'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['ticket_id'], ['tickets.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_issuances_id'), 'issuances', ['id'], unique=False)
@@ -194,8 +194,8 @@ def upgrade():
     op.create_table('users_to_groups',
     sa.Column('user_id', sa.String(), nullable=True),
     sa.Column('group_id', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], )
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('associations_networks',
     sa.Column('pool_id', sa.Integer(), nullable=True),
@@ -240,18 +240,17 @@ def upgrade():
     sa.Column('update_token', sa.String(), nullable=True),
     sa.Column('flavor_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['flavor_id'], ['flavors.id'], onupdate='CASCADE', ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['storage_uuid'], ['storages.uuid'], ),
+    sa.ForeignKeyConstraint(['storage_uuid'], ['storages.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('name', 'storage_uuid')
     )
     op.create_table('networks_portgroups',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('network_uuid', sa.String(), nullable=True),
-    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('network_uuid', sa.String(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
     sa.Column('vlan_id', sa.String(), nullable=True),
     sa.Column('is_default', sa.Boolean(), nullable=True),
     sa.Column('update_token', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['network_uuid'], ['networks.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('network_uuid', 'name')
     )
     op.create_table('storages_metadata',
     sa.Column('device_type', sa.String(), nullable=True),
@@ -263,9 +262,10 @@ def upgrade():
     )
     op.create_table('associations_networks_pools',
     sa.Column('pool_id', sa.Integer(), nullable=True),
-    sa.Column('port_id', sa.Integer(), nullable=True),
+    sa.Column('port_network_uuid', sa.String(), nullable=True),
+    sa.Column('port_name', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['pool_id'], ['networks_pools.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['port_id'], ['networks_portgroups.id'], onupdate='CASCADE', ondelete='CASCADE')
+    sa.ForeignKeyConstraint(['port_network_uuid', 'port_name'], ['networks_portgroups.network_uuid', 'networks_portgroups.name'], )
     )
     op.create_table('domains_drives',
     sa.Column('domain_uuid', sa.String(), nullable=False),
