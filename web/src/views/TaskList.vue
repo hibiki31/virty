@@ -67,6 +67,7 @@
             v-bind="attrs"
             v-on="on"
             class="ml-5"
+            @click="copyClipBoardCurl(item)"
             >mdi-code-json</v-icon>
           </template>
           <span>{{ item.request }}</span>
@@ -121,6 +122,26 @@ export default {
     },
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {
+        console.log(e);
+      }, function(e) {
+        console.log(e);
+      });
+    },
+    methodTransration(method) {
+      switch (method) {
+        case 'add': return 'POST';
+        case 'update': return 'PUT';
+        case 'delete': return 'DELETE';
+        case 'cahnge': return 'PATH';
+      }
+    },
+    copyClipBoardCurl(item) {
+      const comand = `curl -X '${this.methodTransration(item.method)}' \\
+'${location.protocol}//${location.host}/api/${item.resource}/${item.object}' \\
+-H 'accept: application/json' \\
+-H 'Authorization: Bearer ${this.$store.state.userData.token}' \\
+-d '${JSON.stringify(item.request)}'`;
+      this.$copyText(comand).then(function(e) {
         console.log(e);
       }, function(e) {
         console.log(e);

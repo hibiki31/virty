@@ -1,7 +1,7 @@
 from email.mime import image
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
-from sqlalchemy import func, true
+from sqlalchemy import false, func, true
 from domain.models import DomainDriveModel, DomainModel
 
 from flavor.models import FlavorModel
@@ -75,6 +75,8 @@ def get_api_images(
     ).outerjoin(
         DomainModel,
         DomainModel.uuid==DomainDriveModel.domain_uuid
+    ).outerjoin(
+        FlavorModel
     )
 
     if pool_uuid != None:
@@ -96,6 +98,10 @@ def get_api_images(
             domain = GetImageDomain(**i[1].__dict__)
         else:
             domain = None
+        if i[0].flavor:
+            flavor = i[0].flavor
+        else:
+            flavor = None
         res.append(
             ImageSelect(
                 **i[0].__dict__ ,
