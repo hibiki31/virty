@@ -84,6 +84,11 @@ class PaseStorage(CamelModel):
     class Config:
         orm_mode  =  True
 
+class GetImageDomain(CamelModel):
+    owner_user_id: str = None
+    issuance_id: int = None
+    name: str
+    uuid: str
 
 class ImageSelect(ImageBase):
     name:str
@@ -94,6 +99,7 @@ class ImageSelect(ImageBase):
     allocation:int
     path:str
     update_token:str = None
+    domain: GetImageDomain = None
     class Config:
         orm_mode  =  True
 

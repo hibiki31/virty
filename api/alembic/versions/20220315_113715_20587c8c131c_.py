@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 4a99a45ddab1
+Revision ID: 20587c8c131c
 Revises: 
-Create Date: 2022-03-15 10:29:11.524547
+Create Date: 2022-03-15 11:37:15.217708
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4a99a45ddab1'
+revision = '20587c8c131c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -232,16 +232,16 @@ def upgrade():
     )
     op.create_index(op.f('ix_domains_uuid'), 'domains', ['uuid'], unique=False)
     op.create_table('images',
-    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('name', sa.String(), nullable=True),
     sa.Column('storage_uuid', sa.String(), nullable=False),
     sa.Column('capacity', sa.Integer(), nullable=True),
     sa.Column('allocation', sa.Integer(), nullable=True),
-    sa.Column('path', sa.String(), nullable=True),
+    sa.Column('path', sa.String(), nullable=False),
     sa.Column('update_token', sa.String(), nullable=True),
     sa.Column('flavor_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['flavor_id'], ['flavors.id'], onupdate='CASCADE', ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['storage_uuid'], ['storages.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('name', 'storage_uuid')
+    sa.PrimaryKeyConstraint('storage_uuid', 'path')
     )
     op.create_table('networks_portgroups',
     sa.Column('network_uuid', sa.String(), nullable=False),

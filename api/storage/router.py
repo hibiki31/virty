@@ -2,6 +2,7 @@ from email.mime import image
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, true
+from domain.models import DomainDriveModel, DomainModel
 
 from flavor.models import FlavorModel
 
@@ -66,7 +67,15 @@ def get_api_images(
         name:str = None,
         rool:str = None,
     ):
-    query = db.query(ImageModel).join(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
+    query = db.query(
+        ImageModel,DomainModel
+        ).join(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel).outerjoin(
+        DomainDriveModel,
+        DomainDriveModel.source==ImageModel.path
+    ).outerjoin(
+        DomainModel,
+        DomainModel.uuid==DomainDriveModel.domain_uuid
+    )
 
     if pool_uuid != None:
         query = query.filter(StorageModel.uuid==pool_uuid)
@@ -79,8 +88,23 @@ def get_api_images(
     
     if rool != None:
         query = query.filter(StorageMetadataModel.rool==rool)
+    
+    res = []
 
-    return query.all()
+    for i in query.all():
+        if i[1]:
+            domain = GetImageDomain(**i[1].__dict__)
+        else:
+            domain = None
+        res.append(
+            ImageSelect(
+                **i[0].__dict__ ,
+                storage=i[0].storage,
+                domain=domain
+            )
+        )
+
+    return res
 
 
 @app.put("/api/images", tags=["storage"])

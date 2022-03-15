@@ -88,6 +88,8 @@ class GetNEtworkPoolNetworksNetwork(CamelModel):
 
 class GetNetworkPoolPort(CamelModel):
     name: str= None
+    vlan_id: int = None
+    network: GetNEtworkPoolNetworksNetwork
     class Config:
         orm_mode  =  True
 

@@ -48,11 +48,11 @@ class StoragePoolModel(Base):
 
 class ImageModel(Base):
     __tablename__ = "images"
-    name = Column(String, primary_key=True)
+    name = Column(String)
     storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     capacity = Column(Integer)
     allocation = Column(Integer)
-    path = Column(String)
+    path = Column(String, primary_key=True)
     update_token = Column(String)
     flavor_id = Column(Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='SET NULL'))
     flavor = relationship("FlavorModel")

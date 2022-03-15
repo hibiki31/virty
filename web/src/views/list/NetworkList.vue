@@ -72,7 +72,7 @@
               label
               small
             >
-              {{ network.name }} @{{ network.nodeName }}
+              {{ network.name }}@{{ network.nodeName }}
             </v-chip>
         </template>
          <template v-slot:[`item.ports`]="{ item }">
@@ -83,7 +83,7 @@
               label
               small
             >
-              {{ port.name }}
+              {{ port.network.name }}@{{ port.network.nodeName }}#{{ port.name }}
             </v-chip>
         </template>
     </v-data-table>
