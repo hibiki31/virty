@@ -22,20 +22,19 @@ from module import virtlib
 from module import xmllib
 from module import sshlib
 from module import cloudinitlib
-from module import ansiblelib
+from module.ansiblelib import AnsibleManager
 
 
 logger = setup_logger(__name__)
 
 
 def update_domain_list(db: Session, model: TaskModel):
-    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(name="libvirt"))
+    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
     for node in nodes:
         if node.status != 10:
             continue
-        logger.info(f'connecting node: {node.user_name + "@" + node.domain}')
         try:
             manager = virtlib.VirtManager(node_model=node)
         except Exception as e:
@@ -215,6 +214,7 @@ def add_domain_base(db: Session, model: TaskModel):
     if domains != []:
         raise Exception("domain name is duplicated")
 
+    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
     # XMLのベース読み込んで編集開始
     editor = xmllib.XmlEditor("static","domain_base")
@@ -281,6 +281,22 @@ def add_domain_base(db: Session, model: TaskModel):
                 to_path=create_image_path
             )
 
+            if req.cloud_init != None:
+
+                play_source = dict(
+                    hosts = 'all',
+                    gather_facts = 'no',
+                    tasks = [dict(
+                        qemu_img = dict(
+                            dest = create_image_path,
+                            size = f"{device.size_giga_byte}G",
+                            state = "resize"
+                        ),
+                        become = "yes"
+                )])
+
+                res = ansible_manager.run_playbook(book=play_source)
+
     # Cloud-init
     if req.cloud_init != None:
         # iso作成
@@ -298,7 +314,7 @@ def add_domain_base(db: Session, model: TaskModel):
 
         # 生成したisoをノードに転送
         send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
-        ansible_manager = ansiblelib.AnsibleManager(user=node.user_name, domain=node.domain)
+        ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
         ansible_manager.file_copy_to_node(src=iso_path,dest=send_path)
         editor.domain_cdrom(target=None,path=send_path)
 

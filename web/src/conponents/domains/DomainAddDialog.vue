@@ -55,6 +55,7 @@
               label="Name"
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
+              @change="(val) => postData.cloudInit.hostname = val"
             ></v-text-field>
             <v-row>
               <v-col cols="12" md="6">
