@@ -24,6 +24,11 @@ class PatchNodePool(CamelModel):
     node_name:str
     core: int
 
+class GetNodeRole(CamelModel):
+    role_name: str
+    extra_json: dict = None
+    class Config:
+        orm_mode  =  True
 
 class GetNode(CamelModel):
     name: str
@@ -40,10 +45,11 @@ class GetNode(CamelModel):
     status: int
     qemu_version: str = None
     libvirt_version: str = None
-    roles: List[Any]
+    roles: List[GetNodeRole]
     class Config:
         orm_mode  =  True
 
 class NodeRolePatch(CamelModel):
     node_name: str
     role_name: str
+    extra_json: dict = None

@@ -38,16 +38,25 @@
           {{ item.memory|toFixed}} G
         </template>
         <template v-slot:[`item.roles`]="{ item }" justify="right">
-          <v-chip
+          <v-tooltip
+            bottom
             v-for="role in item.roles"
-            :key="role.name"
-            class="ma-2"
-            small
-            label
+            :key="role.roleName"
           >
-            <v-icon small class="pr-2">{{ getIcon(role.name) }}</v-icon>
-            {{ role.name }}
-          </v-chip>
+            <template v-slot:activator="{ on, attrs }">
+              <v-chip
+                v-bind="attrs"
+                v-on="on"
+                class="ma-2"
+                small
+                label
+              >
+                <v-icon small class="pr-2">{{ getIcon(role.roleName) }}</v-icon>
+                {{ role.roleName }}
+              </v-chip>
+            </template>
+            <span>{{ role.extraJson }}</span>
+          </v-tooltip>
         </template>
         <template v-slot:[`item.actions`]="{ item }" justify="right">
           <v-btn @click="$refs.nodeRolePatch.openDialog(item.name)" icon><v-icon>mdi-flask-empty-plus-outline</v-icon></v-btn>
@@ -114,10 +123,10 @@ export default {
       else return 'yellow';
     },
     getIcon(role) {
-      if (role==='ssh') {
-        return 'mdi-connection';
-      } else if (role==='libvirt') {
-        return 'mdi-penguin';
+      switch (role) {
+        case 'ssh': return 'mdi-connection';
+        case 'libvirt': return 'mdi-penguin';
+        case 'ovs': return 'mdi-lan';
       }
     }
   },

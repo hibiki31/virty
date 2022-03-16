@@ -1,3 +1,4 @@
+from lib2to3.pytree import NodePattern
 from os import name
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -61,7 +62,9 @@ def post_node_base(db: Session, model: TaskSelect):
         qemu_version = None,
         libvirt_version = None,
     )
-    row.roles.append(ssh_role)
+    a = AssociationNodeToRole(extra_json={})
+    a.role = ssh_role
+    row.roles.append(a)
     db.add(row)
     db.commit()
 
@@ -74,6 +77,16 @@ def patch_node_role(db: Session, model: TaskSelect):
     add_role_name = request.role_name
     
     node:NodeModel = db.query(NodeModel).filter(NodeModel.name==node_name).one()
+
+    if add_role_name == "libvirt":
+        patch_node_role_libvirt(db=db, model=model, node=node)
+    elif add_role_name == "ovs":
+        patch_node_role_ovs(db=db, model=model, node=node, request=request)
+
+    return model
+
+def patch_node_role_libvirt(db: Session, model: TaskSelect, node: NodeModel):
+    
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
     res = ansible_manager.run_playbook_file("pb_init_libvirt")
@@ -91,8 +104,39 @@ def patch_node_role(db: Session, model: TaskSelect):
     node.qemu_version = ssh_manager.get_node_qemu_version()
     node.libvirt_version = ssh_manager.get_node_libvirt_version()
 
-    node.roles.append(role_model)
+    if not db.query(AssociationNodeToRole).filter(
+            AssociationNodeToRole.node_name==node.name, 
+            AssociationNodeToRole.role_name=="libvirt"
+        ).one_or_none():
+        a = AssociationNodeToRole(extra_json={})
+        a.role = role_model
+        node.roles.append(a)
 
     db.commit()
 
-    return model
+
+def patch_node_role_ovs(db: Session, model: TaskSelect, node: NodeModel, request: NodeRolePatch):
+    
+    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+
+    res = ansible_manager.run_playbook_file("pb_init_ovs")
+    model.message = "ansible run successfull " + str(res["summary"])
+    
+    role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ovs").one_or_none()
+    
+    if role_model == None:
+        role_model = NodeRoleModel(name="ovs")
+        db.add(role_model)
+
+    if not db.query(AssociationNodeToRole).filter(
+            AssociationNodeToRole.node_name==node.name, 
+            AssociationNodeToRole.role_name=="ovs"
+        ).one_or_none():
+        a = AssociationNodeToRole(extra_json=request.extra_json)
+        a.role = role_model
+        node.roles.append(a)
+
+    db.commit()
+
+    return node
+    

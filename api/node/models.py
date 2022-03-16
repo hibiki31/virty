@@ -1,14 +1,10 @@
 from math import fabs
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from pydantic import Json
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, JSON
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
 
 from storage.models import StorageModel
-
-node_to_noderole_table = Table('node_to_noderole', Base.metadata,
-    Column('node_name', String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE')),
-    Column('role_id', String, ForeignKey('nodesrole.name', onupdate='CASCADE', ondelete='CASCADE'))
-)
 
 
 class NodeModel(Base):
@@ -28,13 +24,22 @@ class NodeModel(Base):
     qemu_version = Column(String)
     libvirt_version = Column(String)
     storages = relationship('StorageModel', uselist=True, lazy=False, backref="node")
-    roles = relationship("NodeRoleModel", secondary=node_to_noderole_table, back_populates="nodes", lazy=False)
+    roles = relationship("AssociationNodeToRole", back_populates="node")
 
 
 class NodeRoleModel(Base):
     __tablename__ = "nodesrole"
     name = Column(String, primary_key=True, index=True)
-    nodes = relationship("NodeModel", secondary=node_to_noderole_table, back_populates="roles",lazy=False)
+    nodes = relationship("AssociationNodeToRole", back_populates="role")
+
+
+class AssociationNodeToRole(Base):
+    __tablename__ = 'association_node_to_role'
+    node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    role_name = Column(String, ForeignKey('nodesrole.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    extra_json = Column(JSON)
+    role = relationship("NodeRoleModel", back_populates="nodes", lazy=False)
+    node = relationship("NodeModel", back_populates="roles")
 
 
 class AssociationPoolsCpu(Base):

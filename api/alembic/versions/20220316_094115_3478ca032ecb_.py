@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 20587c8c131c
+Revision ID: 3478ca032ecb
 Revises: 
-Create Date: 2022-03-15 11:37:15.217708
+Create Date: 2022-03-16 09:41:15.659113
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '20587c8c131c'
+revision = '3478ca032ecb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -92,6 +92,14 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    op.create_table('association_node_to_role',
+    sa.Column('node_name', sa.String(), nullable=False),
+    sa.Column('role_id', sa.String(), nullable=False),
+    sa.Column('extra_json', sa.JSON(), nullable=True),
+    sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['role_id'], ['nodesrole.name'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('node_name', 'role_id')
+    )
     op.create_table('association_pools_cpu',
     sa.Column('pool_id', sa.Integer(), nullable=False),
     sa.Column('node_name', sa.String(), nullable=False),
@@ -129,12 +137,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_networks_uuid'), 'networks', ['uuid'], unique=False)
-    op.create_table('node_to_noderole',
-    sa.Column('node_name', sa.String(), nullable=True),
-    sa.Column('role_id', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['role_id'], ['nodesrole.name'], onupdate='CASCADE', ondelete='CASCADE')
-    )
     op.create_table('storages',
     sa.Column('uuid', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -313,12 +315,12 @@ def downgrade():
     op.drop_table('tasks')
     op.drop_index(op.f('ix_storages_uuid'), table_name='storages')
     op.drop_table('storages')
-    op.drop_table('node_to_noderole')
     op.drop_index(op.f('ix_networks_uuid'), table_name='networks')
     op.drop_table('networks')
     op.drop_index(op.f('ix_issuances_id'), table_name='issuances')
     op.drop_table('issuances')
     op.drop_table('association_pools_cpu')
+    op.drop_table('association_node_to_role')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_table('users')
     op.drop_index(op.f('ix_tickets_id'), table_name='tickets')

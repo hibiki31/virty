@@ -13,6 +13,8 @@
             :rules="[required]"
           >
           </v-select>
+          <v-text-field label="local ip" v-model="ovsExtraJson.localIp" v-if="requestData.roleName==='ovs'">
+          </v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -32,8 +34,12 @@ export default {
   data: function() {
     return {
       roles: [
-        'libvirt'
+        'libvirt',
+        'ovs'
       ],
+      ovsExtraJson: {
+        localIp: ''
+      },
       requestData: {
         nodeName: '',
         roleName: ''
@@ -52,6 +58,9 @@ export default {
         return;
       }
       this.submitting = true;
+      if (this.requestData.roleName==='ovs') {
+        this.requestData.extraJson = this.ovsExtraJson;
+      }
       axios.request({
         method: 'patch',
         url: '/api/nodes/role',
