@@ -25,8 +25,8 @@ class DomainModel(Base):
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     owner_user = relationship("UserModel")
     owner_user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
-    owner_group = relationship("GroupModel")
-    owner_group_id = Column(String, ForeignKey('groups.id', onupdate='CASCADE', ondelete='CASCADE'))
+    owner_project = relationship("ProjectModel")
+    owner_project = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
     issuance_id = Column(Integer, ForeignKey('issuances.id', onupdate='CASCADE', ondelete='SET NULL'))
 
 

@@ -11,7 +11,7 @@ class TokenData(CamelModel):
     user_id: Optional[str] = None
     scopes: List[str] = []
     role: List[str] = []
-    groups: List[str] = []
+    projects: List[str] = []
 
 class Setup(CamelModel):
     user_id: str

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 3478ca032ecb
+Revision ID: 150ac408132b
 Revises: 
-Create Date: 2022-03-16 09:41:15.659113
+Create Date: 2022-03-16 13:56:40.465913
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3478ca032ecb'
+revision = '150ac408132b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,11 +31,6 @@ def upgrade():
     sa.UniqueConstraint('name')
     )
     op.create_index(op.f('ix_flavors_id'), 'flavors', ['id'], unique=False)
-    op.create_table('groups',
-    sa.Column('id', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_groups_id'), 'groups', ['id'], unique=False)
     op.create_table('networks_pools',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -69,6 +64,12 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('projects',
+    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('name', sa.String(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_projects_id'), 'projects', ['id'], unique=False)
     op.create_table('storages_pools',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -94,11 +95,11 @@ def upgrade():
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('association_node_to_role',
     sa.Column('node_name', sa.String(), nullable=False),
-    sa.Column('role_id', sa.String(), nullable=False),
+    sa.Column('role_name', sa.String(), nullable=False),
     sa.Column('extra_json', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['role_id'], ['nodesrole.name'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('node_name', 'role_id')
+    sa.ForeignKeyConstraint(['role_name'], ['nodesrole.name'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('node_name', 'role_name')
     )
     op.create_table('association_pools_cpu',
     sa.Column('pool_id', sa.Integer(), nullable=False),
@@ -112,11 +113,11 @@ def upgrade():
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('issued_date', sa.DateTime(), nullable=False),
     sa.Column('issued_by', sa.String(), nullable=True),
-    sa.Column('user_id', sa.String(), nullable=True),
+    sa.Column('project_id', sa.String(), nullable=True),
     sa.Column('ticket_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issued_by'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['ticket_id'], ['tickets.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_issuances_id'), 'issuances', ['id'], unique=False)
@@ -193,10 +194,10 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('user_id', 'name')
     )
-    op.create_table('users_to_groups',
+    op.create_table('users_to_projects',
     sa.Column('user_id', sa.String(), nullable=True),
-    sa.Column('group_id', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.Column('project_id', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('associations_networks',
@@ -224,11 +225,11 @@ def upgrade():
     sa.Column('vnc_password', sa.String(), nullable=True),
     sa.Column('node_name', sa.String(), nullable=True),
     sa.Column('owner_user_id', sa.String(), nullable=True),
-    sa.Column('owner_group_id', sa.String(), nullable=True),
+    sa.Column('owner_project', sa.String(), nullable=True),
     sa.Column('issuance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issuance_id'], ['issuances.id'], onupdate='CASCADE', ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['owner_group_id'], ['groups.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['owner_project'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['owner_user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('uuid')
     )
@@ -306,7 +307,7 @@ def downgrade():
     op.drop_table('domains')
     op.drop_table('associations_storages_pools')
     op.drop_table('associations_networks')
-    op.drop_table('users_to_groups')
+    op.drop_table('users_to_projects')
     op.drop_table('users_scope')
     op.drop_table('tickets_to_storages_pools')
     op.drop_table('tickets_to_networks_pools')
@@ -326,14 +327,14 @@ def downgrade():
     op.drop_index(op.f('ix_tickets_id'), table_name='tickets')
     op.drop_table('tickets')
     op.drop_table('storages_pools')
+    op.drop_index(op.f('ix_projects_id'), table_name='projects')
+    op.drop_table('projects')
     op.drop_table('pools_cpu')
     op.drop_index(op.f('ix_nodesrole_name'), table_name='nodesrole')
     op.drop_table('nodesrole')
     op.drop_index(op.f('ix_nodes_name'), table_name='nodes')
     op.drop_table('nodes')
     op.drop_table('networks_pools')
-    op.drop_index(op.f('ix_groups_id'), table_name='groups')
-    op.drop_table('groups')
     op.drop_index(op.f('ix_flavors_id'), table_name='flavors')
     op.drop_table('flavors')
     # ### end Alembic commands ###

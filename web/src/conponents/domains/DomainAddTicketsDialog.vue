@@ -59,7 +59,7 @@
                   item-value="id"
                   v-model="postData.issuanceId"
                   @change="changeTicket"
-                  label="Tciket"
+                  label="Ticket"
                 ></v-select>
               </v-col>
             </v-row>

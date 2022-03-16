@@ -24,7 +24,7 @@ class PostTask():
         self.user = user
         self.model = model
     
-    def commit(self, resource, object, method, bg, status="init", dependence_uuid=None):
+    def commit(self, resource, object, method, bg=None, status="init", dependence_uuid=None):
         uuid_str = str(uuid.uuid4())
         time = datetime.now()
         user_id = self.user.id
@@ -51,6 +51,7 @@ class PostTask():
         self.db.add(row)
         self.db.commit()
 
-        bg.add_task(do_task,db=self.db)
+        if bg:
+            bg.add_task(do_task,db=self.db)
         
         return res

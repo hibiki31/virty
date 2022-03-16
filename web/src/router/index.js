@@ -11,7 +11,6 @@ import ImageList from '../views/ImageList.vue';
 import Empty from '../views/EmptyView.vue';
 import Develop from '../views/Develop.vue';
 import UserList from '../views/UserList.vue';
-import GroupList from '../views/GroupList.vue';
 import NetworkDetail from '@/views/NetworkDetail';
 
 import ListRouter from '@/router/listRouter.js';
@@ -92,11 +91,6 @@ const routes = [
     path: '/users',
     name: 'Users',
     component: UserList
-  },
-  {
-    path: '/groups',
-    name: 'Groups',
-    component: GroupList
   },
   {
     path: '*',

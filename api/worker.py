@@ -13,6 +13,7 @@ from domain.tasks import *
 from node.tasks import *
 from storage.tasks import *
 from network.tasks import *
+from project.tasks import post_project
 
 
 logger = setup_logger(__name__)
@@ -58,6 +59,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         elif model.object == "role":
             if model.method == "change":
                 res = patch_node_role(db=db, model=model)
+    
+    elif model.resource == "project":
+        if model.object == "root":
+            if model.method == "post":
+                res = post_project(db=db, model=model)
 
     elif model.resource == "storage":
         if model.object == "list":

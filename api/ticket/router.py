@@ -12,6 +12,7 @@ from storage.models import StoragePoolModel
 
 from .models import *
 from .schemas import *
+from project.models import ProjectModel
 from auth.router import CurrentUser, get_current_user, pwd_context
 
 logger = setup_logger(__name__)
@@ -95,6 +96,8 @@ def get_api_tickets(
     if admin:
         current_user.verify_scope(scopes=["admin"])
     else:
-        query = query.filter(IssuanceModel.user_id==current_user.id)
+        query = query.filter(
+                IssuanceModel.project.has(ProjectModel.users.any(id=current_user.id))
+        )
 
     return query.all()

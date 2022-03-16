@@ -5,17 +5,19 @@ from pydantic import BaseModel
 from user.schemas import UserBase
 
 
-class GroupBase(CamelModel):
+class ProjectBase(CamelModel):
     id: str
+    name: str
     class Config:
         orm_mode = True
 
-class GroupPost(CamelModel):
-    group_id: str
+class PostProject(CamelModel):
+    project_name: str
+    user_ids: List[str]
 
-class GroupPatch(CamelModel):
-    group_id: str
+class ProjectPatch(CamelModel):
+    project_id: str
     user_id: str
 
-class GroupSelect(GroupBase):
+class ProjectSelect(ProjectBase):
     users: List[UserBase]

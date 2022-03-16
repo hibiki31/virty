@@ -62,9 +62,9 @@ class DomainPatchCore(CamelModel):
     uuid: str
     core: int
 
-class DomainGroupPatch(CamelModel):
+class DomainProjectPatch(CamelModel):
     uuid: str
-    group_id: str
+    project_id: str
 
 class DomainDelete(DomainBase):
     pass

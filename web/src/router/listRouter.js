@@ -5,6 +5,7 @@ import NodeList from '@/views/NodeList.vue';
 import IssueanceList from '@/views/list/IssueanceList.vue';
 import TicketList from '@/views/list/TicketList.vue';
 import FlavorList from '@/views/list/FlavorList.vue';
+import ProjectList from '@/views/list/ProjectList.vue';
 
 export default {
   routes: [
@@ -15,6 +16,11 @@ export default {
       meta: {
         requiresAuth: true
       }
+    },
+    {
+      path: '/projects',
+      name: 'ProjectList',
+      component: ProjectList
     },
     {
       path: '/issuances',

@@ -56,7 +56,7 @@ class CurrentUser(BaseModel):
     id: str
     token: str
     scopes: List[str] = []
-    groups: List[str] = []
+    projects: List[str] = []
     def verify_scope(self, scopes, return_bool=False):
         # 要求Scopeでループ
         for request_scope in scopes:
@@ -162,7 +162,7 @@ def login_for_access_token(
             "sub": user.id,
             # "scopes": form_data.scopes,
             "scopes": [i.name for i in list(user.scopes)],
-            "groups": [i.id for i in list(user.groups)]
+            "projects": [i.id for i in list(user.projects)]
             },
         expires_delta=access_token_expires,
     )

@@ -9,7 +9,8 @@ from .schemas import *
 from auth.router import CurrentUser, get_current_user
 from task.schemas import TaskSelect
 from task.function import PostTask
-from user.models import GroupModel, UserModel
+from user.models import UserModel
+from project.models import ProjectModel
 from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import notfound_exception
@@ -39,7 +40,7 @@ def get_api_domain(
     else:
         query = query.filter(or_(
                 DomainModel.owner_user_id==current_user.id,
-                DomainModel.owner_group.has(GroupModel.users.any(id=current_user.id))
+                DomainModel.project.has(ProjectModel.users.any(id=current_user.id))
         ))
 
     return query.all()
@@ -196,19 +197,19 @@ def path_vms_user(
     return vm
 
 
-@app.patch("/group")
-def path_vms_group(
-        model: DomainGroupPatch,
+@app.patch("/project")
+def path_vms_project(
+        model: DomainProjectPatch,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
     try:
         vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
-        db.query(GroupModel).filter(GroupModel.id==model.group_id).one()
+        db.query(ProjectModel).filter(ProjectModel.id==model.project_id).one()
     except:
         raise notfound_exception(msg="not found vm or group")
     
-    vm.owner_group_id = model.group_id
+    vm.owner_project = model
     db.commit()
 
     return vm

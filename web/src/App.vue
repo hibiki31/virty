@@ -41,59 +41,59 @@
             </v-list-item-icon>
             <v-list-item-title>VM</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'NodeList' }">
+          <v-list-item :to="{ name: 'NodeList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-server</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Node</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'NetworkList' }">
+          <v-list-item :to="{ name: 'NetworkList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-wan</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Network</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'StorageList' }">
+          <v-list-item :to="{ name: 'StorageList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-database</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Storage</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'ImageList' }">
+          <v-list-item :to="{ name: 'ImageList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-harddisk</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Image</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'FlavorList' }">
+          <v-list-item :to="{ name: 'FlavorList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-tag-multiple</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Flavor</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'TicketList' }">
+          <v-list-item :to="{ name: 'TicketList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-ticket-confirmation</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Ticket</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'IssueanceList' }">
+          <v-list-item :to="{ name: 'IssueanceList' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-ticket</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Issuance</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'Users' }">
+          <v-list-item :to="{ name: 'Users' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
               <v-icon>mdi-account</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Users</v-list-item-title>
           </v-list-item>
-          <v-list-item :to="{ name: 'Groups' }">
+          <v-list-item :to="{ name: 'ProjectList' }">
             <v-list-item-icon>
-              <v-icon>mdi-account-group</v-icon>
+              <v-icon>mdi-folder-star</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>Groups</v-list-item-title>
+            <v-list-item-title>Projects</v-list-item-title>
           </v-list-item>
           <v-list-item :to="{ name: 'TaskList' }">
             <v-list-item-icon>

@@ -11,7 +11,7 @@
           class="ma-2"
           color="primary"
         >
-          <v-icon left>mdi-account-multiple-plus</v-icon>ADD
+          <v-icon left>mdi-folder-star</v-icon>CREATE
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -55,8 +55,8 @@
 
 <script>
 import axios from '@/axios/index';
-import GroupAddDialog from '../conponents/groups/GroupAddDialog.vue';
-import GroupPutDialog from '../conponents/groups/GroupPutDialog.vue';
+import GroupAddDialog from '@/conponents/groups/GroupAddDialog.vue';
+import GroupPutDialog from '@/conponents/groups/GroupPutDialog.vue';
 
 export default {
   name: 'VMList',
@@ -69,6 +69,7 @@ export default {
       tableLoading: true,
       headers: [
         { text: 'id', value: 'id' },
+        { text: 'name', value: 'name' },
         { text: 'users', value: 'users' },
         { text: 'actions', value: 'actions' }
       ],
@@ -83,7 +84,7 @@ export default {
     async reload() {
       this.tableLoading = true;
       await axios.get('/api/users').then((response) => (this.user = response.data));
-      await axios.get('/api/groups').then((response) => (this.group = response.data));
+      await axios.get('/api/projects').then((response) => (this.group = response.data));
       this.tableLoading = false;
     }
   }

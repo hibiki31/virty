@@ -1,67 +1,63 @@
-import os
-import jwt
-import secrets
-
 from datetime import datetime, timedelta
 from typing import List, Optional
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
-from fastapi import APIRouter, Depends, Request, HTTPException, Security, status
+from fastapi import APIRouter, Depends, Request, HTTPException, Security, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
+from task.function import PostTask
 from mixin.database import get_db
 from mixin.log import setup_logger
 from settings import IS_DEV
 
 from user.models import *
+from project.models import *
 from .schemas import *
 from auth.router import CurrentUser, get_current_user
 
 logger = setup_logger(__name__)
 app = APIRouter(
-    prefix="/api/groups",
-    tags=["group"],
+    prefix="/api/projects",
+    tags=["project"],
 )
 
 
 
-@app.get("", tags=["groups"],response_model=List[GroupSelect])
-def get_api_groups(
+@app.get("", response_model=List[ProjectSelect])
+def get_api_projects(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    groups = []
-    for group in db.query(GroupModel).all():
-        group.users
-        groups.append(group)
-    return groups
+    projects = []
+    for project in db.query(ProjectModel).all():
+        project.users
+        projects.append(project)
+    return projects
 
 
-@app.post("", tags=["groups"])
-def post_api_groups(
-        request: GroupPost, 
+@app.post("")
+def post_api_projects(
+        request: PostProject, 
+        bg: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
 
-    group = GroupModel(id=request.group_id)
-
-    db.add(group)
-    db.commit()
-
-    return
+    post_task = PostTask(db=db, user=current_user, model=request)
+    task_model = post_task.commit("project","root","post", bg)
+    return task_model
 
 
 @app.put("")
-def put_api_groups(
-        request: GroupPatch, 
+def put_api_projects(
+        request: ProjectPatch, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
     try:
-        group: GroupModel = db.query(GroupModel).filter(GroupModel.id==request.group_id).one()
+        project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
         user: UserModel = db.query(UserModel).filter(UserModel.id==request.user_id).one()
     except:
         raise  HTTPException(
@@ -69,24 +65,24 @@ def put_api_groups(
             detail="The specified value is invalid"
         )
 
-    group.users.append(user)
+    project.users.append(user)
 
-    db.merge(group)
+    db.merge(project)
     db.commit()
 
-    group: GroupModel = db.query(GroupModel).filter(GroupModel.id==request.group_id).one()
+    project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
 
-    return group
+    return project
 
 
-@app.delete("", tags=["groups"])
-def delete_api_groups(
-        request: GroupPatch, 
+@app.delete("")
+def delete_api_projects(
+        request: ProjectPatch, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
     try:
-        group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
+        project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
         users = []
     except:
         raise  HTTPException(
@@ -94,16 +90,16 @@ def delete_api_groups(
             detail="The specified value is invalid"
         )
 
-    for user in group.users:
+    for user in project.users:
         if user.user_id == request.user_id:
             continue
         else:
             users.append(user)
         
-    group.users = users
-    db.merge(group)
+    project.users = users
+    db.merge(project)
     db.commit()
 
-    group: GroupModel = db.query(GroupModel).filter(GroupModel.group_id==request.group_id).one()
+    project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
 
-    return group
+    return project
