@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 150ac408132b
+Revision ID: abbef2df40b2
 Revises: 
-Create Date: 2022-03-16 13:56:40.465913
+Create Date: 2022-03-17 02:25:52.538891
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '150ac408132b'
+revision = 'abbef2df40b2'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -65,7 +65,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('projects',
-    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('id', sa.String(length=6), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -113,7 +113,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('issued_date', sa.DateTime(), nullable=False),
     sa.Column('issued_by', sa.String(), nullable=True),
-    sa.Column('project_id', sa.String(), nullable=True),
+    sa.Column('project_id', sa.String(length=6), nullable=True),
     sa.Column('ticket_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issued_by'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
@@ -196,7 +196,7 @@ def upgrade():
     )
     op.create_table('users_to_projects',
     sa.Column('user_id', sa.String(), nullable=True),
-    sa.Column('project_id', sa.String(), nullable=True),
+    sa.Column('project_id', sa.String(length=6), nullable=True),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE')
     )
@@ -225,11 +225,11 @@ def upgrade():
     sa.Column('vnc_password', sa.String(), nullable=True),
     sa.Column('node_name', sa.String(), nullable=True),
     sa.Column('owner_user_id', sa.String(), nullable=True),
-    sa.Column('owner_project', sa.String(), nullable=True),
+    sa.Column('owner_project_id', sa.String(), nullable=True),
     sa.Column('issuance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['issuance_id'], ['issuances.id'], onupdate='CASCADE', ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['owner_project'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['owner_project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['owner_user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('uuid')
     )

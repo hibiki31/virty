@@ -1,4 +1,5 @@
 from pprint import pprint
+from random import random, randint
 import libvirt
 
 from urllib import request
@@ -11,6 +12,9 @@ from domain.schemas import *
 from mixin.database import SessionLocal
 from task.models import TaskModel
 from module.ansiblelib import AnsibleManager
+from module.ovslib import OVSManager
+from user.models import *
+from project.models import *
 
 from module import sshlib
 
@@ -106,7 +110,18 @@ def ansible_test():
     manager = AnsibleManager(user="akane", domain="192.168.144.31")
     #manager.run_playbook(play_source)
     manager.file_copy_to_node(src="/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",dest="aaa.iso")
-    
+
+
+def dev_ovs():
+    db = SessionLocal()
+    manager = OVSManager(domain=db.query(NodeModel).first().domain)
+    manager.ovs_crean()
+    # manager.ovs_add_br("br-test")
+    # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
+
+
+def project():
+    pass
 
 if __name__ == "__main__":
-    dev_libvirt()
+    project()

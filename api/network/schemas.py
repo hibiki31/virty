@@ -101,3 +101,6 @@ class GetNetworkPool(CamelModel):
     ports: List[GetNetworkPoolPort] = None
     class Config:
         orm_mode  =  True
+
+class PostVXLANInternal(CamelModel):
+    project_id: str

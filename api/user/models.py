@@ -6,7 +6,7 @@ from mixin.database import Base
 
 association_users_to_projects = Table('users_to_projects', Base.metadata,
     Column('user_id', String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE')),
-    Column('project_id', String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
+    Column('project_id', String(6), ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
 )
 
 

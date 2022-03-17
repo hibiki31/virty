@@ -99,7 +99,7 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
 
 
 def do_task(mode="init", db = SessionLocal()):
-    logger.info(f"looking for a {mode} task")
+    logger.debug(f"looking for a {mode} task")
 
     # 指定された状態のタスクを取得
     tasks = db.query(TaskModel)\

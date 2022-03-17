@@ -5,11 +5,12 @@ from .models import *
 from .schemas import *
 
 from task.models import TaskModel
-from node.models import NodeModel
+from node.models import AssociationNodeToRole, NodeModel
 from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
+from module.ovslib import OVSManager
 
 from time import time
 
@@ -148,4 +149,19 @@ def delete_network_ovs(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_delete(uuid=network.uuid, name=request.name)
 
+    return model
+
+
+def post_network_vxlan_internal(db: Session, model: TaskModel):
+    request: PostVXLANInternal = PostVXLANInternal(**model.request)
+
+    nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
+
+    for node in nodes:
+        logger.info(node.extra_json)
+
+    # manager = OVSManager(node_model=db.query(NodeModel).first())
+    # manager.ovs_crean()
+    # manager.ovs_add_br("br-test")
+    # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
     return model

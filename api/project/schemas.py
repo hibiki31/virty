@@ -15,6 +15,11 @@ class PostProject(CamelModel):
     project_name: str
     user_ids: List[str]
 
+
+class DeleteProject(CamelModel):
+    id: str
+
+
 class ProjectPatch(CamelModel):
     project_id: str
     user_id: str

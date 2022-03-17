@@ -40,7 +40,7 @@ class IssuanceModel(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     issued_date = Column(DateTime, nullable=False)
     issued_by = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
-    project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
+    project_id = Column(String(6), ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
     project = relationship("ProjectModel")
     ticket_id = Column(Integer, ForeignKey('tickets.id', onupdate='CASCADE', ondelete='CASCADE'))
     ticket = relationship("TicketModel")

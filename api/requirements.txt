@@ -23,4 +23,6 @@ python-multipart==0.0.5
 passlib==1.7.4
 paramiko==2.9.2
 requests==2.27.1
+# OVS
+ryu==4.34
 # pip list -o

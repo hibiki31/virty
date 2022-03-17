@@ -27,7 +27,6 @@ def update_storage_list(db: Session, model: TaskModel):
         if node.status != 10:
             continue
 
-        logger.info(f'connectiong node: {node.user_name + "@" + node.domain}')
         manager = virtlib.VirtManager(node_model=node)
 
         storages = manager.storage_data(token=token)

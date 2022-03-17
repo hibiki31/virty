@@ -10,19 +10,26 @@ def setup_logger(name, logfile=f'{DATA_ROOT}/api.log'):
     fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
     fh.setFormatter(fh_formatter)
 
+    # ファイル出力設定
+    fh_info = logging.FileHandler(f'{DATA_ROOT}/api_info.log')
+    fh_info_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
+    fh_info.setFormatter(fh_info_formatter)
+
     # コンソール出力設定
     ch = logging.StreamHandler()
     ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
     ch.setFormatter(ch_formatter)
 
     logger.addHandler(fh)
+    logger.addHandler(fh_info)
     logger.addHandler(ch)
 
     # 全体のログレベル
     logger.setLevel(logging.DEBUG)
     # ファイル出力のログレベル
     fh.setLevel(logging.DEBUG)
+    fh_info.setLevel(logging.INFO)
     # コンソール出力のログレベル
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
 
     return logger

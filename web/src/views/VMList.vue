@@ -39,7 +39,7 @@
           class="ma-2"
           color="primary"
           :loading="this.reloadLoading"
-          v-if="this.$store.state.userData.isAuthe"
+          v-if="this.$store.state.userData.adminMode"
         >
           <v-icon left>mdi-cached</v-icon>Reload
         </v-btn>
@@ -49,7 +49,7 @@
           dark
           class="ma-2"
           color="primary"
-          v-if="this.$store.state.userData.isAuthe"
+          v-if="this.$store.state.userData.adminMode"
         >
           <v-icon left>mdi-server-plus</v-icon>ADD
         </v-btn>
