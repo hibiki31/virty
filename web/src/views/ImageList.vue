@@ -1,6 +1,6 @@
 <template>
 <div>
-  <flavor-join ref="flavorJoin" />
+  <flavor-join ref="flavorJoin" @reload='reload'/>
   <v-card>
     <v-card-title>
       Images

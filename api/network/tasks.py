@@ -1,11 +1,13 @@
-from os import name
+from json import loads
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
+from mixin.log import setup_logger
 
 from .models import *
 from .schemas import *
-
 from task.models import TaskModel
-from node.models import AssociationNodeToRole, NodeModel
+from node.models import NodeModel
+
 from mixin.log import setup_logger
 
 from module import virtlib
@@ -18,7 +20,7 @@ from time import time
 logger = setup_logger(__name__)
 
 
-def update_network_list(db: Session, model: TaskModel):
+def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     nodes = db.query(NodeModel).all()
 
     token = str(time())
@@ -60,10 +62,10 @@ def update_network_list(db: Session, model: TaskModel):
         ).delete()
         
         db.commit()
-    return model
+    task.message = "Network list updated has been successfull"
 
-def add_network_base(db: Session, model: TaskModel):
-    request: NetworkInsert = NetworkInsert(**model.request)
+def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkInsert = NetworkInsert(**loads(task.request))
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
@@ -93,12 +95,11 @@ def add_network_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_define(xml_str=xml)
 
-    update_network_list(db=db, model=TaskModel())
+    put_network_list(db=db, bg=bg,task=TaskModel())
 
-    return model
 
-def delete_network_base(db: Session, model: TaskModel):
-    request: NetworkDelete = NetworkDelete(**model.request)
+def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkDelete = NetworkDelete(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -113,11 +114,10 @@ def delete_network_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_undefine(request.uuid)
 
-    update_network_list(db=db, model=TaskModel())
+    put_network_list(db=db, bg=bg,task=TaskModel())
 
-    return model
 
-def add_network_ovs(db: Session, model: TaskModel):
+def add_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: NetworkOVSAdd = NetworkOVSAdd(**model.request)
 
     try:
@@ -134,7 +134,7 @@ def add_network_ovs(db: Session, model: TaskModel):
 
     return model
 
-def delete_network_ovs(db: Session, model: TaskModel):
+def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: NetworkOVSDelete = NetworkOVSDelete(**model.request)
 
     try:
@@ -152,7 +152,7 @@ def delete_network_ovs(db: Session, model: TaskModel):
     return model
 
 
-def post_network_vxlan_internal(db: Session, model: TaskModel):
+def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: PostVXLANInternal = PostVXLANInternal(**model.request)
 
     nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
@@ -165,3 +165,5 @@ def post_network_vxlan_internal(db: Session, model: TaskModel):
     # manager.ovs_add_br("br-test")
     # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
     return model
+
+

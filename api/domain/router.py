@@ -8,7 +8,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.schemas import TaskSelect
-from task.function import PostTask
+from task.functions import TaskManager
 from user.models import UserModel
 from project.models import ProjectModel
 from mixin.database import get_db
@@ -60,17 +60,17 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.put("", response_model=TaskSelect)
+@app.put('', response_model=TaskSelect)
 def publish_task_to_update_vm_list(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("vm","list","update", bg)
-    return task_model
+    task = TaskManager(db=db, bg=bg)
+    task.select('put', 'vm', 'list')
+    task.commit(user=current_user)
+
+    return task.model
 
 
 @app.delete("", response_model=TaskSelect)
@@ -78,13 +78,13 @@ def delete_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: DomainDelete = None
+        request: DomainDelete = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","delete", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('delete', 'vm', 'root')
+    task.commit(user=current_user, request=request)
 
-    return task_model
+    return task.model
 
 
 @app.post("", response_model=TaskSelect)
@@ -92,37 +92,35 @@ def post_api_vms(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: DomainInsert = None
+        request: DomainInsert = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","add", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'vm', 'root')
+    task.commit(user=current_user, request=request)
 
-    # ストレージ更新タスク
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("storage","list","update", bg, status="wait",dependence_uuid=task_model.uuid)
+    storage_task = TaskManager(db=db, bg=bg)
+    storage_task.select('put', 'storage', 'list')
+    storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 
-
-    return task_model
+    return task.model
 
 
 @app.post("/ticket")
 def post_api_vms(
         bg: BackgroundTasks,
-        request_model: PostDomainTicket,
+        request: PostDomainTicket,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'vm', 'root')
+    task.commit(user=current_user, request=request)
 
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","add", bg)
+    storage_task = TaskManager(db=db, bg=bg)
+    storage_task.select('put', 'storage', 'list')
+    storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 
-    # ストレージ更新タスク
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("storage","list","update", bg, status="wait",dependence_uuid=task_model.uuid)
-
-    return request_model
+    return task.model
 
 
 @app.patch("", response_model=TaskSelect)
@@ -130,13 +128,13 @@ def patch_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: DomainPatch = None
+        request: DomainPatch = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","base","change", bg)
-   
-    return task_model
+    task = TaskManager(db=db, bg=bg)
+    task.select('patch', 'vm', 'root')
+    task.commit(user=current_user, request=request)
+
+    return task.model
 
 
 @app.patch("/name")
@@ -224,7 +222,7 @@ def patch_api_vm_network(
     ):
     # タスクを追加
     post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","network","change", bg)
+    task_model = post_task.commit("vm","network","patch", bg)
    
     return task_model
 

@@ -12,7 +12,7 @@ from .schemas import *
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
 from task.schemas import TaskSelect
-from task.function import PostTask
+from task.functions import TaskManager
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
@@ -120,10 +120,11 @@ def put_api_images(
         db: Session = Depends(get_db)
     ):
     # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("storage","list","update", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('put', 'storage', 'list')
+    task.commit(user=current_user)
    
-    return task_model
+    return task.model
 
 
 @app.patch("/api/images", tags=["storage"])

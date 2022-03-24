@@ -1,11 +1,12 @@
 <template>
   <div>
-    <group-add-dialog ref="userAddDialog" @reload="reload"/>
-    <group-put-dialog ref="userPutDialog" @reload="reload"/>
+    <project-add-dialog ref="addDialog" @reload="reload"/>
+    <project-put-dialog ref="putDialog" @reload="reload"/>
+    <project-delete-dialog ref="deleteDialog" @reload="reload"/>
     <v-card>
       <v-card-actions>
         <v-btn
-          v-on:click="$refs.userAddDialog.openDialog()"
+          v-on:click="$refs.addDialog.openDialog()"
           small
           dark
           class="ma-2"
@@ -38,14 +39,18 @@
         </template>
         <template v-slot:[`item.actions`]="{ item }" justify="right">
           <v-btn
-            v-on:click="$refs.userPutDialog.openDialog(item)"
+            v-on:click="$refs.putDialog.openDialog(item)"
             small
-            dark
-            class="ma-2"
-            color="primary"
             icon
           >
-            <v-icon left>mdi-account-multiple-plus</v-icon>
+            <v-icon class="ma-2 mr-5" left>mdi-account-multiple-plus</v-icon>
+          </v-btn>
+          <v-btn
+            v-on:click="$refs.deleteDialog.openDialog(item)"
+            small
+            icon
+          >
+            <v-icon class="ma-2" left>mdi-delete</v-icon>
           </v-btn>
         </template>
       </v-data-table>
@@ -55,14 +60,16 @@
 
 <script>
 import axios from '@/axios/index';
-import GroupAddDialog from '@/conponents/groups/GroupAddDialog.vue';
-import GroupPutDialog from '@/conponents/groups/GroupPutDialog.vue';
+import ProjectAddDialog from '@/conponents/projects/ProjectAddDialog.vue';
+import ProjectPutDialog from '@/conponents/projects/ProjectPutDialog.vue';
+import ProjectDeleteDialog from '@/conponents/projects/ProjectDeleteDialog.vue';
 
 export default {
-  name: 'VMList',
+  name: 'ProjectList',
   components: {
-    GroupAddDialog,
-    GroupPutDialog
+    ProjectAddDialog,
+    ProjectPutDialog,
+    ProjectDeleteDialog
   },
   data: function() {
     return {

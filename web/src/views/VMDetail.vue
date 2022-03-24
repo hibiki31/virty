@@ -41,34 +41,34 @@
       </v-card>
     </v-dialog>
       <v-menu>
-            <template v-slot:activator="{ on: menu, attrs }">
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <v-icon
-                    left
-                    v-bind="attrs"
-                    v-on="{ ...tooltip, ...menu }"
-                    class="ma-3"
-                    :color="getPowerColor(data.status)"
-                    >mdi-power-standby</v-icon
-                  >
-                </template>
-                <span>Power control</span>
-              </v-tooltip>
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-icon
+                left
+                v-bind="attrs"
+                v-on="{ ...tooltip, ...menu }"
+                class="ma-3"
+                :color="getPowerColor(data.status)"
+                >mdi-power-standby</v-icon
+              >
             </template>
-            <v-card>
-              <v-card-text>
-                <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.db.uuid)" color="primary"
-                    >mdi-power-standby</v-icon
-                  >
-                </div>
-                <v-icon v-on:click="vmPowerOff(item.db.uuid)" color="grey"
-                  >mdi-power-standby</v-icon
-                >
-              </v-card-text>
-            </v-card>
-          </v-menu>
+            <span>Power control</span>
+          </v-tooltip>
+        </template>
+        <v-card>
+          <v-card-text>
+            <div class="mb-3">
+              <v-icon v-on:click="vmPowerOn(data.uuid)" color="primary"
+                >mdi-power-standby</v-icon
+              >
+            </div>
+            <v-icon v-on:click="vmPowerOff(data.uuid)" color="grey"
+              >mdi-power-standby</v-icon
+            >
+          </v-card-text>
+        </v-card>
+      </v-menu>
     <span class="title">{{ data.name }}</span>
     <span class="body ml-5">{{ data.uuid }}</span>
     <v-row>
@@ -169,7 +169,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in data.interfaces" :key="`second-${item.target}`">
+                <tr v-for="item in data.interfaces" :key="`interface-${item.mac}`">
                   <td>{{ item.type }}</td>
                   <td>{{ item.mac }}</td>
                   <td>{{ item.network }}</td>

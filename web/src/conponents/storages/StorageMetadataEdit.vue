@@ -85,13 +85,7 @@ export default {
         .then(res => {
           this.$_pushNotice('Changed successfully', 'success');
           this.dialogState = false;
-          this.item.metaData.rool = this.postData.rool;
-          this.item.metaData.protocol = this.postData.protocol;
-          this.item.metaData.deviceType = this.postData.deviceType;
           this.$emit('reload');
-        })
-        .catch(error => {
-          this.$_pushNotice(error.response.data.detail, 'error');
         });
     }
   },

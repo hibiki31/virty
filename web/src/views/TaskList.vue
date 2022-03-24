@@ -157,8 +157,8 @@ export default {
       else return 'yellow';
     },
     getMethodColor(statusCode) {
-      if (statusCode === 'add') return 'success';
-      else if (statusCode === 'update') return 'primary';
+      if (statusCode === 'post') return 'success';
+      else if (statusCode === 'put') return 'primary';
       else if (statusCode === 'delete') return 'error';
       else return 'yellow';
     },

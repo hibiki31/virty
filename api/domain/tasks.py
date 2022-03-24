@@ -1,22 +1,22 @@
-from ast import Raise
-from distutils import core
-from doctest import FAIL_FAST
-import re
-from pydantic import create_model_from_namedtuple
-from sqlalchemy import func, nullsfirst
+from json import loads
 from sqlalchemy.orm import Session
-from time import time
-from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
-
-from ticket.models import IssuanceModel, TicketModel
+from fastapi import BackgroundTasks
+from mixin.log import setup_logger
 
 from .models import *
 from .schemas import *
-
 from task.models import TaskModel
+
+import re
+from time import time
+from sqlalchemy import func, nullsfirst
+from sqlalchemy.orm import Session
+
+from task.functions import TaskManager
+from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
+from ticket.models import IssuanceModel
 from node.models import NodeModel
 from storage.models import AssociationStoragePool, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
-from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
@@ -28,7 +28,8 @@ from module.ansiblelib import AnsibleManager
 logger = setup_logger(__name__)
 
 
-def update_domain_list(db: Session, model: TaskModel):
+def put_vm_list(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request = loads(task.request)
     nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
@@ -68,11 +69,11 @@ def update_domain_list(db: Session, model: TaskModel):
         db.commit()
     db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
     db.commit()
-    return model
+    task.message = "VM list updated has been successfull"
 
 
-def add_domain_base_ticket(db: Session, model: TaskModel):
-    req = PostDomainTicket(**model.request)
+def post_vm_ticketd(db:Session, bg: BackgroundTasks, task: TaskModel):
+    req = PostDomainTicket(**task.request)
     issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
 
     # メモリのアサインが少ない順で行く
@@ -198,11 +199,10 @@ def add_domain_base_ticket(db: Session, model: TaskModel):
     raise Exception("avalilabel node not found")
 
 
-def add_domain_base(db: Session, model: TaskModel):
-    if model.request['type'] == "ticket":
-        req = add_domain_base_ticket(db=db, model=model)
-    else:
-        req: DomainInsert = DomainInsert(**model.request)
+def post_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    req = DomainInsert(**loads(task.request))
+    if req.type == "ticket":
+        req = post_vm_ticketd(db=db, model=task)
 
     # データベースから情報とってきて確認も行う
     domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
@@ -221,7 +221,7 @@ def add_domain_base(db: Session, model: TaskModel):
 
     editor.domain_emulator_edit(node.os_like)
     editor.domain_base_edit(
-        domain_name=f'{req.name}@{model.user_id}',
+        domain_name=f'{req.name}@{task.user_id}',
         memory_mega_byte=req.memory_mega_byte,
         core=req.cpu,
         vnc_port=0,
@@ -251,7 +251,7 @@ def add_domain_base(db: Session, model: TaskModel):
         except:
             raise Exception("request storage pool uuid not found")
         # ファイル名決めてる
-        create_image_path = f'{new_pool.path}/{model.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
+        create_image_path = f'{new_pool.path}/{task.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
         # XMLに追加
         editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
 
@@ -323,18 +323,19 @@ def add_domain_base(db: Session, model: TaskModel):
     node = virtlib.VirtManager(node_model=node)
     node.domain_define(xml_str=editor.dump_str())
 
-    # 情報の更新
-    update_domain_list(db=db, model=TaskModel())
+    put_task = TaskManager(db=db)
+    put_task.select('put', 'vm', 'list')
+    put_task.folk(task=task)
 
     domain = db.query(DomainModel).filter(DomainModel.uuid==domain_uuid).one()
-    domain.owner_user_id = model.user_id
+    domain.owner_user_id = task.user_id
     db.commit()
 
-    return model
+    task.message = "Virtual machine has been added successfully"
 
 
-def delete_domain_base(db: Session, model: TaskModel):
-    request: DomainInsert = DomainDelete(**model.request)
+def delete_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: DomainInsert = DomainDelete(**loads(task.request))
 
     try:
         domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
@@ -350,13 +351,15 @@ def delete_domain_base(db: Session, model: TaskModel):
     manager.domain_destroy(uuid=request.uuid)
     manager.domain_undefine(request.uuid)
 
-    update_domain_list(db=db, model=TaskModel())
+    put_task = TaskManager(db=db, bg=bg)
+    put_task.select('put', 'vm', 'list')
+    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
 
-    return model
+    task.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
-def change_domain_base(db: Session, model: TaskModel):
-    request: DomainPatch = DomainPatch(**model.request)
+def patch_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: DomainPatch = DomainPatch(**loads(task.request))
 
     try:
         domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
@@ -382,12 +385,13 @@ def change_domain_base(db: Session, model: TaskModel):
     elif request.status == "unmount":
         manager.domain_cdrom(request.uuid, request.target)
 
-    update_domain_list(db=db, model=TaskModel())
+    put_task = TaskManager(db=db, bg=bg)
+    put_task.select('put', 'vm', 'list')
+    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
 
-    return model
 
-def change_domain_network(db: Session, model: TaskModel):
-    request: DomainNetworkChange = DomainNetworkChange(**model.request)
+def patch_vm_network(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: DomainNetworkChange = DomainNetworkChange(**loads(task.request))
 
     try:
         domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
@@ -402,6 +406,6 @@ def change_domain_network(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.domain_network(uuid=request.uuid, network=request.network_name, port=request.port, mac=request.mac)
 
-    update_domain_list(db=db, model=TaskModel())
-
-    return model
+    put_task = TaskManager(db=db, bg=bg)
+    put_task.select('put', 'vm', 'list')
+    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)

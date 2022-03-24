@@ -20,6 +20,7 @@ class OVSManager():
         self.address = f'tcp:{socket.gethostbyname(domain)}:{self.port}'
         self.vc =  vsctl.VSCtl(self.address)
         logger.debug(self.address)
+    
     def get_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.node_model.domain, self.port))
@@ -52,31 +53,36 @@ class OVSManager():
         response = s.recv(8192)
         result = json.loads(response.decode())
         print(json.dumps(result, sort_keys=False, indent=1))
-    
+
+
+    def ovs_run(self, cmd, args=None):
+        logger.info(f"{self.address} run {cmd} args {args}")
+        command = vsctl.VSCtlCommand(command=cmd, args=args)
+        self.vc.run_command([command])
+        return command
+
+
+    def ovs_runs(self, cmds):
+        logger.info(f"{self.address} run {cmds}")
+        command = [vsctl.VSCtlCommand(command=cmd[0], args=cmd[1]) for cmd in cmds]
+        self.vc.run_command(command)
+        return command
+
+
     def ovs_crean(self):
         cmd = self.ovs_run('list-br')
-        print(cmd.result)
 
         for i in cmd.result:
             if i != "ovs-network" and i != "ovs-br-akane":
                 self.ovs_del_br(i)
     
     def ovs_del_br(self, bridge):
-        print(self.ovs_run('del-br', (bridge,)))
+        self.ovs_run('del-br', (bridge,))
     
     def ovs_add_br(self, bridge):
-        print(self.ovs_run('add-br', (bridge,)))
+        self.ovs_run('add-br', (bridge,))
 
-    def ovs_run(self, cmd, args=None):
-        command = vsctl.VSCtlCommand(command=cmd, args=args)
-        self.vc.run_command([command])
-        return command
     
-    def ovs_runs(self, cmds):
-        command = [vsctl.VSCtlCommand(command=cmd[0], args=cmd[1]) for cmd in cmds]
-        self.vc.run_command(command)
-        print(command)
-        return command
     
     def ovs_add_vxlan(self, bridge, remote, key):
         ip_hex = str(hex(int(ipaddress.ip_address(remote))))
@@ -88,3 +94,14 @@ class OVSManager():
             ['set', ['Interface', inf, 'type=vxlan', f'options:key={key}', f'options:remote_ip={remote}']]
         ]
         self.ovs_runs(cmds)
+    
+    def ovs_list_br(self):
+        cmd = self.ovs_run('list-br')
+        return cmd.result
+    
+    def ovs_list_port(self, bridge):
+        cmd = self.ovs_run('list-ports', [bridge,])
+        return cmd.result
+
+    def ovs_get_port(self):
+        cmd = self.ovs_run('list', ['port'])

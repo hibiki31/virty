@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, Se
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from task.function import PostTask
+from task.functions import TaskManager
 from mixin.database import get_db
 from mixin.log import setup_logger
 from settings import IS_DEV
@@ -44,11 +44,26 @@ def post_api_projects(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'project', 'root')
+    task.commit(user=current_user, request=request)
 
-    post_task = PostTask(db=db, user=current_user, model=request)
-    task_model = post_task.commit("project","root","post", bg)
-    return task_model
+    return task.model
 
+
+@app.delete("")
+def delete_api_projects(
+        request: DeleteProject, 
+        bg: BackgroundTasks,
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    task = TaskManager(db=db, bg=bg)
+    task.select('delete', 'project', 'root')
+    task.commit(user=current_user, request=request)
+
+    return task.model
+    
 
 @app.put("")
 def put_api_projects(
@@ -75,31 +90,31 @@ def put_api_projects(
     return project
 
 
-@app.delete("")
-def delete_api_projects(
-        request: ProjectPatch, 
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    try:
-        project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
-        users = []
-    except:
-        raise  HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The specified value is invalid"
-        )
+# @app.delete("")
+# def delete_api_projects(
+#         request: ProjectPatch, 
+#         db: Session = Depends(get_db),
+#         current_user: CurrentUser = Depends(get_current_user)
+#     ):
+#     try:
+#         project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
+#         users = []
+#     except:
+#         raise  HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="The specified value is invalid"
+#         )
 
-    for user in project.users:
-        if user.user_id == request.user_id:
-            continue
-        else:
-            users.append(user)
+#     for user in project.users:
+#         if user.user_id == request.user_id:
+#             continue
+#         else:
+#             users.append(user)
         
-    project.users = users
-    db.merge(project)
-    db.commit()
+#     project.users = users
+#     db.merge(project)
+#     db.commit()
 
-    project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
+#     project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
 
-    return project
+#     return project

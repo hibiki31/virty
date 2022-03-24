@@ -9,7 +9,7 @@ from .schemas import *
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
 from task.schemas import TaskSelect
-from task.function import PostTask
+from task.functions import TaskManager
 from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
@@ -36,36 +36,37 @@ def put_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    post_task = PostTask(db=db, user=current_user, model=None)
-    task_model = post_task.commit("network","list","update", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('put', 'network', 'list')
+    task.commit(user=current_user)
    
-    return task_model
+    return task.model
 
 @app.post("/api/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: NetworkInsert = None
+        request: NetworkInsert = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("network","base","add", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'network', 'root')
+    task.commit(user=current_user, request=request)
 
-    return task_model
+    return task.model
 
 @app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: NetworkDelete = None
+        request: NetworkDelete = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("network","base","delete", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('delete', 'network', 'root')
+    task.commit(user=current_user, request=request)
 
-    return task_model
+    return task.model
 
 @app.get("/api/networks/pools", tags=["network"], response_model=List[GetNetworkPool])
 def get_api_networks_pools(

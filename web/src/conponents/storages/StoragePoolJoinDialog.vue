@@ -45,6 +45,7 @@ export default {
       this.item = item;
       this.postData.storageUuids = [item.uuid];
       this.dialogState = true;
+      axios.get('/api/storages/pools').then((response) => (this.itemsPools = response.data));
     },
     runMethod() {
       if (!this.$refs.joinForm.validate()) {
@@ -66,7 +67,6 @@ export default {
     }
   },
   mounted: function() {
-    axios.get('/api/storages/pools').then((response) => (this.itemsPools = response.data));
   }
 };
 </script>

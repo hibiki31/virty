@@ -58,10 +58,11 @@ export default {
   },
   methods: {
     openDialog(item) {
+      this.dialogState = true;
       this.item = item;
       this.postData.networkUuid = item.uuid;
+      axios.get('/api/networks/pools').then((response) => (this.itemsPools = response.data));
       axios.get('/api/networks/' + item.uuid).then((response) => (this.networkDetail = response.data));
-      this.dialogState = true;
     },
     runMethod() {
       if (!this.$refs.joinForm.validate()) {
@@ -83,7 +84,6 @@ export default {
     }
   },
   mounted: function() {
-    axios.get('/api/networks/pools').then((response) => (this.itemsPools = response.data));
   }
 };
 </script>

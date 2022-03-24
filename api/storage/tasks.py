@@ -1,5 +1,5 @@
-from enum import auto
-import uuid
+from fastapi import BackgroundTasks
+
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -18,7 +18,7 @@ from time import time
 logger = setup_logger(__name__)
 
 
-def update_storage_list(db: Session, model: TaskModel):
+def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     nodes = db.query(NodeModel).all()
 
     token = time()
@@ -60,9 +60,9 @@ def update_storage_list(db: Session, model: TaskModel):
     db.query(StorageModel).filter(StorageModel.update_token!=str(token)).delete()
     db.query(ImageModel).filter(ImageModel.update_token!=str(token)).delete()
     db.commit()
-    return model
+    task.message = "Storage list updated has been successfull"
 
-def add_storage_base(db: Session, model: TaskModel):
+def add_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: StorageInsert = StorageInsert(**model.request)
 
     try:
@@ -82,7 +82,7 @@ def add_storage_base(db: Session, model: TaskModel):
 
     return model
 
-def delete_storage_base(db: Session, model: TaskModel):
+def delete_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: StorageDelete = StorageDelete(**model.request)
 
     try:

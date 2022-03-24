@@ -115,7 +115,9 @@ def ansible_test():
 def dev_ovs():
     db = SessionLocal()
     manager = OVSManager(domain=db.query(NodeModel).first().domain)
-    manager.ovs_crean()
+    for i in manager.ovs_list_br():
+        print(i)
+        print(manager.ovs_list_port(i))
     # manager.ovs_add_br("br-test")
     # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
 
@@ -124,4 +126,4 @@ def project():
     pass
 
 if __name__ == "__main__":
-    project()
+    dev_ovs()

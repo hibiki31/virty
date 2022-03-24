@@ -49,6 +49,8 @@ class GetDomainDetail(GetDomain):
 
 class DomainBase(CamelModel):
     uuid: str
+    class Config:
+        orm_mode  =  True
 
 class DomainPatchUser(CamelModel):
     uuid: str
@@ -73,9 +75,6 @@ class DomainPatch(DomainBase):
     status: str = None
     path: str = None
     target: str = None
-
-class DomainInsert(DomainBase):
-    description: str = None
 
 
 class DomainDetailXmlInterface(CamelModel):
@@ -119,16 +118,21 @@ class DomainInsertDisk(CamelModel):
     original_name: str = None
     size_giga_byte: int = None
     template_name: str = None
+    class Config:
+        orm_mode  =  True
 
 class DomainInsertInterface(CamelModel):
     type: str
     mac: str = None
     network_name: str
     port: str = None
+    class Config:
+        orm_mode  =  True
 
 class CloudInitInsert(CamelModel):
     hostname: str
     userData: str
+
 class DomainInsert(CamelModel):
     type: str
     name: str
@@ -138,6 +142,8 @@ class DomainInsert(CamelModel):
     disks: List[DomainInsertDisk]
     interface: List[DomainInsertInterface]
     cloud_init: CloudInitInsert = None
+    class Config:
+        orm_mode  =  True
 
 class DomainNetworkChange(CamelModel):
     uuid: str

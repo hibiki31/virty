@@ -187,7 +187,7 @@ export default {
   mounted: async function() {
     this.reload();
     axios.get('/api/users').then((response) => (this.user = response.data));
-    axios.get('/api/groups').then((response) => (this.group = response.data));
+    axios.get('/api/projects').then((response) => (this.group = response.data));
   },
   methods: {
     reload() {
