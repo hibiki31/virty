@@ -20,7 +20,10 @@ export default {
     {
       path: '/projects',
       name: 'ProjectList',
-      component: ProjectList
+      component: ProjectList,
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/issuances',
@@ -69,10 +72,6 @@ export default {
       meta: {
         requiresAuth: true
       }
-    },
-    {
-      path: '*',
-      redirect: 'VMList'
     }
   ]
 };

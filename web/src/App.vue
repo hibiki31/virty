@@ -32,6 +32,19 @@
         </v-list-item-content>
       </v-list-item>
       <v-divider></v-divider>
+      <v-list-item>
+        <v-select
+        :items="projectList"
+        item-text="name"
+        item-value="id"
+        @change="(value) =>{$store.dispatch('setProjectId', value)}"
+        class="pt-3 pb-3"
+        dense
+        hide-details
+      >
+      </v-select>
+      </v-list-item>
+      <v-divider></v-divider>
       <v-list nav dense>
         <v-list-item-group active-class="primary--text text--primary">
           <!-- メニュー描画 -->
@@ -138,9 +151,13 @@ export default {
     userId: '',
     taskCount: 0,
     taskHash: null,
-    taskChecking: false
+    taskChecking: false,
+    projectList: []
   }),
   methods: {
+    reload() {
+      axios.get('/api/projects', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => (this.projectList = response.data));
+    },
     async task_check() {
       if (!this.$store.state.userData.isAuthed) {
         return;
@@ -169,6 +186,7 @@ export default {
       this.$store.dispatch('toggleAdminMode');
       if ('reload' in this.$refs.view === true) {
         this.$refs.view.reload();
+        this.reload();
       }
     }
   },
@@ -177,6 +195,7 @@ export default {
     this.$store.subscribe((mutation, state) => {
       if (mutation.type === 'updateAuthState' && this.$store.state.userData.isAuthed) {
         this.task_check();
+        this.reload();
       }
     });
     axios.interceptors.request.use(

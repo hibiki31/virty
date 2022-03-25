@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Security, HTTPException, status
+from fastapi import APIRouter, Depends, Security, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,8 @@ from settings import SECRET_KEY, API_VERSION
 
 from .schemas import *
 from user.models import UserModel, UserScope
-
+from task.functions import TaskManager
+from project.schemas import PostProject
 
 logger = setup_logger(__name__)
 app = APIRouter(
@@ -172,6 +173,7 @@ def login_for_access_token(
 @app.post("/setup", tags=["auth"])
 def api_auth_setup(
         model: Setup, 
+        bg: BackgroundTasks,
         db: Session = Depends(get_db)
     ):
     if model.user_id == "":
@@ -194,12 +196,16 @@ def api_auth_setup(
     )
 
     db.add(user_model)
-    db.commit()
 
     db.add(UserScope(user_id=user_model.id,name="admin"))
     db.add(UserScope(user_id=user_model.id,name="user"))
 
     db.commit()
+
+    project_reqeust = PostProject(project_name='default', user_ids=[model.user_id])
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'project', 'root')
+    task.commit(user=user_model, request=project_reqeust)
 
     return model
 

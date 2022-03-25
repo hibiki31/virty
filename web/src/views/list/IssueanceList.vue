@@ -125,25 +125,6 @@ export default {
     },
     openTaskDeleteDialog() {
       this.$refs.taskDeleteDialog.openDialog();
-    },
-    getStatusColor(statusCode) {
-      if (statusCode === 'finish') return 'primary';
-      else if (statusCode === 'init') return 'grey lighten-1';
-      else if (statusCode === 'error') return 'error';
-      else return 'yellow';
-    },
-    getMethodColor(statusCode) {
-      if (statusCode === 'add') return 'success';
-      else if (statusCode === 'update') return 'primary';
-      else if (statusCode === 'delete') return 'error';
-      else return 'yellow';
-    },
-    getResourceIcon(resource) {
-      if (resource === 'vm') return 'mdi-cube-outline';
-      else if (resource === 'node') return 'mdi-server';
-      else if (resource === 'storage') return 'mdi-database';
-      else if (resource === 'network') return 'mdi-wan';
-      else return 'mdi-help-rhombus';
     }
   },
   filters: {

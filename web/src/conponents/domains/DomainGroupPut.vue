@@ -71,7 +71,6 @@ export default {
   },
   mounted: async function() {
     axios.get('/api/users').then((response) => (this.users = response.data));
-    axios.get('/api/groups').then((response) => (this.groups = response.data));
   }
 };
 </script>

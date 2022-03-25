@@ -13,13 +13,28 @@
               :rules="[required]"
             ></v-select>
             <v-select
-              :items="itemsUsers"
+              :items="itemsProjects"
               item-text="id"
               item-value="id"
-              v-model="postData.userId"
-              label="Select user name"
+              v-model="postData.projectId"
+              label="Select project"
               :rules="[required]"
-            ></v-select>
+            >
+              <template v-slot:item="{ item }">
+                <span>{{ item.id }} - {{ item.name }}</span>
+                <v-chip
+                  v-for="user in item.users"
+                  :key="user.id"
+                  x-small
+                  class="ma-2"
+                >
+                  {{ user.id }}
+                </v-chip>
+              </template>
+              <template v-slot:selection="{ item }">
+                <span>{{ item.id }} - {{ item.name }}</span>
+              </template>
+            </v-select>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -37,10 +52,10 @@ export default {
   name: 'NodeAddDialog',
   data: function() {
     return {
-      itemsUsers: [],
+      itemsProjects: [],
       itemsTickets: [],
       postData: {
-        userId: '',
+        projectId: '',
         ticketId: ''
       },
       dialogState: false
@@ -71,7 +86,7 @@ export default {
   },
   mounted: function() {
     axios.get('/api/tickets').then((response) => (this.itemsTickets = response.data));
-    axios.get('/api/users').then((response) => (this.itemsUsers = response.data));
+    axios.get('/api/projects').then((response) => (this.itemsProjects = response.data));
   }
 };
 </script>

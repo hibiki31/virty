@@ -77,7 +77,7 @@ def post_api_issuances(
     model = IssuanceModel(
         issued_date = datetime.now(),
         issued_by = current_user.id,
-        user_id = request_model.user_id,
+        project_id = request_model.project_id,
         ticket_id = request_model.ticket_id
     )
 

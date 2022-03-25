@@ -81,8 +81,7 @@ class OVSManager():
     
     def ovs_add_br(self, bridge):
         self.ovs_run('add-br', (bridge,))
-
-    
+        self.ovs_run('set',('Bridge', bridge, 'stp_enable=true'))
     
     def ovs_add_vxlan(self, bridge, remote, key):
         ip_hex = str(hex(int(ipaddress.ip_address(remote))))

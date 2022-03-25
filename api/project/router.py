@@ -28,14 +28,14 @@ app = APIRouter(
 @app.get("", response_model=List[ProjectSelect])
 def get_api_projects(
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
+        admin: bool = False
     ):
-    projects = []
-    for project in db.query(ProjectModel).all():
-        project.users
-        projects.append(project)
-    return projects
-
+    if admin:
+        current_user.verify_scope(['admin'])
+        return db.query(ProjectModel).all()
+    else:
+        return db.query(ProjectModel).filter(ProjectModel.users.any(id=current_user.id)).all()
 
 @app.post("")
 def post_api_projects(
@@ -88,33 +88,3 @@ def put_api_projects(
     project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
 
     return project
-
-
-# @app.delete("")
-# def delete_api_projects(
-#         request: ProjectPatch, 
-#         db: Session = Depends(get_db),
-#         current_user: CurrentUser = Depends(get_current_user)
-#     ):
-#     try:
-#         project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
-#         users = []
-#     except:
-#         raise  HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="The specified value is invalid"
-#         )
-
-#     for user in project.users:
-#         if user.user_id == request.user_id:
-#             continue
-#         else:
-#             users.append(user)
-        
-#     project.users = users
-#     db.merge(project)
-#     db.commit()
-
-#     project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.project_id==request.project_id).one()
-
-#     return project

@@ -31,7 +31,7 @@ class GetTicket(PostTicket):
         orm_mode  =  True
 
 class PostIssuance(CamelModel):
-    user_id: str
+    project_id: str
     ticket_id: str
     class Config:
         orm_mode  =  True

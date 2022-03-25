@@ -18,7 +18,7 @@
       <v-data-table
         :loading="tableLoading"
         :headers="headers"
-        :items="group"
+        :items="ListProjects"
         :items-per-page="20"
         :footer-props="{
           'items-per-page-options': [10, 20, 50, 100, 200, 300, 400, 500],
@@ -81,7 +81,7 @@ export default {
         { text: 'actions', value: 'actions' }
       ],
       user: [],
-      group: []
+      ListProjects: []
     };
   },
   mounted: async function() {
@@ -91,7 +91,12 @@ export default {
     async reload() {
       this.tableLoading = true;
       await axios.get('/api/users').then((response) => (this.user = response.data));
-      await axios.get('/api/projects').then((response) => (this.group = response.data));
+      await axios.get('/api/projects', {
+        params: {
+          admin: this.$store.state.userData.adminMode
+        }
+      }).then((response) => (this.ListProjects = response.data));
+
       this.tableLoading = false;
     }
   }

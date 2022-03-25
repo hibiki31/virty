@@ -11,6 +11,7 @@
       :headers="headers"
       :items="list"
       :items-per-page="10"
+      :loading="listLoadig"
       :footer-props="{
       'items-per-page-options': [10, 20, 50, 100],
       showFirstLastPage: true,
@@ -103,6 +104,7 @@ export default {
   data: function() {
     return {
       list: [],
+      listLoadig: true,
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'PostTime', value: 'postTime' },
@@ -118,7 +120,9 @@ export default {
   },
   methods: {
     reload() {
-      axios.get('/api/tasks').then((response) => (this.list = response.data));
+      this.listLoadig = true;
+      axios.get('/api/tasks', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => (this.list = response.data));
+      this.listLoadig = false;
     },
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {

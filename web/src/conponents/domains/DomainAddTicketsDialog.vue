@@ -107,7 +107,7 @@
             <v-row v-else>
               <v-col cols="12" md="6">
                 <v-select
-                  :items="itemsCpu.filter(x => x.value <= useTicket.core)"
+                  :items="itemsCpuSelect"
                   :rules="[$required]"
                   v-model="postData.core"
                   label="CPU"
@@ -116,7 +116,7 @@
               </v-col>
               <v-col cols="12" md="6">
                 <v-select
-                  :items="itemsMemory.filter(x => x.value <= useTicket.memory)"
+                  :items="itemsMemorySelect"
                   :rules="[$required]"
                   v-model="postData.memory"
                   label="Memory"
@@ -192,13 +192,33 @@
             <v-row v-for="(nic, index) in postData.interfaces" :key="index">
               <v-col cols="12" md="6">
                 <v-select
+                  :items="['ticket', 'project']"
+                  :rules="[$required]"
+                  v-model="nic.type"
+                  label="Type"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="6" v-if="nic.type==='ticket'">
+                <v-select
                   :items="useTicket.networkPools"
                   item-text="name"
                   item-value="id"
                   append-outer-icon="mdi-delete"
                   :rules="[$required]"
                   v-model="nic.id"
-                  label="Network"
+                  label="Ticket Network"
+                  @click:append-outer="deleteInterface(index)"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="6" v-if="nic.type==='project'">
+                <v-select
+                  :items="useTicket.networkPools"
+                  item-text="name"
+                  item-value="id"
+                  append-outer-icon="mdi-delete"
+                  :rules="[$required]"
+                  v-model="nic.id"
+                  label="Project Network"
                   @click:append-outer="deleteInterface(index)"
                 ></v-select>
               </v-col>
@@ -302,7 +322,7 @@ export default {
         { text: '16GB', value: 16384 },
         { text: '32GB', value: 32768 }
       ],
-
+      itemsMemorySelect: [],
       itemsCpu: [
         { text: '1 Core', value: 1 },
         { text: '2 Core', value: 2 },
@@ -312,6 +332,7 @@ export default {
         { text: '16 Core', value: 16 },
         { text: '24 Core', value: 24 }
       ],
+      itemsCpuSelect: [],
       stepCount: 1,
       useCloudInit: false,
       manualSpec: false,
@@ -349,13 +370,19 @@ ssh_authorized_keys:
     openDialog(useTicket=false) {
       this.useTicket = useTicket;
       this.dialogState = true;
+      axios.get('/api/tickets/issuances').then((response) => {
+        this.itemsIssuances = response.data;
+        this.postData.issuanceId = this.itemsIssuances[0].id;
+        this.changeTicket();
+      });
     },
     counterValueInt(value) {
       return value;
     },
     changeTicket() {
       this.useTicket = this.itemsIssuances.filter(x => x.id===this.postData.issuanceId)[0].ticket;
-      console.log(JSON.stringify(this.useTicket, null, 3));
+      this.itemsMemorySelect = this.itemsMemory.filter(x => x.value <= this.useTicket.memory);
+      this.itemsCpuSelect = this.itemsCpu.filter(x => x.value <= this.useTicket.core);
     },
     checkOVS(networkName) {
       const net = this.itemsNetworks.filter(x => x.nodeName===this.postData.nodeName && x.name === networkName);
@@ -425,7 +452,6 @@ ssh_authorized_keys:
   },
   mounted: function() {
     axios.get('/api/storages').then((response) => (this.itemsStorages = response.data));
-    axios.get('/api/tickets/issuances').then((response) => (this.itemsIssuances = response.data));
     axios.get('/api/images').then((response) => (this.itemsImages = response.data));
     axios.get('/api/networks').then((response) => (this.itemsNetworks = response.data));
     axios.get('/api/nodes').then((response) => (this.itemsNodes = response.data));

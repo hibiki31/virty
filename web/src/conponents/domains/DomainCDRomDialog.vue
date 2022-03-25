@@ -9,7 +9,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn :loading="this.loadingSubmit" color="error" v-on:click="runMethod(true)">unmount</v-btn>
-            <v-btn :loading="this.loadingSubmit" color="primary" v-on:click="runMethod">mount</v-btn>
+            <v-btn :loading="this.loadingSubmit" color="primary" v-on:click="runMethod(false)">mount</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>

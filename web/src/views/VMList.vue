@@ -181,13 +181,13 @@ export default {
         { text: 'groupId', value: 'ownerGroupId' }
       ],
       user: [],
-      group: []
+      projects: []
     };
   },
   mounted: async function() {
     this.reload();
     axios.get('/api/users').then((response) => (this.user = response.data));
-    axios.get('/api/projects').then((response) => (this.group = response.data));
+    axios.get('/api/projects').then((response) => (this.projects = response.data));
   },
   methods: {
     reload() {

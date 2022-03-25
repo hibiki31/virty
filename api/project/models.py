@@ -15,3 +15,10 @@ class ProjectModel(Base):
     name = Column(String)
     users = relationship("UserModel", secondary=association_users_to_projects, back_populates="projects", lazy=False)
     domains = relationship("DomainModel", backref="project")
+
+
+class ProjectPortsModel(Base):
+    __tablename__ = "projects_ports"
+    project_id = Column(String(6), ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    vlan_id = Column(Integer, primary_key=True)
+    name = Column(String)

@@ -1,22 +1,15 @@
-import os
-import jwt
-import secrets
 
-from datetime import datetime, timedelta
-from typing import List, Optional
-from passlib.context import CryptContext
-from pydantic import BaseModel, ValidationError
-from fastapi import APIRouter, Depends, Request, HTTPException, Security, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from mixin.database import get_db
 from mixin.log import setup_logger
-from settings import IS_DEV
+
+from task.functions import TaskManager
 
 from .models import *
 from .schemas import *
+from project.schemas import PostProject
 from auth.router import CurrentUser, get_current_user, pwd_context
 
 logger = setup_logger(__name__)
@@ -36,12 +29,12 @@ def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
 
 @app.post("", tags=["user"])
 def post_api_users(
-        model: UserInsert, 
+        request: UserInsert,
+        bg: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    print(model)
-    if model.user_id == "":
+    if request.user_id == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Blanks are not allowed in id"
@@ -49,16 +42,19 @@ def post_api_users(
 
     # ユーザ追加
     user_model = UserModel(
-        id=model.user_id, 
-        hashed_password=pwd_context.hash(model.password)
+        id=request.user_id, 
+        hashed_password=pwd_context.hash(request.password)
     )
 
     db.add(user_model)
-    db.commit()
-
     db.add(UserScope(user_id=user_model.id,name="user"))
 
     db.commit()
+
+    project_reqeust = PostProject(project_name='default', user_ids=[request.user_id])
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'project', 'root')
+    task.commit(user=current_user, request=project_reqeust)
 
     return user_model
 
