@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: abbef2df40b2
+Revision ID: e8ddc480d179
 Revises: 
-Create Date: 2022-03-17 02:25:52.538891
+Create Date: 2022-03-25 16:27:34.038086
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'abbef2df40b2'
+revision = 'e8ddc480d179'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -138,6 +138,13 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_networks_uuid'), 'networks', ['uuid'], unique=False)
+    op.create_table('projects_ports',
+    sa.Column('project_id', sa.String(length=6), nullable=False),
+    sa.Column('vlan_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('project_id', 'vlan_id')
+    )
     op.create_table('storages',
     sa.Column('uuid', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -164,6 +171,7 @@ def upgrade():
     sa.Column('object', sa.String(), nullable=True),
     sa.Column('method', sa.String(), nullable=True),
     sa.Column('request', sa.JSON(), nullable=True),
+    sa.Column('result', sa.JSON(), nullable=True),
     sa.Column('message', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['dependence_uuid'], ['tasks.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
@@ -316,6 +324,7 @@ def downgrade():
     op.drop_table('tasks')
     op.drop_index(op.f('ix_storages_uuid'), table_name='storages')
     op.drop_table('storages')
+    op.drop_table('projects_ports')
     op.drop_index(op.f('ix_networks_uuid'), table_name='networks')
     op.drop_table('networks')
     op.drop_index(op.f('ix_issuances_id'), table_name='issuances')
