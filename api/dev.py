@@ -4,8 +4,6 @@ import libvirt
 
 from urllib import request
 from module.virtlib import VirtManager
-from storage.tasks import update_storage_list
-from network.tasks import update_network_list
 from node.tasks import patch_node_role
 from domain.tasks import *
 from domain.schemas import *
@@ -92,24 +90,21 @@ def ansible_test():
     )
 
     play_source = dict(
-        name = "Ansible Play",
         hosts = 'all',
         gather_facts = 'no',
         tasks = [
             dict(
-                synchronize = dict(
-                    src = "/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",
-                    dest = "/",
-                    compress = "no"
+                file_manager = dict(
+                    path = "/home/"
                 ),
                 become = "yes"
             )
         ]
     )
 
-    manager = AnsibleManager(user="akane", domain="192.168.144.31")
-    #manager.run_playbook(play_source)
-    manager.file_copy_to_node(src="/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",dest="aaa.iso")
+    manager = AnsibleManager(user="", domain="")
+    res = manager.run_playbook(play_source)
+    pprint(res)
 
 
 def dev_ovs():
@@ -126,4 +121,4 @@ def project():
     pass
 
 if __name__ == "__main__":
-    dev_ovs()
+    ansible_test()

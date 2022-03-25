@@ -32,6 +32,7 @@ class AnsibleManager():
             if i["status"] == "ok":
                 summary["ok"] += 1
             elif i["status"] == "failed":
+                logger.error(i)
                 summary["failed"] += 1
             elif i["status"] == "unreachable":
                 summary["unreachable"] += 1
