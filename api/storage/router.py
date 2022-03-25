@@ -98,14 +98,16 @@ def get_api_images(
             domain = GetImageDomain(**i[1].__dict__)
         else:
             domain = None
-        if i[0].flavor:
-            flavor = i[0].flavor
-        else:
-            flavor = None
+
         res.append(
             ImageSelect(
-                **i[0].__dict__ ,
+                name=i[0].name,
                 storage=i[0].storage,
+                capacity=i[0].capacity,
+                allocation=i[0].allocation,
+                path=i[0].path,
+                flavor=i[0].flavor,
+                storage_uuid=i[0].storage_uuid,
                 domain=domain
             )
         )
