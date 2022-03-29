@@ -61,7 +61,7 @@ def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     db.commit()
     task.message = "Storage list updated has been successfull"
 
-def post_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
+def post_storage_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: StorageInsert = StorageInsert(**loads(task.request))
 
     try:
