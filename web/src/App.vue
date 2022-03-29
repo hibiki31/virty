@@ -33,16 +33,6 @@
       </v-list-item>
       <v-divider></v-divider>
       <v-list-item>
-        <v-select
-        :items="projectList"
-        item-text="name"
-        item-value="id"
-        @change="(value) =>{$store.dispatch('setProjectId', value)}"
-        class="pt-3 pb-3"
-        dense
-        hide-details
-      >
-      </v-select>
       </v-list-item>
       <v-divider></v-divider>
       <v-list nav dense>
@@ -121,7 +111,20 @@
       <span class="subtitle-2 ml-1">v{{this.version}}</span>
     </v-navigation-drawer>
     <v-app-bar color="primary" dark dense flat app clipped-left>
-      <v-toolbar-title>Virty</v-toolbar-title>
+      <v-toolbar-title>Virty Cloud Platform</v-toolbar-title>
+      <div style="50px;">
+        <v-select
+            :items="projectList"
+            item-text="name"
+            item-value="id"
+            prepend-icon="mdi-hexagon-multiple"
+            @change="(value) =>{$store.dispatch('setProjectId', value)}"
+            class="pl-10 pt-1"
+            dense
+            hide-details
+          >
+        </v-select>
+      </div>
       <v-spacer></v-spacer>
       <v-progress-circular
         v-if="(taskCount != 0)"

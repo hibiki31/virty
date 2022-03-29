@@ -156,13 +156,17 @@ def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageInsert = None
+        request: StorageInsert = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("storage","base","add", bg)
+    task = TaskManager(db=db, bg=bg)
+    task.select('post', 'storage', 'root')
+    task.commit(user=current_user, request=request)
 
-    return task_model
+    put_task = TaskManager(db=db, bg=bg)
+    put_task.select('put', 'storage', 'list')
+    put_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+
+    return task.model
 
 
 @app.patch("/api/storages", tags=["storage"])

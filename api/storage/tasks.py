@@ -1,13 +1,12 @@
-from fastapi import BackgroundTasks
-
+from json import loads
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
+from mixin.log import setup_logger
 
 from .models import *
 from .schemas import *
-
 from task.models import TaskModel
 from node.models import NodeModel
-from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
@@ -62,8 +61,8 @@ def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     db.commit()
     task.message = "Storage list updated has been successfull"
 
-def add_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: StorageInsert = StorageInsert(**model.request)
+def post_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: StorageInsert = StorageInsert(**loads(task.request))
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
@@ -78,9 +77,8 @@ def add_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_define(xml_str=editor.dump_str())
 
-    update_storage_list(db=db, model=TaskModel())
+    task.message = "Storage append has been successfull"
 
-    return model
 
 def delete_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: StorageDelete = StorageDelete(**model.request)
