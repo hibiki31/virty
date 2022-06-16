@@ -72,8 +72,8 @@ def put_vm_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     task.message = "VM list updated has been successfull"
 
 
-def post_vm_ticketd(db:Session, bg: BackgroundTasks, task: TaskModel):
-    req = PostDomainTicket(**task.request)
+def post_vm_ticketd(db:Session, task: TaskModel):
+    req = PostDomainTicket(**loads(task.request))
     issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
 
     # メモリのアサインが少ない順で行く
@@ -200,9 +200,10 @@ def post_vm_ticketd(db:Session, bg: BackgroundTasks, task: TaskModel):
 
 
 def post_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    req = DomainInsert(**loads(task.request))
-    if req.type == "ticket":
-        req = post_vm_ticketd(db=db, model=task)
+    if loads(task.request)["type"] == "ticket":
+        req = post_vm_ticketd(db=db, task=task)
+    else:
+        req = DomainInsert(**loads(task.request))
 
     # データベースから情報とってきて確認も行う
     domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
