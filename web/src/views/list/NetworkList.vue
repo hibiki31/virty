@@ -1,7 +1,9 @@
 <template>
 <div>
-  <network-add-dialog ref="networkAddDialog" />
-  <network-delete-dialog ref="networkDeleteDialog" />
+  <network-add-dialog ref="networkAddDialog" @reload="reload"/>
+  <network-delete-dialog ref="networkDeleteDialog" @reload="reload"/>
+  <network-pool-add-dialog ref="networkPortAddDialog" @reload="reload"/>
+  <network-pool-join-dialog ref="networkPortJoinDialog" @reload="reload"/>
   <v-card>
     <v-card-actions>
       <v-btn
@@ -40,6 +42,50 @@
           >{{ item.uuid }}</router-link
         >
       </template>
+       <template v-slot:[`item.actions`]="{ item }" justify="right">
+          <v-icon v-on:click="$refs.networkPortJoinDialog.openDialog(item)" small left>mdi-server-plus</v-icon>
+      </template>
+    </v-data-table>
+  </v-card>
+    <v-card class="mt-4">
+    <v-card-actions>
+       <v-btn v-on:click="$refs.networkPortAddDialog.openDialog()" small class="ma-2" color="primary">
+          <v-icon left>mdi-server-plus</v-icon>ADD
+        </v-btn>
+    </v-card-actions>
+    <v-data-table
+      :headers="headersPools"
+      :items="listPools"
+      :items-per-page="10"
+      :loading="loading"
+      :footer-props="{
+        'items-per-page-options': [10, 20, 50, 100],
+        showFirstLastPage: true,
+          }"
+      multi-sort
+    >
+      <template v-slot:[`item.networks`]="{ item }">
+            <v-chip
+              v-for="network in item.networks"
+              :key="network.uuid"
+              class="ma-2"
+              label
+              small
+            >
+              {{ network.name }}@{{ network.nodeName }}
+            </v-chip>
+        </template>
+         <template v-slot:[`item.ports`]="{ item }">
+            <v-chip
+              v-for="port in item.ports"
+              :key="port.name"
+              class="ma-2"
+              label
+              small
+            >
+              {{ port.network.name }}@{{ port.network.nodeName }}#{{ port.name }}
+            </v-chip>
+        </template>
     </v-data-table>
   </v-card>
 </div>
@@ -50,16 +96,21 @@ import axios from '@/axios/index';
 
 import NetworkDeleteDialog from '@/conponents/networks/NetworkDeleteDialog.vue';
 import NetworkAddDialog from '@/conponents/networks/NetworkAddDialog.vue';
+import NetworkPoolAddDialog from '@/conponents/networks/NetworkPoolAddDialog.vue';
+import NetworkPoolJoinDialog from '../../conponents/networks/NetworkPoolJoinDialog.vue';
 
 export default {
   name: 'NetworkList',
   components: {
     NetworkDeleteDialog,
-    NetworkAddDialog
+    NetworkAddDialog,
+    NetworkPoolAddDialog,
+    NetworkPoolJoinDialog
   },
   data: function() {
     return {
       list: [],
+      listPools: [],
       loading: false,
       headers: [
         { text: 'Name', value: 'name' },
@@ -67,7 +118,14 @@ export default {
         { text: 'Node', value: 'nodeName' },
         { text: 'Type', value: 'type' },
         { text: 'UUID', value: 'uuid' },
-        { text: 'DHCP', value: 'dhcp' }
+        { text: 'DHCP', value: 'dhcp' },
+        { text: 'actions', value: 'actions' }
+      ],
+      headersPools: [
+        { text: 'id', value: 'id' },
+        { text: 'name', value: 'name' },
+        { text: 'networks', value: 'networks' },
+        { text: 'ports', value: 'ports' }
       ]
     };
   },
@@ -78,6 +136,7 @@ export default {
     async reload() {
       this.loading = true;
       await axios.get('/api/networks').then((response) => (this.list = response.data));
+      await axios.get('/api/networks/pools').then((response) => (this.listPools = response.data));
       this.loading = false;
     },
     openNetworkDeleteDialog() {

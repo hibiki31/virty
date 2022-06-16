@@ -12,6 +12,9 @@ from domain.models import *
 from node.models import *
 from task.models import *
 from network.models import *
+from ticket.models import *
+from flavor.models import *
+from project.models import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

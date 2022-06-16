@@ -11,6 +11,15 @@
               counter="64"
             ></v-text-field>
             <v-select
+              :items="[ { name: 'Linux bridge', value: 'bridge' }, { name: 'Open vSwitch', value: 'ovs' } ]"
+              item-text="name"
+              item-value="value"
+              v-model="postData.type"
+              label="Type"
+              :rules="[required]"
+            >
+            </v-select>
+            <v-select
               :items="itemsNodes"
               item-text="name"
               item-value="name"

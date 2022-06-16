@@ -11,7 +11,6 @@ import ImageList from '../views/ImageList.vue';
 import Empty from '../views/EmptyView.vue';
 import Develop from '../views/Develop.vue';
 import UserList from '../views/UserList.vue';
-import GroupList from '../views/GroupList.vue';
 import NetworkDetail from '@/views/NetworkDetail';
 
 import ListRouter from '@/router/listRouter.js';
@@ -91,12 +90,10 @@ const routes = [
   {
     path: '/users',
     name: 'Users',
-    component: UserList
-  },
-  {
-    path: '/groups',
-    name: 'Groups',
-    component: GroupList
+    component: UserList,
+    meta: {
+      requiresAuth: true
+    }
   },
   {
     path: '*',
@@ -112,18 +109,20 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthed = store.state.userData.isAuthed;
-  if (isAuthed || to.matched.some(record => !record.meta.requiresAuth)) {
-    if ((to.name === 'Login' && isAuthed) || (to.name === 'Logout' && !isAuthed)) {
-      next({ name: 'VMList' });
-    } else {
-      next();
-    }
-  } else {
+  // ログインしているのにログインページに行く場合
+  if (isAuthed && to.name === 'Login') {
+    next({
+      name: 'VMList'
+    });
+  }
+  // 認証が必要なページに未認証でアクセスした場合
+  if (!isAuthed && to.matched.some(record => record.meta.requiresAuth)) {
     next({
       name: 'Login',
       query: { redirect: to.fullPath }
     });
   }
+  next();
 });
 
 export default router;

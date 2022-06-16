@@ -1,6 +1,7 @@
 <template>
   <div>
     <DomainAddDialog ref="domainAddDialog"/>
+    <domain-add-tickets-dialog ref="domainAddTicketsDialog"/>
     <domain-group-put ref="domainGroupPut" @reload="reload"/>
     <v-dialog width="300" v-model="dialog">
       <v-card>
@@ -38,6 +39,7 @@
           class="ma-2"
           color="primary"
           :loading="this.reloadLoading"
+          v-if="this.$store.state.userData.adminMode"
         >
           <v-icon left>mdi-cached</v-icon>Reload
         </v-btn>
@@ -47,8 +49,18 @@
           dark
           class="ma-2"
           color="primary"
+          v-if="this.$store.state.userData.adminMode"
         >
           <v-icon left>mdi-server-plus</v-icon>ADD
+        </v-btn>
+        <v-btn
+          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-server-plus</v-icon>CREATE
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -141,12 +153,14 @@
 import axios from '@/axios/index';
 import DomainAddDialog from '../conponents/domains/DomainAddDialog';
 import DomainGroupPut from '../conponents/domains/DomainGroupPut.vue';
+import DomainAddTicketsDialog from '../conponents/domains/DomainAddTicketsDialog.vue';
 
 export default {
   name: 'VMList',
   components: {
     DomainAddDialog,
-    DomainGroupPut
+    DomainGroupPut,
+    DomainAddTicketsDialog
   },
   data: function() {
     return {
@@ -167,13 +181,13 @@ export default {
         { text: 'groupId', value: 'ownerGroupId' }
       ],
       user: [],
-      group: []
+      projects: []
     };
   },
   mounted: async function() {
     this.reload();
     axios.get('/api/users').then((response) => (this.user = response.data));
-    axios.get('/api/groups').then((response) => (this.group = response.data));
+    axios.get('/api/projects').then((response) => (this.projects = response.data));
   },
   methods: {
     reload() {

@@ -10,9 +10,10 @@ from settings import APP_ROOT
 from mixin.log import setup_logger
 from module.model import AttributeDict
 
-from storage.schemas import ImageRaw
+from storage.schemas import PaseImage, PaseStorage
 from domain.schemas import *
-
+from network.schemas import PaseNetwork, PaseNetworkPortgroup
+from network.models import NetworkModel
 
 logger = setup_logger(__name__)
 
@@ -48,14 +49,6 @@ class XmlEditor():
 
 
     def storage_pase(self):
-        """
-        ストレージのXMLをパースする
-        Returns
-        -------
-        AttributeDict()
-        """
-        logger.debug("ストレージのパースを開始")
-
         data = AttributeDict()
         
         data.name = self.xml.find('name').text
@@ -90,7 +83,7 @@ class XmlEditor():
         AttributeDict()
         """
 
-        data = ImageRaw(
+        data = PaseImage(
             name = self.xml.find('name').text,
             capacity = unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text),
             allocation = unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text),
@@ -103,62 +96,54 @@ class XmlEditor():
     
 
     def network_pase(self):
-        data = {}
-        data['name'] = self.xml.find('name').text
-        data['uuid'] = self.xml.find('uuid').text
-
         # タイプ判定
         if self.xml.find('forward') is not None:
             mode = self.xml.find('forward').get("mode")
-            data['type'] = mode
+            network_type = mode
             try:
                 if self.xml.find('virtualport').get("type") == "openvswitch":
-                    data['type'] = "openvswitch"
+                    network_type = "openvswitch"
             except:
                 pass
         else:
-            data['type'] = "internal"
-
-        # ブリッジ先
-        data['bridge'] = self.xml.find('bridge').get("name")
+            network_type = "internal"
         
-        # MACアドレス
-        try:
-            data['mac'] = self.xml.find('mac').get("address",None)
-        except:
-            data['mac'] = None
+        data = PaseNetwork(
+            name = self.xml.find('name').text,
+            uuid = self.xml.find('uuid').text,
+            bridge = self.xml.find('bridge').get("name"),
+            type = network_type,
+            portgroups=[]
+        )
+
+        for portgroup in self.xml.findall('portgroup'):
+            try:
+                vlan_id = portgroup.find('vlan').find('tag').get('id')
+            except:
+                vlan_id = None
+            data.portgroups.append(PaseNetworkPortgroup(
+                name = portgroup.get("name"),
+                is_default= True if portgroup.get("default") == "yes" else False,
+                vlan_id= vlan_id
+            ))
 
         # IP関係
-        if self.xml.find('ip') is not None:
-            data['ip'] = []
-            data['dhcp'] = []
-            data['mac'] = None
-            data['ip'].append(self.xml.find('ip').get("address",None))
-            data['ip'].append(self.xml.find('ip').get("netmask",None))
-            if self.xml.find('ip').find('dhcp') is not None:
-                DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
-                DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
-                data['dhcp'].append([DHCP_START,DHCP_END])
-        else:
-            data['ip'] = None
-            data['dhcp'] = None
+        # mac = self.xml.find('mac').get("address",None)
+        # if self.xml.find('ip') is not None:
+        #     data['ip'] = []
+        #     data['dhcp'] = []
+        #     data['mac'] = None
+        #     data['ip'].append(self.xml.find('ip').get("address",None))
+        #     data['ip'].append(self.xml.find('ip').get("netmask",None))
+        #     if self.xml.find('ip').find('dhcp') is not None:
+        #         DHCP_START = self.xml.find('ip').find('dhcp').find('range').get("start",None)
+        #         DHCP_END = self.xml.find('ip').find('dhcp').find('range').get("end",None)
+        #         data['dhcp'].append([DHCP_START,DHCP_END])
+        # else:
+        #     data['ip'] = None
+        #     data['dhcp'] = None
 
-        # OpenVswith
-        if data['type'] == 'openvswitch':
-            data['portgroup'] = []
-            for portgroup in self.xml.findall('portgroup'):
-                try:
-                    vlan_id = portgroup.find('vlan').find('tag').get('id')
-                except:
-                    vlan_id = None
-                data['portgroup'].append({
-                    'name': portgroup.get("name"),
-                    'isDefault': True if portgroup.get("default") == "yes" else False,
-                    'vlanId': vlan_id
-                })
-
-        else:
-            data['portgroup'] = None
+        
 
         return data
 

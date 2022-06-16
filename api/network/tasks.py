@@ -1,14 +1,18 @@
+from json import loads
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
+from mixin.log import setup_logger
 
 from .models import *
 from .schemas import *
-
 from task.models import TaskModel
 from node.models import NodeModel
+
 from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
+from module.ovslib import OVSManager
 
 from time import time
 
@@ -16,36 +20,52 @@ from time import time
 logger = setup_logger(__name__)
 
 
-def update_network_list(db: Session, model: TaskModel):
+def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     nodes = db.query(NodeModel).all()
 
-    token = time()
+    token = str(time())
 
     for node in nodes:
         if node.status != 10:
             continue
-        try:
-            logger.info(f'connectiong node: {node.user_name + "@" + node.domain}')
-            manager = virtlib.VirtManager(node_model=node)
-        except:
-            logger.error(f'ノードへの接続に失敗しました: {node.name}')
-            continue
 
-        for network in manager.network_data(token=token):
-            network: NetworkModel
-            network.node_name = node.name
-            db.merge(network)
-        # ノードが変わる前に一度コミット
+        manager = virtlib.VirtManager(node_model=node)
+
+        for network in manager.network_data():
+            network:PaseNetwork
+            merge_model = NetworkModel(
+                uuid = network.uuid,
+                name = network.name,
+                type = network.type,
+                bridge = network.bridge,
+                update_token = token,
+                node_name = node.name,
+            )
+            db.merge(merge_model)
+            for port in network.portgroups:
+                port_model = NetworkPortgroupModel(
+                    network_uuid = network.uuid, 
+                    update_token=token,
+                    name=port.name,
+                    vlan_id=port.vlan_id,
+                    is_default=port.is_default
+                )
+                db.merge(port_model)
+            db.commit()
+        db.query(NetworkPortgroupModel).filter(
+            NetworkPortgroupModel.network_uuid==network.uuid, 
+            NetworkPortgroupModel.update_token!=token
+        ).delete()
+        db.query(NetworkModel).filter(
+            NetworkModel.node_name==node.name,
+            NetworkModel.update_token!=token
+        ).delete()
+        
         db.commit()
+    task.message = "Network list updated has been successfull"
 
-    db.commit()
-    # トークンで削除
-    db.query(NetworkModel).filter(NetworkModel.update_token!=str(token)).delete()
-    db.commit()
-    return model
-
-def add_network_base(db: Session, model: TaskModel):
-    request: NetworkInsert = NetworkInsert(**model.request)
+def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkInsert = NetworkInsert(**loads(task.request))
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
@@ -75,12 +95,11 @@ def add_network_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_define(xml_str=xml)
 
-    update_network_list(db=db, model=TaskModel())
+    put_network_list(db=db, bg=bg,task=TaskModel())
 
-    return model
 
-def delete_network_base(db: Session, model: TaskModel):
-    request: NetworkDelete = NetworkDelete(**model.request)
+def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkDelete = NetworkDelete(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -95,12 +114,11 @@ def delete_network_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_undefine(request.uuid)
 
-    update_network_list(db=db, model=TaskModel())
+    put_network_list(db=db, bg=bg,task=TaskModel())
 
-    return model
 
-def add_network_ovs(db: Session, model: TaskModel):
-    request: NetworkOVSAdd = NetworkOVSAdd(**model.request)
+def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkOVSAdd = NetworkOVSAdd(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -113,11 +131,10 @@ def add_network_ovs(db: Session, model: TaskModel):
 
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_add(uuid=network.uuid, name=request.name, vlan=request.vlan_id)
+    
 
-    return model
-
-def delete_network_ovs(db: Session, model: TaskModel):
-    request: NetworkOVSDelete = NetworkOVSDelete(**model.request)
+def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkOVSDelete = NetworkOVSDelete(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -130,5 +147,21 @@ def delete_network_ovs(db: Session, model: TaskModel):
 
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_delete(uuid=network.uuid, name=request.name)
+    
 
+
+def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: PostVXLANInternal = PostVXLANInternal(**model.request)
+
+    nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
+
+    for node in nodes:
+        logger.info(node.extra_json)
+
+    # manager = OVSManager(node_model=db.query(NodeModel).first())
+    # manager.ovs_crean()
+    # manager.ovs_add_br("br-test")
+    # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
     return model
+
+

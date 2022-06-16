@@ -1,11 +1,12 @@
+from json import loads
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
+from mixin.log import setup_logger
 
 from .models import *
 from .schemas import *
-
 from task.models import TaskModel
 from node.models import NodeModel
-from mixin.log import setup_logger
 
 from module import virtlib
 from module import xmllib
@@ -16,7 +17,7 @@ from time import time
 logger = setup_logger(__name__)
 
 
-def update_storage_list(db: Session, model: TaskModel):
+def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     nodes = db.query(NodeModel).all()
 
     token = time()
@@ -25,27 +26,43 @@ def update_storage_list(db: Session, model: TaskModel):
         if node.status != 10:
             continue
 
-        logger.info(f'connectiong node: {node.user_name + "@" + node.domain}')
         manager = virtlib.VirtManager(node_model=node)
 
         storages = manager.storage_data(token=token)
         for storage in storages:
-            for image in storage["image"]:
-                image = ImageModel(**image.dict())
-                image.storage_uuid = storage["storage"].uuid
-                # イメージを登録
-                db.merge(image)
+            storage_model = StorageModel(
+                uuid=storage.uuid,
+                name=storage.name,
+                node_name=storage.node_name,
+                capacity=storage.capacity,
+                available=storage.available,
+                path=storage.path,
+                active=storage.active,
+                auto_start=storage.auto_start,
+                status=storage.status,
+                update_token=storage.update_token
+            )
+            for image in storage.images:
+                image_model = ImageModel(
+                    name=image.name,
+                    storage_uuid=image.storage_uuid,
+                    capacity=image.capacity,
+                    allocation=image.allocation,
+                    path=image.path,
+                    update_token=image.update_token
+                )
+                db.merge(image_model)
             # ストレージを登録
-            db.merge(storage["storage"])
+            db.merge(storage_model)
     db.commit()
     # トークンで除外
     db.query(StorageModel).filter(StorageModel.update_token!=str(token)).delete()
     db.query(ImageModel).filter(ImageModel.update_token!=str(token)).delete()
     db.commit()
-    return model
+    task.message = "Storage list updated has been successfull"
 
-def add_storage_base(db: Session, model: TaskModel):
-    request: StorageInsert = StorageInsert(**model.request)
+def post_storage_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: StorageInsert = StorageInsert(**loads(task.request))
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
@@ -60,11 +77,10 @@ def add_storage_base(db: Session, model: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_define(xml_str=editor.dump_str())
 
-    update_storage_list(db=db, model=TaskModel())
+    task.message = "Storage append has been successfull"
 
-    return model
 
-def delete_storage_base(db: Session, model: TaskModel):
+def delete_storage_base(db:Session, bg: BackgroundTasks, task: TaskModel):
     request: StorageDelete = StorageDelete(**model.request)
 
     try:

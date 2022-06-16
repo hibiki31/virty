@@ -1,16 +1,18 @@
 from pprint import pprint
+from random import random, randint
 import libvirt
 
 from urllib import request
 from module.virtlib import VirtManager
-from storage.tasks import update_storage_list
-from network.tasks import update_network_list
 from node.tasks import patch_node_role
 from domain.tasks import *
 from domain.schemas import *
 from mixin.database import SessionLocal
 from task.models import TaskModel
 from module.ansiblelib import AnsibleManager
+from module.ovslib import OVSManager
+from user.models import *
+from project.models import *
 
 from module import sshlib
 
@@ -88,25 +90,35 @@ def ansible_test():
     )
 
     play_source = dict(
-        name = "Ansible Play",
         hosts = 'all',
         gather_facts = 'no',
         tasks = [
             dict(
-                synchronize = dict(
-                    src = "/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",
-                    dest = "/",
-                    compress = "no"
+                file_manager = dict(
+                    path = "/home/"
                 ),
                 become = "yes"
             )
         ]
     )
 
-    manager = AnsibleManager(user="akane", domain="192.168.144.31")
-    #manager.run_playbook(play_source)
-    manager.file_copy_to_node(src="/workspaces/virty/main/data/cloud-init/aaaaa/init.iso",dest="aaa.iso")
-    
+    manager = AnsibleManager(user="", domain="")
+    res = manager.run_playbook(play_source)
+    pprint(res)
+
+
+def dev_ovs():
+    db = SessionLocal()
+    manager = OVSManager(domain=db.query(NodeModel).first().domain)
+    for i in manager.ovs_list_br():
+        print(i)
+        print(manager.ovs_list_port(i))
+    # manager.ovs_add_br("br-test")
+    # manager.ovs_add_vxlan(bridge="br-test", remote="10.254.4.12", key="test")
+
+
+def project():
+    pass
 
 if __name__ == "__main__":
-    dev_libvirt()
+    ansible_test()

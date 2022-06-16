@@ -11,6 +11,7 @@
       :headers="headers"
       :items="list"
       :items-per-page="10"
+      :loading="listLoadig"
       :footer-props="{
       'items-per-page-options': [10, 20, 50, 100],
       showFirstLastPage: true,
@@ -67,6 +68,7 @@
             v-bind="attrs"
             v-on="on"
             class="ml-5"
+            @click="copyClipBoardCurl(item)"
             >mdi-code-json</v-icon>
           </template>
           <span>{{ item.request }}</span>
@@ -102,6 +104,7 @@ export default {
   data: function() {
     return {
       list: [],
+      listLoadig: true,
       headers: [
         { text: 'Status', value: 'status' },
         { text: 'PostTime', value: 'postTime' },
@@ -117,10 +120,32 @@ export default {
   },
   methods: {
     reload() {
-      axios.get('/api/tasks').then((response) => (this.list = response.data));
+      this.listLoadig = true;
+      axios.get('/api/tasks', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => (this.list = response.data));
+      this.listLoadig = false;
     },
     copyClipBoard(text) {
       this.$copyText(text).then(function(e) {
+        console.log(e);
+      }, function(e) {
+        console.log(e);
+      });
+    },
+    methodTransration(method) {
+      switch (method) {
+        case 'add': return 'POST';
+        case 'update': return 'PUT';
+        case 'delete': return 'DELETE';
+        case 'cahnge': return 'PATH';
+      }
+    },
+    copyClipBoardCurl(item) {
+      const comand = `curl -X '${this.methodTransration(item.method)}' \\
+'${location.protocol}//${location.host}/api/${item.resource}/${item.object}' \\
+-H 'accept: application/json' \\
+-H 'Authorization: Bearer ${this.$store.state.userData.token}' \\
+-d '${JSON.stringify(item.request)}'`;
+      this.$copyText(comand).then(function(e) {
         console.log(e);
       }, function(e) {
         console.log(e);
@@ -136,8 +161,8 @@ export default {
       else return 'yellow';
     },
     getMethodColor(statusCode) {
-      if (statusCode === 'add') return 'success';
-      else if (statusCode === 'update') return 'primary';
+      if (statusCode === 'post') return 'success';
+      else if (statusCode === 'put') return 'primary';
       else if (statusCode === 'delete') return 'error';
       else return 'yellow';
     },

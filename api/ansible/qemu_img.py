@@ -2,21 +2,6 @@
 import os
 from ansible.module_utils.basic import AnsibleModule
 
-def test():
-    play_source = dict(
-        hosts = 'all',
-        gather_facts = 'no',
-        tasks = [
-            dict(
-                qemu_img = dict(
-                    dest = "/tmp/test.img",
-                    size = "32G",
-                    state = "present"
-                ),
-                become = "yes"
-            )
-        ]
-    )
 
 def main():
     module = AnsibleModule(
@@ -24,7 +9,7 @@ def main():
             dest=dict(type='str', required=True),
             format=dict(type='str', default='qcow2'),
             size=dict(type='str'),
-            state=dict(type='str', choices=['absent', 'present', 'resize'], default='present'),
+            state=dict(type='str', choices=['remove', 'create', 'resize'], default='create'),
         ),
     )
 
@@ -34,7 +19,7 @@ def main():
     img_format = module.params['format']
     img_size = module.params['size']
     qemu_img_cmd = module.get_bin_path('qemu-img', True)
-    become_status = module.params['state']
+    method = module.params['state']
     
     if img_size != None:
         if(img_size[:-1].upper == 'G'):
@@ -46,23 +31,23 @@ def main():
         else:
             img_size = img_size
 
-    if become_status == 'present':
+    if method == 'create':
         if not img_size:
             module.fail_json(msg='Requires a image size')
         if not os.path.exists(img_dst):
             module.run_command(f'{qemu_img_cmd} create -f {img_format} "{img_dst}" {img_size}', check_rc=True)
             changed = True
 
-    if become_status == 'resize':
-        if not size:
+    if method == 'resize':
+        if not img_size:
             module.fail_json(msg='Requires a image size')            
         if not os.path.exists(img_dst):
             module.fail_json(msg='Terget file not found')
         else:
-            module.run_command('%s resize "%s" %s'%(qemu_img, dest, size), check_rc=True)
+            module.run_command('%s resize "%s" %s'%(qemu_img_cmd, img_dst, img_size), check_rc=True)
             changed = True
 
-    if become_status == 'absent':
+    if method == 'delete':
         if os.path.exists(img_dst):
             os.remove(img_dst)
             changed = True

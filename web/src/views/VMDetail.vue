@@ -41,36 +41,36 @@
       </v-card>
     </v-dialog>
       <v-menu>
-            <template v-slot:activator="{ on: menu, attrs }">
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on: tooltip }">
-                  <v-icon
-                    left
-                    v-bind="attrs"
-                    v-on="{ ...tooltip, ...menu }"
-                    class="ma-3"
-                    :color="getPowerColor(data.db.status)"
-                    >mdi-power-standby</v-icon
-                  >
-                </template>
-                <span>Power control</span>
-              </v-tooltip>
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-icon
+                left
+                v-bind="attrs"
+                v-on="{ ...tooltip, ...menu }"
+                class="ma-3"
+                :color="getPowerColor(data.status)"
+                >mdi-power-standby</v-icon
+              >
             </template>
-            <v-card>
-              <v-card-text>
-                <div class="mb-3">
-                  <v-icon v-on:click="vmPowerOn(item.db.uuid)" color="primary"
-                    >mdi-power-standby</v-icon
-                  >
-                </div>
-                <v-icon v-on:click="vmPowerOff(item.db.uuid)" color="grey"
-                  >mdi-power-standby</v-icon
-                >
-              </v-card-text>
-            </v-card>
-          </v-menu>
-    <span class="title">{{ data.db.name }}</span>
-    <span class="body ml-5">{{ data.db.uuid }}</span>
+            <span>Power control</span>
+          </v-tooltip>
+        </template>
+        <v-card>
+          <v-card-text>
+            <div class="mb-3">
+              <v-icon v-on:click="vmPowerOn(data.uuid)" color="primary"
+                >mdi-power-standby</v-icon
+              >
+            </div>
+            <v-icon v-on:click="vmPowerOff(data.uuid)" color="grey"
+              >mdi-power-standby</v-icon
+            >
+          </v-card-text>
+        </v-card>
+      </v-menu>
+    <span class="title">{{ data.name }}</span>
+    <span class="body ml-5">{{ data.uuid }}</span>
     <v-row>
       <v-col cols="12" sm="6" md="6" lg="3">
         <v-card>
@@ -80,6 +80,7 @@
               class="ma-2"
               color="primary"
               @click="openVNC()"
+              :disabled="data.vncPort === -1"
             >
               <v-icon left>mdi-console</v-icon>Console
             </v-btn>
@@ -101,7 +102,7 @@
           <v-list class="body-2" dense>
             <v-list-item>
               <v-list-item-content>Memory</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.db.memory / 1024 }} GB</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.memory / 1024 }} GB</v-list-item-content>
               <!-- <v-list-item-icon>
                 <v-btn v-on:click="memoryDialog=true" small icon color="primary">
                   <v-icon>mdi-circle-edit-outline</v-icon>
@@ -111,7 +112,7 @@
 
             <v-list-item>
               <v-list-item-content>CPU</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.db.core }} Core</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.core }} Core</v-list-item-content>
               <!-- <v-list-item-icon>
                 <v-btn v-on:click="cpuDialog=true" small icon color="primary">
                   <v-icon>mdi-circle-edit-outline</v-icon>
@@ -144,7 +145,7 @@
 
             <v-list-item>
               <v-list-item-content>VNC Port</v-list-item-content>
-              <v-list-item-content class="align-end">{{ data.xml.vncPort }}</v-list-item-content>
+              <v-list-item-content class="align-end">{{ data.vncPort }}</v-list-item-content>
             </v-list-item>
           </v-list>
         </v-card>
@@ -168,7 +169,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in data.xml.interface" :key="`second-${item.target}`">
+                <tr v-for="item in data.interfaces" :key="`interface-${item.mac}`">
                   <td>{{ item.type }}</td>
                   <td>{{ item.mac }}</td>
                   <td>{{ item.network }}</td>
@@ -176,7 +177,7 @@
                   <td>{{ item.port }}</td>
                   <td>{{ item.target }}</td>
                   <td>
-                    <v-icon @click="$refs.domainNetworkChange.openDialog(data.db.uuid, item.mac, data.db.nodeName)">mdi-pencil</v-icon>
+                    <v-icon @click="$refs.domainNetworkChange.openDialog(data.uuid, item.mac, data.nodeName)">mdi-pencil</v-icon>
                   </td>
                 </tr>
               </tbody>
@@ -201,7 +202,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(itemDisk, index) in data.xml.disk" :key="`itemDisk-${index}`">
+                <tr v-for="(itemDisk, index) in data.drives" :key="`itemDisk-${index}`">
                   <td>{{ itemDisk.device }}</td>
                   <td>{{ itemDisk.type }}</td>
                   <td>{{ itemDisk.source }}</td>
@@ -258,16 +259,14 @@ export default {
     ],
     cpuValue: 0,
     data: {
-      db: {
-        uuid: '',
-        description: null,
-        name: '',
-        core: 16,
-        memory: 16384,
-        status: 1,
-        userId: null,
-        groupId: null
-      },
+      uuid: '',
+      description: null,
+      name: '',
+      core: 16,
+      memory: 16384,
+      status: 1,
+      userId: null,
+      groupId: null,
       node: {
         name: '',
         description: '',
@@ -284,44 +283,23 @@ export default {
         qemuVersion: '',
         libvirtVersion: ''
       },
-      xml: {
-        name: '',
-        memory: 16384,
-        vcpu: 16,
-        uuid: '',
-        vncPort: 5903,
-        disk: [
-          {
-            device: '',
-            type: '',
-            file: null,
-            target: ''
-          },
-          {
-            device: '',
-            type: '',
-            file: '',
-            target: ''
-          },
-          {
-            device: '',
-            type: '',
-            file: '',
-            target: ''
-          }
-        ],
-        interface: [
-          {
-            type: '',
-            mac: '',
-            target: '',
-            source: '',
-            netwrok: null
-          }
-        ],
-        boot: [],
-        selinux: false
-      }
+      drives: [
+        {
+          device: '',
+          type: '',
+          file: null,
+          target: ''
+        }
+      ],
+      interface: [
+        {
+          type: '',
+          mac: '',
+          target: '',
+          source: '',
+          netwrok: null
+        }
+      ]
     }
   }),
   async mounted() {
@@ -339,13 +317,13 @@ export default {
         });
     },
     openVNC() {
-      window.open(`/novnc/vnc.html?resize=remote&autoconnect=true&path=novnc/websockify?token=${this.data.token}`);
+      window.open(`/novnc/vnc.html?resize=remote&autoconnect=true&path=novnc/websockify?token=${this.data.uuid}`);
     },
     openCDRomDialog(target) {
-      this.$refs.domainCDRomDialog.openDialog(target, this.data.db.uuid, this.data.node.name);
+      this.$refs.domainCDRomDialog.openDialog(target, this.data.uuid, this.data.node.name);
     },
     openDeleteDialog() {
-      this.$refs.domainDeleteDialog.openDialog(this.data.db.uuid);
+      this.$refs.domainDeleteDialog.openDialog(this.data.uuid);
     },
     vmPowerOff(uuid) {
       axios

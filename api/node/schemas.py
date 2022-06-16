@@ -19,7 +19,18 @@ class NodeInsert(NodeBase):
     libvirt_role: bool
 
 
-class NodeSelect(CamelModel):
+class PatchNodePool(CamelModel):
+    pool_id:int
+    node_name:str
+    core: int
+
+class GetNodeRole(CamelModel):
+    role_name: str
+    extra_json: dict = None
+    class Config:
+        orm_mode  =  True
+
+class GetNode(CamelModel):
     name: str
     description: str
     domain: str
@@ -34,10 +45,11 @@ class NodeSelect(CamelModel):
     status: int
     qemu_version: str = None
     libvirt_version: str = None
-    roles: List[Any]
+    roles: List[GetNodeRole]
     class Config:
         orm_mode  =  True
 
 class NodeRolePatch(CamelModel):
     node_name: str
     role_name: str
+    extra_json: dict = None

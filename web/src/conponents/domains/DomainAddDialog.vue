@@ -55,6 +55,7 @@
               label="Name"
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
+              @change="(val) => postData.cloudInit.hostname = val"
             ></v-text-field>
             <v-row>
               <v-col cols="12" md="6">
@@ -182,6 +183,7 @@
                   label="Port"
                 ></v-select>
               </v-col>
+              <v-col><v-icon class="mt-5" @click="deleteInterface(index)">mdi-minus</v-icon></v-col>
             </v-row>
             <div>
               <v-icon class="ma-1 mb-3" @click="addInterface">mdi-plus</v-icon>
@@ -208,7 +210,7 @@
                 v-model="postData.cloudInit.hostname"
                 label="Host name"
                 dense
-                :rules="[$required, $limitLength64, $hostNameCharacter]"
+                :rules="[$required, $limitLength64, $characterRestrictions]"
               >
               </v-text-field>
               <v-textarea
@@ -285,6 +287,7 @@ export default {
       stepCount: 1,
       useCloudInit: false,
       postData: {
+        type: 'manual',
         name: '',
         nodeName: '',
         memoryMegaByte: null,
@@ -339,7 +342,7 @@ ssh_authorized_keys:
       }
     },
     getNetworkDetail(uuid, nic) {
-      axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.xml.portgroup));
+      axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
     },
     addInterface() {
       this.postData.interface.push({
@@ -348,6 +351,9 @@ ssh_authorized_keys:
         networkName: '',
         selectPort: null
       });
+    },
+    deleteInterface(index) {
+      this.postData.interface.splice(index, 1);
     },
     validateStep1() {
       if (!this.$refs.step1Form.validate()) {

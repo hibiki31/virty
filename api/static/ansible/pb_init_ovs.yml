@@ -1,0 +1,19 @@
+- hosts: all
+  become: yes
+  tasks:
+    - block:
+      - name: apt_update
+        apt:
+          update_cache: yes
+  
+      - name: install_ovs
+        apt:
+          name: "{{ packages }}"
+        vars:
+          packages: 
+            - openvswitch-common
+            - openvswitch-switch
+      - name: set-manager
+        shell: sudo ovs-vsctl set-manager ptcp:6632
+
+      when: ansible_distribution == "Ubuntu"

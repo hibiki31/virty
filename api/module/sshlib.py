@@ -114,3 +114,25 @@ class SSHManager():
                 raise Exception("cp command output is illegal")
         else:
             raise Exception("request disk is already exists")
+
+    def scp_other_node(self, from_node, from_path, to_node, to_path):
+        # cmd = ([
+        #     "ssh",
+        #     "-t",
+        #     f"{from_node.user_name}@{from_node.domain}",
+        #     f"sudo tar cv {from_path}",
+        #     "|",
+        #     "ssh",
+        #     "-t",
+        #     f"{to_node.user_name}@{to_node.domain}",
+        #     f"'sudo tar xv {from_path}'",
+
+        # ])
+
+        cmd = (
+            "scp",
+            "-3",
+            f"{from_node.user_name}@{from_node.domain}:{from_path}",
+            f"{to_node.user_name}@{to_node.domain}:{to_path}"
+        )
+        # proc = subprocess.Popen(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)

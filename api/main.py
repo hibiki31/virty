@@ -10,7 +10,10 @@ from domain.router import app as domain_router
 from storage.router import app as storage_router
 from network.router import app as network_router
 from user.router import app as user_router
-from group.router import app as group_router
+from project.router import app as project_router
+from ticket.router import app as ticket_router
+from flavor.router import app as flavor_router
+from exporter.router import app as exporter_router
 
 from mixin.log import setup_logger
 from settings import API_VERSION
@@ -50,8 +53,11 @@ app.include_router(domain_router)
 app.include_router(storage_router)
 app.include_router(network_router)
 app.include_router(user_router)
-app.include_router(group_router)
+app.include_router(project_router)
+app.include_router(ticket_router)
+app.include_router(flavor_router)
+app.include_router(exporter_router)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=28000, reload=True)

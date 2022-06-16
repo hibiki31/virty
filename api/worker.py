@@ -39,7 +39,7 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
     if model.resource == "vm":
         if model.object == "list":
             if model.method == "update":
-                res = update_domain_list(db=db, model=model)
+                res = update_vm_list(db=db, model=model)
         elif model.object == "base":
             if model.method == "add":
                 res = add_domain_base(db=db, model=model)
@@ -58,6 +58,11 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
         elif model.object == "role":
             if model.method == "change":
                 res = patch_node_role(db=db, model=model)
+    
+    elif model.resource == "project":
+        if model.object == "root":
+            if model.method == "post":
+                res = post_project(db=db, model=model)
 
     elif model.resource == "storage":
         if model.object == "list":
@@ -91,13 +96,14 @@ def task_swicher(model:TaskSelect, db:SessionLocal):
 
     return res
 
-def do_task(mode="init"):
-    logger.info(f"looking for a {mode} task")
-    db = SessionLocal()
+
+def do_task(mode="init", db = SessionLocal()):
+    logger.debug(f"looking for a {mode} task")
+
     # 指定された状態のタスクを取得
     tasks = db.query(TaskModel)\
         .filter(TaskModel.status==mode)\
-        .order_by(desc(TaskModel.post_time))\
+        .order_by(TaskModel.post_time)\
         .with_lockmode('update').all()
     
     if tasks == [] and mode == "wait":
@@ -106,7 +112,7 @@ def do_task(mode="init"):
         return
     elif tasks == [] and mode == "init":
         # 待機中のタスク実施へ
-        do_task(mode="wait")
+        do_task(db=db, mode="wait")
         return
 
     # 新規タスク処理
@@ -114,7 +120,7 @@ def do_task(mode="init"):
         task:TaskModel = tasks[0]
         logger.info(f'find tasks: {task.resource}.{task.object}.{task.method} {task.uuid}')
         exec_task(db=db, task=task)
-        do_task()
+        do_task(db=db)
         return
     
     for task in tasks:
@@ -153,9 +159,9 @@ def do_task(mode="init"):
             db.merge(task)
             db.commit()
             logger.error(f"init depended task {task.uuid} => {task.dependence_uuid}")
-            do_task()
+            do_task(db=db)
         
-    do_task()
+    do_task(db=db)
 
 
 def exec_task(db, task):

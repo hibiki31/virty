@@ -4,6 +4,8 @@
 alembic revision --autogenerate
 alembic upgrade head
 alembic downgrade base
+dropdb -U postgres -h db mydatabase
+psql -U postgres -h db -c "create database mydatabase"
 ```
 
 ## マージ手順

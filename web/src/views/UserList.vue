@@ -80,7 +80,7 @@ export default {
     async reload() {
       this.tableLoading = true;
       await axios.get('/api/users').then((response) => (this.user = response.data));
-      await axios.get('/api/groups').then((response) => (this.group = response.data));
+      await axios.get('/api/projects').then((response) => (this.group = response.data));
       this.tableLoading = false;
     }
   }

@@ -102,3 +102,9 @@ network:
         addresses: [ 192.168.200.254 ]
   version: 2
 ```
+
+### Backup
+
+```
+docker-compose exec db pg_dump -U postgres mydatabase > virty_db_`date -Iseconds`.dump
+```
