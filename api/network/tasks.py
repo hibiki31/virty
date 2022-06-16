@@ -117,8 +117,8 @@ def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     put_network_list(db=db, bg=bg,task=TaskModel())
 
 
-def add_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSAdd = NetworkOVSAdd(**model.request)
+def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
+    request: NetworkOVSAdd = NetworkOVSAdd(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -131,11 +131,10 @@ def add_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
 
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_add(uuid=network.uuid, name=request.name, vlan=request.vlan_id)
-
-    return model
+    
 
 def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSDelete = NetworkOVSDelete(**model.request)
+    request: NetworkOVSDelete = NetworkOVSDelete(**loads(task.request))
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
@@ -148,8 +147,7 @@ def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
 
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_delete(uuid=network.uuid, name=request.name)
-
-    return model
+    
 
 
 def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel):

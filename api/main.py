@@ -13,6 +13,7 @@ from user.router import app as user_router
 from project.router import app as project_router
 from ticket.router import app as ticket_router
 from flavor.router import app as flavor_router
+from exporter.router import app as exporter_router
 
 from mixin.log import setup_logger
 from settings import API_VERSION
@@ -55,6 +56,7 @@ app.include_router(user_router)
 app.include_router(project_router)
 app.include_router(ticket_router)
 app.include_router(flavor_router)
+app.include_router(exporter_router)
 
 
 if __name__ == "__main__":
