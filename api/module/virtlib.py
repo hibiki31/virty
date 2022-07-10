@@ -27,6 +27,7 @@ class VirtManager():
     def __init__(self,node_model:NodeModel):
         conn_ip = f'{node_model.user_name}@{node_model.domain}'
         self.node = libvirt.open(f'qemu+ssh://{conn_ip}/system')
+        self.lib_version = self.node.getLibVersion()
         logger.info(f"Connected: {f'qemu+ssh://{conn_ip}/system'}")
         self.node_model:NodeModel = node_model
 
@@ -212,7 +213,13 @@ class VirtManager():
         # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
         # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
         # parentIndex: 1先頭, -1適当末尾
-        res = net.update(command=3,section=9, xml=xml, parentIndex=1)
+        # 新しいlibvirtでセクションとコマンドが逆のバグが直った
+        # https://github.com/digitalocean/go-libvirt/pull/148#issue-1234093981
+        # 6.0.0では逆、少なくとも8.0.0で直ってる
+        if self.lib_version < 8000000:
+            res = net.update(command=3,section=9, xml=xml, parentIndex=1)
+        else:
+            res = net.update(command=9,section=3, xml=xml, parentIndex=1)
         if res == -1:
             raise Exception("An error occurred after updating the network with libvirt")
 
