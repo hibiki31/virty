@@ -2,7 +2,7 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>Join node</v-card-title>
+          <v-card-title>Add node</v-card-title>
           <v-card-text>
             <v-text-field
               v-model="postData.name"
@@ -21,7 +21,6 @@
             <v-text-field
               v-model="postData.description"
               label="Descriptions"
-              :rules="[$required]"
               counter="128"
             ></v-text-field>
             <v-checkbox

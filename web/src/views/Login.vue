@@ -41,10 +41,11 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn
+                  v-if="this.apiVersion.initialized === false"
                   v-on:click="this.openSetupVirtyDialog"
                   depressed
                   text
-                  color="secondary"
+                  color="primary"
                 >Setup</v-btn>
                 <v-btn
                   @click.prevent="doLogin"
@@ -90,6 +91,9 @@ export default {
       userId: '',
       password: ''
     },
+    apiVersion: {
+      initialized: true
+    },
     rules: {
       required: (v) => !!v?.length
     }
@@ -132,7 +136,7 @@ export default {
     }
   },
   mounted: async function() {
-    await axios.get('/api/auth/version').then((response) => (this.apiVersion = response.data));
+    await axios.get('/api/version').then((response) => (this.apiVersion = response.data));
     if (!this.apiVersion.initialized) {
       this.$refs.setupVirtyDialog.openDialog();
     }

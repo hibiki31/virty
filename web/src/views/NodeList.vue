@@ -7,13 +7,13 @@
     <v-card>
       <v-card-actions>
         <v-btn v-on:click="$refs.nodeKeyDialog.openDialog()" small class="ma-2" color="primary">
-          <v-icon left>mdi-file-key</v-icon>KEY
+          <v-icon left>mdi-file-key</v-icon>Administration Key
         </v-btn>
         <v-btn v-on:click="this.openNodeAddDialog" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>JOIN
+          <v-icon left>mdi-server-plus</v-icon>ADD NODE
         </v-btn>
         <v-btn v-on:click="this.openNodeDeleteDialog" small dark class="ma-2" color="error">
-          <v-icon left>mdi-server-remove</v-icon>LEAVE
+          <v-icon left>mdi-server-remove</v-icon>DELETE NODE
         </v-btn>
       </v-card-actions>
       <v-data-table

@@ -3,10 +3,11 @@
   <v-dialog width="800" v-model="dialogState">
     <v-card>
       <v-form ref="dialogForm">
-        <v-card-title>Set SSH Key</v-card-title>
+        <v-card-title>Administration Key</v-card-title>
         <v-card-text>
+           Using this SSH key, Virty manages nodes.
           <v-textarea
-          class="text-caption"
+          class="text-caption pt-3"
           outlined
           clearable
           auto-grow
@@ -58,7 +59,7 @@ export default {
       this.submitting = true;
       axios.request({
         method: 'post',
-        url: '/api/auth/key',
+        url: '/api/nodes/key',
         data: this.requestData
       })
         .then(res => {
@@ -73,7 +74,7 @@ export default {
     }
   },
   mounted: async function() {
-    axios.get('/api/auth/key').then(res => {
+    axios.get('/api/nodes/key').then(res => {
       this.requestData.key = res.data.private_key;
       this.requestData.pub = res.data.publick_key;
     });

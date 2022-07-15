@@ -41,7 +41,16 @@
           :loading="this.reloadLoading"
           v-if="this.$store.state.userData.adminMode"
         >
-          <v-icon left>mdi-cached</v-icon>Reload
+          <v-icon left>mdi-cached</v-icon>Reload List
+        </v-btn>
+        <v-btn
+          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-server-plus</v-icon>CREATE VM
         </v-btn>
         <v-btn
           v-on:click="this.openDomainAddDialog"
@@ -51,16 +60,8 @@
           color="primary"
           v-if="this.$store.state.userData.adminMode"
         >
-          <v-icon left>mdi-server-plus</v-icon>ADD
-        </v-btn>
-        <v-btn
-          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
-          small
-          dark
-          class="ma-2"
-          color="primary"
-        >
-          <v-icon left>mdi-server-plus</v-icon>CREATE
+
+          <v-icon left>mdi-server-plus</v-icon>CREATE VM Administration MODE
         </v-btn>
       </v-card-actions>
       <v-data-table
