@@ -15,15 +15,19 @@ The author is not responsible for any damage caused by the use of this software.
 ### Quick Start
 
 Nothing needs to be edited.
-Start with Docker-compose and connect to localhost:8765.
+Start with Docker compose and connect to localhost:8765.
+
+This can be done on the host that will be the hypervisor, or on the laptop at hand.
 
 ```
 mkdir virty
 cd virty
 wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml
 mv docker-compose.example.yml docker-compose.yml
-docker-compose up -d
+docker compose up -d
 ```
+
+Once activated, access http://localhost:8765 with a web browser.
 
 ### Preparation of managed nodes
 
@@ -66,14 +70,6 @@ ssh-copy-id user@host
 sudo apt update
 sudo apt install openvswitch-common openvswitch-switch
 sudo systemctl status openvswitch-switch.service
-```
-
-#### Package (CentOS)
-
-```bash
-yum install -y openvswitch python-openvswitch
-systemctl start openvswitch
-systemctl enable openvswitch
 ```
 
 #### Creating Bridges
