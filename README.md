@@ -22,8 +22,7 @@ This can be done on the host that will be the hypervisor, or on the laptop at ha
 ```
 mkdir virty
 cd virty
-wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml
-mv docker-compose.example.yml docker-compose.yml
+wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml -O docker-compose.yml
 docker compose up -d
 ```
 
@@ -55,6 +54,11 @@ ssh-copy-id user@host
 ### Open vSwitch (Optional)
 
 #### Configuration
+
+This example has only one nic.
+It is recommended to do this from the Console since the network is usually disconnected once.
+
+![network](https://user-images.githubusercontent.com/35087924/179314489-b8a5e48b-368a-4274-b3ef-9ec67810805c.png)
 
 | name               | value            |
 | ---------------------- | ------------- |
