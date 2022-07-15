@@ -3,6 +3,11 @@ from pydantic import BaseModel
 from typing import List, Optional, Any
 
 
+class SSHKeyPair(CamelModel):
+    pub: str
+    key: str
+
+
 class NodeBase(CamelModel):
     name: str
 

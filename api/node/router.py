@@ -1,4 +1,4 @@
-from os import name
+from os import name, chmod, makedirs
 from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlalchemy import true
 from sqlalchemy.orm import Session
@@ -16,11 +16,11 @@ from mixin.log import setup_logger
 from node.models import NodeModel
 
 
-app = APIRouter()
+app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.post("/api/nodes", tags=["node"], response_model=TaskSelect)
+@app.post("", response_model=TaskSelect)
 def post_api_nodes(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -57,7 +57,7 @@ def post_api_nodes(
     return task.model
 
 
-@app.get("/api/nodes", tags=["node"],response_model=List[GetNode])
+@app.get("", response_model=List[GetNode])
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -66,7 +66,7 @@ def get_api_nodes(
     return db.query(NodeModel).all()
 
 
-@app.delete("/api/nodes", tags=["node"])
+@app.delete("")
 def delete_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -82,7 +82,41 @@ def delete_api_nodes(
     return node
 
 
-@app.patch("/api/nodes/role", tags=["node"], response_model=TaskSelect)
+@app.get("/key")
+def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
+    private_key = ""
+    publick_key = ""
+    try: 
+        with open("/root/.ssh/id_rsa") as f:
+            private_key = f.read()
+        with open("/root/.ssh/id_rsa.pub") as f:
+            publick_key = f.read()
+    except:
+        pass
+
+    return {"private_key": private_key, "publick_key": publick_key}
+
+
+@app.post("/key")
+def post_ssh_key_pair(
+        model: SSHKeyPair,
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    makedirs('/root/.ssh/', exist_ok=True)
+    
+    with open("/root/.ssh/id_rsa", "w") as f:
+        f.write(model.key.rstrip('\r\n') + '\n')
+    with open("/root/.ssh/id_rsa.pub", "w") as f:
+        f.write(model.pub)
+    
+    chmod('/root/.ssh/', 0o700)
+    chmod('/root/.ssh/id_rsa', 0o600)
+    chmod('/root/.ssh/id_rsa.pub', 0o600)
+
+    return {}
+
+
+@app.patch("/roles", response_model=TaskSelect)
 def patch_api_node_role(
         model: NodeRolePatch,
         bg: BackgroundTasks,
@@ -96,7 +130,7 @@ def patch_api_node_role(
     return task.model
 
 
-@app.get("/api/nodes/pools", tags=["node"])
+@app.get("/pools")
 def get_api_nodes_pools(
         db: Session = Depends(get_db)
     ):
@@ -104,7 +138,7 @@ def get_api_nodes_pools(
     return db.query(PoolCpu).all()
 
 
-@app.post("/api/nodes/pools", tags=["node"])
+@app.post("/pools")
 def post_api_nodes_pools(
         model: NodeBase,
         db: Session = Depends(get_db),
@@ -114,7 +148,8 @@ def post_api_nodes_pools(
     db.commit()
     return True
 
-@app.patch("/api/nodes/pools", tags=["node"])
+
+@app.patch("/pools")
 def patch_api_nodes_pools(
         model: PatchNodePool,
         db: Session = Depends(get_db),

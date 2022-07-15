@@ -12,14 +12,15 @@ from .schemas import *
 from project.schemas import PostProject
 from auth.router import CurrentUser, get_current_user, pwd_context
 
+
 logger = setup_logger(__name__)
 app = APIRouter(
     prefix="/api/users",
-    tags=["user"],
+    tags=["users"],
 )
 
 
-@app.get("/me", tags=["user"])
+@app.get("/me")
 def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     current_user.is_joined("aaaa")
     
@@ -27,7 +28,7 @@ def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     return ""
 
 
-@app.post("", tags=["user"])
+@app.post("")
 def post_api_users(
         request: UserInsert,
         bg: BackgroundTasks,
@@ -58,7 +59,8 @@ def post_api_users(
 
     return user_model
 
-@app.get("", tags=["user"])
+
+@app.get("")
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

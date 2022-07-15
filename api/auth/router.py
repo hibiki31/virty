@@ -18,11 +18,14 @@ from user.models import UserModel, UserScope
 from task.functions import TaskManager
 from project.schemas import PostProject
 
+
 logger = setup_logger(__name__)
+
+
 app = APIRouter(
-    prefix="/api/auth",
-    tags=["auth"]
+    prefix="/api/auth"
 )
+
 
 scopes_dict = {
     "admin": {
@@ -36,7 +39,9 @@ scopes_dict = {
     }
 }
 
+
 scopes_list = []
+
 
 def scopes_list_generator(argd, scope=None):
     for k in sorted(argd.keys(), reverse=False):
@@ -50,7 +55,6 @@ def scopes_list_generator(argd, scope=None):
     return scopes_list
 
 scopes_list_generator(scopes_dict)
-
 
 
 class CurrentUser(BaseModel):
@@ -88,9 +92,10 @@ pwd_context = CryptContext(
     schemes=["bcrypt"], 
     deprecated="auto"
 )
+
 # oAuth2の設定
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="api/auth",
+    tokenUrl="/api/auth",
     auto_error=False,
     scopes={"admin": "Have all authority", "user": "User authority"},
 )
@@ -140,7 +145,6 @@ def get_current_user(
                 )
 
     return CurrentUser(id=user_id, token=token, scopes=scopes)
-
 
 
 @app.post("", response_model=TokenRFC6749Response, tags=["auth"])
@@ -210,51 +214,8 @@ def api_auth_setup(
     return model
 
 
-@app.get("/version")
-def get_version(
-        db: Session = Depends(get_db)
-    ):
-    initialized = (not db.query(UserModel).all() == [])
-
-    return {"initialized": initialized, "version": API_VERSION}
-
-
 @app.get("/validate", tags=["auth"])
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):
     return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}
-
-
-
-@app.get("/key", tags=["auth"])
-def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
-    private_key = ""
-    publick_key = ""
-    try: 
-        with open("/root/.ssh/id_rsa") as f:
-            private_key = f.read()
-        with open("/root/.ssh/id_rsa.pub") as f:
-            publick_key = f.read()
-    except:
-        pass
-
-    return {"private_key": private_key, "publick_key": publick_key}
-
-@app.post("/key")
-def post_ssh_key_pair(
-        model: SSHKeyPair,
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    os.makedirs('/root/.ssh/', exist_ok=True)
-    
-    with open("/root/.ssh/id_rsa", "w") as f:
-        f.write(model.key.rstrip('\r\n') + '\n')
-    with open("/root/.ssh/id_rsa.pub", "w") as f:
-        f.write(model.pub)
-    
-    os.chmod('/root/.ssh/', 0o700)
-    os.chmod('/root/.ssh/id_rsa', 0o600)
-    os.chmod('/root/.ssh/id_rsa.pub', 0o600)
-
-    return {}

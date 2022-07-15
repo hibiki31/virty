@@ -11,9 +11,9 @@ from storage.router import app as storage_router
 from network.router import app as network_router
 from user.router import app as user_router
 from project.router import app as project_router
-from ticket.router import app as ticket_router
 from flavor.router import app as flavor_router
 from exporter.router import app as exporter_router
+from mixin.router import app as mixin_router
 
 from mixin.log import setup_logger
 from settings import API_VERSION
@@ -24,8 +24,8 @@ logger = setup_logger(__name__)
 
 tags_metadata = [
     {"name": "auth", "description": ""},
-    {"name": "user", "description": ""},
-    {"name": "node", "description": ""},
+    {"name": "users", "description": ""},
+    {"name": "nodes", "description": ""},
 ]
 
 app = FastAPI(
@@ -54,9 +54,9 @@ app.include_router(storage_router)
 app.include_router(network_router)
 app.include_router(user_router)
 app.include_router(project_router)
-app.include_router(ticket_router)
 app.include_router(flavor_router)
 app.include_router(exporter_router)
+app.include_router(mixin_router)
 
 
 if __name__ == "__main__":

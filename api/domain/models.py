@@ -27,8 +27,6 @@ class DomainModel(Base):
     owner_user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
     owner_project = relationship("ProjectModel")
     owner_project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
-    issuance_id = Column(Integer, ForeignKey('issuances.id', onupdate='CASCADE', ondelete='SET NULL'))
-
 
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"

@@ -18,7 +18,3 @@ class Setup(CamelModel):
     password: str
     class Config:
         orm_mode = True
-
-class SSHKeyPair(CamelModel):
-    pub: str
-    key: str

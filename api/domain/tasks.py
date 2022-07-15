@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 
 from task.functions import TaskManager
 from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
-from ticket.models import IssuanceModel
 from node.models import NodeModel
 from storage.models import AssociationStoragePool, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
 
