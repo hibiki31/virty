@@ -12,6 +12,8 @@ class SSHManager():
         self.port = port
         self.base_cmd = ["ssh" , f"{user}@{domain}", "-p", str(port)]
 
+        self.add_known_hosts()
+
     def add_known_hosts(self):
         fo = open('/root/.ssh/known_hosts', 'ab')
 

@@ -5,10 +5,6 @@
       - name: apt update
         apt:
           update_cache: yes
-
-      - name: apt upgrade
-        apt:
-          upgrade: yes
   
       - name: Install qemu
         apt:
