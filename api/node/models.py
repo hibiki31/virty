@@ -1,5 +1,3 @@
-from math import fabs
-from pydantic import Json
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, JSON
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
@@ -24,6 +22,7 @@ class NodeModel(Base):
     qemu_version = Column(String)
     libvirt_version = Column(String)
     storages = relationship('StorageModel', uselist=True, lazy=False, backref="node")
+    ansible_facts = Column(JSON)
     roles = relationship("AssociationNodeToRole", back_populates="node")
 
 

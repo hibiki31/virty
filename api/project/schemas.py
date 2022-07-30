@@ -25,4 +25,9 @@ class ProjectPatch(CamelModel):
     user_id: str
 
 class ProjectSelect(ProjectBase):
+    core: int
+    memory_g: int
+    storage_capacity_g: int
     users: List[UserBase]
+    used_memory_g: int
+    used_core: int

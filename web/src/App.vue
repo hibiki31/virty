@@ -39,6 +39,7 @@
             item-text="name"
             item-value="id"
             prepend-icon="mdi-hexagon-multiple"
+            :value="$store.state.appData.projectId"
             @change="(value) =>{$store.dispatch('setProjectId', value)}"
             class="pt-1"
             dense
@@ -86,18 +87,6 @@
               <v-icon>mdi-tag-multiple</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Flavor</v-list-item-title>
-          </v-list-item>
-          <v-list-item :to="{ name: 'TicketList' }" v-if="this.$store.state.userData.adminMode">
-            <v-list-item-icon>
-              <v-icon>mdi-ticket-confirmation</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Ticket</v-list-item-title>
-          </v-list-item>
-          <v-list-item :to="{ name: 'IssueanceList' }" v-if="this.$store.state.userData.adminMode">
-            <v-list-item-icon>
-              <v-icon>mdi-ticket</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Issuance</v-list-item-title>
           </v-list-item>
           <v-list-item :to="{ name: 'Users' }" v-if="this.$store.state.userData.adminMode">
             <v-list-item-icon>
@@ -159,7 +148,10 @@ export default {
   }),
   methods: {
     reload() {
-      axios.get('/api/projects', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => (this.projectList = response.data));
+      axios.get('/api/projects', { params: { admin: this.$store.state.userData.adminMode } }).then((response) => {
+        this.projectList = response.data;
+        this.$store.dispatch('setProjectId', response.data[0].id);
+      });
     },
     async task_check() {
       if (!this.$store.state.userData.isAuthed) {

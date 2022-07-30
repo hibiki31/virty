@@ -97,14 +97,14 @@
           <span>{{ item.ownerUserId === null ? "" : item.ownerUserId }}</span>
         </template>
 
-        <template v-slot:[`item.ownerGroupId`]="{ item }" justify="right">
+        <template v-slot:[`item.ownerProject`]="{ item }" justify="right">
           <v-icon
             left
             v-on:click="$refs.domainGroupPut.openDialog(item)"
-            :color="item.ownerGroupId === null ? '' : 'primary'"
+            :color="item.ownerProjectId === null ? '' : 'primary'"
             >mdi-account</v-icon
           >
-          <span>{{ item.ownerGroupId === null ? "" : item.ownerGroupId }}</span>
+          <span>{{ item.ownerProject === null ? "" : item.ownerProject.name }}</span>
         </template>
 
         <template v-slot:[`item.status`]="{ item }">
@@ -179,7 +179,7 @@ export default {
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
         { text: 'userId', value: 'ownerUserId' },
-        { text: 'groupId', value: 'ownerGroupId' }
+        { text: 'groupId', value: 'ownerProject' }
       ],
       user: [],
       projects: []

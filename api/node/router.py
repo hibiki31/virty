@@ -1,5 +1,7 @@
 from os import name, chmod, makedirs
-from fastapi import APIRouter, Depends, BackgroundTasks, Request
+import string
+from tkinter import N
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy import true
 from sqlalchemy.orm import Session
 
@@ -158,3 +160,18 @@ def patch_api_nodes_pools(
     db.add(ass)
     db.commit()
     return True
+
+
+@app.get("/{node_name}/facts")
+def get_node_name_facts(
+        node_name: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+
+    node = db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
+    
+    if node == None:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    return node.ansible_facts["result"]

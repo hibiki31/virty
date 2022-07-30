@@ -21,7 +21,7 @@
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" dark v-on:click="runMethod">LEAVE</v-btn>
+            <v-btn color="error" dark v-on:click="runMethod">Deletion</v-btn>
         </v-card-actions>
         </v-form>
       </v-card>

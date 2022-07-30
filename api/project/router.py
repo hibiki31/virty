@@ -4,8 +4,10 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
 from fastapi import APIRouter, Depends, Request, HTTPException, Security, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import alias, func
+from domain.models import DomainModel
 
 from task.functions import TaskManager
 from mixin.database import get_db
@@ -33,7 +35,26 @@ def get_api_projects(
     ):
     if admin:
         current_user.verify_scope(['admin'])
-        return db.query(ProjectModel).all()
+
+        rows = db.query(
+            ProjectModel,
+            func.sum(DomainModel.memory).label("used_memory_g"),
+            func.sum(DomainModel.core)
+        ).outerjoin(
+            DomainModel
+        ).group_by(ProjectModel.id).all()
+        
+        res = []
+
+        for row in rows:
+            res.append({
+                **row[0].toDict(),
+                'users':row[0].users,
+                'used_memory_g': 0 if row[1] == None else row[0],
+                'used_core': 0 if row[2] == None else row[0]
+            })
+
+        return res
     else:
         return db.query(ProjectModel).filter(ProjectModel.users.any(id=current_user.id)).all()
 

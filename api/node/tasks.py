@@ -46,6 +46,7 @@ def post_node_root(db:Session, bg: BackgroundTasks, task: TaskModel):
         os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
         os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
         status = 10,
+        ansible_facts = node_infomation,
         qemu_version = None,
         libvirt_version = None,
     )

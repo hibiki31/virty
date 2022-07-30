@@ -2,7 +2,7 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="joinForm">
-          <v-card-title>Join Pool</v-card-title>
+          <v-card-title>Adding a network to the pool</v-card-title>
           <v-card-text>
             {{ item.name }}
               <v-checkbox

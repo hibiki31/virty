@@ -8,10 +8,10 @@
     <v-card>
       <v-card-actions>
         <v-btn v-on:click="this.storageReloadTask" small dark class="ma-2" color="primary">
-          <v-icon left>mdi-cached</v-icon>Reload
+          <v-icon left>mdi-cached</v-icon>Reload list
         </v-btn>
         <v-btn v-on:click="this.openAddDialog" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>ADD
+          <v-icon left>mdi-server-plus</v-icon>register Storage
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -59,7 +59,7 @@
     <v-card class="mt-5">
       <v-card-actions>
          <v-btn v-on:click="$refs.storagePoolAddDialog.openDialog()" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>ADD
+          <v-icon left>mdi-server-plus</v-icon>Create Storage Pool
         </v-btn>
       </v-card-actions>
       <v-data-table

@@ -76,6 +76,9 @@ export default {
       tableLoading: true,
       headers: [
         { text: 'id', value: 'id' },
+        { text: 'cpu limit', value: 'core' },
+        { text: 'memory limit(GB)', value: 'memoryG' },
+        { text: 'sotrage capacity', value: 'storageCapacityG' },
         { text: 'name', value: 'name' },
         { text: 'users', value: 'users' },
         { text: 'actions', value: 'actions' }

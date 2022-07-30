@@ -52,7 +52,7 @@ def post_api_users(
 
     db.commit()
 
-    project_reqeust = PostProject(project_name='default', user_ids=[request.user_id])
+    project_reqeust = PostProject(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
     task = TaskManager(db=db, bg=bg)
     task.select('post', 'project', 'root')
     task.commit(user=current_user, request=project_reqeust)

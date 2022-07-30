@@ -3,6 +3,7 @@ from typing import List, Optional, Any
 from pydantic import BaseModel
 
 from fastapi_camelcase import CamelModel
+from pyparsing import str_type
 
 from node.schemas import GetNode
 
@@ -25,6 +26,14 @@ class GetDomainInterfaces(CamelModel):
     class Config:
         orm_mode  =  True
 
+
+class GetDomainProject(CamelModel):
+    id: str
+    name: str
+    class Config:
+        orm_mode  =  True
+
+
 class GetDomain(CamelModel):
     uuid: str
     name: str
@@ -34,7 +43,8 @@ class GetDomain(CamelModel):
     description: str = None
     node_name: str
     owner_user_id: str = None
-    owner_group_id: str = None
+    owner_project_id: str = None
+    owner_project: GetDomainProject = None
     vnc_port: int = None
     vnc_password: str = None
     drives: list[GetDomainDrives] | None = None

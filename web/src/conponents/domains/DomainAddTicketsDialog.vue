@@ -51,26 +51,13 @@
         <v-stepper-content step="1">
           <v-form class="form-box" ref="step1Form">
             <v-row>
-              <v-col cols="12" md="6" lg="6">
-                <v-select
-                  :items="itemsIssuances"
-                  :rules="[$required]"
-                  item-text="ticket.name"
-                  item-value="id"
-                  v-model="postData.issuanceId"
-                  @change="changeTicket"
-                  label="Ticket"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
               <v-col>
                 <v-text-field
                   v-model="postData.name"
                   label="Virtual machine name"
                   :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
                   counter="64"
-                  :disabled="postData.issuanceId === null"
+                  :disabled="postData.projectId === null"
                   @change="(val) => postData.cloudInit.hostname = val"
                 ></v-text-field>
               </v-col>
@@ -338,7 +325,7 @@ export default {
       manualSpec: false,
       postData: {
         type: 'ticket',
-        issuanceId: null,
+        projectId: null,
         name: '',
         memory: 1024,
         core: 1,
@@ -370,11 +357,7 @@ ssh_authorized_keys:
     openDialog(useTicket=false) {
       this.useTicket = useTicket;
       this.dialogState = true;
-      axios.get('/api/tickets/issuances').then((response) => {
-        this.itemsIssuances = response.data;
-        this.postData.issuanceId = this.itemsIssuances[0].id;
-        this.changeTicket();
-      });
+      this.postData.projectId = this.$store.state.appData.projectId;
     },
     counterValueInt(value) {
       return value;

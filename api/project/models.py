@@ -36,8 +36,8 @@ class ProjectModel(Base):
     domains = relationship("DomainModel", backref="project")
     # limit
     is_admin = Column(Boolean, nullable=False, default=False)
-    core = Column(Integer, nullable=False, default=1)
-    memory = Column(Integer, nullable=False, default=1024)
+    core = Column(Integer, nullable=False, default=4)
+    memory_g = Column(Integer, nullable=False, default=1)
     storage_capacity_g = Column(Integer, default=0)
     network_pools = relationship("NetworkPoolModel", secondary=association_projects_to_networks_pools, lazy=False)
     storage_pools = relationship("StoragePoolModel", secondary=association_projects_to_storages_pools, lazy=False)

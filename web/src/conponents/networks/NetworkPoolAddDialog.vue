@@ -2,19 +2,24 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="networkPoolAdd">
-          <v-card-title>Add Network Pool
+          <v-card-title>Create Network Pool
           </v-card-title>
           <v-card-text>
+            A network pool is a list of bridges that can be connected to the same network.
+            <br>
+            If different KVM hosts can connect to the same network, this feature allows for abstraction.
+First, create an empty network pool.
+Next, add the Bridges that can connect to the same network to the Pool.
             <v-text-field
               v-model="postData.name"
-              label="Name"
+              label="Display name on virty"
               :rules="[$required, $limitLength64]"
               counter="64"
             ></v-text-field>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" v-on:click="runMethod">ADD</v-btn>
+            <v-btn color="primary" v-on:click="runMethod">CREATE</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>

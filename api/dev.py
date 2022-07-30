@@ -1,11 +1,14 @@
 from pprint import pprint
 from module.sshlib import SSHManager
+from mixin.database import SessionLocal
+from sqlalchemy.orm import Session
+
+
+from node.models import NodeModel
+
 
 def main():
-    mg = SSHManager("", "", 22)
-    print(mg.get_node_cpu_core())
-
-
+    db:Session = SessionLocal()
 
 if __name__ == "__main__":
     main()

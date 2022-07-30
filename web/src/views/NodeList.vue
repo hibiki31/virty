@@ -10,10 +10,10 @@
           <v-icon left>mdi-file-key</v-icon>Administration Key
         </v-btn>
         <v-btn v-on:click="this.openNodeAddDialog" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>ADD NODE
+          <v-icon left>mdi-server-plus</v-icon>Register NODE
         </v-btn>
         <v-btn v-on:click="this.openNodeDeleteDialog" small dark class="ma-2" color="error">
-          <v-icon left>mdi-server-remove</v-icon>DELETE NODE
+          <v-icon left>mdi-server-remove</v-icon>Deletion NODE
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -27,6 +27,12 @@
         }"
         multi-sort
       >
+         <template v-slot:[`item.name`]="{ item }" justify="right">
+          <router-link
+            :to="{ name: 'NodeDetail', params: { name: item.name } }"
+            >{{ item.name }}</router-link
+          >
+        </template>
         <template v-slot:[`item.osName`]="{ item }">{{item.osName+' '+item.osVersion}}</template>
 
         <template v-slot:[`item.status`]="{ item }">

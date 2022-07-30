@@ -14,6 +14,12 @@ class RepresentableBase(object):
         return '<{0}({1})>'.format(
             self.__class__.__name__, columns
         )
+    
+    def toDict(self):
+        model = {}
+        for column in self.__table__.columns:
+            model[column.name] = str(getattr(self, column.name))
+        return model
 
 
 def get_db():

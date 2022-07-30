@@ -207,7 +207,7 @@ def path_vms_project(
     except:
         raise notfound_exception(msg="not found vm or group")
     
-    vm.owner_project = model
+    vm.owner_project_id = model.project_id
     db.commit()
 
     return vm

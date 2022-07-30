@@ -2,19 +2,21 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>Add Storage Pool
+          <v-card-title>Create Storage Pool
           </v-card-title>
           <v-card-text>
+            Add storage of equal speed and fault tolerance to the pool. Abstraction makes it easy to use storage of similar performance on different hosts.<br>
+            First, create an empty pool and then register storage for each host that will contain VM images.
             <v-text-field
               v-model="postData.name"
-              label="Name"
+              label="Display name on virty"
               :rules="[$required, $limitLength64]"
               counter="64"
             ></v-text-field>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" v-on:click="runMethod">ADD</v-btn>
+            <v-btn color="primary" v-on:click="runMethod">Create</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>

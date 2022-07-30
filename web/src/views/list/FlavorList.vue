@@ -4,7 +4,7 @@
   <v-card>
     <v-card-actions>
         <v-btn v-on:click="$refs.flavorAdd.openDialog()" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>ADD
+          <v-icon left>mdi-server-plus</v-icon>Create flavor
         </v-btn>
     </v-card-actions>
     <v-data-table
