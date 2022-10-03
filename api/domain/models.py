@@ -1,3 +1,4 @@
+from email.policy import default
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from mixin.database import Base, Engine
@@ -16,6 +17,9 @@ class DomainModel(Base):
     vnc_port = Column(String)
     vnc_password = Column(String)
     
+    # Cache
+    storage_used = Column(Integer, default=0)
+
     # One to Many
     interfaces = relationship('DomainInterfaceModel')
     drives = relationship('DomainDriveModel')

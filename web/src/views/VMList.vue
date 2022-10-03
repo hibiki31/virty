@@ -173,13 +173,13 @@ export default {
       selectUserId: '',
       headers: [
         { text: 'Status', value: 'status' },
-        { text: 'name', value: 'name' },
-        { text: 'node', value: 'nodeName' },
+        { text: 'Name', value: 'name' },
+        { text: 'Node', value: 'nodeName' },
         { text: 'UUID', value: 'uuid' },
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
-        { text: 'userId', value: 'ownerUserId' },
-        { text: 'groupId', value: 'ownerProject' }
+        { text: 'UserID', value: 'ownerUserId' },
+        { text: 'ProjectID', value: 'ownerProject' }
       ],
       user: [],
       projects: []

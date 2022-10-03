@@ -38,7 +38,7 @@ class ProjectModel(Base):
     is_admin = Column(Boolean, nullable=False, default=False)
     core = Column(Integer, nullable=False, default=4)
     memory_g = Column(Integer, nullable=False, default=1)
-    storage_capacity_g = Column(Integer, default=0)
+    storage_capacity_g = Column(Integer, default=64)
     network_pools = relationship("NetworkPoolModel", secondary=association_projects_to_networks_pools, lazy=False)
     storage_pools = relationship("StoragePoolModel", secondary=association_projects_to_storages_pools, lazy=False)
     flavors = relationship("FlavorModel", secondary=association_projects_to_flavors_pools, lazy=False)

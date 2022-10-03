@@ -1,6 +1,11 @@
 import logging
 from settings import DATA_ROOT
 
+
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+
+
 def setup_logger(name, logfile=f'{DATA_ROOT}/api.log'):
     logger = logging.getLogger(name)
 

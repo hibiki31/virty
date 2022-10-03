@@ -3,13 +3,13 @@
   <v-dialog width="400" v-model="dialogState">
     <v-card>
       <v-form ref="dialogForm">
-        <v-card-title>Change owner</v-card-title>
+        <v-card-title>Change Project</v-card-title>
         <v-card-text>
           <v-select
-            :items="groups"
-            item-text="id"
+            :items="projects"
+            item-text="name"
             item-value="id"
-            v-model="requestData.groupId"
+            v-model="requestData.projectId"
             label="Select userid"
             dense
           ></v-select>
@@ -32,11 +32,10 @@ export default {
   data: function() {
     return {
       requestData: {
-        groupId: '',
+        projectId: '',
         uuid: ''
       },
-      users: [],
-      groups: [],
+      projects: [],
       importData: {},
       dialogState: false,
       submitting: false
@@ -55,7 +54,7 @@ export default {
       this.submitting = true;
       axios.request({
         method: 'patch',
-        url: '/api/vms/group',
+        url: '/api/vms/project',
         data: this.requestData
       })
         .then(res => {
@@ -70,7 +69,7 @@ export default {
     }
   },
   mounted: async function() {
-    axios.get('/api/users').then((response) => (this.users = response.data));
+    axios.get('/api/projects').then((response) => (this.projects = response.data));
   }
 };
 </script>

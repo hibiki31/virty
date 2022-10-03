@@ -53,6 +53,7 @@ class ImageModel(Base):
     storage = relationship("StorageModel", uselist=False)
     capacity = Column(Integer)
     allocation = Column(Integer)
+    domain_uuid = Column(String, nullable=True)
     path = Column(String, primary_key=True)
     update_token = Column(String)
     flavor_id = Column(Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='SET NULL'))

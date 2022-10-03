@@ -1,3 +1,4 @@
+from anyio import Any
 from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
@@ -31,3 +32,5 @@ class ProjectSelect(ProjectBase):
     users: List[UserBase]
     used_memory_g: int
     used_core: int
+    network_pools: Any
+    storage_pools: Any

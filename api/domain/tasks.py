@@ -62,12 +62,18 @@ def put_vm_list(db:Session, bg: BackgroundTasks, task: TaskModel):
                 row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
             
             for disk in temp.disk:
+                db_image = db.query(ImageModel).filter(
+                    ImageModel.storage.has(StorageModel.node_name==node.name),
+                    ImageModel.path==disk.source).one_or_none()
+                if db_image != None:
+                    db_image.domain_uuid=temp.uuid
                 row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()
     db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
     db.commit()
+
     task.message = "VM list updated has been successfull"
 
 

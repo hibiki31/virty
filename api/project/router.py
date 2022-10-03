@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, Se
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import alias, func
-from domain.models import DomainModel
+from domain.models import DomainModel, DomainDriveModel
 
 from task.functions import TaskManager
 from mixin.database import get_db
@@ -33,30 +33,34 @@ def get_api_projects(
         current_user: CurrentUser = Depends(get_current_user),
         admin: bool = False
     ):
-    if admin:
-        current_user.verify_scope(['admin'])
 
-        rows = db.query(
+    res = []
+
+    query = db.query(
             ProjectModel,
             func.sum(DomainModel.memory).label("used_memory_g"),
             func.sum(DomainModel.core)
         ).outerjoin(
             DomainModel
-        ).group_by(ProjectModel.id).all()
-        
-        res = []
+        ).group_by(ProjectModel.id)
 
-        for row in rows:
-            res.append({
-                **row[0].toDict(),
-                'users':row[0].users,
-                'used_memory_g': 0 if row[1] == None else row[0],
-                'used_core': 0 if row[2] == None else row[0]
-            })
-
-        return res
+    if admin:
+        current_user.verify_scope(['admin'])
+        rows = query.all()
     else:
-        return db.query(ProjectModel).filter(ProjectModel.users.any(id=current_user.id)).all()
+        rows = query.filter(ProjectModel.users.any(id=current_user.id)).all()
+    
+    for row in rows:
+        res.append({
+            **row[0].toDict(),
+            'users':row[0].users,
+            'storage_pools': row[0].storage_pools,
+            'network_pools': row[0].network_pools,
+            'used_memory_g': 0 if row[1] == None else int(row[1])/1024,
+            'used_core': 0 if row[2] == None else row[2]
+        })
+
+    return res
 
 @app.post("")
 def post_api_projects(

@@ -1,4 +1,5 @@
 from email.mime import image
+from pprint import pprint
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import false, func, true
@@ -68,8 +69,9 @@ def get_api_images(
         rool:str = None,
     ):
     query = db.query(
-        ImageModel,DomainModel
-        ).join(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel).outerjoin(
+        ImageModel,
+        DomainModel
+    ).join(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel).outerjoin(
         DomainDriveModel,
         DomainDriveModel.source==ImageModel.path
     ).outerjoin(

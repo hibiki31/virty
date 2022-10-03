@@ -75,11 +75,13 @@ export default {
     return {
       tableLoading: true,
       headers: [
+        { text: 'name', value: 'name' },
         { text: 'id', value: 'id' },
         { text: 'cpu limit', value: 'core' },
-        { text: 'memory limit(GB)', value: 'memoryG' },
+        { text: 'memory limit', value: 'memoryG' },
+        { text: 'cpu used', value: 'usedCore' },
+        { text: 'memory used', value: 'usedMemoryG' },
         { text: 'sotrage capacity', value: 'storageCapacityG' },
-        { text: 'name', value: 'name' },
         { text: 'users', value: 'users' },
         { text: 'actions', value: 'actions' }
       ],
