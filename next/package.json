@@ -9,7 +9,8 @@
     "lint:eslint": "next lint",
     "lint:prettier": "prettier --check './**/*.{ts,tsx,css,html}'",
     "format:eslint": "next lint --fix",
-    "format:prettier": "prettier --write './**/*.{ts,tsx,css,html}'"
+    "format:prettier": "prettier --write './**/*.{ts,tsx,css,html}'",
+    "generate:api": "openapi-generator-cli generate -i ./openapi.json -g typescript-axios -o ./lib/api/generated"
   },
   "dependencies": {
     "@emotion/react": "^11.10.4",
@@ -22,6 +23,7 @@
     "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/node": "18.7.23",
     "@types/react": "18.0.21",
     "@types/react-dom": "18.0.6",
