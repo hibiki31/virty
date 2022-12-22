@@ -23,6 +23,13 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
 
+  redis:
+    image: redis:latest
+    volumes:
+      - celery-app:/data
+
+
 volumes:
   virty-postgres-data:
   virty-develop-ssh-key:
+  celery-app:

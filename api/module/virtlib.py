@@ -19,9 +19,9 @@ from network.models import NetworkModel
 
 from typing import List, Optional
 
+from celery.utils.log import get_task_logger
 
-logger = setup_logger(__name__)
-
+logger = get_task_logger(__name__)
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):

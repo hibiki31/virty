@@ -15,6 +15,9 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
+from .tasks import put_vm_list
+from celery import chain, group
+
 from module.virtlib import VirtManager
 
 
@@ -62,12 +65,17 @@ def get_api_domain_uuid(
 
 @app.put('', response_model=TaskSelect)
 def publish_task_to_update_vm_list(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('put', 'vm', 'list')
+
+    task = TaskManager(db=db)
+    task.select(
+        method='put',
+        resource='vm', 
+        object='base', 
+        celery_task=put_vm_list.si(node_name="shiori")
+    )
     task.commit(user=current_user)
 
     return task.model
