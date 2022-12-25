@@ -1,0 +1,1 @@
+echo "source <(vctl completion bash)" >> ~/.zshrc
