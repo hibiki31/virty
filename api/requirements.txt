@@ -26,3 +26,6 @@ requests==2.27.1
 # OVS
 ryu==4.34
 # pip list -o
+# worker
+celery==5.2.7
+pyparsing>=3.0.9

@@ -1,3 +1,4 @@
+from email.mime import base
 from json import loads
 from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
@@ -23,11 +24,64 @@ from module import sshlib
 from module import cloudinitlib
 from module.ansiblelib import AnsibleManager
 
+from celery.utils.log import get_task_logger
 
-logger = setup_logger(__name__)
+from worker import celery, BaseTask
 
 
-def put_vm_list(db:Session, bg: BackgroundTasks, task: TaskModel):
+
+logger = get_task_logger(__name__)
+
+
+@celery.task(bind=True, base=BaseTask)
+def put_vm_list(self, node_name) -> float:
+
+    node:NodeModel = self.db.query(NodeModel).filter(
+        NodeModel.roles.any(role_name="libvirt"),
+        NodeModel.name==node_name
+    ).one()
+
+    virt_manager = virtlib.VirtManager(node_model=node)
+
+    domains = virt_manager.domain_data()
+
+    token = str(time())
+
+    for domain in domains:
+        editor = xmllib.XmlEditor("str",domain['xml'])
+        editor.dump_file("domain")
+        temp = editor.domain_parse()
+        
+        row = DomainModel(
+            uuid = temp.uuid,
+            name = re.sub(r'(.*)@.*',r'\1', temp.name),
+            core = temp.vcpu,
+            memory = temp.memory,
+            status = domain['status'],
+            node_name = node.name,
+            update_token = token,
+            vnc_port = temp.vnc_port
+        )
+        for interface in temp.interface:
+            row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
+        
+        for disk in temp.disk:
+            db_image = self.db.query(ImageModel).filter(
+                ImageModel.storage.has(StorageModel.node_name==node.name),
+                ImageModel.path==disk.source).one_or_none()
+            if db_image != None:
+                db_image.domain_uuid=temp.uuid
+            row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
+        self.db.merge(row)
+    self.db.commit()
+    
+    self.db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
+    # ノードが変わる前に一度コミット
+    self.db.commit()
+    a = 1/0
+
+
+def put_vm_list_old(db:Session, bg: BackgroundTasks, task: TaskModel):
     request = loads(task.request)
     nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())

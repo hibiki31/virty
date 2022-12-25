@@ -5,11 +5,12 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+    ports:
+      - 0.0.0.0:8765:8765
     volumes:
       - "../../:/workspace:cached"
       - virty-develop-ssh-key:/root/.ssh
     command: sleep infinity
-    network_mode: service:db
 
   db:
     image: postgres:latest
@@ -23,6 +24,13 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
 
+  redis:
+    image: redis:latest
+    volumes:
+      - celery-app:/data
+
+
 volumes:
   virty-postgres-data:
   virty-develop-ssh-key:
+  celery-app:
