@@ -3,7 +3,7 @@ import pathlib
 import secrets
 
 
-SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql://postgres:password@localhost:5432/mydatabase')
+SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql://postgres:password@db:5432/mydatabase')
 APP_ROOT = os.getenv('APP_ROOT', str(pathlib.Path('./').resolve()))
 DATA_ROOT = os.getenv('DATA_ROOT', str(pathlib.Path('./data').resolve()))
 IS_DEV = (APP_ROOT == str(pathlib.Path('./').resolve()))

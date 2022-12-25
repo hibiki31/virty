@@ -1,9 +1,13 @@
 
+## Test
+
+
+
 ## Celery
 
 ```
 celery --app=celery_task flower --port=5555
-celery --app=celery_task worker --pool prefork --concurrency 12
+celery --app=worker worker --pool prefork --concurrency 12
 celery --app=celery_task worker --autoscale=32,4
 ```
 

@@ -13,11 +13,26 @@ def test_auth():
         "/api/auth",
         data={"username": json_load["user"], "password": json_load["password"]},
     )
-    print(response.json())
-    print(json_load)
+
     assert response.status_code == 200
-    assert response.json() == {
-        "id": "foobar",
-        "title": "Foo Bar",
-        "description": "The Foo Barters",
-    }
+
+    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+    
+    response = client.get(
+        "/api/auth/validate",
+        headers=headers,
+        json={},
+    )
+
+    print(response.json())
+
+    assert response.status_code == 200
+
+    response = client.get(
+        "/api/nodes",
+        headers=headers,
+        json={},
+    )
+
+    print(response.json())
+
