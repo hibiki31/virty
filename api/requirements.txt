@@ -29,3 +29,5 @@ ryu==4.34
 # worker
 celery==5.2.7
 pyparsing>=3.0.9
+redis>=4.4.0
+flower>=1.2.0

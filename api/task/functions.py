@@ -18,70 +18,6 @@ logger = setup_logger(__name__)
 
 
 class TaskManager():
-    def __init__(self, db:Session, bg: BackgroundTasks=None):
-        self.db = db
-        self.bg = bg
-    
-    def select(self, method, resource, object):
-        self.method = method
-        self.resource = resource
-        self.object = object
-    
-    def commit(self, user, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
-        task_uuid = str(uuid.uuid4())
-
-        self.db.add(TaskModel(
-            uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
-            user_id = user.id,
-            status = status,
-            dependence_uuid = dependence_uuid,
-            resource = self.resource,
-            object = self.object,
-            method = self.method,
-            request = request.json(),
-            message = "Task has been queued"
-        ))
-        self.db.commit()
-
-        self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        if self.bg:
-            self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        else:
-            task_runner(db=self.db, bg=self.bg, task=self.model)
-    
-    def folk(self, task:TaskModel, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
-        status = status if self.bg else "start"
-        task_uuid = str(uuid.uuid4())
-
-        self.db.add(TaskModel(
-            uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
-            user_id = task.user_id,
-            status = status,
-            dependence_uuid = dependence_uuid,
-            resource = self.resource,
-            object = self.object,
-            method = self.method,
-            request = request.json(),
-            message = "Task has been queued"
-        ))
-        self.db.commit()
-
-        self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        if self.bg:
-            self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        else:
-            task_runner(db=self.db, bg=self.bg, task=self.model)
-
-
-class TaskManager():
     def __init__(self, db:Session):
         self.db = db
 
@@ -113,42 +49,10 @@ class TaskManager():
 
         self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
 
-        # if self.bg:
-        #     self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        # else:
-        #     task_runner(db=self.db, bg=self.bg, task=self.model)
         self.celery_task.apply_async(
             link_error=error_handler.s(virty_task_uuid=task_uuid),
-            # link_error=task_error.s(virty_task_uuid=task_uuid),
             link=task_success.s(virty_task_uuid=task_uuid)
         )
-    
-    def folk(self, task:TaskModel, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
-        status = status if self.bg else "start"
-        task_uuid = str(uuid.uuid4())
-
-        self.db.add(TaskModel(
-            uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
-            user_id = task.user_id,
-            status = status,
-            dependence_uuid = dependence_uuid,
-            resource = self.resource,
-            object = self.object,
-            method = self.method,
-            request = request.json(),
-            message = "Task has been queued"
-        ))
-        self.db.commit()
-
-        self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        if self.bg:
-            self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        else:
-            task_runner(db=self.db, bg=self.bg, task=self.model)
 
 def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
     tasks = db.query(

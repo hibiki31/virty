@@ -147,33 +147,6 @@ def get_current_user(
     return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
-def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: Session = Depends(get_db)
-    ):
-
-    try:
-        user = db.query(UserModel).filter(UserModel.id==form_data.username).one()
-    except:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-    
-    if not pwd_context.verify(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={
-            "sub": user.id,
-            # "scopes": form_data.scopes,
-            "scopes": [i.name for i in list(user.scopes)],
-            "projects": [i.id for i in list(user.projects)]
-            },
-        expires_delta=access_token_expires,
-    )
-    return {"access_token": access_token, "token_type": "Bearer"}
-
-
 @app.post("/setup", tags=["auth"])
 def api_auth_setup(
         model: Setup, 
@@ -206,15 +179,42 @@ def api_auth_setup(
 
     db.commit()
 
-    project_reqeust = PostProject(project_name='default', user_ids=[model.user_id])
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'project', 'root')
-    task.commit(user=user_model, request=project_reqeust)
+    # project_reqeust = PostProject(project_name='default', user_ids=[model.user_id])
+    # task = TaskManager(db=db, bg=bg)
+    # task.select('post', 'project', 'root')
+    # task.commit(user=user_model, request=project_reqeust)
 
     return model
 
 
-@app.get("/validate", tags=["auth"])
+@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
+def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm = Depends(), 
+        db: Session = Depends(get_db)
+    ):
+
+    try:
+        user = db.query(UserModel).filter(UserModel.id==form_data.username).one()
+    except:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    
+    if not pwd_context.verify(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": user.id,
+            # "scopes": form_data.scopes,
+            "scopes": [i.name for i in list(user.scopes)],
+            "projects": [i.id for i in list(user.projects)]
+            },
+        expires_delta=access_token_expires,
+    )
+    return {"access_token": access_token, "token_type": "Bearer"}
+
+
+@app.get("/validate", tags=["auth"], response_model=AuthValidate)
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):

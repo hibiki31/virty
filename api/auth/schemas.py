@@ -7,6 +7,11 @@ class TokenRFC6749Response(BaseModel):
     access_token: str
     token_type: str
 
+
+class AuthValidate(TokenRFC6749Response):
+    username: str
+
+
 class TokenData(CamelModel):
     user_id: Optional[str] = None
     scopes: List[str] = []

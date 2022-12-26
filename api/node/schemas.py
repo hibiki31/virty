@@ -4,8 +4,8 @@ from typing import List, Optional, Any
 
 
 class SSHKeyPair(CamelModel):
-    pub: str
-    key: str
+    private_key: str
+    publick_key: str
 
 
 class NodeBase(CamelModel):

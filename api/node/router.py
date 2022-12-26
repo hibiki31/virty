@@ -18,11 +18,45 @@ from mixin.log import setup_logger
 from node.models import NodeModel
 
 
-app = APIRouter(prefix="/api/nodes", tags=["nodes"])
+app = APIRouter(prefix="/api", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.post("", response_model=TaskSelect)
+@app.post("/nodes/key")
+def post_ssh_key_pair(
+        model: SSHKeyPair,
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    makedirs('/root/.ssh/', exist_ok=True)
+    
+    with open("/root/.ssh/id_rsa", "w") as f:
+        f.write(model.key.rstrip('\r\n') + '\n')
+    with open("/root/.ssh/id_rsa.pub", "w") as f:
+        f.write(model.pub)
+    
+    chmod('/root/.ssh/', 0o700)
+    chmod('/root/.ssh/id_rsa', 0o600)
+    chmod('/root/.ssh/id_rsa.pub', 0o600)
+
+    return {}
+
+
+@app.get("/nodes/key", response_model=SSHKeyPair)
+def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
+    private_key = ""
+    publick_key = ""
+    try: 
+        with open("/root/.ssh/id_rsa") as f:
+            private_key = f.read()
+        with open("/root/.ssh/id_rsa.pub") as f:
+            publick_key = f.read()
+    except:
+        pass
+
+    return SSHKeyPair(private_key=private_key, publick_key=publick_key)
+
+
+@app.post("/tasks/nodes", response_model=TaskSelect)
 def post_api_nodes(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -59,7 +93,7 @@ def post_api_nodes(
     return task.model
 
 
-@app.get("", response_model=List[GetNode])
+@app.get("/nodes", response_model=List[GetNode])
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -84,38 +118,10 @@ def delete_api_nodes(
     return node
 
 
-@app.get("/key")
-def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
-    private_key = ""
-    publick_key = ""
-    try: 
-        with open("/root/.ssh/id_rsa") as f:
-            private_key = f.read()
-        with open("/root/.ssh/id_rsa.pub") as f:
-            publick_key = f.read()
-    except:
-        pass
-
-    return {"private_key": private_key, "publick_key": publick_key}
 
 
-@app.post("/key")
-def post_ssh_key_pair(
-        model: SSHKeyPair,
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    makedirs('/root/.ssh/', exist_ok=True)
-    
-    with open("/root/.ssh/id_rsa", "w") as f:
-        f.write(model.key.rstrip('\r\n') + '\n')
-    with open("/root/.ssh/id_rsa.pub", "w") as f:
-        f.write(model.pub)
-    
-    chmod('/root/.ssh/', 0o700)
-    chmod('/root/.ssh/id_rsa', 0o600)
-    chmod('/root/.ssh/id_rsa.pub', 0o600)
 
-    return {}
+
 
 
 @app.patch("/roles", response_model=TaskSelect)

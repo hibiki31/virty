@@ -11,10 +11,13 @@ from task.models import TaskModel
 from module import sshlib
 from module.ansiblelib import AnsibleManager
 
+from worker import celery, BaseTask
+
 
 logger = setup_logger(__name__)
 
 
+@celery.task(bind=True, base=BaseTask)
 def post_node_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     request = NodeInsert(**loads(task.request))
     user = request.user_name

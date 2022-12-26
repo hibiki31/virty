@@ -23,7 +23,8 @@ logger = setup_logger(__name__)
 
 
 tags_metadata = [
-    {"name": "auth", "description": ""},
+    {"name": "mixin", "description": ""},
+    {"name": "auth", "description": "トークン関係のリクエストはRFCの関係でスネークケース"},
     {"name": "users", "description": ""},
     {"name": "nodes", "description": ""},
 ]

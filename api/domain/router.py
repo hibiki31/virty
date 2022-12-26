@@ -22,14 +22,13 @@ from module.virtlib import VirtManager
 
 
 app = APIRouter(
-    prefix="/api/vms",
     tags=["vms"]
 )
 
 logger = setup_logger(__name__)
 
 
-@app.get("",response_model=List[GetDomain])
+@app.get("/api/vms",response_model=List[GetDomain])
 def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -49,7 +48,7 @@ def get_api_domain(
     return query.all()
 
 
-@app.get("/{uuid}",response_model=GetDomainDetail)
+@app.get("/api/vms/{uuid}",response_model=GetDomainDetail)
 def get_api_domain_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -63,7 +62,7 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.put('', response_model=TaskSelect)
+@app.put('/api/task/vms', response_model=TaskSelect)
 def publish_task_to_update_vm_list(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -73,7 +72,7 @@ def publish_task_to_update_vm_list(
     task.select(
         method='put',
         resource='vm', 
-        object='base', 
+        object='base',
         celery_task=put_vm_list.si(node_name="shiori")
     )
     task.commit(user=current_user)
@@ -81,7 +80,7 @@ def publish_task_to_update_vm_list(
     return task.model
 
 
-@app.delete("", response_model=TaskSelect)
+@app.delete("/api/task/vms", response_model=TaskSelect)
 def delete_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -95,7 +94,7 @@ def delete_api_domains(
     return task.model
 
 
-@app.post("", response_model=TaskSelect)
+@app.post("/api/task/vms", response_model=TaskSelect)
 def post_api_vms(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -113,7 +112,7 @@ def post_api_vms(
     return task.model
 
 
-@app.post("/ticket")
+@app.post("/api/task/vms/ticket")
 def post_api_vms(
         bg: BackgroundTasks,
         request: PostDomainTicket,
@@ -131,7 +130,7 @@ def post_api_vms(
     return task.model
 
 
-@app.patch("", response_model=TaskSelect)
+@app.patch("/api/task/vms", response_model=TaskSelect)
 def patch_api_domains(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -145,7 +144,7 @@ def patch_api_domains(
     return task.model
 
 
-@app.patch("/name")
+@app.patch("/api/task/vms/name")
 def path_vms_name(
         model: DomainPatchName,
         current_user: CurrentUser = Depends(get_current_user),
@@ -165,7 +164,7 @@ def path_vms_name(
     return True
 
 
-@app.patch("/core")
+@app.patch("/api/task/vms/core")
 def path_vms_core(
         model: DomainPatchCore,
         current_user: CurrentUser = Depends(get_current_user),
@@ -185,7 +184,7 @@ def path_vms_core(
     return True
 
 
-@app.patch("/user")
+@app.patch("/api/task/vms/user")
 def path_vms_user(
         model: DomainPatchUser,
         current_user: CurrentUser = Depends(get_current_user),
@@ -203,7 +202,7 @@ def path_vms_user(
     return vm
 
 
-@app.patch("/project")
+@app.patch("/api/task/vms/project")
 def path_vms_project(
         model: DomainProjectPatch,
         current_user: CurrentUser = Depends(get_current_user),
@@ -221,7 +220,7 @@ def path_vms_project(
     return vm
 
 
-@app.patch("/network", response_model=TaskSelect)
+@app.patch("/api/task/vms/network", response_model=TaskSelect)
 def patch_api_vm_network(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -235,7 +234,7 @@ def patch_api_vm_network(
     return task_model
 
 
-@app.get("/vnc/{token}")
+@app.get("/api/vms/vnc/{token}")
 def get_api_domain(
         token: str,
         db: Session = Depends(get_db),

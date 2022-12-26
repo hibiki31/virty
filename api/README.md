@@ -5,10 +5,13 @@
 
 ## Celery
 
-```
-celery --app=celery_task flower --port=5555
+```bash
+# ダッシュボード
+celery --app=worker flower --port=5555
+# 12サブプロセス
 celery --app=worker worker --pool prefork --concurrency 12
-celery --app=celery_task worker --autoscale=32,4
+# オートスケール
+celery --app=worker worker --autoscale=32,4
 ```
 
 ## Alembic

@@ -1,20 +1,20 @@
-from ast import keyword
 import os
-import time
+import uuid
+import logging
+from datetime import datetime
+
 from celery import Celery, Task
 from celery.signals import after_setup_logger, after_setup_task_logger
-
-import logging
-
 from celery.utils.log import get_task_logger
 
+from pydantic import BaseModel
 from task.models import TaskModel
 
-
+from sqlalchemy.orm import Session
 from mixin.database import SessionLocal
 
+
 celery = Celery(__name__,include=[
-    'exporter.tasks',
     'domain.tasks'
     ])
 
@@ -29,17 +29,10 @@ celery.conf.result_backend = os.environ.get(
 
 logger = get_task_logger(__name__)
 
-class TaskTools():
-    def __init__(self):
-        self.db = SessionLocal()
-
 
 class BaseTask(Task):
     def __init__(self):
         self.db = SessionLocal()
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        print("s")
 
 
 @after_setup_logger.connect
@@ -80,8 +73,6 @@ def error_handler(request, exc, traceback, virty_task_uuid):
     model.status = "error"
     model.message = str(exc)
     db.commit()
-    print(dir(request))
-    print(request.chain)
 
 
 @celery.task(bind=True, base=BaseTask)
