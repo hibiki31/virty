@@ -12,11 +12,16 @@ import {
   UserApi,
   VmsApi,
 } from './generated/api';
+import { parseCookies } from 'nookies';
 
 const { NEXT_PUBLIC_API_URL } = process.env;
 
 const config = new Configuration({
   basePath: NEXT_PUBLIC_API_URL,
+  accessToken: () => {
+    const { token } = parseCookies();
+    return token;
+  },
 });
 
 export const authApi = new AuthApi(config);

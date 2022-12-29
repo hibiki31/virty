@@ -1279,6 +1279,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie@npm:^0.4.1":
+  version: 0.4.2
+  resolution: "cookie@npm:0.4.2"
+  checksum: a00833c998bedf8e787b4c342defe5fa419abd96b32f4464f718b91022586b8f1bafbddd499288e75c037642493c83083da426c6a9080d309e3bd90fd11baa9b
+  languageName: node
+  linkType: hard
+
 "core-js-pure@npm:^3.25.1":
   version: 3.25.3
   resolution: "core-js-pure@npm:3.25.3"
@@ -2100,6 +2107,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hamt_plus@npm:1.0.2":
+  version: 1.0.2
+  resolution: "hamt_plus@npm:1.0.2"
+  checksum: af26ea32db03009019cc83dfa9411521a2fa16079443de1a502c9be46d8b3c975acda8ed93fc5750ef08d3186d35901e2d8cfe717dd54bea67b358601fa74e4c
+  languageName: node
+  linkType: hard
+
 "has-bigints@npm:^1.0.1, has-bigints@npm:^1.0.2":
   version: 1.0.2
   resolution: "has-bigints@npm:1.0.2"
@@ -2591,6 +2605,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mdi-material-ui@npm:^7.6.0":
+  version: 7.6.0
+  resolution: "mdi-material-ui@npm:7.6.0"
+  peerDependencies:
+    "@mui/material": ^5.0.0 || ^5.0.0-rc.0
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: c7306f89c2de9466054a12251a7cbae6e5ad8b90480b505b765103856fd8aeb38fe154e346ce0e62c54a48e94c2f77e703a9c6c89f02a8d0356e3cf8e1b43d5a
+  languageName: node
+  linkType: hard
+
 "merge2@npm:^1.3.0, merge2@npm:^1.4.1":
   version: 1.4.1
   resolution: "merge2@npm:1.4.1"
@@ -2755,6 +2779,16 @@ __metadata:
     encoding:
       optional: true
   checksum: 8d816ffd1ee22cab8301c7756ef04f3437f18dace86a1dae22cf81db8ef29c0bf6655f3215cb0cdb22b420b6fe141e64b26905e7f33f9377a7fa59135ea3e10b
+  languageName: node
+  linkType: hard
+
+"nookies@npm:^2.5.2":
+  version: 2.5.2
+  resolution: "nookies@npm:2.5.2"
+  dependencies:
+    cookie: ^0.4.1
+    set-cookie-parser: ^2.4.6
+  checksum: 4cc6fd8d0ab9fce840ccdb161eefe9dee581f441429fc729f279924491ebd1c12c220f889b6e315d66f8ea00bef944966969c966c957a6b9918ced7d7f9cc8a8
   languageName: node
   linkType: hard
 
@@ -3056,6 +3090,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-hook-form@npm:^7.41.2":
+  version: 7.41.2
+  resolution: "react-hook-form@npm:7.41.2"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18
+  checksum: bc923b74018d55289838f820d49e32043dbc683d97ea2f93a6f3b75ff58fea9ee4536d6487adcb02912b4bc90a09ea07a63c4c24f930ec59f598bdafd5e8c8d3
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^16.13.1, react-is@npm:^16.7.0":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
@@ -3102,6 +3145,22 @@ __metadata:
     string_decoder: ^1.1.1
     util-deprecate: ^1.0.1
   checksum: d4ea81502d3799439bb955a3a5d1d808592cf3133350ed352aeaa499647858b27b1c4013984900238b0873ec8d0d8defce72469fb7a83e61d53f5ad61cb80dc8
+  languageName: node
+  linkType: hard
+
+"recoil@npm:^0.7.6":
+  version: 0.7.6
+  resolution: "recoil@npm:0.7.6"
+  dependencies:
+    hamt_plus: 1.0.2
+  peerDependencies:
+    react: ">=16.13.1"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+    react-native:
+      optional: true
+  checksum: 2b31dd29a7e0b369bc986a16f7253006776845144684c9e38bb6760e4ea954c5d7dc682aaf88e815e69098b8dea3ff62b6fa4e6c156157a29d2d9cb824db1779
   languageName: node
   linkType: hard
 
@@ -3332,6 +3391,13 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 2fa3e877568cd6ce769c75c211beaed1f9fce80b28338cadd9d0b6c40f2e2862bafd62c19a6cff42f3d54292b7c623277bcab8816a2b5521cf15210d43e75232
+  languageName: node
+  linkType: hard
+
+"set-cookie-parser@npm:^2.4.6":
+  version: 2.5.1
+  resolution: "set-cookie-parser@npm:2.5.1"
+  checksum: b99c37f976e68ae6eb7c758bf2bbce1e60bb54e3eccedaa25f2da45b77b9cab58d90674cf9edd7aead6fbeac6308f2eb48713320a47ca120d0e838d0194513b6
   languageName: node
   linkType: hard
 
@@ -3757,10 +3823,14 @@ __metadata:
     "@types/react-dom": 18.0.6
     eslint: 8.24.0
     eslint-config-next: 12.3.1
+    mdi-material-ui: ^7.6.0
     next: 12.3.1
+    nookies: ^2.5.2
     prettier: 2.7.1
     react: 18.2.0
     react-dom: 18.2.0
+    react-hook-form: ^7.41.2
+    recoil: ^0.7.6
     typescript: 4.8.4
   languageName: unknown
   linkType: soft
