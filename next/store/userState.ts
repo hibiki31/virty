@@ -37,15 +37,7 @@ export const useGetUser = (): UserState => {
       setUser(null);
       return;
     }
-    authApi
-      .readAuthValidateApiAuthValidateGet()
-      .then(() => {
-        setUser(getUserFromToken(token));
-      })
-      .catch((err) => {
-        console.error(err);
-        setUser(null);
-      });
+    setUser(getUserFromToken(token));
   }, [setUser]);
 
   return user;

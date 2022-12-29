@@ -1,7 +1,10 @@
 import type { NextPage } from 'next';
+import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
-const Home: NextPage = () => {
+export const getServerSideProps = makeRequireLoginProps();
+
+const HomePage: NextPage = () => {
   return <div>Virty</div>;
 };
 
-export default Home;
+export default HomePage;
