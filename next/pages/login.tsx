@@ -3,11 +3,13 @@ import { Button, Card, CardContent, CardHeader, Grid } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { generateProperty } from '~/lib/jtd';
 import { makeRequireLogoutProps } from '~/lib/utils/makeGetServerSideProps';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useAuth } from '~/store/userState';
 
 type LoginForm = JTDDataType<typeof loginFormJtd>;
@@ -16,6 +18,7 @@ export const getServerSideProps = makeRequireLogoutProps();
 
 const LoginPage: NextPage = () => {
   const { user, login, logout } = useAuth();
+  const { openPersistNotistack } = useNotistack();
   const formMethods = useForm<LoginForm>({
     defaultValues: generateProperty(loginFormJtd),
   });
@@ -24,14 +27,17 @@ const LoginPage: NextPage = () => {
     formState: { isSubmitting },
   } = formMethods;
   const [isError, setIsError] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleLogin = async (data: LoginForm) => {
     setIsError(false);
     const { error } = await login(data.username, data.password);
-    if (error) {
-      console.log(error);
-      setIsError(true);
+    if (!error) {
+      router.push('/');
+      return;
     }
+    setIsError(true);
+    openPersistNotistack('Login failed.', { variant: 'error' });
   };
 
   return (
