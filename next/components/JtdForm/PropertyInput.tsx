@@ -38,10 +38,11 @@ type PropertyInputProps = {
   propertyJtd: Schema & { metadata?: MetaData };
   rootJtd: Schema & { metadata?: MetaData };
   isEditing: boolean;
+  isError?: boolean;
 };
 
 export const PropertyInput: FC<PropertyInputProps> = (props) => {
-  const { prefixPropertyName = '', propertyKey, propertyJtd, rootJtd, isEditing } = props;
+  const { prefixPropertyName = '', propertyKey, propertyJtd, rootJtd, isEditing, isError = false } = props;
 
   const { control, getValues, setValue } = useFormContext();
   const { choices, isLoading } = useChoices(propertyJtd.metadata);
@@ -69,17 +70,14 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
         propertyJtd={refJtd}
         rootJtd={rootJtd}
         isEditing={isEditing}
+        isError={isError}
       />
     );
   }
 
   if ('properties' in propertyJtd) {
     return (
-      <SpreadInputWrapper
-        label={!hiddenPropertyLabel ? propertyLabel : undefined}
-        spread={propertySpread}
-        WrapperComponent={WrapperComponent}
-      >
+      <SpreadInputWrapper label={!hiddenPropertyLabel ? propertyLabel : undefined} spread={propertySpread}>
         {Object.entries(propertyJtd.properties as Schema).map(([nextPropertyKey, nextPropertyJtd]) => (
           <PropertyInput
             key={propertyKey ? `${propertyKey}.${nextPropertyKey}` : nextPropertyKey}
@@ -88,6 +86,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
             propertyJtd={nextPropertyJtd}
             rootJtd={rootJtd}
             isEditing={isEditing}
+            isError={isError}
           />
         ))}
       </SpreadInputWrapper>
@@ -109,7 +108,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
               required={propertyRequired}
               disabled={propertyReadonly}
               fullWidth
-              error={!!error}
+              error={!!error || isError}
             >
               <InputLabel id={propertyName}>{propertyLabel}</InputLabel>
               <Select
@@ -148,7 +147,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
               required={propertyRequired}
               disabled={propertyReadonly}
               fullWidth
-              error={!!error}
+              error={!!error || isError}
             >
               <InputLabel id={propertyName}>{propertyLabel}</InputLabel>
               {(propertyJtd as any).elements ? (
@@ -211,11 +210,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
     const discriminator = propertyJtd.discriminator;
     const discriminatorName = propertyJtd.metadata?.discriminatorName || discriminator;
     return (
-      <SpreadInputWrapper
-        label={!hiddenPropertyLabel ? propertyLabel : undefined}
-        spread={propertySpread}
-        WrapperComponent={WrapperComponent}
-      >
+      <SpreadInputWrapper label={!hiddenPropertyLabel ? propertyLabel : undefined} spread={propertySpread}>
         {!propertyJtd.metadata?.hiddenDiscriminator && (
           <WrapperComponent>
             <Controller
@@ -230,7 +225,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                   required={propertyRequired}
                   disabled={propertyReadonly}
                   fullWidth
-                  error={!!error}
+                  error={!!error || isError}
                 >
                   {propertyJtd.metadata?.customType === 'mappingBoolean' ? (
                     <FormControlLabel
@@ -306,6 +301,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                     propertyJtd={nextPropertyJtd}
                     rootJtd={rootJtd}
                     isEditing={isEditing}
+                    isError={isError}
                   />
                 )
               )}
@@ -350,7 +346,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                   {...params}
                   label={propertyLabel}
                   required={propertyRequired}
-                  error={!!error}
+                  error={!!error || isError}
                   helperText={error?.message || ' '}
                   inputProps={{
                     ...params.inputProps,
@@ -377,7 +373,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
               required: propertyRequired && `${propertyLabel} is required.`,
             }}
             render={({ field: { value, onChange }, fieldState: { error } }) => (
-              <FormControl required={propertyRequired} error={!!error}>
+              <FormControl required={propertyRequired} error={!!error || isError}>
                 <FormControlLabel
                   label={propertyLabel}
                   disabled={!isEditing}
@@ -402,11 +398,11 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
           render={({ field: { value, onChange }, fieldState: { error } }) => (
             <TextField
               label={propertyLabel}
-              type={isNumber ? 'number' : 'text'}
+              type={propertyJtd.metadata?.customType === 'password' ? 'password' : isNumber ? 'number' : 'text'}
               required={propertyRequired}
               disabled={propertyReadonly}
               fullWidth
-              error={!!error}
+              error={!!error || isError}
               helperText={error?.message || ' '}
               InputProps={{
                 readOnly: !isEditing,
@@ -426,7 +422,6 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
 type SpreadInputWrapperProps = PropsWithChildren<{
   label?: string;
   spread?: boolean;
-  WrapperComponent?: FC<WrapperComponentProps>;
 }>;
 
 const SpreadInputWrapper: FC<SpreadInputWrapperProps> = ({ children, label, spread }) => {
@@ -471,6 +466,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
   propertyJtd,
   rootJtd,
   isEditing,
+  isError,
 }) => {
   const { control } = useFormContext();
   const { fields, insert, remove } = useFieldArray({
@@ -497,11 +493,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
   const removeProperty = (index: number) => remove(index);
 
   return (
-    <SpreadInputWrapper
-      label={!hiddenPropertyLabel ? propertyLabel : undefined}
-      spread={propertySpread}
-      WrapperComponent={WrapperComponent}
-    >
+    <SpreadInputWrapper label={!hiddenPropertyLabel ? propertyLabel : undefined} spread={propertySpread}>
       <Box component="div" sx={{ width: '100%' }}>
         {editableArray && (
           <IconButton
@@ -522,6 +514,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
                 propertyJtd={elementsJtd}
                 rootJtd={rootJtd}
                 isEditing={isEditing}
+                isError={isError}
               />
               {editableArray && (
                 <IconButton size="small" color="error" sx={{ ml: 1, my: 'auto' }} onClick={() => removeProperty(i)}>

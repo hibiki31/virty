@@ -10,9 +10,10 @@ type Props = {
   propertyJtd?: Schema & { metadata?: MetaData };
   rootJtd: Schema & { metadata?: MetaData };
   isEditing: boolean;
+  isError?: boolean;
 };
 
-export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, isEditing }) => {
+export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, isEditing, isError = false }) => {
   const { reset } = useJtdForm(rootJtd);
   const propertiesJtd: Schema = (propertyJtd as any)?.properties || (rootJtd as any).properties;
 
@@ -33,6 +34,7 @@ export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, i
           propertyJtd={jtd}
           rootJtd={rootJtd}
           isEditing={isEditing}
+          isError={isError}
         />
       ))}
     </Grid>

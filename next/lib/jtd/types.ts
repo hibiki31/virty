@@ -39,7 +39,7 @@ export interface MetaData {
    * Define types not supported by the JTD
    * @default undefined
    */
-  customType?: 'mappingBoolean';
+  customType?: 'mappingBoolean' | 'password';
   /**
    * Set the choices in the select form.
    * If the value is a table name, the list is fetched; if it is an array, it is used as is.
