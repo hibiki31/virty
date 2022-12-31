@@ -1,5 +1,5 @@
 import { GetServerSideProps, GetServerSidePropsResult, PreviewData } from 'next';
-import { parseCookies } from 'nookies';
+import { destroyCookie, parseCookies } from 'nookies';
 import { ParsedUrlQuery } from 'querystring';
 import { authApi } from '../api';
 
@@ -19,6 +19,7 @@ export const makeRequireLoginProps =
       .catch(() => false);
 
     if (!isValid) {
+      destroyCookie(ctx, 'token');
       return {
         redirect: {
           destination: '/login',
@@ -60,6 +61,7 @@ export const makeRequireLogoutProps =
       };
     }
 
+    destroyCookie(ctx, 'token');
     if (!getServerSideProps) {
       return {
         props: {},

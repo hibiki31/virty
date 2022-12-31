@@ -523,7 +523,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/utils@npm:^5.11.2":
+"@mui/utils@npm:^5.10.3, @mui/utils@npm:^5.11.2":
   version: 5.11.2
   resolution: "@mui/utils@npm:5.11.2"
   dependencies:
@@ -535,6 +535,24 @@ __metadata:
   peerDependencies:
     react: ^17.0.0 || ^18.0.0
   checksum: 69091d9120681dee29fc20220b7db5dd61334194c139df735d932f072dab00eeae6e440058ffbccebbe93d4a3a998c23b6f4df570cb66cdacd023fce9f0f5912
+  languageName: node
+  linkType: hard
+
+"@mui/x-data-grid@npm:^5.17.17":
+  version: 5.17.17
+  resolution: "@mui/x-data-grid@npm:5.17.17"
+  dependencies:
+    "@babel/runtime": ^7.18.9
+    "@mui/utils": ^5.10.3
+    clsx: ^1.2.1
+    prop-types: ^15.8.1
+    reselect: ^4.1.6
+  peerDependencies:
+    "@mui/material": ^5.4.1
+    "@mui/system": ^5.4.1
+    react: ^17.0.2 || ^18.0.0
+    react-dom: ^17.0.2 || ^18.0.0
+  checksum: 9d51f9e779be9aa712dc81b75f166beafa1c10a4637fd1fb84e62c1086803c2969b235e35553f5e66d5a14914ba0695548daaa64acff4bfde79e4b51566e5d62
   languageName: node
   linkType: hard
 
@@ -3323,6 +3341,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"reselect@npm:^4.1.6":
+  version: 4.1.7
+  resolution: "reselect@npm:4.1.7"
+  checksum: 738d8e2b8f0dca154ad29de6a209c9fbca2d70ae6788fd85df87f2c74b95a65bbf2d16d43a9e2faff39de34d17a29d706ba08a6b2ee5660c09589edbd19af7e1
+  languageName: node
+  linkType: hard
+
 "resolve-from@npm:^4.0.0":
   version: 4.0.0
   resolution: "resolve-from@npm:4.0.0"
@@ -3945,6 +3970,7 @@ __metadata:
     "@mui/icons-material": ^5.10.6
     "@mui/lab": ^5.0.0-alpha.114
     "@mui/material": ^5.11.2
+    "@mui/x-data-grid": ^5.17.17
     "@openapitools/openapi-generator-cli": ^2.5.2
     "@types/node": 18.7.23
     "@types/react": 18.0.21

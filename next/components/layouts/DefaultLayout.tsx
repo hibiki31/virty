@@ -8,7 +8,11 @@ export const DefaultLayout: FC<PropsWithChildren> = ({ children }) => {
     <Box component="div" sx={{ display: 'flex' }}>
       <DefaultHeader />
       <NavigationDrawer />
-      <Container component="main" sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 16px)' }}>
+      <Container
+        component="main"
+        maxWidth="xl"
+        sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 16px)' }}
+      >
         <Toolbar />
         {children}
       </Container>
