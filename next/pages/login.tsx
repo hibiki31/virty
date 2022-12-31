@@ -1,5 +1,5 @@
 import { LoadingButton } from '@mui/lab';
-import { Button, Card, CardContent, CardHeader, Grid } from '@mui/material';
+import { Card, CardContent, CardHeader, Grid } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import type { NextPage } from 'next';
 import Head from 'next/head';
@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { NoAuthLayout } from '~/components/layouts/NoAuthLayout';
 import { generateProperty } from '~/lib/jtd';
 import { makeRequireLogoutProps } from '~/lib/utils/makeGetServerSideProps';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -17,7 +18,7 @@ type LoginForm = JTDDataType<typeof loginFormJtd>;
 export const getServerSideProps = makeRequireLogoutProps();
 
 const LoginPage: NextPage = () => {
-  const { user, login, logout } = useAuth();
+  const { login } = useAuth();
   const { openPersistNotistack } = useNotistack();
   const formMethods = useForm<LoginForm>({
     defaultValues: generateProperty(loginFormJtd),
@@ -41,7 +42,7 @@ const LoginPage: NextPage = () => {
   };
 
   return (
-    <>
+    <NoAuthLayout>
       <Head>
         <title>Virty - Login</title>
       </Head>
@@ -59,12 +60,7 @@ const LoginPage: NextPage = () => {
           </Grid>
         </CardContent>
       </Card>
-
-      <Button variant="contained" onClick={logout}>
-        Logout
-      </Button>
-      {user && <div>{JSON.stringify(user)}</div>}
-    </>
+    </NoAuthLayout>
   );
 };
 

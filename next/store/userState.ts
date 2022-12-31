@@ -1,16 +1,19 @@
+import { useRouter } from 'next/router';
 import { destroyCookie, parseCookies, setCookie } from 'nookies';
 import { useEffect } from 'react';
 import { atom, useRecoilState } from 'recoil';
 import { authApi } from '~/lib/api';
 
+export type Scope = 'user' | 'admin';
+
 export type User = {
   username: string;
-  scopes: string[];
+  scopes: Scope[];
 };
 
 type Payload = {
   sub: string;
-  scopes: string[];
+  scopes: Scope[];
 };
 
 type UserState = User | null | undefined; // null = not logged in, undefined = loading
@@ -45,6 +48,7 @@ export const useGetUser = (): UserState => {
 
 export const useAuth = () => {
   const [user, setUser] = useRecoilState(userState);
+  const router = useRouter();
 
   const login = async (username: string, password: string) => {
     if (user) {
@@ -72,6 +76,7 @@ export const useAuth = () => {
   const logout = async () => {
     setUser(null);
     destroyCookie(null, 'token');
+    router.push('/login');
   };
 
   return { user, login, logout };
