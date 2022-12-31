@@ -20,14 +20,13 @@ import {
   Theme,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import { Schema } from 'jtd';
 import { FC, PropsWithChildren } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { generateProperties, generateProperty } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 import { useChoices } from '~/store/formState';
+import { Close, Plus } from 'mdi-material-ui';
 
 export type WrapperComponentProps = PropsWithChildren<{ sx?: SxProps<Theme> }>;
 const WrapperComponent: FC<WrapperComponentProps> = (props) => <Grid {...props} item xs={12} />;
@@ -502,7 +501,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
             sx={{ display: 'flex', mx: 'auto' }}
             onClick={() => insertProperty(0)}
           >
-            <AddIcon />
+            <Plus />
           </IconButton>
         )}
         {fields.map((field, i) => (
@@ -518,7 +517,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
               />
               {editableArray && (
                 <IconButton size="small" color="error" sx={{ ml: 1, my: 'auto' }} onClick={() => removeProperty(i)}>
-                  <CloseIcon />
+                  <Close />
                 </IconButton>
               )}
             </WrapperComponent>
@@ -529,7 +528,7 @@ const ElementsPropertyInput: FC<PropertyInputProps> = ({
                 sx={{ display: 'flex', mx: 'auto' }}
                 onClick={() => insertProperty(i + 1)}
               >
-                <AddIcon />
+                <Plus />
               </IconButton>
             )}
           </div>

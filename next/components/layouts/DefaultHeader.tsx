@@ -12,12 +12,9 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '~/store/userState';
 import { useDrawer } from '~/store/drawerState';
+import { Menu as MdiMenu, Account, Cog, Logout } from 'mdi-material-ui';
 
 export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,7 +34,7 @@ export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
     <AppBar color="inherit" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: 'primary.main' }}>
       <Toolbar>
         <IconButton size="large" edge="start" color="inherit" sx={{ mr: 2 }} onClick={toggleDrawer}>
-          <MenuIcon />
+          <MdiMenu />
         </IconButton>
         <Typography variant="h5" mr={4}>
           Virty
@@ -45,8 +42,8 @@ export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
         {children ? children : <Box component="div" sx={{ mr: 'auto' }} />}
         <Box component="div" sx={{ display: 'flex', alignItems: 'center' }}>
           <Button variant="outlined" color="inherit" sx={{ borderRadius: 5 }} onClick={openUserMenu}>
-            <PersonIcon sx={{ mr: 0.5 }} />
-            <SettingsIcon />
+            <Account sx={{ mr: 0.5 }} />
+            <Cog />
           </Button>
         </Box>
 
@@ -64,13 +61,13 @@ export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
           <Divider sx={{ my: 1 }} />
           <MenuItem>
             <ListItemIcon>
-              <SettingsIcon fontSize="small" />
+              <Cog fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Settings" />
           </MenuItem>
           <MenuItem onClick={logout}>
             <ListItemIcon>
-              <LogoutIcon fontSize="small" />
+              <Logout fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Logout" />
           </MenuItem>
