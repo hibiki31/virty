@@ -11,13 +11,15 @@ services:
       DATA_ROOT: "/opt/data"
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@virty-db:5432/mydatabase"
     restart: always
-  web:
-    hostname: virty-web
-    build: ./web
-    volumes:
-      - ./data/nginx:/var/log/nginx/
+  nginx:
+    hostname: virty-nginx
+    build: ./nginx
     ports:
       - 0.0.0.0:8765:80
+    restart: always
+  next:
+    hostname: virty-next
+    build: ./next
     restart: always
   db:
     hostname: virty-db
