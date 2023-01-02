@@ -1,24 +1,52 @@
 import { Schema } from 'jtd';
 import { useCallback, useEffect, useState } from 'react';
-import { atom, useRecoilState, useResetRecoilState } from 'recoil';
+import { atom, DefaultValue, selectorFamily, useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil';
 import { ajv } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 
-type TableChoicesState = {
-  [key: string]: Choice[];
+type ChoicesFetcher = () => Promise<Choice[]>;
+
+type ChoicesFetchersState = {
+  [key: string]: ChoicesFetcher;
 };
 
-export const tableChoicesState = atom<TableChoicesState>({
-  key: 'tableChoices',
+const choicesFetchersState = atom<ChoicesFetchersState>({
+  key: 'choicesFetchers',
   default: {},
 });
 
+const choicesFetcherSelector = selectorFamily<ChoicesFetcher, string>({
+  key: 'choicesFetcher',
+  get:
+    (name) =>
+    ({ get }) =>
+      get(choicesFetchersState)[name],
+  set:
+    (name) =>
+    ({ set }, newFetcher?: ChoicesFetcher | DefaultValue) => {
+      set(choicesFetchersState, (oldValue) => {
+        if (!newFetcher || newFetcher instanceof DefaultValue) {
+          const { [name]: _, ...newValue } = oldValue;
+          return newValue;
+        }
+        return {
+          ...oldValue,
+          [name]: newFetcher,
+        };
+      });
+    },
+});
+
+export const useChoicesFetcher = (name: string) => {
+  return useSetRecoilState(choicesFetcherSelector(name));
+};
+
 export const useChoices = (metadata?: MetaData) => {
-  const [tableChoices, setTableChoices] = useRecoilState(tableChoicesState);
+  const fetcher = useRecoilValue(choicesFetcherSelector(typeof metadata?.choices === 'string' ? metadata.choices : ''));
   const [choices, setChoices] = useState<Choice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetch = useCallback(async () => {
+  const getChoices = useCallback(async () => {
     if (!metadata?.choices) {
       return {
         data: null,
@@ -26,61 +54,43 @@ export const useChoices = (metadata?: MetaData) => {
       };
     }
     if (Array.isArray(metadata.choices)) {
-      setTableChoices((prev) => ({
-        ...prev,
-        [metadata.name]: metadata.choices as Choice[],
-      }));
       return {
         data: metadata.choices,
         error: null,
       };
     }
-    const cachedChoices = tableChoices[metadata.choices];
-    if (cachedChoices) {
-      return {
-        data: cachedChoices,
-        error: null,
-      };
-    }
-
-    const { data, error } = await fetchChoices(metadata.choices);
-    if (error) {
+    if (!fetcher) {
       return {
         data: null,
-        error,
+        error: new Error('Choices fetcher is not defined.'),
       };
     }
-    setTableChoices((prev) => ({
-      ...prev,
-      [metadata.choices as string]: data,
-    }));
-    return {
-      data,
-      error: null,
-    };
-  }, [metadata, tableChoices, setTableChoices]);
+    return fetcher()
+      .then((data) => ({
+        data,
+        error: null,
+      }))
+      .catch((error) => ({
+        data: null,
+        error,
+      }));
+  }, [metadata, fetcher]);
 
   useEffect(() => {
-    fetch()
-      .then(({ data, error }) => {
-        if (error) {
-          if (error.message !== 'Choices is not defined.') {
-            console.error(error);
-          }
-          return;
-        }
+    setIsLoading(true);
+    getChoices().then(({ data }) => {
+      if (data) {
         setChoices(data);
-      })
-      .finally(() => {
         setIsLoading(false);
-      });
-  }, [fetch]);
+      }
+    });
+  }, [getChoices]);
 
-  return { choices, isLoading, fetch };
+  return { choices: choices, isLoading };
 };
 
 export const useJtdForm = (jtd: Schema) => {
-  const resetTableChoices = useResetRecoilState(tableChoicesState);
+  const resetFetchers = useResetRecoilState(choicesFetchersState);
 
   useEffect(() => {
     if (ajv.getSchema('JTD')) {
@@ -89,15 +99,10 @@ export const useJtdForm = (jtd: Schema) => {
     ajv.addSchema(jtd, 'JTD');
   }, [jtd]);
 
-  const reset = useCallback(() => {
+  const reset = () => {
     ajv.removeSchema('JTD');
-    resetTableChoices();
-  }, [resetTableChoices]);
+    resetFetchers();
+  };
 
   return { reset };
-};
-
-const fetchChoices = async (tableName: string): Promise<any> => {
-  switch (tableName) {
-  }
 };

@@ -10,6 +10,7 @@ import {
   Grid,
   IconButton,
   InputLabel,
+  LinearProgress,
   ListItemText,
   MenuItem,
   Paper,
@@ -197,6 +198,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                   ))}
                 </Select>
               )}
+              {isLoading && <LinearProgress sx={{ mt: -0.5 }} />}
               <FormHelperText>{error?.message || ' '}</FormHelperText>
             </FormControl>
           )}
