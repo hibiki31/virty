@@ -15,7 +15,6 @@ type Props = {
 
 export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, isEditing, isError = false }) => {
   const { reset } = useJtdForm(rootJtd);
-  const propertiesJtd: Schema = (propertyJtd as any)?.properties || (rootJtd as any).properties;
 
   useEffect(
     () => () => {
@@ -26,17 +25,14 @@ export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, i
 
   return (
     <Grid container rowSpacing={2}>
-      {Object.entries(propertiesJtd).map(([propertyKey, jtd]) => (
-        <PropertyInput
-          key={propertyKey}
-          prefixPropertyName={prefixPropertyName}
-          propertyKey={propertyKey}
-          propertyJtd={jtd}
-          rootJtd={rootJtd}
-          isEditing={isEditing}
-          isError={isError}
-        />
-      ))}
+      <PropertyInput
+        prefixPropertyName={prefixPropertyName}
+        propertyKey=""
+        propertyJtd={propertyJtd || rootJtd}
+        rootJtd={rootJtd}
+        isEditing={isEditing}
+        isError={isError}
+      />
     </Grid>
   );
 };

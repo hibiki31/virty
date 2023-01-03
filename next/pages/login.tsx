@@ -67,6 +67,9 @@ const LoginPage: NextPage = () => {
 export default LoginPage;
 
 const loginFormJtd = {
+  metadata: {
+    spread: true,
+  },
   properties: {
     username: {
       metadata: {

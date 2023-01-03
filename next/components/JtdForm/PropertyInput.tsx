@@ -24,10 +24,11 @@ import {
 import { Schema } from 'jtd';
 import { FC, PropsWithChildren } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
-import { generateProperties, generateProperty } from '~/lib/jtd';
+import { generateProperties, generateProperty, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 import { useChoices } from '~/store/formState';
 import { Close, Plus } from 'mdi-material-ui';
+import { StepperForm } from './StepperForm';
 
 export type WrapperComponentProps = PropsWithChildren<{ sx?: SxProps<Theme> }>;
 const WrapperComponent: FC<WrapperComponentProps> = (props) => <Grid {...props} item xs={12} />;
@@ -45,13 +46,15 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   const { prefixPropertyName = '', propertyKey, propertyJtd, rootJtd, isEditing, isError = false } = props;
 
   const { control, getValues, setValue } = useFormContext();
-  const { choices, isLoading } = useChoices(propertyJtd.metadata);
+  const propertyName = prefixPropertyName + propertyKey;
+  const { choices, isLoading } = useChoices(propertyJtd.metadata, getValues, propertyName);
 
   if (propertyJtd.metadata?.hidden) {
-    return null;
+    if (propertyJtd.metadata.hidden === true || propertyJtd.metadata.hidden(getRelatedValue(getValues, propertyName))) {
+      return null;
+    }
   }
 
-  const propertyName = prefixPropertyName + propertyKey;
   const labelPath = propertyJtd.metadata?.labelPath;
   const labelFromName = propertyJtd.metadata?.name || propertyKey;
   const labelFromPath = labelPath?.length && labelPath.reduce((acc, key) => acc?.[key], getValues(propertyName));
@@ -76,6 +79,27 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   }
 
   if ('properties' in propertyJtd) {
+    if (propertyJtd.metadata?.customType === 'stepper') {
+      return (
+        <StepperForm
+          steps={Object.entries(propertyJtd.properties as Schema).map(([nextPropertyKey, nextPropertyJtd]) => ({
+            title: nextPropertyJtd.metadata?.name || nextPropertyKey,
+            body: (
+              <PropertyInput
+                key={propertyKey ? `${propertyKey}.${nextPropertyKey}` : nextPropertyKey}
+                prefixPropertyName={prefixPropertyName}
+                propertyKey={propertyKey ? `${propertyKey}.${nextPropertyKey}` : nextPropertyKey}
+                propertyJtd={nextPropertyJtd}
+                rootJtd={rootJtd}
+                isEditing={isEditing}
+                isError={isError}
+              />
+            ),
+          }))}
+        />
+      );
+    }
+
     return (
       <SpreadInputWrapper label={!hiddenPropertyLabel ? propertyLabel : undefined} spread={propertySpread}>
         {Object.entries(propertyJtd.properties as Schema).map(([nextPropertyKey, nextPropertyJtd]) => (

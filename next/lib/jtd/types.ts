@@ -2,7 +2,7 @@
  * MetaData of JTD property.
  */
 export interface MetaData {
-  name: string;
+  name?: string;
   description?: string;
   default?: any;
   discriminatorName?: string;
@@ -23,7 +23,7 @@ export interface MetaData {
    * If true, the property is not displayed in the dialog.
    * @default false
    */
-  hidden?: boolean;
+  hidden?: boolean | ((get: any) => boolean);
   /**
    * If true, the property is required.
    * (Do not use optionalProperties because it is not possible to define the order of the forms.)
@@ -39,7 +39,7 @@ export interface MetaData {
    * Define types not supported by the JTD
    * @default undefined
    */
-  customType?: 'mappingBoolean' | 'password';
+  customType?: 'mappingBoolean' | 'password' | 'stepper';
   /**
    * Set the choices in the select form.
    * If the value is a table name, the list is fetched; if it is an array, it is used as is.
@@ -48,7 +48,7 @@ export interface MetaData {
    * choices: 'users'
    * choices: [{ label: 'Label A', value: 'a' }, { label: 'Label 1', value: 1 }]
    */
-  choices?: Choice[] | string;
+  choices?: Choice[] | string | ((get: any) => string);
   /**
    * If true, properties can be added to or removed from the array.
    * @default true
