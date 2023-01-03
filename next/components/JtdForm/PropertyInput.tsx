@@ -424,6 +424,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
             <TextField
               label={propertyLabel}
               type={propertyJtd.metadata?.customType === 'password' ? 'password' : isNumber ? 'number' : 'text'}
+              multiline={propertyJtd.metadata?.customType === 'textarea'}
               required={propertyRequired}
               disabled={propertyReadonly}
               fullWidth
