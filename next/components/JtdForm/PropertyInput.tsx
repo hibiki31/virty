@@ -33,7 +33,7 @@ import { StepperForm } from './StepperForm';
 export type WrapperComponentProps = PropsWithChildren<{ sx?: SxProps<Theme> }>;
 const WrapperComponent: FC<WrapperComponentProps> = (props) => <Grid {...props} item xs={12} />;
 
-type PropertyInputProps = {
+export type PropertyInputProps = {
   prefixPropertyName?: string;
   propertyKey: string;
   propertyJtd: Schema & { metadata?: MetaData };
@@ -78,28 +78,11 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
     );
   }
 
-  if ('properties' in propertyJtd) {
-    if (propertyJtd.metadata?.customType === 'stepper') {
-      return (
-        <StepperForm
-          steps={Object.entries(propertyJtd.properties as Schema).map(([nextPropertyKey, nextPropertyJtd]) => ({
-            title: nextPropertyJtd.metadata?.name || nextPropertyKey,
-            body: (
-              <PropertyInput
-                key={propertyKey ? `${propertyKey}.${nextPropertyKey}` : nextPropertyKey}
-                prefixPropertyName={prefixPropertyName}
-                propertyKey={propertyKey ? `${propertyKey}.${nextPropertyKey}` : nextPropertyKey}
-                propertyJtd={nextPropertyJtd}
-                rootJtd={rootJtd}
-                isEditing={isEditing}
-                isError={isError}
-              />
-            ),
-          }))}
-        />
-      );
-    }
+  if (propertyJtd.metadata?.customType === 'stepper') {
+    return <StepperForm {...props} />;
+  }
 
+  if ('properties' in propertyJtd) {
     return (
       <SpreadInputWrapper label={!hiddenPropertyLabel ? propertyLabel : undefined} spread={propertySpread}>
         {Object.entries(propertyJtd.properties as Schema).map(([nextPropertyKey, nextPropertyJtd]) => (

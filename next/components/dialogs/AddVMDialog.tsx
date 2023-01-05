@@ -19,7 +19,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
   const formMethods = useForm<AddVMForm>({
     defaultValues: generateProperty(addVMFormJtd),
   });
-  const { watch, reset, setValue } = formMethods;
+  const { watch, reset, setValue, handleSubmit } = formMethods;
 
   useEffect(() => {
     if (open) {
@@ -49,7 +49,9 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           if (!nodeName) {
             return;
           }
-          setValue('storage.originalPoolUuid', '');
+          if (data.storage?.type === 'copy') {
+            setValue('storage.originalPoolUuid', '');
+          }
           setValue('storage.savePoolUuid', '');
           setFetcher('storages', () =>
             storageApi
@@ -110,8 +112,8 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
   }, [watch, setValue, setFetcher]);
 
   const persistent = false;
-  const handleSubmit = () => {
-    console.log('submit');
+  const handleAddVM = (data: AddVMForm) => {
+    console.log('submit', data);
   };
 
   return (
@@ -128,7 +130,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disableElevation disabled={false}>
+        <Button onClick={handleSubmit(handleAddVM)} variant="contained" disableElevation disabled={false}>
           Submit
         </Button>
       </DialogActions>
@@ -148,6 +150,7 @@ const addVMFormJtd = {
           metadata: {
             name: 'Name',
             default: '',
+            required: true,
           },
           type: 'string',
         },
@@ -155,6 +158,7 @@ const addVMFormJtd = {
           metadata: {
             name: 'Memory',
             default: '',
+            required: true,
             choices: [
               { value: '512', label: '512 MB' },
               { value: '1024', label: '1 GB' },
@@ -171,6 +175,7 @@ const addVMFormJtd = {
           metadata: {
             name: 'CPU',
             default: '',
+            required: true,
             choices: [
               { value: '1', label: '1 Core' },
               { value: '2', label: '2 Cores' },
@@ -186,6 +191,7 @@ const addVMFormJtd = {
           metadata: {
             name: 'Node',
             default: '',
+            required: true,
             choices: 'nodes',
           },
           type: 'string',
@@ -207,6 +213,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Size (GB)',
                 default: 32,
+                required: true,
               },
               type: 'float64',
             },
@@ -214,6 +221,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Dest Pool',
                 default: '',
+                required: true,
                 choices: 'storages',
               },
               type: 'string',
@@ -226,6 +234,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Src Pool',
                 default: '',
+                required: true,
                 choices: 'storages',
               },
               type: 'string',
@@ -234,6 +243,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Src Image',
                 default: '',
+                required: true,
                 choices: 'images',
               },
               type: 'string',
@@ -242,6 +252,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Dest Pool',
                 default: '',
+                required: true,
                 choices: 'storages',
               },
               type: 'string',
@@ -251,12 +262,16 @@ const addVMFormJtd = {
       },
     },
     networks: {
+      metadata: {
+        default: [],
+      },
       elements: {
         properties: {
           type: {
             metadata: {
               name: 'Network Type',
               default: 'network',
+              required: true,
               choices: [
                 {
                   value: 'network',
@@ -270,6 +285,7 @@ const addVMFormJtd = {
             metadata: {
               name: 'Network',
               default: '',
+              required: true,
               choices: 'networks',
             },
             type: 'string',
@@ -278,6 +294,7 @@ const addVMFormJtd = {
             metadata: {
               name: 'Port',
               default: '',
+              required: true,
               hidden: (get: any) => !get(1, 'network'),
               choices: (get: any) => {
                 const network = get(1, 'network');
@@ -294,7 +311,7 @@ const addVMFormJtd = {
         customType: 'mappingBoolean',
         discriminatorName: 'Use cloud-init',
         default: {
-          useCloudInit: false,
+          useCloudInit: 'false',
         },
       },
       discriminator: 'useCloudInit',
@@ -305,6 +322,7 @@ const addVMFormJtd = {
               metadata: {
                 name: 'Hostname',
                 default: '',
+                required: true,
               },
               type: 'string',
             },
@@ -317,6 +335,7 @@ chpasswd: {expire: False}
 ssh_pwauth: True
 ssh_authorized_keys:
   - ssh-rsa AAA...fHQ== sample@example.com`,
+                required: true,
                 customType: 'textarea',
               },
               type: 'string',
@@ -325,6 +344,7 @@ ssh_authorized_keys:
               metadata: {
                 name: 'Network Config',
                 default: 'network:\n  version: 2\n  ethernets: []',
+                required: true,
                 customType: 'textarea',
               },
               type: 'string',
