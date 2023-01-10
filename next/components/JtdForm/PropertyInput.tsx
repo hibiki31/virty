@@ -22,7 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Schema } from 'jtd';
-import { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren, useEffect } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { generateProperties, generateProperty, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
@@ -40,14 +40,29 @@ export type PropertyInputProps = {
   rootJtd: Schema & { metadata?: MetaData };
   isEditing: boolean;
   isError?: boolean;
+  parentComponentName?: 'StepperForm';
 };
 
 export const PropertyInput: FC<PropertyInputProps> = (props) => {
-  const { prefixPropertyName = '', propertyKey, propertyJtd, rootJtd, isEditing, isError = false } = props;
+  const {
+    prefixPropertyName = '',
+    propertyKey,
+    propertyJtd,
+    rootJtd,
+    isEditing,
+    isError = false,
+    parentComponentName,
+  } = props;
 
   const { control, getValues, setValue } = useFormContext();
   const propertyName = prefixPropertyName + propertyKey;
   const { choices, isLoading } = useChoices(propertyJtd.metadata, getValues, propertyName);
+
+  useEffect(() => {
+    if (typeof propertyJtd.metadata?.default === 'function' && !getValues(propertyName)) {
+      setValue(propertyName, propertyJtd.metadata.default(getRelatedValue(getValues, propertyName)));
+    }
+  }, [getValues, propertyName, propertyJtd.metadata, setValue]);
 
   if (propertyJtd.metadata?.hidden) {
     if (propertyJtd.metadata.hidden === true || propertyJtd.metadata.hidden(getRelatedValue(getValues, propertyName))) {
@@ -61,8 +76,8 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   const propertyLabel = ['string', 'number'].includes(typeof labelFromPath) ? labelFromPath : labelFromName;
   const propertyRequired = propertyJtd.metadata?.required !== false;
   const propertyReadonly = propertyJtd.metadata?.readonly;
-  const propertySpread = propertyJtd.metadata?.spread;
-  const hiddenPropertyLabel = propertyJtd.metadata?.hiddenLabel;
+  const propertySpread = parentComponentName === 'StepperForm' || propertyJtd.metadata?.spread;
+  const hiddenPropertyLabel = parentComponentName === 'StepperForm' || propertyJtd.metadata?.hiddenLabel;
 
   if ('ref' in propertyJtd) {
     const refJtd = (rootJtd.definitions as any)[propertyJtd.ref] as Schema & { metadata?: MetaData };

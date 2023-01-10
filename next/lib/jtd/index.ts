@@ -9,6 +9,8 @@ export const generateProperty = (propertyJtd: Schema, rootJtd: Schema = property
     ? generateProperty((rootJtd.definitions as any)[propertyJtd.ref] as Schema, rootJtd)
     : 'discriminator' in propertyJtd
     ? generateDiscriminatorProperty(propertyJtd, rootJtd)
+    : typeof propertyJtd.metadata?.default === 'function'
+    ? ''
     : propertyJtd.metadata?.default;
 };
 
@@ -23,9 +25,12 @@ export const generateProperties = (propertiesJtd: Schema, rootJtd: Schema) => {
 export const generateDiscriminatorProperty = (discriminatorJtd: Schema, rootJtd: Schema) => {
   const discriminator = (discriminatorJtd as any).discriminator;
   const defaultValue = discriminatorJtd.metadata?.default as any;
+  if (typeof defaultValue !== 'object') {
+    return {};
+  }
   const defaultDiscriminatorValue = defaultValue?.[discriminator];
-  if (!defaultDiscriminatorValue || (typeof defaultValue === 'object' && Object.keys(defaultValue).length >= 2)) {
-    return discriminatorJtd.metadata?.default;
+  if (!defaultDiscriminatorValue || Object.keys(defaultValue).length >= 2) {
+    return defaultValue;
   }
   return {
     [discriminator]: defaultDiscriminatorValue,
