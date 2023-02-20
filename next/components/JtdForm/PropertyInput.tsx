@@ -161,7 +161,12 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
           name={propertyName}
           control={control}
           rules={{
-            required: propertyRequired && `${propertyLabel} is required.`,
+            validate: (value: Choice['value']) => {
+              if (propertyRequired && !value) {
+                return `${propertyLabel} is required.`;
+              }
+              return true;
+            },
           }}
           render={({ field: { value, onChange }, fieldState: { error } }) => (
             <FormControl
