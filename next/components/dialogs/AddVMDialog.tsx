@@ -5,6 +5,7 @@ import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { networkApi, nodeApi, storageApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
 
@@ -28,6 +29,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { openConfirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     if (open) {
@@ -125,7 +127,15 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     });
   }, [watch, setValue, setFetcher]);
 
-  const handleAddVM = (data: AddVMForm) => {
+  const handleAddVM = async (data: AddVMForm) => {
+    const confirmed = await openConfirmDialog({
+      description: 'Are you sure you want to add this VM?',
+      submitText: 'Continue',
+    });
+    if (!confirmed) {
+      return;
+    }
+
     console.log('submit', data);
   };
 
