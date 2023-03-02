@@ -45,7 +45,7 @@ export const VMTable: FC = () => {
             disableColumnMenu: true,
             flex: 2,
             renderCell: (params) => (
-              <NextLink href={`#${params.value}`} passHref>
+              <NextLink href={`/vm/${params.value}`} passHref>
                 <Link>{params.value}</Link>
               </NextLink>
             ),

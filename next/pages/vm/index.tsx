@@ -9,7 +9,7 @@ import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
 export const getServerSideProps = makeRequireLoginProps();
 
-const VMPage: NextPage = () => {
+const VMsPage: NextPage = () => {
   const [addVMDialogOpen, setAddVMDialogOpen] = useState<boolean>(false);
 
   return (
@@ -36,4 +36,4 @@ const VMPage: NextPage = () => {
   );
 };
 
-export default VMPage;
+export default VMsPage;
