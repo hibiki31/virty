@@ -20,8 +20,8 @@ type Props = {
   cols: {
     name?: string;
     align?: TableCellProps['align'];
-    getItem: (item: Record<string, any>) => string | number | undefined;
-    getUrl?: (item: Record<string, any>) => string;
+    getItem: (item: Record<string, any>, i: number) => any;
+    getUrl?: (item: Record<string, any>, i: number) => string;
   }[];
   items: Record<string, any>[];
   onClick?: (item: Record<string, any>) => void;
@@ -77,14 +77,14 @@ export const BaseTable: FC<Props> = ({
                 ...(hiddenBorder ? { '& td, & th': { border: 'none' } } : {}),
               }}
             >
-              {cols.map((col, i) => (
-                <TableCell key={i} align={col.align}>
+              {cols.map((col, j) => (
+                <TableCell key={j} align={col.align}>
                   {col.getUrl ? (
-                    <NextLink href={col.getUrl(item)} passHref>
-                      <Link>{col.getItem(item)}</Link>
+                    <NextLink href={col.getUrl(item, i)} passHref>
+                      <Link>{col.getItem(item, i)}</Link>
                     </NextLink>
                   ) : (
-                    col.getItem(item)
+                    col.getItem(item, i)
                   )}
                 </TableCell>
               ))}
