@@ -1,14 +1,15 @@
-import { Button, Card, CardHeader, Grid, IconButton, Typography } from '@mui/material';
+import { Box, Button, Card, CardHeader, Grid, IconButton, Typography } from '@mui/material';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { vmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
-import { useNotistack } from '~/lib/utils/notistack';
 import useSWR from 'swr';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { GetDomainDrives, GetDomainInterfaces } from '~/lib/api/generated';
 import { Pencil } from 'mdi-material-ui';
+import Error404Page from '../404';
+import ErrorPage from '../error';
 
 type Props = {
   id: string;
@@ -32,18 +33,32 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 const VMPage: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
     ['vmsApi.getApiDomainUuidApiVmsUuidGet', id],
-    ([, id]) => vmsApi.getApiDomainUuidApiVmsUuidGet(id).then((res) => res.data),
-    { revalidateOnFocus: false }
+    ([, id]) =>
+      vmsApi
+        .getApiDomainUuidApiVmsUuidGet(id)
+        .then((res) => res.data)
+        .catch((err) => {
+          if (err.response.status === 404) {
+            return null;
+          }
+          throw err;
+        }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }
   );
-  const { enqueueNotistack } = useNotistack();
 
-  if (error) {
-    enqueueNotistack('Failed to fetch VM.', { variant: 'error' });
-    return null;
+  if (isValidating) {
+    return <DefaultLayout isLoading />;
   }
 
-  if (!data || isValidating) {
-    return null;
+  if (error) {
+    return <ErrorPage message={error.message} />;
+  }
+
+  if (!data) {
+    return <Error404Page />;
   }
 
   return (
@@ -99,7 +114,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
         </Grid>
 
         <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ height: '100%' }}>
+          <Card>
             <CardHeader title={<Typography variant="h6">Node</Typography>} />
             <Grid item pb={2}>
               <BaseTable
@@ -160,10 +175,12 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   name: 'Actions',
                   align: 'center',
                   getItem: (item: GetDomainDrives) =>
-                    item.device === 'cdrom' && (
+                    item.device === 'cdrom' ? (
                       <IconButton>
                         <Pencil />
                       </IconButton>
+                    ) : (
+                      <Box sx={{ width: 40, height: 40 }} />
                     ),
                 },
               ]}
