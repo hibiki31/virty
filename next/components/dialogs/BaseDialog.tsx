@@ -1,6 +1,7 @@
 import { Breakpoint, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FC, PropsWithChildren, ReactNode } from 'react';
+import { LoadingButton } from '@mui/lab';
 
 export type Props = PropsWithChildren<{
   title: ReactNode;
@@ -8,6 +9,7 @@ export type Props = PropsWithChildren<{
   open: boolean;
   deletable?: boolean;
   submitDisabled?: boolean;
+  submitLoading?: boolean;
   maxWidth?: Breakpoint;
   persistent?: boolean;
   onClose: () => void;
@@ -21,6 +23,7 @@ export const BaseDialog: FC<Props> = ({
   open,
   deletable = false,
   submitDisabled,
+  submitLoading,
   maxWidth = 'xs',
   persistent = false,
   onClose,
@@ -46,9 +49,15 @@ export const BaseDialog: FC<Props> = ({
       {onSubmit && (
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={onSubmit} variant="contained" disableElevation disabled={submitDisabled}>
+          <LoadingButton
+            onClick={onSubmit}
+            variant="contained"
+            disableElevation
+            disabled={submitDisabled}
+            loading={submitLoading}
+          >
             {submitText}
-          </Button>
+          </LoadingButton>
         </DialogActions>
       )}
     </Dialog>

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { atom, useRecoilState } from 'recoil';
 import { ConfirmDialogProps } from '~/components/dialogs/ConfirmDialog';
 
@@ -18,16 +19,19 @@ type OpenConfirmDialogProps = Omit<ConfirmDialogProps, 'open' | 'onClose' | 'onC
 export const useConfirmDialog = () => {
   const [confirmDialogProps, setConfirmDialogProps] = useRecoilState(confirmDialogState);
 
-  const openConfirmDialog = (props: OpenConfirmDialogProps) =>
-    new Promise<boolean>((resolve) => {
-      setConfirmDialogProps({
-        open: true,
-        ...props,
-        onClose: () => setConfirmDialogProps((beforeProps) => ({ ...beforeProps, open: false })),
-        onCancel: () => resolve(false),
-        onSubmit: () => resolve(true),
-      });
-    });
+  const openConfirmDialog = useCallback(
+    (props: OpenConfirmDialogProps) =>
+      new Promise<boolean>((resolve) => {
+        setConfirmDialogProps({
+          open: true,
+          ...props,
+          onClose: () => setConfirmDialogProps((beforeProps) => ({ ...beforeProps, open: false })),
+          onCancel: () => resolve(false),
+          onSubmit: () => resolve(true),
+        });
+      }),
+    [setConfirmDialogProps]
+  );
 
   return { confirmDialogProps, openConfirmDialog };
 };

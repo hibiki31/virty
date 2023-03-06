@@ -11,8 +11,8 @@ import { Pencil } from 'mdi-material-ui';
 import Error404Page from '../404';
 import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
-import { useState } from 'react';
-import { StorageDetailDialog } from '~/components/dialogs/StorageDetailDialog';
+import { MouseEvent, useState } from 'react';
+import { StorageActionsMenu } from '~/components/dialogs/StorageActionsMenu';
 
 type Props = {
   id: string;
@@ -52,7 +52,8 @@ const VMPage: NextPage<Props> = ({ id }) => {
     }
   );
   const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
-  const [storageTarget, setStorageTarget] = useState<string | undefined>(undefined);
+  const [storageAnchorEl, setStorageAnchorEl] = useState<null | HTMLElement>(null);
+  const [storage, setStorage] = useState<GetDomainDrives | undefined>(undefined);
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -70,8 +71,9 @@ const VMPage: NextPage<Props> = ({ id }) => {
     setMacAddress(item.mac);
   };
 
-  const openStorageDetailDialog = (item: GetDomainDrives) => {
-    setStorageTarget(item.target);
+  const openStorageDetailDialog = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
+    setStorageAnchorEl(e.currentTarget);
+    setStorage(item);
   };
 
   return (
@@ -88,11 +90,11 @@ const VMPage: NextPage<Props> = ({ id }) => {
         nodeName={data.nodeName}
       />
 
-      <StorageDetailDialog
-        open={!!storageTarget}
-        onClose={() => setStorageTarget(undefined)}
+      <StorageActionsMenu
+        anchorEl={storageAnchorEl}
+        onClose={() => setStorage(undefined)}
         vmUuid={data.uuid}
-        target={storageTarget}
+        storage={storage}
         nodeName={data.nodeName}
       />
 
@@ -205,7 +207,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   align: 'center',
                   getItem: (item: GetDomainDrives) =>
                     item.device === 'cdrom' ? (
-                      <IconButton onClick={() => openStorageDetailDialog(item)}>
+                      <IconButton onClick={(e) => openStorageDetailDialog(e, item)}>
                         <Pencil />
                       </IconButton>
                     ) : (
