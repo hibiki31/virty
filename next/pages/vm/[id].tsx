@@ -12,6 +12,7 @@ import Error404Page from '../404';
 import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { useState } from 'react';
+import { StorageDetailDialog } from '~/components/dialogs/StorageDetailDialog';
 
 type Props = {
   id: string;
@@ -51,6 +52,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
     }
   );
   const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
+  const [storageTarget, setStorageTarget] = useState<string | undefined>(undefined);
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -68,6 +70,10 @@ const VMPage: NextPage<Props> = ({ id }) => {
     setMacAddress(item.mac);
   };
 
+  const openStorageDetailDialog = (item: GetDomainDrives) => {
+    setStorageTarget(item.target);
+  };
+
   return (
     <DefaultLayout>
       <Head>
@@ -79,6 +85,14 @@ const VMPage: NextPage<Props> = ({ id }) => {
         onClose={() => setMacAddress(undefined)}
         vmUuid={data.uuid}
         macAddress={macAddress}
+        nodeName={data.nodeName}
+      />
+
+      <StorageDetailDialog
+        open={!!storageTarget}
+        onClose={() => setStorageTarget(undefined)}
+        vmUuid={data.uuid}
+        target={storageTarget}
         nodeName={data.nodeName}
       />
 
@@ -191,7 +205,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   align: 'center',
                   getItem: (item: GetDomainDrives) =>
                     item.device === 'cdrom' ? (
-                      <IconButton>
+                      <IconButton onClick={() => openStorageDetailDialog(item)}>
                         <Pencil />
                       </IconButton>
                     ) : (
