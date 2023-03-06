@@ -1,9 +1,26 @@
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, useTheme } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Drawer,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  Select,
+  Toolbar,
+  useTheme,
+} from '@mui/material';
 import { Home, CubeOutline } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import { useDrawer } from '~/store/drawerState';
+import { useAuth } from '~/store/userState';
 
 const drawerWidth = 250;
 const drawerRoutes = [
@@ -22,6 +39,7 @@ const drawerRoutes = [
 export const NavigationDrawer: FC = () => {
   const theme = useTheme();
   const { drawer } = useDrawer();
+  const { user } = useAuth();
   const router = useRouter();
   const [currentPath, setCurrentPath] = useState(router.pathname);
 
@@ -53,6 +71,26 @@ export const NavigationDrawer: FC = () => {
       }}
     >
       <Toolbar />
+      <Card>
+        <CardHeader title={user?.username} />
+        <CardContent>
+          <FormControl fullWidth>
+            <InputLabel id="scope-select-label">Scope</InputLabel>
+            <Select
+              labelId="scope-select-label"
+              value={'admin'}
+              label="Scope"
+              // onChange={handleChange}
+            >
+              {user?.scopes.map((scope, i) => (
+                <MenuItem key={i} value={scope}>
+                  {scope}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </CardContent>
+      </Card>
       <List>
         {drawerRoutes.map((route, i) => (
           <ListItem

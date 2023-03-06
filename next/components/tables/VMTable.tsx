@@ -1,42 +1,35 @@
 import { Box, Link } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { vmsApi } from '~/lib/api';
-import { GetDomain } from '~/lib/api/generated';
 import { Cpu64Bit, Memory, PowerStandby } from 'mdi-material-ui';
 import NextLink from 'next/link';
+import useSWR from 'swr';
+
+const IS_ADMIN = true;
 
 export const VMTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
-  const [vms, setVMs] = useState<GetDomain[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const { data, error, isValidating } = useSWR(
+    ['vmsApi.getApiDomainApiVmsGet', IS_ADMIN],
+    ([, isAdmin]) => vmsApi.getApiDomainApiVmsGet(isAdmin).then((res) => res.data),
+    { revalidateOnFocus: false }
+  );
 
-  useEffect(() => {
-    vmsApi
-      .getApiDomainApiVmsGet()
-      .then((res) => {
-        setVMs(res.data);
-      })
-      .catch(() => {
-        setIsError(true);
-        enqueueNotistack('Failed to fetch VMs.', { variant: 'error' });
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [enqueueNotistack]);
+  if (error) {
+    enqueueNotistack('Failed to fetch VMs.', { variant: 'error' });
+  }
 
   return (
-    <Box component="div" sx={{ height: 500 }}>
+    <Box component="div" sx={{ height: '100%' }}>
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
         getRowId={(row) => row.uuid}
-        rows={vms}
-        loading={isLoading}
-        error={isError || undefined}
+        rows={data || []}
+        loading={!data || isValidating}
+        error={!!error || undefined}
         columns={[
           {
             headerName: 'Status',
@@ -52,7 +45,7 @@ export const VMTable: FC = () => {
             disableColumnMenu: true,
             flex: 2,
             renderCell: (params) => (
-              <NextLink href={`#${params.value}`} passHref>
+              <NextLink href={`/vm/${params.value}`} passHref>
                 <Link>{params.value}</Link>
               </NextLink>
             ),

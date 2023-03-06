@@ -10,6 +10,7 @@ import {
   Grid,
   IconButton,
   InputLabel,
+  LinearProgress,
   ListItemText,
   MenuItem,
   Paper,
@@ -21,44 +22,62 @@ import {
   Typography,
 } from '@mui/material';
 import { Schema } from 'jtd';
-import { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren, useEffect } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
-import { generateProperties, generateProperty } from '~/lib/jtd';
+import { generateProperties, generateProperty, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 import { useChoices } from '~/store/formState';
 import { Close, Plus } from 'mdi-material-ui';
+import { StepperForm } from './StepperForm';
 
 export type WrapperComponentProps = PropsWithChildren<{ sx?: SxProps<Theme> }>;
 const WrapperComponent: FC<WrapperComponentProps> = (props) => <Grid {...props} item xs={12} />;
 
-type PropertyInputProps = {
+export type PropertyInputProps = {
   prefixPropertyName?: string;
   propertyKey: string;
   propertyJtd: Schema & { metadata?: MetaData };
   rootJtd: Schema & { metadata?: MetaData };
   isEditing: boolean;
   isError?: boolean;
+  parentComponentName?: 'StepperForm';
 };
 
 export const PropertyInput: FC<PropertyInputProps> = (props) => {
-  const { prefixPropertyName = '', propertyKey, propertyJtd, rootJtd, isEditing, isError = false } = props;
+  const {
+    prefixPropertyName = '',
+    propertyKey,
+    propertyJtd,
+    rootJtd,
+    isEditing,
+    isError = false,
+    parentComponentName,
+  } = props;
 
   const { control, getValues, setValue } = useFormContext();
-  const { choices, isLoading } = useChoices(propertyJtd.metadata);
+  const propertyName = prefixPropertyName + propertyKey;
+  const { choices, isLoading } = useChoices(propertyJtd.metadata, getValues, propertyName);
+
+  useEffect(() => {
+    if (typeof propertyJtd.metadata?.default === 'function' && !getValues(propertyName)) {
+      setValue(propertyName, propertyJtd.metadata.default(getRelatedValue(getValues, propertyName)));
+    }
+  }, [getValues, propertyName, propertyJtd.metadata, setValue]);
 
   if (propertyJtd.metadata?.hidden) {
-    return null;
+    if (propertyJtd.metadata.hidden === true || propertyJtd.metadata.hidden(getRelatedValue(getValues, propertyName))) {
+      return null;
+    }
   }
 
-  const propertyName = prefixPropertyName + propertyKey;
   const labelPath = propertyJtd.metadata?.labelPath;
   const labelFromName = propertyJtd.metadata?.name || propertyKey;
   const labelFromPath = labelPath?.length && labelPath.reduce((acc, key) => acc?.[key], getValues(propertyName));
   const propertyLabel = ['string', 'number'].includes(typeof labelFromPath) ? labelFromPath : labelFromName;
   const propertyRequired = propertyJtd.metadata?.required !== false;
   const propertyReadonly = propertyJtd.metadata?.readonly;
-  const propertySpread = propertyJtd.metadata?.spread;
-  const hiddenPropertyLabel = propertyJtd.metadata?.hiddenLabel;
+  const propertySpread = parentComponentName === 'StepperForm' || propertyJtd.metadata?.spread;
+  const hiddenPropertyLabel = parentComponentName === 'StepperForm' || propertyJtd.metadata?.hiddenLabel;
 
   if ('ref' in propertyJtd) {
     const refJtd = (rootJtd.definitions as any)[propertyJtd.ref] as Schema & { metadata?: MetaData };
@@ -72,6 +91,10 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
         isError={isError}
       />
     );
+  }
+
+  if (propertyJtd.metadata?.customType === 'stepper') {
+    return <StepperForm {...props} />;
   }
 
   if ('properties' in propertyJtd) {
@@ -138,7 +161,12 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
           name={propertyName}
           control={control}
           rules={{
-            required: propertyRequired && `${propertyLabel} is required.`,
+            validate: (value: Choice['value']) => {
+              if (propertyRequired && !value) {
+                return `${propertyLabel} is required.`;
+              }
+              return true;
+            },
           }}
           render={({ field: { value, onChange }, fieldState: { error } }) => (
             <FormControl
@@ -197,6 +225,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                   ))}
                 </Select>
               )}
+              {isLoading && <LinearProgress sx={{ mt: -0.5 }} />}
               <FormHelperText>{error?.message || ' '}</FormHelperText>
             </FormControl>
           )}
@@ -398,6 +427,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
             <TextField
               label={propertyLabel}
               type={propertyJtd.metadata?.customType === 'password' ? 'password' : isNumber ? 'number' : 'text'}
+              multiline={propertyJtd.metadata?.customType === 'textarea'}
               required={propertyRequired}
               disabled={propertyReadonly}
               fullWidth
@@ -445,7 +475,7 @@ const SpreadInputWrapper: FC<SpreadInputWrapperProps> = ({ children, label, spre
   }
   return (
     <WrapperComponent>
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Paper elevation={0} sx={{ px: 2, mb: 2, background: 'transparent' }}>
         <Grid container rowSpacing={2} sx={{ mt: !label ? 0 : undefined }}>
           {label && (
             <WrapperComponent sx={{ mb: 2 }}>

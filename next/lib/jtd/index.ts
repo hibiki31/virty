@@ -1,5 +1,6 @@
 import Ajv from 'ajv/dist/jtd';
 import { Schema } from 'jtd';
+import { FieldValues, UseFormGetValues } from 'react-hook-form';
 
 export const generateProperty = (propertyJtd: Schema, rootJtd: Schema = propertyJtd): any => {
   return 'properties' in propertyJtd
@@ -8,6 +9,8 @@ export const generateProperty = (propertyJtd: Schema, rootJtd: Schema = property
     ? generateProperty((rootJtd.definitions as any)[propertyJtd.ref] as Schema, rootJtd)
     : 'discriminator' in propertyJtd
     ? generateDiscriminatorProperty(propertyJtd, rootJtd)
+    : typeof propertyJtd.metadata?.default === 'function'
+    ? ''
     : propertyJtd.metadata?.default;
 };
 
@@ -22,15 +25,26 @@ export const generateProperties = (propertiesJtd: Schema, rootJtd: Schema) => {
 export const generateDiscriminatorProperty = (discriminatorJtd: Schema, rootJtd: Schema) => {
   const discriminator = (discriminatorJtd as any).discriminator;
   const defaultValue = discriminatorJtd.metadata?.default as any;
+  if (typeof defaultValue !== 'object') {
+    return {};
+  }
   const defaultDiscriminatorValue = defaultValue?.[discriminator];
-  if (!defaultDiscriminatorValue || (typeof defaultValue === 'object' && Object.keys(defaultValue).length >= 2)) {
-    return discriminatorJtd.metadata?.default;
+  if (!defaultDiscriminatorValue || Object.keys(defaultValue).length >= 2) {
+    return defaultValue;
   }
   return {
     [discriminator]: defaultDiscriminatorValue,
     ...generateProperty((discriminatorJtd as any).mapping[defaultDiscriminatorValue], rootJtd),
   };
 };
+
+export const getRelatedValue =
+  (getValues: UseFormGetValues<FieldValues>, currentName: string) => (popCount: number, addName: string) => {
+    const path = currentName.split('.');
+    const prefixName = path.slice(0, path.length - popCount).join('.');
+    const value = getValues(prefixName + '.' + addName);
+    return value;
+  };
 
 /**
  * Custom Ajv instance

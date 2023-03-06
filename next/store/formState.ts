@@ -1,24 +1,97 @@
 import { Schema } from 'jtd';
 import { useCallback, useEffect, useState } from 'react';
-import { atom, useRecoilState, useResetRecoilState } from 'recoil';
-import { ajv } from '~/lib/jtd';
+import { FieldValues, UseFormGetValues } from 'react-hook-form';
+import { atom, DefaultValue, selectorFamily, useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
+import { ajv, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 
-type TableChoicesState = {
-  [key: string]: Choice[];
+type ChoicesFetcher = {
+  exec: () => Promise<Choice[]>;
+  cache?: Choice[];
 };
 
-export const tableChoicesState = atom<TableChoicesState>({
-  key: 'tableChoices',
-  default: {},
+const choicesFetchersState = atom<Map<string, ChoicesFetcher>>({
+  key: 'choicesFetchers',
+  default: new Map(),
 });
 
-export const useChoices = (metadata?: MetaData) => {
-  const [tableChoices, setTableChoices] = useRecoilState(tableChoicesState);
+export const useChoicesFetchers = () => {
+  const setChoicesFetchers = useSetRecoilState(choicesFetchersState);
+  const reset = useResetRecoilState(choicesFetchersState);
+
+  const setFetcher = useCallback(
+    (
+      name: string,
+      fetcherFunction?: ChoicesFetcher['exec'] | undefined,
+      options?: {
+        useCache?: boolean;
+      }
+    ) => {
+      setChoicesFetchers((oldValue) => {
+        if (options?.useCache) {
+          const oldValueEntry = oldValue.get(name);
+          if (oldValueEntry) {
+            return oldValue;
+          }
+        }
+        const newValue = new Map(oldValue);
+        if (!fetcherFunction) {
+          newValue.delete(name);
+        } else {
+          newValue.set(name, {
+            exec: fetcherFunction,
+          });
+        }
+        return newValue;
+      });
+    },
+    [setChoicesFetchers]
+  );
+
+  return { setFetcher, reset };
+};
+
+const choicesFetcherSelector = selectorFamily<ChoicesFetcher | undefined, string>({
+  key: 'choicesFetcher',
+  get:
+    (name) =>
+    ({ get }) =>
+      get(choicesFetchersState).get(name),
+  set:
+    (name) =>
+    ({ set }, newFetcher?: ChoicesFetcher | DefaultValue | ChoicesFetcher['exec']) => {
+      set(choicesFetchersState, (oldValue) => {
+        const newValue = new Map(oldValue);
+        if (!newFetcher || newFetcher instanceof DefaultValue) {
+          newValue.delete(name);
+        } else if (typeof newFetcher === 'function') {
+          newValue.set(name, {
+            exec: newFetcher,
+          });
+        } else {
+          newValue.set(name, newFetcher);
+        }
+        return newValue;
+      });
+    },
+});
+
+export const useChoices = (
+  metadata: MetaData | undefined,
+  getValues: UseFormGetValues<FieldValues>,
+  currentName: string
+) => {
+  const choicesName =
+    typeof metadata?.choices === 'string'
+      ? metadata.choices
+      : typeof metadata?.choices === 'function'
+      ? metadata.choices(getRelatedValue(getValues, currentName))
+      : '';
+  const [fetcher, setFetcher] = useRecoilState(choicesFetcherSelector(choicesName));
   const [choices, setChoices] = useState<Choice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetch = useCallback(async () => {
+  const getChoices = useCallback(async () => {
     if (!metadata?.choices) {
       return {
         data: null,
@@ -26,62 +99,60 @@ export const useChoices = (metadata?: MetaData) => {
       };
     }
     if (Array.isArray(metadata.choices)) {
-      setTableChoices((prev) => ({
-        ...prev,
-        [metadata.name]: metadata.choices as Choice[],
-      }));
       return {
         data: metadata.choices,
         error: null,
       };
     }
-    const cachedChoices = tableChoices[metadata.choices];
-    if (cachedChoices) {
+    if (!fetcher) {
       return {
-        data: cachedChoices,
+        data: null,
+        error: new Error('Choices fetcher is not defined.'),
+      };
+    }
+    if (fetcher.cache) {
+      return {
+        data: fetcher.cache,
         error: null,
       };
     }
-
-    const { data, error } = await fetchChoices(metadata.choices);
-    if (error) {
-      return {
+    return fetcher
+      .exec()
+      .then((data) => {
+        setFetcher((oldValue) => {
+          if (!oldValue) {
+            return undefined;
+          }
+          return {
+            exec: oldValue.exec,
+            cache: data,
+          };
+        });
+        return {
+          data,
+          error: null,
+        };
+      })
+      .catch((error) => ({
         data: null,
         error,
-      };
-    }
-    setTableChoices((prev) => ({
-      ...prev,
-      [metadata.choices as string]: data,
-    }));
-    return {
-      data,
-      error: null,
-    };
-  }, [metadata, tableChoices, setTableChoices]);
+      }));
+  }, [metadata, fetcher, setFetcher]);
 
   useEffect(() => {
-    fetch()
-      .then(({ data, error }) => {
-        if (error) {
-          if (error.message !== 'Choices is not defined.') {
-            console.error(error);
-          }
-          return;
-        }
+    setIsLoading(true);
+    getChoices().then(({ data }) => {
+      if (data) {
         setChoices(data);
-      })
-      .finally(() => {
         setIsLoading(false);
-      });
-  }, [fetch]);
+      }
+    });
+  }, [getChoices]);
 
-  return { choices, isLoading, fetch };
+  return { choices, isLoading };
 };
 
 export const useJtdForm = (jtd: Schema) => {
-  const resetTableChoices = useResetRecoilState(tableChoicesState);
-
   useEffect(() => {
     if (ajv.getSchema('JTD')) {
       return;
@@ -91,13 +162,7 @@ export const useJtdForm = (jtd: Schema) => {
 
   const reset = useCallback(() => {
     ajv.removeSchema('JTD');
-    resetTableChoices();
-  }, [resetTableChoices]);
+  }, []);
 
   return { reset };
-};
-
-const fetchChoices = async (tableName: string): Promise<any> => {
-  switch (tableName) {
-  }
 };
