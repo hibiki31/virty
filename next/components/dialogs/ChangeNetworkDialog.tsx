@@ -1,5 +1,3 @@
-import { LoadingButton } from '@mui/lab';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -7,6 +5,7 @@ import { networkApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
+import { BaseDialog } from './BaseDialog';
 
 type Props = {
   open: boolean;
@@ -79,34 +78,26 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
   };
 
   return (
-    <Dialog maxWidth="sm" fullWidth open={open} onClose={!isDirty ? onClose : undefined}>
-      <DialogTitle>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>Change Network</Grid>
-        </Grid>
-      </DialogTitle>
-      <DialogContent sx={{ px: 1, pb: 0 }}>
-        <FormProvider {...formMethods}>
-          <JtdForm rootJtd={changeNetworkFormJtd} isEditing />
-        </FormProvider>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <LoadingButton
-          onClick={handleSubmit(handleChangeNetwork)}
-          variant="contained"
-          disableElevation
-          disabled={!isValid}
-          loading={isSubmitting}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </Dialog>
+    <BaseDialog
+      title="Change Network"
+      open={open}
+      onClose={onClose}
+      onSubmit={handleSubmit(handleChangeNetwork)}
+      submitDisabled={!isValid}
+      submitLoading={isSubmitting}
+      persistent={isDirty}
+    >
+      <FormProvider {...formMethods}>
+        <JtdForm rootJtd={changeNetworkFormJtd} isEditing />
+      </FormProvider>
+    </BaseDialog>
   );
 };
 
 const changeNetworkFormJtd = {
+  metadata: {
+    spread: true,
+  },
   properties: {
     network: {
       metadata: {
