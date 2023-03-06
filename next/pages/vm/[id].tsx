@@ -10,6 +10,8 @@ import { GetDomainDrives, GetDomainInterfaces } from '~/lib/api/generated';
 import { Pencil } from 'mdi-material-ui';
 import Error404Page from '../404';
 import ErrorPage from '../error';
+import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
+import { useState } from 'react';
 
 type Props = {
   id: string;
@@ -48,6 +50,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
       shouldRetryOnError: false,
     }
   );
+  const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -61,11 +64,23 @@ const VMPage: NextPage<Props> = ({ id }) => {
     return <Error404Page />;
   }
 
+  const openChangeNetworkDialog = (item: GetDomainInterfaces) => {
+    setMacAddress(item.mac);
+  };
+
   return (
     <DefaultLayout>
       <Head>
         <title>Virty - {data.name}</title>
       </Head>
+
+      <ChangeNetworkDialog
+        open={!!macAddress}
+        onClose={() => setMacAddress(undefined)}
+        vmUuid={data.uuid}
+        macAddress={macAddress}
+        nodeName={data.nodeName}
+      />
 
       <Grid container alignItems="center" sx={{ m: 2 }}>
         <Typography variant="h6" sx={{ mr: 2 }}>
@@ -149,7 +164,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   name: 'Actions',
                   align: 'center',
                   getItem: (item: GetDomainInterfaces) => (
-                    <IconButton>
+                    <IconButton onClick={() => openChangeNetworkDialog(item)}>
                       <Pencil />
                     </IconButton>
                   ),

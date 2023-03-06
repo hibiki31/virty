@@ -475,7 +475,7 @@ const SpreadInputWrapper: FC<SpreadInputWrapperProps> = ({ children, label, spre
   }
   return (
     <WrapperComponent>
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Paper elevation={0} sx={{ px: 2, mb: 2, background: 'transparent' }}>
         <Grid container rowSpacing={2} sx={{ mt: !label ? 0 : undefined }}>
           {label && (
             <WrapperComponent sx={{ mb: 2 }}>
