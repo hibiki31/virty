@@ -15,7 +15,7 @@ import {
   Toolbar,
   useTheme,
 } from '@mui/material';
-import { Home, CubeOutline } from 'mdi-material-ui';
+import { Home, CubeOutline, CheckboxMultipleMarkedOutline } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
@@ -33,6 +33,11 @@ const drawerRoutes = [
     title: 'VM',
     path: '/vm',
     icon: <CubeOutline />,
+  },
+  {
+    title: 'Task',
+    path: '/task',
+    icon: <CheckboxMultipleMarkedOutline />,
   },
 ];
 
