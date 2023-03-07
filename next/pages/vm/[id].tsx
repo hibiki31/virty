@@ -12,7 +12,8 @@ import Error404Page from '../404';
 import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { MouseEvent, useState } from 'react';
-import { StorageActionsMenu } from '~/components/dialogs/StorageActionsMenu';
+import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
+import { VMStatusController } from '~/components/VMStatusController';
 
 type Props = {
   id: string;
@@ -71,7 +72,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
     setMacAddress(item.mac);
   };
 
-  const openStorageDetailDialog = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
+  const openStorageActionsMenu = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
     setStorageAnchorEl(e.currentTarget);
     setStorage(item);
   };
@@ -98,11 +99,16 @@ const VMPage: NextPage<Props> = ({ id }) => {
         nodeName={data.nodeName}
       />
 
-      <Grid container alignItems="center" sx={{ m: 2 }}>
-        <Typography variant="h6" sx={{ mr: 2 }}>
-          {data.name}
-        </Typography>
-        <Typography variant="subtitle1">{data.uuid}</Typography>
+      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 2 }}>
+        <Grid item>
+          <VMStatusController statusCode={data.status} />
+        </Grid>
+        <Grid item>
+          <Typography variant="h6">{data.name}</Typography>
+        </Grid>
+        <Grid item>
+          <Typography variant="subtitle1">{data.uuid}</Typography>
+        </Grid>
       </Grid>
 
       <Grid container spacing={2}>
@@ -207,7 +213,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   align: 'center',
                   getItem: (item: GetDomainDrives) =>
                     item.device === 'cdrom' ? (
-                      <IconButton onClick={(e) => openStorageDetailDialog(e, item)}>
+                      <IconButton onClick={(e) => openStorageActionsMenu(e, item)}>
                         <Pencil />
                       </IconButton>
                     ) : (

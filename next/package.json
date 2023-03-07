@@ -10,7 +10,10 @@
     "lint:prettier": "prettier --check './**/*.{ts,tsx,css,html}'",
     "format:eslint": "next lint --fix",
     "format:prettier": "prettier --write './**/*.{ts,tsx,css,html}'",
-    "generate:api": "openapi-generator-cli generate -i ./openapi.json -g typescript-axios -o ./lib/api/generated"
+    "generate:api": "openapi-generator-cli generate -i ./openapi.json -g typescript-axios -o ./lib/api/generated",
+    "generate:component": "hygen component new",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   },
   "dependencies": {
     "@emotion/react": "^11.10.4",
@@ -33,12 +36,26 @@
     "swr": "^2.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@mdx-js/react": "^1.6.22",
     "@openapitools/openapi-generator-cli": "^2.5.2",
+    "@storybook/addon-actions": "^6.5.16",
+    "@storybook/addon-docs": "^6.5.16",
+    "@storybook/addon-essentials": "^6.5.16",
+    "@storybook/addon-interactions": "^6.5.16",
+    "@storybook/addon-links": "^6.5.16",
+    "@storybook/builder-webpack5": "^6.5.16",
+    "@storybook/manager-webpack5": "^6.5.16",
+    "@storybook/react": "^6.5.16",
+    "@storybook/testing-library": "^0.0.13",
     "@types/node": "18.7.23",
     "@types/react": "18.0.21",
     "@types/react-dom": "18.0.6",
+    "babel-loader": "^8.3.0",
     "eslint": "8.24.0",
     "eslint-config-next": "12.3.1",
+    "eslint-plugin-storybook": "^0.6.11",
+    "hygen": "^6.2.11",
     "jtd": "^0.1.1",
     "prettier": "2.7.1",
     "typescript": "4.8.4"
