@@ -3,9 +3,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { vmsApi } from '~/lib/api';
-import { Cpu64Bit, Memory, PowerStandby } from 'mdi-material-ui';
+import { Cpu64Bit, Memory } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import useSWR from 'swr';
+import { VMStatusController } from '../VMStatusController';
 
 const IS_ADMIN = true;
 
@@ -35,7 +36,7 @@ export const VMTable: FC = () => {
             headerName: 'Status',
             field: 'status',
             disableColumnMenu: true,
-            renderCell: (params) => <PowerStandby color={getStatusColor(params.value)} />,
+            renderCell: (params) => <VMStatusController statusCode={params.value} />,
           },
           { headerName: 'Name', field: 'name', disableColumnMenu: true, flex: 1 },
           { headerName: 'Node', field: 'nodeName', disableColumnMenu: true, flex: 1 },
@@ -79,21 +80,4 @@ export const VMTable: FC = () => {
       />
     </Box>
   );
-};
-
-const getStatusColor = (statusCode: number) => {
-  switch (statusCode) {
-    case 1:
-      return 'primary';
-    case 5:
-      return 'disabled';
-    case 7:
-      return 'secondary';
-    case 10:
-      return 'error';
-    case 20:
-      return 'secondary';
-    default:
-      return 'warning';
-  }
 };
