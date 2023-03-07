@@ -12,7 +12,7 @@ import Error404Page from '../404';
 import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { MouseEvent, useState } from 'react';
-import { StorageActionsMenu } from '~/components/dialogs/StorageActionsMenu';
+import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
 
 type Props = {
   id: string;
@@ -71,7 +71,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
     setMacAddress(item.mac);
   };
 
-  const openStorageDetailDialog = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
+  const openStorageActionsMenu = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
     setStorageAnchorEl(e.currentTarget);
     setStorage(item);
   };
@@ -207,7 +207,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   align: 'center',
                   getItem: (item: GetDomainDrives) =>
                     item.device === 'cdrom' ? (
-                      <IconButton onClick={(e) => openStorageDetailDialog(e, item)}>
+                      <IconButton onClick={(e) => openStorageActionsMenu(e, item)}>
                         <Pencil />
                       </IconButton>
                     ) : (

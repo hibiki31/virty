@@ -8,7 +8,7 @@ import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
-import { BaseDialog } from './BaseDialog';
+import { BaseDialog } from '../dialogs/BaseDialog';
 
 type Props = {
   anchorEl: HTMLElement | null;
