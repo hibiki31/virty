@@ -42,3 +42,6 @@ next-env.d.ts
 
 # openapi
 openapi.json
+
+# storybook
+storybook-static
