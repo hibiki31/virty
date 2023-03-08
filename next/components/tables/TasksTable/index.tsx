@@ -6,6 +6,7 @@ import { tasksApi } from '~/lib/api';
 import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
 import { CubeOutline, Database, HelpRhombus, Server, Wan } from 'mdi-material-ui';
+import { TASK_METHOD, TASK_RESOURCE } from '~/lib/api/task';
 
 const IS_ADMIN = true;
 
@@ -97,17 +98,4 @@ const ResourceIcon: FC<ResourceIconProps> = ({ method, resource }) => {
       return <Wan color={color} />;
   }
   return <HelpRhombus color={color} />;
-};
-
-const TASK_METHOD = {
-  POST: 'post',
-  PUT: 'put',
-  DELETE: 'delete',
-};
-
-const TASK_RESOURCE = {
-  VM: 'vm',
-  NODE: 'node',
-  STORAGE: 'storage',
-  NETWORK: 'network',
 };

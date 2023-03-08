@@ -1,14 +1,7 @@
 import { Box, Grid, IconButton, Tooltip } from '@mui/material';
 import { AlertOutline, DeleteForever, DotsVertical, PowerStandby, ServerRemove, Wrench } from 'mdi-material-ui';
 import { FC, memo } from 'react';
-
-const VM_STATUS = {
-  POWER_ON: 1,
-  POWER_OFF: 5,
-  MAINTENANCE_MODE: 7,
-  DELETED_DOMAIN: 10,
-  LOST_NODE: 20,
-};
+import { VM_STATUS } from '~/lib/api/vm';
 
 type Props = {
   statusCode: number;
