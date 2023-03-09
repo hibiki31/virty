@@ -1,3 +1,9 @@
+export const TASK_STATUS = {
+  FINISH: 'finish',
+  INIT: 'init',
+  ERROR: 'error',
+} as const;
+
 export const TASK_METHOD = {
   POST: 'post',
   PUT: 'put',

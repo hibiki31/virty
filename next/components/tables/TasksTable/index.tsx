@@ -1,12 +1,12 @@
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { tasksApi } from '~/lib/api';
 import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
-import { CubeOutline, Database, HelpRhombus, Server, Wan } from 'mdi-material-ui';
-import { TASK_METHOD, TASK_RESOURCE } from '~/lib/api/task';
+import { CheckCircle, CubeOutline, Database, DotsVertical, HelpRhombus, Server, Wan } from 'mdi-material-ui';
+import { TASK_METHOD, TASK_RESOURCE, TASK_STATUS } from '~/lib/api/task';
 import { useAuth } from '~/store/userState';
 
 export const TasksTable: FC = () => {
@@ -33,7 +33,20 @@ export const TasksTable: FC = () => {
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
-          { headerName: 'Status', field: 'status', disableColumnMenu: true, flex: 1 },
+          {
+            headerName: 'Status',
+            field: 'status',
+            disableColumnMenu: true,
+            flex: 1,
+            renderCell: (params) => (
+              <>
+                <StatusIcon status={params.value} />
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  {params.value}
+                </Typography>
+              </>
+            ),
+          },
           { headerName: 'UUID', field: 'uuid', disableColumnMenu: true, flex: 2 },
           {
             headerName: 'Request',
@@ -67,10 +80,39 @@ export const TasksTable: FC = () => {
             flex: 1,
             renderCell: (params) => `${Math.round(params.row.runTime! * 100) / 100} s`,
           },
+          {
+            headerName: '',
+            field: 'details',
+            disableColumnMenu: true,
+            sortable: false,
+            width: 40,
+            align: 'center',
+            renderCell: (params) => (
+              <IconButton>
+                <DotsVertical />
+              </IconButton>
+            ),
+          },
         ]}
       />
     </Box>
   );
+};
+
+type StatusIconProps = {
+  status: string;
+};
+
+const StatusIcon: FC<StatusIconProps> = ({ status }) => {
+  const color =
+    status === TASK_STATUS.FINISH
+      ? 'primary.main'
+      : status === TASK_STATUS.INIT
+      ? 'grey.500'
+      : status === TASK_STATUS.ERROR
+      ? 'error.main'
+      : 'warning.main';
+  return <CheckCircle sx={{ color }} />;
 };
 
 type ResourceIconProps = {
