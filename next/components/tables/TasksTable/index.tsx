@@ -7,13 +7,13 @@ import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
 import { CubeOutline, Database, HelpRhombus, Server, Wan } from 'mdi-material-ui';
 import { TASK_METHOD, TASK_RESOURCE } from '~/lib/api/task';
-
-const IS_ADMIN = true;
+import { useAuth } from '~/store/userState';
 
 export const TasksTable: FC = () => {
+  const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', IS_ADMIN],
+    ['tasksApi.getTasksApiTasksGet', user?.isAdminMode],
     ([, isAdmin]) => tasksApi.getTasksApiTasksGet(isAdmin).then((res) => res.data),
     { revalidateOnFocus: false }
   );

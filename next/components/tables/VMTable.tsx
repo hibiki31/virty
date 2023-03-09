@@ -7,13 +7,13 @@ import { Cpu64Bit, Memory } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import useSWR from 'swr';
 import { VMStatusController } from '../VMStatusController';
-
-const IS_ADMIN = true;
+import { useAuth } from '~/store/userState';
 
 export const VMTable: FC = () => {
+  const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    ['vmsApi.getApiDomainApiVmsGet', IS_ADMIN],
+    ['vmsApi.getApiDomainApiVmsGet', user?.isAdminMode],
     ([, isAdmin]) => vmsApi.getApiDomainApiVmsGet(isAdmin).then((res) => res.data),
     { revalidateOnFocus: false }
   );
