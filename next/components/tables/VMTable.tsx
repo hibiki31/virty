@@ -13,8 +13,8 @@ export const VMTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    ['vmsApi.getApiDomainApiVmsGet', user?.isAdminMode],
-    ([, isAdmin]) => vmsApi.getApiDomainApiVmsGet(isAdmin).then((res) => res.data),
+    ['vmsApi.getApiDomainApiVmsGet', user],
+    ([, user]) => vmsApi.getApiDomainApiVmsGet(user?.isAdminMode).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

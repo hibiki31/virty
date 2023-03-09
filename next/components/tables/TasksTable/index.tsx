@@ -15,8 +15,8 @@ export const TasksTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', user?.isAdminMode],
-    ([, isAdmin]) => tasksApi.getTasksApiTasksGet(isAdmin).then((res) => res.data),
+    ['tasksApi.getTasksApiTasksGet', user],
+    ([, user]) => tasksApi.getTasksApiTasksGet(user?.isAdminMode).then((res) => res.data),
     { revalidateOnFocus: false }
   );
   const [selectedTask, setSelectedTask] = useState<TaskSelect | undefined>(undefined);
