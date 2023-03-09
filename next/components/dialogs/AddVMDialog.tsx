@@ -1,5 +1,3 @@
-import { LoadingButton } from '@mui/lab';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -8,6 +6,7 @@ import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
+import { BaseDialog } from './BaseDialog';
 
 type Props = {
   open: boolean;
@@ -140,30 +139,20 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <Dialog maxWidth="sm" fullWidth open={open} onClose={!isDirty ? onClose : undefined}>
-      <DialogTitle>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>Add VM</Grid>
-        </Grid>
-      </DialogTitle>
-      <DialogContent sx={{ px: 1, pb: 0 }}>
-        <FormProvider {...formMethods}>
-          <JtdForm rootJtd={addVMFormJtd} isEditing />
-        </FormProvider>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <LoadingButton
-          onClick={handleSubmit(handleAddVM)}
-          variant="contained"
-          disableElevation
-          disabled={!isValid}
-          loading={isSubmitting}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </Dialog>
+    <BaseDialog
+      title="Add VM"
+      open={open}
+      submitDisabled={!isValid}
+      submitLoading={isSubmitting}
+      persistent={isDirty}
+      disabledPadding
+      onClose={onClose}
+      onSubmit={handleSubmit(handleAddVM)}
+    >
+      <FormProvider {...formMethods}>
+        <JtdForm rootJtd={addVMFormJtd} isEditing />
+      </FormProvider>
+    </BaseDialog>
   );
 };
 
