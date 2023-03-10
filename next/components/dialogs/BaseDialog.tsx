@@ -3,7 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { FC, PropsWithChildren, ReactNode } from 'react';
 import { LoadingButton } from '@mui/lab';
 
-export type Props = PropsWithChildren<{
+type Props = PropsWithChildren<{
   title: ReactNode;
   submitText?: string;
   open: boolean;
@@ -12,6 +12,7 @@ export type Props = PropsWithChildren<{
   submitLoading?: boolean;
   maxWidth?: Breakpoint;
   persistent?: boolean;
+  disabledPadding?: boolean;
   onClose: () => void;
   onSubmit?: () => void;
   onDelete?: () => void;
@@ -26,6 +27,7 @@ export const BaseDialog: FC<Props> = ({
   submitLoading,
   maxWidth = 'xs',
   persistent = false,
+  disabledPadding = false,
   onClose,
   onSubmit,
   onDelete,
@@ -45,7 +47,7 @@ export const BaseDialog: FC<Props> = ({
           )}
         </Grid>
       </DialogTitle>
-      <DialogContent sx={{ pt: '10px !important' }}>{children}</DialogContent>
+      <DialogContent sx={{ pt: '10px !important', p: disabledPadding ? 0 : undefined }}>{children}</DialogContent>
       {onSubmit && (
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>

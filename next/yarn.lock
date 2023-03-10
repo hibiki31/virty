@@ -7167,6 +7167,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dayjs@npm:^1.11.7":
+  version: 1.11.7
+  resolution: "dayjs@npm:1.11.7"
+  checksum: 5003a7c1dd9ed51385beb658231c3548700b82d3548c0cfbe549d85f2d08e90e972510282b7506941452c58d32136d6362f009c77ca55381a09c704e9f177ebb
+  languageName: node
+  linkType: hard
+
 "debug@npm:2.6.9, debug@npm:^2.2.0, debug@npm:^2.3.3, debug@npm:^2.6.9":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -16339,6 +16346,7 @@ __metadata:
     "@types/react-dom": 18.0.6
     ajv: ^8.11.2
     babel-loader: ^8.3.0
+    dayjs: ^1.11.7
     eslint: 8.24.0
     eslint-config-next: 12.3.1
     eslint-plugin-storybook: ^0.6.11

@@ -1,7 +1,6 @@
 import {
-  Card,
-  CardContent,
-  CardHeader,
+  Box,
+  Divider,
   Drawer,
   FormControl,
   InputLabel,
@@ -13,12 +12,14 @@ import {
   MenuItem,
   Select,
   Toolbar,
+  Typography,
   useTheme,
 } from '@mui/material';
-import { Home, CubeOutline } from 'mdi-material-ui';
+import { Home, CubeOutline, CheckboxMultipleMarkedOutline } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import { SCOPE_TO_LABEL } from '~/lib/api/auth';
 import { useDrawer } from '~/store/drawerState';
 import { useAuth } from '~/store/userState';
 
@@ -34,12 +35,17 @@ const drawerRoutes = [
     path: '/vm',
     icon: <CubeOutline />,
   },
+  {
+    title: 'Task',
+    path: '/task',
+    icon: <CheckboxMultipleMarkedOutline />,
+  },
 ];
 
 export const NavigationDrawer: FC = () => {
   const theme = useTheme();
   const { drawer } = useDrawer();
-  const { user } = useAuth();
+  const { user, changeScope } = useAuth();
   const router = useRouter();
   const [currentPath, setCurrentPath] = useState(router.pathname);
 
@@ -71,26 +77,28 @@ export const NavigationDrawer: FC = () => {
       }}
     >
       <Toolbar />
-      <Card>
-        <CardHeader title={user?.username} />
-        <CardContent>
-          <FormControl fullWidth>
-            <InputLabel id="scope-select-label">Scope</InputLabel>
-            <Select
-              labelId="scope-select-label"
-              value={'admin'}
-              label="Scope"
-              // onChange={handleChange}
-            >
-              {user?.scopes.map((scope, i) => (
-                <MenuItem key={i} value={scope}>
-                  {scope}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </CardContent>
-      </Card>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {user?.username}
+        </Typography>
+        <FormControl fullWidth>
+          <InputLabel id="scope-select-label">Scope</InputLabel>
+          <Select
+            labelId="scope-select-label"
+            value={user?.scopeIndex}
+            label="Scope"
+            disabled={user?.scopes.length === 1}
+            onChange={(e) => changeScope(e.target.value as number)}
+          >
+            {user?.scopes.map((scope, i) => (
+              <MenuItem key={i} value={i}>
+                {SCOPE_TO_LABEL[scope] || scope}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Divider />
       <List>
         {drawerRoutes.map((route, i) => (
           <ListItem

@@ -12,6 +12,7 @@
     "format:prettier": "prettier --write './**/*.{ts,tsx,css,html}'",
     "generate:api": "openapi-generator-cli generate -i ./openapi.json -g typescript-axios -o ./lib/api/generated",
     "generate:component": "hygen component new",
+    "generate:page": "hygen page new",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -24,6 +25,7 @@
     "@mui/material": "^5.11.2",
     "@mui/x-data-grid": "^5.17.17",
     "ajv": "^8.11.2",
+    "dayjs": "^1.11.7",
     "mdi-material-ui": "^7.6.0",
     "next": "12.3.1",
     "nookies": "^2.5.2",
