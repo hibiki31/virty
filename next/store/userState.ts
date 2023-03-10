@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { destroyCookie, parseCookies, setCookie } from 'nookies';
+import { parseCookies, setCookie } from 'nookies';
 import { useEffect } from 'react';
 import { atom, useRecoilState } from 'recoil';
 import { authApi } from '~/lib/api';
@@ -39,15 +39,15 @@ const getUserFromToken = (token: string): User => {
 
 export const useGetUser = (): UserState => {
   const [user, setUser] = useRecoilState(userState);
+  const { token } = parseCookies();
 
   useEffect(() => {
-    const { token } = parseCookies();
     if (!token) {
       setUser(null);
       return;
     }
     setUser(getUserFromToken(token));
-  }, [setUser]);
+  }, [token, setUser]);
 
   return user;
 };
@@ -80,9 +80,7 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    setUser(null);
-    destroyCookie(null, 'token');
-    router.push('/login');
+    router.push('/logout');
   };
 
   const changeScope = (scopeIndex: number) => {

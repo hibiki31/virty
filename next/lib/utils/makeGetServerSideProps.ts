@@ -1,5 +1,5 @@
 import { GetServerSideProps, GetServerSidePropsResult, PreviewData } from 'next';
-import { destroyCookie, parseCookies } from 'nookies';
+import nookies from 'nookies';
 import { ParsedUrlQuery } from 'querystring';
 import { authApi } from '../api';
 
@@ -8,7 +8,7 @@ export const makeRequireLoginProps =
     getServerSideProps?: GetServerSideProps<P, Q, D>
   ): GetServerSideProps<P, Q, D> =>
   async (ctx) => {
-    const { token } = parseCookies(ctx);
+    const { token } = nookies.get(ctx);
     const isValid = await authApi
       .readAuthValidateApiAuthValidateGet({
         headers: {
@@ -19,7 +19,7 @@ export const makeRequireLoginProps =
       .catch(() => false);
 
     if (!isValid) {
-      destroyCookie(ctx, 'token');
+      nookies.destroy(ctx, 'token', { path: '/' });
       return {
         redirect: {
           destination: '/login',
@@ -42,7 +42,7 @@ export const makeRequireLogoutProps =
     getServerSideProps?: GetServerSideProps<P, Q, D>
   ): GetServerSideProps<P, Q, D> =>
   async (ctx) => {
-    const { token } = parseCookies(ctx);
+    const { token } = nookies.get(ctx);
     const isValid = await authApi
       .readAuthValidateApiAuthValidateGet({
         headers: {
@@ -61,7 +61,7 @@ export const makeRequireLogoutProps =
       };
     }
 
-    destroyCookie(ctx, 'token');
+    nookies.destroy(ctx, 'token', { path: '/' });
     if (!getServerSideProps) {
       return {
         props: {},
