@@ -2,6 +2,7 @@ import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
+import { JoinNodeDialog } from '~/components/dialogs/JoinNodeDialog';
 import { NodeKeyDialog } from '~/components/dialogs/NodeKeyDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { NodesTable } from '~/components/tables/NodesTable';
@@ -22,6 +23,9 @@ const Page: NextPage = () => {
         </Grid>
         <Grid item>
           <OpenDialogButton label="Key" DialogComponent={NodeKeyDialog} buttonProps={{ variant: 'contained' }} />
+        </Grid>
+        <Grid item>
+          <OpenDialogButton label="Join" DialogComponent={JoinNodeDialog} buttonProps={{ variant: 'contained' }} />
         </Grid>
       </Grid>
 
