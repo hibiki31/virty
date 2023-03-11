@@ -1,5 +1,4 @@
-import { Breakpoint, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Breakpoint, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material';
 import { FC, PropsWithChildren, ReactNode } from 'react';
 import { LoadingButton } from '@mui/lab';
 
@@ -7,7 +6,7 @@ type Props = PropsWithChildren<{
   title: ReactNode;
   submitText?: string;
   open: boolean;
-  deletable?: boolean;
+  headerActions?: ReactNode;
   submitDisabled?: boolean;
   submitLoading?: boolean;
   maxWidth?: Breakpoint;
@@ -15,14 +14,13 @@ type Props = PropsWithChildren<{
   disabledPadding?: boolean;
   onClose: () => void;
   onSubmit?: () => void;
-  onDelete?: () => void;
 }>;
 
 export const BaseDialog: FC<Props> = ({
   title,
   submitText = 'Submit',
   open,
-  deletable = false,
+  headerActions,
   submitDisabled,
   submitLoading,
   maxWidth = 'xs',
@@ -30,7 +28,6 @@ export const BaseDialog: FC<Props> = ({
   disabledPadding = false,
   onClose,
   onSubmit,
-  onDelete,
   children,
 }) => {
   return (
@@ -38,13 +35,7 @@ export const BaseDialog: FC<Props> = ({
       <DialogTitle>
         <Grid container justifyContent="space-between" alignItems="center">
           <Grid item>{title}</Grid>
-          {deletable && (
-            <Grid item>
-              <IconButton color="error" size="small" onClick={onDelete}>
-                <DeleteIcon />
-              </IconButton>
-            </Grid>
-          )}
+          {headerActions && <Grid item>{headerActions}</Grid>}
         </Grid>
       </DialogTitle>
       <DialogContent sx={{ pt: '10px !important', p: disabledPadding ? 0 : undefined }}>{children}</DialogContent>
