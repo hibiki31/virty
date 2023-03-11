@@ -1,6 +1,7 @@
 import { IconButton } from '@mui/material';
 import { FlaskEmptyPlusOutline, ServerRemove } from 'mdi-material-ui';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback } from 'react';
+import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { RoleChip } from '~/components/tables/NodesTable/RoleChip';
 import { GetNode } from '~/lib/api/generated';
@@ -16,7 +17,6 @@ type Props = {
 
 export const NodeDetailsDialog: FC<Props> = ({ open, node, onClose }) => {
   const { openConfirmDialog } = useConfirmDialog();
-  const [asignRoleDialogOpen, setAsignRoleDialogOpen] = useState(false);
 
   const leaveNode = useCallback(async () => {
     const confirmed = await openConfirmDialog({
@@ -37,46 +37,45 @@ export const NodeDetailsDialog: FC<Props> = ({ open, node, onClose }) => {
   }
 
   return (
-    <>
-      <BaseDialog
-        title="Node Details"
-        headerActions={
-          <IconButton onClick={leaveNode}>
-            <ServerRemove color="error" />
-          </IconButton>
-        }
-        maxWidth="md"
-        open={open}
-        onClose={onClose}
-      >
-        <BaseTable
-          cols={[
-            { name: 'Label', getItem: (item) => item.label },
-            { name: 'Value', getItem: (item) => item.value },
-          ]}
-          items={[
-            { label: 'Name', value: node.name },
-            { label: 'Domain : Port', value: `${node.domain} : ${node.port}` },
-            {
-              label: 'Roles',
-              value: (
-                <>
-                  {node.roles.map((role, i) => (
-                    <RoleChip key={i} role={role} />
-                  ))}
-                  <IconButton onClick={() => setAsignRoleDialogOpen(true)}>
-                    <FlaskEmptyPlusOutline />
-                  </IconButton>
-                </>
-              ),
-            },
-          ]}
-          hiddenHeader
-          disableElevation
-        />
-      </BaseDialog>
-
-      <AssignRoleDialog open={asignRoleDialogOpen} nodeName={node.name} onClose={() => setAsignRoleDialogOpen(false)} />
-    </>
+    <BaseDialog
+      title="Node Details"
+      headerActions={
+        <IconButton onClick={leaveNode}>
+          <ServerRemove color="error" />
+        </IconButton>
+      }
+      maxWidth="md"
+      open={open}
+      onClose={onClose}
+    >
+      <BaseTable
+        cols={[
+          { name: 'Label', getItem: (item) => item.label },
+          { name: 'Value', getItem: (item) => item.value },
+        ]}
+        items={[
+          { label: 'Name', value: node.name },
+          { label: 'Domain : Port', value: `${node.domain} : ${node.port}` },
+          {
+            label: 'Roles',
+            value: (
+              <>
+                {node.roles.map((role, i) => (
+                  <RoleChip key={i} role={role} />
+                ))}
+                <OpenDialogButton
+                  useIconButton
+                  label={<FlaskEmptyPlusOutline />}
+                  DialogComponent={AssignRoleDialog}
+                  dialogProps={{ nodeName: node.name }}
+                />
+              </>
+            ),
+          },
+        ]}
+        hiddenHeader
+        disableElevation
+      />
+    </BaseDialog>
   );
 };
