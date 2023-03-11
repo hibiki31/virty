@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import NextLink from 'next/link';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { ServerPlus } from 'mdi-material-ui';
+import { JoinNetworkPoolDialog } from '~/components/dialogs/JoinNetworkPoolDialog';
 
 export const NetworksTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
@@ -54,12 +55,13 @@ export const NetworksTable: FC = () => {
             disableColumnMenu: true,
             width: 40,
             align: 'center',
-            renderCell: () => (
+            renderCell: (params) => (
               <OpenDialogButton
                 useIconButton
                 label={<ServerPlus />}
-                DialogComponent={() => <div />}
+                DialogComponent={JoinNetworkPoolDialog}
                 buttonProps={{ size: 'small' }}
+                dialogProps={{ network: params.row }}
               />
             ),
           },
