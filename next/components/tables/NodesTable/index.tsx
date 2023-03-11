@@ -3,7 +3,9 @@ import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import useSWR from 'swr';
 import { nodeApi } from '~/lib/api';
+import { GetNodeRole } from '~/lib/api/generated';
 import { useNotistack } from '~/lib/utils/notistack';
+import { RoleChip } from './RoleChip';
 
 export const NodesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
@@ -54,7 +56,20 @@ export const NodesTable: FC = () => {
           { headerName: 'OS', field: 'osName', disableColumnMenu: true, flex: 1, minWidth: 80 },
           { headerName: 'QEMU', field: 'qemuVersion', disableColumnMenu: true, flex: 1, minWidth: 80 },
           { headerName: 'Libvirt', field: 'libvirtVersion', disableColumnMenu: true, flex: 1, minWidth: 80 },
-          { headerName: 'Roles', field: 'roles', disableColumnMenu: true, flex: 2, minWidth: 200 },
+          {
+            headerName: 'Roles',
+            field: 'roles',
+            disableColumnMenu: true,
+            flex: 2,
+            minWidth: 200,
+            renderCell: (params) => (
+              <>
+                {(params.value as GetNodeRole[]).map((role, i) => (
+                  <RoleChip key={i} role={role} />
+                ))}
+              </>
+            ),
+          },
           { headerName: '', field: 'details', disableColumnMenu: true, flex: 1 },
         ]}
       />
