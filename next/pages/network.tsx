@@ -2,6 +2,7 @@ import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { NetworksTable } from '~/components/tables/NetworksTable';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
 export const getServerSideProps = makeRequireLoginProps();
@@ -18,6 +19,8 @@ const Page: NextPage = () => {
           <Typography variant="h4">Network</Typography>
         </Grid>
       </Grid>
+
+      <NetworksTable />
     </DefaultLayout>
   );
 };
