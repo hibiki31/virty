@@ -15,7 +15,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Home, CubeOutline, CheckboxMultipleMarkedOutline } from 'mdi-material-ui';
+import { Home, CubeOutline, CheckboxMultipleMarkedOutline, Server } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
@@ -34,6 +34,11 @@ const drawerRoutes = [
     title: 'VM',
     path: '/vm',
     icon: <CubeOutline />,
+  },
+  {
+    title: 'Node',
+    path: '/node',
+    icon: <Server />,
   },
   {
     title: 'Task',
