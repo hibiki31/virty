@@ -2,6 +2,8 @@ import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useSWR from 'swr';
+import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
+import { AddPortDialog } from '~/components/dialogs/AddPortDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { PortsTable } from '~/components/tables/PortsTable';
 import { networkApi } from '~/lib/api';
@@ -74,6 +76,19 @@ const Page: NextPage<Props> = ({ id }) => {
         </Grid>
       </Grid>
 
+      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
+        <Grid item>
+          <Typography variant="h4">Virtual Port</Typography>
+        </Grid>
+        <Grid item>
+          <OpenDialogButton
+            label="Add"
+            DialogComponent={AddPortDialog}
+            buttonProps={{ variant: 'contained' }}
+            dialogProps={{ networkUuid: data.uuid }}
+          />
+        </Grid>
+      </Grid>
       <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
     </DefaultLayout>
   );
