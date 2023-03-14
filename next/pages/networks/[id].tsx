@@ -1,4 +1,4 @@
-import { Grid, Typography } from '@mui/material';
+import { Button, Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useSWR from 'swr';
@@ -8,6 +8,7 @@ import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { PortsTable } from '~/components/tables/PortsTable';
 import { networkApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
+import { useConfirmDialog } from '~/store/confirmDialogState';
 import Error404Page from '../404';
 import ErrorPage from '../error';
 
@@ -48,6 +49,7 @@ const Page: NextPage<Props> = ({ id }) => {
       shouldRetryOnError: false,
     }
   );
+  const { openConfirmDialog } = useConfirmDialog();
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -61,6 +63,20 @@ const Page: NextPage<Props> = ({ id }) => {
     return <Error404Page />;
   }
 
+  const deleteNetwork = async () => {
+    const confirmed = await openConfirmDialog({
+      title: 'Delete Network',
+      description: `Are you sure you want to delete the network "${data.name}"?\nRunning VMs will not be affected.`,
+      submitText: 'Delete',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    console.log('delete network');
+  };
+
   return (
     <DefaultLayout>
       <Head>
@@ -73,6 +89,11 @@ const Page: NextPage<Props> = ({ id }) => {
         </Grid>
         <Grid item>
           <Typography variant="subtitle1">{data.uuid}</Typography>
+        </Grid>
+        <Grid item>
+          <Button variant="contained" color="error" disableElevation size="small" onClick={deleteNetwork}>
+            Delete
+          </Button>
         </Grid>
       </Grid>
 
