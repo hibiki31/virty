@@ -1,7 +1,9 @@
+import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useSWR from 'swr';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { PortsTable } from '~/components/tables/PortsTable';
 import { networkApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import Error404Page from '../404';
@@ -62,7 +64,17 @@ const Page: NextPage<Props> = ({ id }) => {
       <Head>
         <title>Virty - {data.name}</title>
       </Head>
-      {id} - {data.name}
+
+      <Grid container alignItems="baseline" spacing={2} sx={{ mt: 0, mb: 2 }}>
+        <Grid item>
+          <Typography variant="h6">{data.name}</Typography>
+        </Grid>
+        <Grid item>
+          <Typography variant="subtitle1">{data.uuid}</Typography>
+        </Grid>
+      </Grid>
+
+      <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
     </DefaultLayout>
   );
 };
