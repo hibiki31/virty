@@ -15,7 +15,18 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Home, CubeOutline, CheckboxMultipleMarkedOutline, Server, Wan, Database } from 'mdi-material-ui';
+import {
+  Home,
+  CubeOutline,
+  CheckboxMultipleMarkedOutline,
+  Server,
+  Wan,
+  Database,
+  Harddisk,
+  TagMultiple,
+  Account,
+  FolderStar,
+} from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
@@ -49,6 +60,26 @@ const drawerRoutes = [
     title: 'Storage',
     path: '/storage',
     icon: <Database />,
+  },
+  {
+    title: 'Image',
+    path: '/image',
+    icon: <Harddisk />,
+  },
+  {
+    title: 'Flavor',
+    path: '/flavors',
+    icon: <TagMultiple />,
+  },
+  {
+    title: 'Users',
+    path: '/users',
+    icon: <Account />,
+  },
+  {
+    title: 'Projects',
+    path: '/projects',
+    icon: <FolderStar />,
   },
   {
     title: 'Task',
