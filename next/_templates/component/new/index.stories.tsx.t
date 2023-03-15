@@ -2,7 +2,7 @@
 to: "<%= storybook ? `${path}/${name}/index.stories.tsx` : null %>"
 ---
 
-import { ComponentMeta } from '@storybook/react';
+import { ComponentMeta, ComponentStoryObj } from '@storybook/react';
 import { <%= name %> } from '.';
 
 export default {
@@ -10,6 +10,6 @@ export default {
   component: <%= name %>,
 } as ComponentMeta<typeof <%= name %>>;
 
-export const Default = {
+export const Default: ComponentStoryObj<typeof <%= name %>> = {
   args: {},
 };

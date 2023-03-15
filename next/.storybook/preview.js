@@ -1,4 +1,5 @@
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
+import { RecoilRoot } from 'recoil';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -23,7 +24,9 @@ export const decorators = [
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Story />
+        <RecoilRoot>
+          <Story />
+        </RecoilRoot>
       </ThemeProvider>
     );
   },
