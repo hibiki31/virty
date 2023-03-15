@@ -25,6 +25,7 @@ import {
   Harddisk,
   TagMultiple,
   Account,
+  FolderStar,
 } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -74,6 +75,11 @@ const drawerRoutes = [
     title: 'Users',
     path: '/users',
     icon: <Account />,
+  },
+  {
+    title: 'Projects',
+    path: '/projects',
+    icon: <FolderStar />,
   },
   {
     title: 'Task',
