@@ -2,6 +2,7 @@ import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { StoragePoolsTable } from '~/components/tables/StoragePoolsTable';
 import { StoragesTable } from '~/components/tables/StoragesTable';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
@@ -26,6 +27,7 @@ const Page: NextPage = () => {
           <Typography variant="h4">Storage Pool</Typography>
         </Grid>
       </Grid>
+      <StoragePoolsTable />
     </DefaultLayout>
   );
 };
