@@ -8,7 +8,14 @@ type Props = {
 };
 
 export const RoleChip: FC<Props> = ({ role }) => {
-  return <Chip icon={<RoleIcon roleName={role.roleName} fontSize="small" />} label={role.roleName} sx={{ mr: 1 }} />;
+  return (
+    <Chip
+      icon={<RoleIcon roleName={role.roleName} fontSize="small" />}
+      label={role.roleName}
+      size="small"
+      sx={{ mr: 1 }}
+    />
+  );
 };
 
 type RoleIconProps = {

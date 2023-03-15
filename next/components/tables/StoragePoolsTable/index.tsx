@@ -18,7 +18,6 @@ export const StoragePoolsTable: FC = () => {
   if (error) {
     enqueueNotistack('Failed to fetch storage pools.', { variant: 'error' });
   }
-  console.log(data);
 
   return (
     <Box sx={{ height: '100%' }}>
