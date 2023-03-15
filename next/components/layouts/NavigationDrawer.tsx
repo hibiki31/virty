@@ -24,6 +24,7 @@ import {
   Database,
   Harddisk,
   TagMultiple,
+  Account,
 } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -68,6 +69,11 @@ const drawerRoutes = [
     title: 'Flavor',
     path: '/flavors',
     icon: <TagMultiple />,
+  },
+  {
+    title: 'Users',
+    path: '/users',
+    icon: <Account />,
   },
   {
     title: 'Task',
