@@ -12,7 +12,7 @@
           clearable
           auto-grow
           label="Key"
-          v-model="requestData.key"
+          v-model="requestData.privateKey"
         ></v-textarea>
         <v-textarea
           class="text-caption"
@@ -20,7 +20,7 @@
           clearable
           auto-grow
           label="Pub"
-          v-model="requestData.pub"
+          v-model="requestData.publicKey"
         ></v-textarea>
         </v-card-text>
         <v-card-actions>
@@ -75,8 +75,8 @@ export default {
   },
   mounted: async function() {
     axios.get('/api/nodes/key').then(res => {
-      this.requestData.key = res.data.private_key;
-      this.requestData.pub = res.data.publick_key;
+      this.requestData.privateKey = res.data.privateKey;
+      this.requestData.publicKey = res.data.publicKey;
     });
   }
 };

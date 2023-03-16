@@ -74,6 +74,22 @@ docker build --no-cache --pull -t hibiki131/virty-proxy:$VER ./proxy/
 docker push hibiki131/virty-proxy:$VER
 ```
 
+```
+VER=`cat ./next/package.json |grep '"version":' |sed -E 's/.*\"(.*)\".*/\1/g'`
+docker build -t virty-next:$VER -f ./next/Dockerfile ./next
+docker tag virty-next:$VER virty-next:latest
+
+VER=`cat ./web/package.json |grep '"version":' |sed -E 's/.*\"(.*)\".*/\1/g'`
+docker build -t virty-web:$VER -f ./web/Dockerfile ./web
+docker tag virty-web:$VER virty-web:latest
+
+VER=`cat ./api/settings.py |grep 'API_VERSION' |sed -E "s/.*'(.*)'.*/\1/g"`
+docker build -t virty-api:$VER -f ./api/Dockerfile ./api
+docker tag virty-api:$VER virty-api:latest
+
+docker build -t virty-proxy:$VER -f ./proxy/Dockerfile ./proxy
+docker tag virty-proxy:$VER virty-proxy:latest
+```
 
 ## 定数一覧
 
