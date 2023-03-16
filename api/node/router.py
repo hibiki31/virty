@@ -49,11 +49,11 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
         with open("/root/.ssh/id_rsa") as f:
             private_key = f.read()
         with open("/root/.ssh/id_rsa.pub") as f:
-            publick_key = f.read()
+            public_key = f.read()
     except:
         pass
 
-    return SSHKeyPair(private_key=private_key, publick_key=publick_key)
+    return SSHKeyPair(private_key=private_key, public_key=public_key)
 
 
 @app.post("/tasks/nodes", response_model=TaskSelect)
