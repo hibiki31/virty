@@ -65,7 +65,7 @@ export default {
       }
       axios.request({
         method: 'post',
-        url: '/api/nodes',
+        url: '/api/tasks/nodes',
         data: this.postData
       })
         .then(res => {
