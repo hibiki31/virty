@@ -7,6 +7,9 @@ import useSWR from 'swr';
 import { useAuth } from '~/store/userState';
 import { UserChip } from './UserChip';
 import { UserBase } from '~/lib/api/generated';
+import { OpenMenuButton } from '~/components/buttons/OpenMenuButton';
+import { ProjectMenu } from '~/components/menus/ProjectMenu';
+import { DotsVertical } from 'mdi-material-ui';
 
 export const ProjectsTable: FC = () => {
   const { user } = useAuth();
@@ -42,7 +45,21 @@ export const ProjectsTable: FC = () => {
             minWidth: 100,
             renderCell: (params) => (params.value as UserBase[]).map((user, i) => <UserChip key={i} user={user} />),
           },
-          { headerName: '', field: 'actions', disableColumnMenu: true, width: 40 },
+          {
+            headerName: '',
+            field: 'actions',
+            disableColumnMenu: true,
+            width: 40,
+            align: 'center',
+            renderCell: (params) => (
+              <OpenMenuButton
+                useIconButton
+                label={<DotsVertical />}
+                MenuComponent={ProjectMenu}
+                menuProps={{ project: params.row }}
+              />
+            ),
+          },
         ]}
       />
     </Box>
