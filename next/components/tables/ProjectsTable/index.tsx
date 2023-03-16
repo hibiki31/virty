@@ -43,7 +43,19 @@ export const ProjectsTable: FC = () => {
             disableColumnMenu: true,
             flex: 1,
             minWidth: 100,
-            renderCell: (params) => (params.value as UserBase[]).map((user, i) => <UserChip key={i} user={user} />),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {(params.value as UserBase[]).map((user, i) => (
+                  <UserChip key={i} user={user} />
+                ))}
+              </Box>
+            ),
           },
           {
             headerName: '',

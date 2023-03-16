@@ -39,10 +39,19 @@ export const NetworkPoolsTable: FC = () => {
             disableColumnMenu: true,
             flex: 2,
             minWidth: 150,
-            renderCell: (params) =>
-              (params.value as GetNEtworkPoolNetworksNetwork[]).map((network) => (
-                <NetworkChip key={network.uuid} network={network} />
-              )),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {(params.value as GetNEtworkPoolNetworksNetwork[]).map((network) => (
+                  <NetworkChip key={network.uuid} network={network} />
+                ))}
+              </Box>
+            ),
           },
           {
             headerName: 'Ports',
@@ -50,8 +59,19 @@ export const NetworkPoolsTable: FC = () => {
             disableColumnMenu: true,
             flex: 2,
             minWidth: 150,
-            renderCell: (params) =>
-              (params.value as GetNetworkPoolPort[]).map((port, i) => <PortChip key={i} port={port} />),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {(params.value as GetNetworkPoolPort[]).map((port, i) => (
+                  <PortChip key={i} port={port} />
+                ))}
+              </Box>
+            ),
           },
         ]}
       />

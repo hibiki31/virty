@@ -67,11 +67,17 @@ export const NodesTable: FC = () => {
               flex: 2,
               minWidth: 200,
               renderCell: (params) => (
-                <>
+                <Box
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {(params.value as GetNodeRole[]).map((role, i) => (
                     <RoleChip key={i} role={role} />
                   ))}
-                </>
+                </Box>
               ),
             },
             {
