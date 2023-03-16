@@ -30,9 +30,9 @@ def post_ssh_key_pair(
     makedirs('/root/.ssh/', exist_ok=True)
     
     with open("/root/.ssh/id_rsa", "w") as f:
-        f.write(model.key.rstrip('\r\n') + '\n')
+        f.write(model.private_key.rstrip('\r\n') + '\n')
     with open("/root/.ssh/id_rsa.pub", "w") as f:
-        f.write(model.pub)
+        f.write(model.public_key)
     
     chmod('/root/.ssh/', 0o700)
     chmod('/root/.ssh/id_rsa', 0o600)
@@ -44,7 +44,7 @@ def post_ssh_key_pair(
 @app.get("/nodes/key", response_model=SSHKeyPair)
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
-    publick_key = ""
+    public_key = ""
     try: 
         with open("/root/.ssh/id_rsa") as f:
             private_key = f.read()

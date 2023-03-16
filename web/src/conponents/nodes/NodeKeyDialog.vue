@@ -41,8 +41,8 @@ export default {
   data: function() {
     return {
       requestData: {
-        key: '',
-        pub: ''
+        privateKey: '',
+        privateKey: ''
       },
       dialogState: false,
       submitting: false
