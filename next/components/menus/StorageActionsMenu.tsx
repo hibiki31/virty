@@ -1,4 +1,3 @@
-import { ListItemText, Menu, MenuItem } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -9,6 +8,7 @@ import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
 import { BaseDialog } from '../dialogs/BaseDialog';
+import { BaseMenu } from './BaseMenu';
 
 type Props = {
   anchorEl: HTMLElement | null;
@@ -47,11 +47,6 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
     );
   }, [changeImageOpen, reset, resetFetchers, setValue, setFetcher, nodeName]);
 
-  const handleMenuClick = (func: () => void) => () => {
-    func();
-    onClose();
-  };
-
   const handleUnmount = async () => {
     const confirmed = await openConfirmDialog({
       description: `Are you sure you want to unmount this storage?\n\n${storage?.source}`,
@@ -70,21 +65,27 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
 
   return (
     <>
-      <Menu
-        anchorEl={anchorEl}
+      <BaseMenu
         open={!!storage}
+        anchorEl={anchorEl}
         onClose={onClose}
-        transformOrigin={{ horizontal: 'left', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
-        sx={{ mt: 1, '& .MuiPaper-root': { minWidth: 200 } }}
-      >
-        <MenuItem onClick={handleMenuClick(handleUnmount)} disabled={!storage?.source}>
-          <ListItemText primary="Unmount" primaryTypographyProps={{ color: 'error' }} />
-        </MenuItem>
-        <MenuItem onClick={handleMenuClick(() => setChangeImageOpen(true))}>
-          <ListItemText primary="Change" />
-        </MenuItem>
-      </Menu>
+        menuProps={{
+          transformOrigin: { horizontal: 'left', vertical: 'top' },
+          anchorOrigin: { horizontal: 'left', vertical: 'bottom' },
+        }}
+        items={[
+          {
+            primary: 'Unmount',
+            color: 'error',
+            disabled: !storage?.source,
+            onClick: handleUnmount,
+          },
+          {
+            primary: 'Change',
+            onClick: () => setChangeImageOpen(true),
+          },
+        ]}
+      />
 
       <BaseDialog
         title="Change Image"
