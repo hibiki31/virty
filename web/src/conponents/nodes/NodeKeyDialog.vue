@@ -42,7 +42,7 @@ export default {
     return {
       requestData: {
         privateKey: '',
-        privateKey: ''
+        publicKey: ''
       },
       dialogState: false,
       submitting: false
