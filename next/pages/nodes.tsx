@@ -14,12 +14,12 @@ const Page: NextPage = () => {
   return (
     <DefaultLayout>
       <Head>
-        <title>Virty - Node</title>
+        <title>Virty - Nodes</title>
       </Head>
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
         <Grid item>
-          <Typography variant="h4">Node</Typography>
+          <Typography variant="h4">Nodes</Typography>
         </Grid>
         <Grid item>
           <OpenDialogButton label="Key" DialogComponent={NodeKeyDialog} buttonProps={{ variant: 'contained' }} />

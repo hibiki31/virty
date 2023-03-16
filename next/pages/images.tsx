@@ -11,12 +11,12 @@ const Page: NextPage = () => {
   return (
     <DefaultLayout>
       <Head>
-        <title>Virty - Image</title>
+        <title>Virty - Images</title>
       </Head>
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
         <Grid item>
-          <Typography variant="h4">Image</Typography>
+          <Typography variant="h4">Images</Typography>
         </Grid>
       </Grid>
 

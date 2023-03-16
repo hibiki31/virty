@@ -15,12 +15,12 @@ const Page: NextPage = () => {
   return (
     <DefaultLayout>
       <Head>
-        <title>Virty - Storage</title>
+        <title>Virty - Storages</title>
       </Head>
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
         <Grid item>
-          <Typography variant="h4">Storage</Typography>
+          <Typography variant="h4">Storages</Typography>
         </Grid>
         <Grid item>
           <OpenDialogButton label="Add" DialogComponent={AddStorageDialog} buttonProps={{ variant: 'contained' }} />
@@ -30,7 +30,7 @@ const Page: NextPage = () => {
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
         <Grid item>
-          <Typography variant="h4">Storage Pool</Typography>
+          <Typography variant="h4">Storage Pools</Typography>
         </Grid>
         <Grid item>
           <OpenDialogButton label="Add" DialogComponent={AddStoragePoolDialog} buttonProps={{ variant: 'contained' }} />
