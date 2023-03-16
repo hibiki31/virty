@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { AddProjectMemberDialog } from '~/components/dialogs/AddProjectMemberDialog';
 import { ProjectSelect } from '~/lib/api/generated';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { BaseMenu } from '../BaseMenu';
@@ -37,7 +38,11 @@ export const ProjectMenu: FC<Props> = ({ open, anchorEl, project, onClose }) => 
         transformOrigin: { vertical: 'top', horizontal: 'right' },
       }}
       items={[
-        { primary: 'Add Member', onClick: () => {} },
+        {
+          primary: 'Add Member',
+          DialogComponent: AddProjectMemberDialog,
+          dialogProps: { project },
+        },
         { primary: 'Delete', color: 'error', onClick: deleteProject },
       ]}
     />
