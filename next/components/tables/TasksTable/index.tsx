@@ -1,4 +1,4 @@
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Link, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC, useState } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -10,6 +10,7 @@ import { TASK_METHOD, TASK_RESOURCE, TASK_STATUS } from '~/lib/api/task';
 import { useAuth } from '~/store/userState';
 import { TaskSelect } from '~/lib/api/generated';
 import { TaskDetailsDialog } from '~/components/dialogs/TaskDetailsDialog';
+import NextLink from 'next/link';
 
 export const TasksTable: FC = () => {
   const { user } = useAuth();
@@ -51,7 +52,17 @@ export const TasksTable: FC = () => {
                 </>
               ),
             },
-            { headerName: 'UUID', field: 'uuid', disableColumnMenu: true, flex: 2 },
+            {
+              headerName: 'UUID',
+              field: 'uuid',
+              disableColumnMenu: true,
+              flex: 2,
+              renderCell: (params) => (
+                <NextLink href={`/tasks/${params.value}`} passHref>
+                  <Link>{params.value}</Link>
+                </NextLink>
+              ),
+            },
             {
               headerName: 'Request',
               field: 'request',
