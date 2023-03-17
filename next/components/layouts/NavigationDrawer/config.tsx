@@ -50,11 +50,31 @@ export const DRAWER_ITEMS: DrawerItem[] = [
     title: 'Networks',
     path: '/networks',
     icon: <Wan />,
+    children: [
+      {
+        title: 'Networks',
+        path: '',
+      },
+      {
+        title: 'Network Pools',
+        path: '/pools',
+      },
+    ],
   },
   {
     title: 'Storages',
     path: '/storages',
     icon: <Database />,
+    children: [
+      {
+        title: 'Storages',
+        path: '',
+      },
+      {
+        title: 'Storage Pools',
+        path: '/pools',
+      },
+    ],
   },
   {
     title: 'Images',
