@@ -100,6 +100,11 @@ const BaseDrawerListItem: FC<Props> = memo(function NotMemoBaseDrawerListItem({ 
               </Box>
             )
           }
+          sx={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         />
       </ListItemButton>
     </ListItem>

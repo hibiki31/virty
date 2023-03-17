@@ -13,22 +13,25 @@ import {
 } from '@mui/material';
 import { FC, memo } from 'react';
 import { SCOPE_TO_LABEL } from '~/lib/api/auth';
-import { useDrawer } from '~/store/drawerState';
 import { useAuth } from '~/store/userState';
 import { DRAWER_ITEMS, DRAWER_WIDTH } from './config';
 import { DrawerListItem } from './DrawerListItem';
 
-export const NavigationDrawer: FC = memo(function NotMemoNavigationDrawer() {
+type Props = {
+  open: boolean;
+  onClose: () => void;
+};
+
+export const NavigationDrawer: FC<Props> = memo(function NotMemoNavigationDrawer({ open, onClose }) {
   const theme = useTheme();
-  const { drawer } = useDrawer();
   const { user, changeScope } = useAuth();
 
   return (
     <Drawer
-      open={drawer}
-      variant="persistent"
+      open={open}
+      onClose={onClose}
       sx={{
-        ...(drawer
+        ...(open
           ? {
               width: DRAWER_WIDTH,
               transition: theme.transitions.create('width', {
