@@ -1,12 +1,27 @@
-FROM python:3.10-buster
+FROM ubuntu:22.04 AS build
 
 RUN apt update -y && apt install -y \
     make gcc wget openssh-client openssh-server \
     genisoimage rsync \
-    libvirt-clients libvirt-dev
+    libvirt-clients libvirt-dev \
+    python3 python3-pip
 
 COPY ./requirements.txt /tmp/
-RUN /usr/local/bin/python -m pip install --upgrade pip && pip3 install -r /tmp/requirements.txt
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install --user -r /tmp/requirements.txt
+
+FROM ubuntu:22.04 AS runner
+
+RUN apt-get update -y --no-install-recommends \
+    && apt-get install -y \
+        wget openssh-client openssh-server \
+        genisoimage rsync \
+        libvirt-clients libvirt-dev \
+        python3 python3-pip \
+    && apt-get -y clean \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /root/.local /root/.local
 
 RUN mkdir -p /opt/app && mkdir -p /opt/data
 COPY . /opt/app
