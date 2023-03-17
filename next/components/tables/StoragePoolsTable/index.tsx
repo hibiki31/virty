@@ -38,8 +38,19 @@ export const StoragePoolsTable: FC = () => {
             disableColumnMenu: true,
             flex: 1,
             minWidth: 150,
-            renderCell: (params) =>
-              (params.value as GetStoragePoolStorages[]).map((storage, i) => <StorageChip key={i} storage={storage} />),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {(params.value as GetStoragePoolStorages[]).map((storage, i) => (
+                  <StorageChip key={i} storage={storage} />
+                ))}
+              </Box>
+            ),
           },
         ]}
       />

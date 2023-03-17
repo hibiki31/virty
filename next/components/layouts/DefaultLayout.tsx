@@ -2,7 +2,6 @@ import { Box, Container, Toolbar } from '@mui/material';
 import { FC, PropsWithChildren } from 'react';
 import { LoadingBox } from '../utils/LoadingBox';
 import { DefaultHeader } from './DefaultHeader';
-import { NavigationDrawer } from './NavigationDrawer';
 
 type Props = PropsWithChildren<{
   isLoading?: boolean;
@@ -10,9 +9,9 @@ type Props = PropsWithChildren<{
 
 export const DefaultLayout: FC<Props> = ({ children, isLoading }) => {
   return (
-    <Box component="div" sx={{ display: 'flex' }}>
+    <Box display="flex">
       <DefaultHeader />
-      <NavigationDrawer />
+
       <Container
         component="main"
         maxWidth="xl"

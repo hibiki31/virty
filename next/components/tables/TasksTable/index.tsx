@@ -1,15 +1,17 @@
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Link, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC, useState } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { tasksApi } from '~/lib/api';
 import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
-import { CheckCircle, CubeOutline, Database, DotsVertical, HelpRhombus, Server, Wan } from 'mdi-material-ui';
-import { TASK_METHOD, TASK_RESOURCE, TASK_STATUS } from '~/lib/api/task';
+import { CheckCircle, DotsVertical } from 'mdi-material-ui';
+import { TASK_STATUS } from '~/lib/api/task';
 import { useAuth } from '~/store/userState';
 import { TaskSelect } from '~/lib/api/generated';
 import { TaskDetailsDialog } from '~/components/dialogs/TaskDetailsDialog';
+import NextLink from 'next/link';
+import { ResourceIcon } from './ResourceIcon';
 
 export const TasksTable: FC = () => {
   const { user } = useAuth();
@@ -51,7 +53,17 @@ export const TasksTable: FC = () => {
                 </>
               ),
             },
-            { headerName: 'UUID', field: 'uuid', disableColumnMenu: true, flex: 2 },
+            {
+              headerName: 'UUID',
+              field: 'uuid',
+              disableColumnMenu: true,
+              flex: 2,
+              renderCell: (params) => (
+                <NextLink href={`/tasks/${params.value}`} passHref>
+                  <Link>{params.value}</Link>
+                </NextLink>
+              ),
+            },
             {
               headerName: 'Request',
               field: 'request',
@@ -120,31 +132,4 @@ const StatusIcon: FC<StatusIconProps> = ({ status }) => {
       ? 'error.main'
       : 'warning.main';
   return <CheckCircle sx={{ color }} />;
-};
-
-type ResourceIconProps = {
-  method: string;
-  resource: string;
-};
-
-const ResourceIcon: FC<ResourceIconProps> = ({ method, resource }) => {
-  const color =
-    method === TASK_METHOD.POST
-      ? 'success'
-      : method === TASK_METHOD.PUT
-      ? 'primary'
-      : method === TASK_METHOD.DELETE
-      ? 'error'
-      : 'warning';
-  switch (resource) {
-    case TASK_RESOURCE.VM:
-      return <CubeOutline color={color} />;
-    case TASK_RESOURCE.NODE:
-      return <Server color={color} />;
-    case TASK_RESOURCE.STORAGE:
-      return <Database color={color} />;
-    case TASK_RESOURCE.NETWORK:
-      return <Wan color={color} />;
-  }
-  return <HelpRhombus color={color} />;
 };

@@ -15,14 +15,14 @@ const VMsPage: NextPage = () => {
   return (
     <DefaultLayout>
       <Head>
-        <title>Virty - VM</title>
+        <title>Virty - VMs</title>
       </Head>
 
       <AddVMDialog open={addVMDialogOpen} onClose={() => setAddVMDialogOpen(false)} />
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
         <Grid item>
-          <Typography variant="h4">VM</Typography>
+          <Typography variant="h4">VMs</Typography>
         </Grid>
         <Grid item>
           <Button variant="contained" color="primary" onClick={() => setAddVMDialogOpen(true)}>

@@ -37,7 +37,19 @@ export const UsersTable: FC = () => {
             disableColumnMenu: true,
             flex: 1,
             minWidth: 100,
-            renderCell: (params) => params.value.map((scope: any, i: number) => <ScopeChip key={i} scope={scope} />),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {params.value.map((scope: any, i: number) => (
+                  <ScopeChip key={i} scope={scope} />
+                ))}
+              </Box>
+            ),
           },
           {
             headerName: 'Groups',
@@ -45,7 +57,19 @@ export const UsersTable: FC = () => {
             disableColumnMenu: true,
             flex: 1,
             minWidth: 100,
-            renderCell: (params) => params.value.map((group: any) => <GroupChip key={group.id} group={group} />),
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {params.value.map((group: any) => (
+                  <GroupChip key={group.id} group={group} />
+                ))}
+              </Box>
+            ),
           },
           { headerName: '', field: 'actions', disableColumnMenu: true, width: 40 },
         ]}
