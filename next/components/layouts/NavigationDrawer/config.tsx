@@ -1,5 +1,4 @@
 import {
-  Home,
   CubeOutline,
   CheckboxMultipleMarkedOutline,
   Server,
@@ -9,6 +8,7 @@ import {
   TagMultiple,
   Account,
   FolderStar,
+  ViewDashboard,
 } from 'mdi-material-ui';
 
 export type DrawerItem = {
@@ -22,9 +22,9 @@ export const DRAWER_WIDTH = 250;
 
 export const DRAWER_ITEMS: DrawerItem[] = [
   {
-    title: 'Home',
+    title: 'Dashboard',
     path: '/',
-    icon: <Home />,
+    icon: <ViewDashboard />,
   },
   {
     title: 'VMs',
