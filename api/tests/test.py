@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import httpx
 import json
 from pprint import pprint
@@ -12,6 +13,21 @@ BASE_URL = "http://localhost:8765"
 
 
 TEST_ENV = json.load(open('./tests/env.json', 'r'))
+
+class Color:
+    BLACK     = '\033[30m'
+    RED       = '\033[31m'
+    GREEN     = '\033[32m'
+    YELLOW    = '\033[33m'
+    BLUE      = '\033[34m'
+    PURPLE    = '\033[35m'
+    CYAN      = '\033[36m'
+    WHITE     = '\033[37m'
+    END       = '\033[0m'
+    BOLD      = '\038[1m'
+    UNDERLINE = '\033[4m'
+    INVISIBLE = '\033[08m'
+    REVERCE   = '\033[07m'
 
 
 if not httpx.get(f'{BASE_URL}/api/version').json()["initialized"]:
@@ -44,16 +60,21 @@ def main():
     api_users_me()
     post_nodes_key()
     # delete_nodes()
-    post_nodes()
-    # post_storage()
-
+    # post_nodes()
+    post_storage()
 
 
 
 
 def print_resp(resp: httpx.Response):
-    print(resp, resp.url)
-    pprint(resp.json())
+    print(resp, resp.request.method, resp.url)
+    print(Color.BLUE+"-------------------------------------"+Color.END)
+    pprint(resp.json()) 
+    print(Color.BLUE+"-------------------------------------"+Color.END)
+
+    if resp.status_code != 200:
+        raise Exception
+
     print()
 
 
@@ -69,10 +90,14 @@ def api_users_me():
 
 
 def delete_nodes():
-    req_data = {
-        "name": "test-node"
-    }
-    resp = httpx.request(method="delete",url=f'{BASE_URL}/api/nodes', headers=HEADERS, json=req_data)
+    node_name = "test-node"
+    resp = httpx.request(method="delete",url=f'{BASE_URL}/api/nodes/{node_name}', headers=HEADERS, json=req_data)
+    print_resp(resp=resp)
+
+
+def delete_nodes():
+    node_name = "test-node"
+    resp = httpx.request(method="delete",url=f'{BASE_URL}/api/storages', headers=HEADERS, json=req_data)
     print_resp(resp=resp)
 
 
@@ -104,18 +129,18 @@ def post_storage():
         {
             "name": "test-img",
             "nodeName": "test-node",
-            "path": "/var/lib/libvirt/images"
+            "path": "/var/lib/libvirt/test/images"
         },
-        {
-            "name": "test-iso",
-            "nodeName": "test-node",
-            "path": "/var/lib/libvirt/images"
-        },
-        {
-            "name": "test-cloud",
-            "nodeName": "test-node",
-            "path": "/var/lib/libvirt/images"
-        },
+        # {
+        #     "name": "test-iso",
+        #     "nodeName": "test-node",
+        #     "path": "/var/lib/libvirt/test/iso"
+        # },
+        # {
+        #     "name": "test-cloud",
+        #     "nodeName": "test-node",
+        #     "path": "/var/lib/libvirt/test/cloud-init"
+        # },
     ]
     for req_data in req_datas:
         resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/storages', headers=HEADERS, json=req_data)
@@ -144,7 +169,7 @@ def print_tasks():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks', headers=HEADERS).json()
     count = 0
     for task in resp:
-        print ("{:<20} {:<5} {:<8} {:<5} {:<5} {:<5} {:<9}".format(
+        print ("{:<20} {:<5} {:<8} {:<5} {:<9} {:<5} {:<9}".format(
             datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S'),
             f'{int(task["runTime"])}s',
             task["status"],

@@ -107,7 +107,7 @@ def run_scheduler(task_manager: TaskBase):
             db.commit()
             logger.info(f"init depended task {task.uuid} => {task.dependence_uuid}")
             exec_task(db=task_manager.db, task=task, tasks=task_manager)
-    
+    sleep(3)
 
 
 

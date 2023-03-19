@@ -173,7 +173,12 @@ class VirtManager():
 
     def storage_define(self,xml_str):
         sp = self.node.storagePoolDefineXML(xml_str,0)
-        sp.create()
+        try:
+            sp.create()
+        except libvirt.libvirtError as e:
+            sp.undefine()
+            raise e
+
         sp.setAutostart(1)
 
 

@@ -1,22 +1,15 @@
-from datetime import datetime, timedelta
-from typing import List, Optional
-from passlib.context import CryptContext
-from pydantic import BaseModel, ValidationError
-from fastapi import APIRouter, Depends, Request, HTTPException, Security, status, BackgroundTasks
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
-from sqlalchemy.orm import Session, aliased
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import alias, func
-from domain.models import DomainModel, DomainDriveModel
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from domain.models import DomainModel
 
 from task.functions import TaskManager
 from mixin.database import get_db
 from mixin.log import setup_logger
-from settings import IS_DEV
 
 from user.models import *
 from project.models import *
-from .schemas import *
+from project.schemas import *
 from auth.router import CurrentUser, get_current_user
 
 logger = setup_logger(__name__)
@@ -65,12 +58,11 @@ def get_api_projects(
 @app.post("")
 def post_api_projects(
         request: PostProject, 
-        bg: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'project', 'root')
+    task = TaskManager(db=db)
+    task.select(method='post', resource='project', object='root')
     task.commit(user=current_user, request=request)
 
     return task.model
@@ -79,12 +71,11 @@ def post_api_projects(
 @app.delete("")
 def delete_api_projects(
         request: DeleteProject, 
-        bg: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('delete', 'project', 'root')
+    task = TaskManager(db=db)
+    task.select(method='delete', resource='project', object='root')
     task.commit(user=current_user, request=request)
 
     return task.model

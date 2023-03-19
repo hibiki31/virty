@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: directory created
+      file:
+        path: "{{ path }}"
+        state: directory
+        mode: "775"
+        recurse: yes

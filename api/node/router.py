@@ -3,6 +3,7 @@ from os import name, chmod, makedirs
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy import true
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
 from .models import *
 from .schemas import *
@@ -13,6 +14,7 @@ from task.schemas import TaskSelect
 from task.functions import TaskManager
 from mixin.database import get_db
 from mixin.log import setup_logger
+from mixin.exception import *
 
 from node.models import NodeModel
 
@@ -36,6 +38,12 @@ def delete_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
+
+    try:
+        db.query(NodeModel).filter(NodeModel.name==node_name).one()
+    except NoResultFound:
+        raise notfound_exception(msg="Not found node")
+
     
     db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node_name).delete()
     db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node_name).delete()
@@ -43,7 +51,7 @@ def delete_api_nodes(
     db.query(NodeModel).filter(NodeModel.name==node_name).delete()
     db.commit()
 
-    return {}
+    return
 
 
 @app.post("/nodes/key", tags=["nodes"])
