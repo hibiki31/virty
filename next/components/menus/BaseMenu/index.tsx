@@ -14,7 +14,7 @@ type Item<P> = {
 type Props<P> = {
   open?: boolean;
   anchorEl: HTMLElement | null;
-  menuProps: Omit<MenuProps, 'open' | 'anchorEl' | 'onClose'>;
+  menuProps?: Omit<MenuProps, 'open' | 'anchorEl' | 'onClose'>;
   items: Item<P>[];
   onClose: () => void;
 };
