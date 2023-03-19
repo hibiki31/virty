@@ -33,6 +33,7 @@ export const PortsTable: FC<Props> = ({ networkUuid, ports }) => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
+        autoHeight
         pageSize={25}
         getRowId={(row) => row.name}
         rows={ports}

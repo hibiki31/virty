@@ -1,7 +1,9 @@
-import { Box, Grid, IconButton, Tooltip } from '@mui/material';
+import { Box, Grid, Tooltip } from '@mui/material';
 import { AlertOutline, DeleteForever, DotsVertical, PowerStandby, ServerRemove, Wrench } from 'mdi-material-ui';
 import { FC, memo } from 'react';
 import { VM_STATUS } from '~/lib/api/vm';
+import { OpenMenuButton } from '../buttons/OpenMenuButton';
+import { PowerControlMenu } from './PowerControlMenu';
 
 type Props = {
   statusCode: number;
@@ -37,9 +39,12 @@ export const VMStatusController: FC<Props> = memo(function NotMemoVMStatusContro
           <StatusIcon statusCode={statusCode} />
         </Box>
       </Tooltip>
-      <IconButton size="small">
-        <DotsVertical />
-      </IconButton>
+      <OpenMenuButton
+        useIconButton
+        label={<DotsVertical />}
+        MenuComponent={PowerControlMenu}
+        buttonProps={{ size: 'small' }}
+      />
     </Grid>
   );
 });

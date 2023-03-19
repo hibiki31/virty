@@ -2,7 +2,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { storageApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
 type FormData = JTDDataType<typeof formJtd>;
 
 export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
+  const { setFetcher, reset: resetFetchers } = useChoicesFetchers();
   const formMethods = useForm<FormData>({
     defaultValues: generateProperty(formJtd),
   });
@@ -23,10 +26,21 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
   } = formMethods;
 
   useEffect(() => {
-    if (open) {
-      reset();
+    if (!open) {
+      return;
     }
-  }, [open, reset]);
+    reset();
+    resetFetchers();
+
+    setFetcher('storages', () =>
+      storageApi.getApiStoragesApiStoragesGet().then((res) =>
+        res.data.map((storage) => ({
+          label: storage.name,
+          value: storage.name,
+        }))
+      )
+    );
+  }, [open, reset, resetFetchers, setFetcher]);
 
   const handleAddStoragePool = useCallback((data: FormData) => {
     console.log('handleAddStoragePool', data);
@@ -61,6 +75,16 @@ const formJtd = {
         default: '',
       },
       type: 'string',
+    },
+    storageUuids: {
+      metadata: {
+        name: 'Storages',
+        default: [],
+        choices: 'storages',
+      },
+      elements: {
+        type: 'string',
+      },
     },
   },
 } as const;

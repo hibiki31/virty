@@ -1,10 +1,8 @@
 import { LoadingButton } from '@mui/lab';
-import { Card, CardContent, CardHeader, Grid } from '@mui/material';
+import { Card, CardActions, CardContent, CardHeader, Grid, Typography } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { NoAuthLayout } from '~/components/layouts/NoAuthLayout';
@@ -12,10 +10,8 @@ import { authApi } from '~/lib/api';
 import { VersionResponse } from '~/lib/api/auth';
 import { generateProperty } from '~/lib/jtd';
 import { makeRequireLogoutProps } from '~/lib/utils/makeGetServerSideProps';
-import { useNotistack } from '~/lib/utils/notistack';
-import { useAuth } from '~/store/userState';
 
-type LoginForm = JTDDataType<typeof loginFormJtd>;
+type FormData = JTDDataType<typeof formJtd>;
 
 export const getServerSideProps = makeRequireLogoutProps(async () => {
   const initialized = await authApi
@@ -23,10 +19,10 @@ export const getServerSideProps = makeRequireLogoutProps(async () => {
     .then((res) => (res.data as VersionResponse).initialized)
     .catch(() => false);
 
-  if (!initialized) {
+  if (initialized) {
     return {
       redirect: {
-        destination: '/setup',
+        destination: '/login',
         permanent: false,
       },
     };
@@ -37,56 +33,58 @@ export const getServerSideProps = makeRequireLogoutProps(async () => {
   };
 });
 
-const LoginPage: NextPage = () => {
-  const { login } = useAuth();
-  const { openPersistNotistack } = useNotistack();
-  const formMethods = useForm<LoginForm>({
-    defaultValues: generateProperty(loginFormJtd),
+const Page: NextPage = () => {
+  const formMethods = useForm<FormData>({
+    defaultValues: generateProperty(formJtd),
   });
   const {
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isValid },
   } = formMethods;
-  const [isError, setIsError] = useState<boolean>(false);
-  const router = useRouter();
 
-  const handleLogin = async (data: LoginForm) => {
-    setIsError(false);
-    const { error } = await login(data.username, data.password);
-    if (!error) {
-      router.push('/');
-      return;
-    }
-    setIsError(true);
-    openPersistNotistack('Login failed.', { variant: 'error' });
+  const handleSetup = (data: FormData) => {
+    console.log('handleSetup', data);
   };
 
   return (
     <NoAuthLayout>
       <Head>
-        <title>Virty - Login</title>
+        <title>Virty - Setup</title>
       </Head>
 
-      <Card elevation={0} sx={{ width: 500, margin: 'auto' }}>
-        <CardHeader title="Login" />
-        <CardContent component={'form'} onSubmit={handleSubmit(handleLogin)}>
+      <Card elevation={0}>
+        <CardHeader title="Setup" />
+        <CardContent>
+          <Typography variant="body2" marginBottom={3} sx={{ whiteSpace: 'pre-line' }}>
+            {'Create an administrative user.\nThis will fail if a user with administrative privileges already exists.'}
+          </Typography>
           <FormProvider {...formMethods}>
-            <JtdForm rootJtd={loginFormJtd} isEditing isError={isError} />
+            <JtdForm rootJtd={formJtd} isEditing />
           </FormProvider>
-          <Grid container justifyContent="flex-end">
-            <LoadingButton type="submit" variant="contained" disableElevation loading={isSubmitting}>
-              Login
-            </LoadingButton>
-          </Grid>
         </CardContent>
+        <CardActions>
+          <Grid container justifyContent="flex-end">
+            <Grid item>
+              <LoadingButton
+                onClick={handleSubmit(handleSetup)}
+                variant="contained"
+                disableElevation
+                disabled={!isValid}
+                loading={isSubmitting}
+              >
+                Setup
+              </LoadingButton>
+            </Grid>
+          </Grid>
+        </CardActions>
       </Card>
     </NoAuthLayout>
   );
 };
 
-export default LoginPage;
+export default Page;
 
-const loginFormJtd = {
+const formJtd = {
   metadata: {
     spread: true,
   },
