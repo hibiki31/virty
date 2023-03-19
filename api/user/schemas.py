@@ -8,10 +8,9 @@ class TokenRFC6749Response(BaseModel):
     token_type: str
 
 class TokenData(CamelModel):
-    user_id: Optional[str] = None
+    id: Optional[str] = None
     scopes: List[str] = []
     role: List[str] = []
-    groups: List[str] = []
 
 class UserBase(CamelModel):
     id: str = None

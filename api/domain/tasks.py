@@ -24,66 +24,17 @@ from module import sshlib
 from module import cloudinitlib
 from module.ansiblelib import AnsibleManager
 
-from celery.utils.log import get_task_logger
-
-from worker import celery, BaseTask
+from task.functions import TaskBase
 
 
-
-logger = get_task_logger(__name__)
-
-
-@celery.task(bind=True, base=BaseTask)
-def put_vm_list(self, node_name) -> float:
-
-    node:NodeModel = self.db.query(NodeModel).filter(
-        NodeModel.roles.any(role_name="libvirt"),
-        NodeModel.name==node_name
-    ).one()
-
-    virt_manager = virtlib.VirtManager(node_model=node)
-
-    domains = virt_manager.domain_data()
-
-    token = str(time())
-
-    for domain in domains:
-        editor = xmllib.XmlEditor("str",domain['xml'])
-        editor.dump_file("domain")
-        temp = editor.domain_parse()
-        
-        row = DomainModel(
-            uuid = temp.uuid,
-            name = re.sub(r'(.*)@.*',r'\1', temp.name),
-            core = temp.vcpu,
-            memory = temp.memory,
-            status = domain['status'],
-            node_name = node.name,
-            update_token = token,
-            vnc_port = temp.vnc_port
-        )
-        for interface in temp.interface:
-            row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
-        
-        for disk in temp.disk:
-            db_image = self.db.query(ImageModel).filter(
-                ImageModel.storage.has(StorageModel.node_name==node.name),
-                ImageModel.path==disk.source).one_or_none()
-            if db_image != None:
-                db_image.domain_uuid=temp.uuid
-            row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
-        self.db.merge(row)
-    self.db.commit()
-    
-    self.db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
-    # ノードが変わる前に一度コミット
-    self.db.commit()
-    a = 1/0
+worker_task = TaskBase()
+logger = setup_logger(__name__)
 
 
-def put_vm_list_old(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request = loads(task.request)
-    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
+
+@worker_task(key="put.vm.root")
+def put_vm_list(self: TaskBase, task: TaskModel) -> float:
+    nodes:NodeModel = self.db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
     for node in nodes:
@@ -116,17 +67,17 @@ def put_vm_list_old(db:Session, bg: BackgroundTasks, task: TaskModel):
                 row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
             
             for disk in temp.disk:
-                db_image = db.query(ImageModel).filter(
+                db_image = self.db.query(ImageModel).filter(
                     ImageModel.storage.has(StorageModel.node_name==node.name),
                     ImageModel.path==disk.source).one_or_none()
                 if db_image != None:
                     db_image.domain_uuid=temp.uuid
                 row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
-            db.merge(row)
+            self.db.merge(row)
         # ノードが変わる前に一度コミット
-        db.commit()
-    db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
-    db.commit()
+        self.db.commit()
+    self.db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
+    self.db.commit()
 
     task.message = "VM list updated has been successfull"
 
@@ -258,7 +209,9 @@ def post_vm_ticketd(db:Session, task: TaskModel):
     raise Exception("avalilabel node not found")
 
 
-def post_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+@worker_task(key="post.vm.root")
+def post_vm_root(self: TaskBase, task: TaskModel):
+    db = self.db
     if loads(task.request)["type"] == "ticket":
         req = post_vm_ticketd(db=db, task=task)
     else:

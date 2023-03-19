@@ -15,23 +15,19 @@ from auth.router import CurrentUser, get_current_user, pwd_context
 
 logger = setup_logger(__name__)
 app = APIRouter(
-    prefix="/api/users",
+    prefix="/api",
     tags=["users"],
 )
 
 
-@app.get("/me")
+@app.get("/users/me", response_model=TokenData)
 def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
-    current_user.is_joined("aaaa")
-    
-    print(current_user)
-    return ""
+    return current_user
 
 
-@app.post("")
+@app.post("/users")
 def post_api_users(
         request: UserInsert,
-        bg: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -39,6 +35,12 @@ def post_api_users(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Blanks are not allowed in id"
+        )
+    
+    if db.query(UserModel).filter(UserModel.id==request.user_id).one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists"
         )
 
     # ユーザ追加
@@ -52,15 +54,15 @@ def post_api_users(
 
     db.commit()
 
-    project_reqeust = PostProject(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'project', 'root')
-    task.commit(user=current_user, request=project_reqeust)
+    # project_reqeust = PostProject(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
+    # task = TaskManager(db=db, bg=bg)
+    # task.select('post', 'project', 'root')
+    # task.commit(user=current_user, request=project_reqeust)
 
     return user_model
 
 
-@app.get("")
+@app.get("/users")
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

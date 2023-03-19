@@ -25,14 +25,15 @@ class SSHManager():
     
     def run_cmd(self, cmd):
         cmd = self.base_cmd + cmd
-        return subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+        return subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
     
     def get_node_mem(self):
         res = self.run_cmd(["cat /proc/meminfo |grep MemTotal"])
+        # Ex. MemTotal:       131957404 kB
         words = float(str(res.stdout).split()[1])
         memory = words/1024000
-        return memory
+        return memory # GB
 
 
     def get_node_cpu_core(self):
@@ -73,6 +74,21 @@ class SSHManager():
             key = line.split("=")[0]
             value = line.split("=")[1]
             result[key] = value
+        
+        '''
+        NAME="Ubuntu"
+        VERSION="20.04.5 LTS (Focal Fossa)"
+        ID=ubuntu
+        ID_LIKE=debian
+        PRETTY_NAME="Ubuntu 20.04.5 LTS"
+        VERSION_ID="20.04"
+        HOME_URL="https://www.ubuntu.com/"
+        SUPPORT_URL="https://help.ubuntu.com/"
+        BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+        PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+        VERSION_CODENAME=focal
+        UBUNTU_CODENAME=focal
+        '''
         return result
 
 

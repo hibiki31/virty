@@ -19,7 +19,7 @@ class TokenData(CamelModel):
     projects: List[str] = []
 
 class Setup(CamelModel):
-    user_id: str
+    username: str
     password: str
     class Config:
         orm_mode = True

@@ -1,80 +1,137 @@
-import os
+import subprocess
 import uuid
-import logging
-from datetime import datetime
+from time import time, sleep
+from sqlalchemy import desc, or_
 
-from celery import Celery, Task
-from celery.signals import after_setup_logger, after_setup_task_logger
-from celery.utils.log import get_task_logger
-
-from pydantic import BaseModel
-from task.models import TaskModel
-
-from sqlalchemy.orm import Session
+from settings import APP_ROOT
+from mixin.log import setup_logger
 from mixin.database import SessionLocal
 
+from task.schemas import TaskSelect
+from task.functions import TaskBase
+from node.tasks import *
+from storage.tasks import *
+from network.tasks import *
 
-celery = Celery(__name__,include=[
-    'domain.tasks'
-    ])
+from task.models import TaskModel
+from user.models import UserModel
+from project.models import ProjectModel
 
-celery.conf.broker_url = os.environ.get(
-    'CELERY_BROKER_URL',
-    'redis://redis:6379'
-)
-celery.conf.result_backend = os.environ.get(
-    'CELERY_BACKEND_URL',
-    'redis://redis:6379'
-)
+from functools import update_wrapper
 
-logger = get_task_logger(__name__)
-
-
-class BaseTask(Task):
-    def __init__(self):
-        self.db = SessionLocal()
+from domain.tasks import worker_task as domain_tasks
+from node.tasks import worker_task as node_tasks
+from storage.tasks import worker_task as storage_tasks
 
 
-@after_setup_logger.connect
-def setup_root_logger(logger, *args, **kwargs):
-    logger.handlers = []
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-
-@after_setup_task_logger.connect
-def setup_task_logger(logger, *args, **kwargs):
-    logger.handlers = []
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+logger = setup_logger(__name__)
 
 
 
-@celery.task(bind=True, base=BaseTask)
-def task_error(self, *args, virty_task_uuid):
-    print(self.request.id)
-    # model = self.db.query(TaskModel).filter(TaskModel.uuid==virty_task_uuid).one()
-    # model.status = "error"
-    # model.message = exc
-    # self.db.merge(model)
-    # self.db.commit()
 
-@celery.task
-def error_handler(request, exc, traceback, virty_task_uuid):
+
+
+
+def main():
+    tasks = TaskBase()
+    tasks.include_task(domain_tasks)
+    tasks.include_task(node_tasks)
+    tasks.include_task(storage_tasks)
+
+    init_scheduler()
+
+    while True:
+        run_scheduler(tasks)
+
+
+
+
+def init_scheduler():
     db = SessionLocal()
-    model = db.query(TaskModel).filter(TaskModel.uuid==virty_task_uuid).one()
-    model.status = "error"
-    model.message = str(exc)
+
+    lost_tasks = db.query(TaskModel).filter(TaskModel.status!="finish", TaskModel.status!="lost", TaskModel.status!="error")
+    lost_tasks.update({
+        TaskModel.status:"lost",
+        TaskModel.message:"Worker restarted and did not run"
+    })
+
+    lost_tasks = lost_tasks.all()
+
+    if len(lost_tasks) != 0:
+        logger.error(f'{len(lost_tasks)} task was not executed')
+    
     db.commit()
 
 
-@celery.task(bind=True, base=BaseTask)
-def task_success(self) -> float:
-    logger.info("iiiiiiiiiiiiiiiiiiiii")
+def run_scheduler(task_manager: TaskBase):
+    db = task_manager.db
+
+    tasks = db.query(
+        TaskModel
+    ).filter(or_(
+        TaskModel.status=="init",
+        TaskModel.status=="wait"
+    )).order_by(TaskModel.post_time).with_for_update().all()
+
+    for task in tasks:
+        task:TaskModel
+
+        # initだったら実行
+        if task.status == "init":
+            exec_task(db=task_manager.db, task=task, tasks=task_manager)
+            continue
+        
+        # 以下はWaitタスクの処理
+        depends_task:TaskModel = db.query(TaskModel).filter(
+            TaskModel.uuid==task.dependence_uuid
+            ).with_lockmode('update').one()
+
+        if depends_task.status == "error" or depends_task.status == "lost":
+            task.status = "error"
+            task.message = "depended task faile"
+            db.merge(task)
+            db.commit()
+            logger.error(f"depended task faile {task.uuid} => {task.dependence_uuid}")
+            continue
+        
+
+        # 親タスクが実行中の場合待機
+        elif depends_task.status != "finish":
+            logger.info(f"wait depended task. {task.uuid} => {task.dependence_uuid}")
+            continue
+        
+        # 実行可能なタスクは初期化
+        elif depends_task.status == "finish" and task.status == "wait":
+            task.status = "init"
+            db.merge(task)
+            db.commit()
+            logger.info(f"init depended task {task.uuid} => {task.dependence_uuid}")
+            exec_task(db=task_manager.db, task=task, tasks=task_manager)
+    
+
+
+
+
+def exec_task(db, task, tasks):
+    logger.info(f'start tasks: {task.method}.{task.resource}.{task.object} {task.uuid}')
+    task.status = "start"
+    db.commit()
+
+    start_time = time()
+    
+    try:
+        tasks.run(key=f"{task.method}.{task.resource}.{task.object}", task_model=task)
+        task.status = "finish"
+    except Exception as e:
+        db.rollback()
+        logger.error(e, exc_info=True)
+        task.status = "error"
+        task.message = str(e)
+
+    task.run_time = time() - start_time
+    db.commit()
+
+    
+
+if __name__ == "__main__":
+    main()

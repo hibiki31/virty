@@ -9,7 +9,7 @@ class TaskModel(Base):
     uuid = Column(String, primary_key=True, index=True)
     post_time = Column(DateTime)
     run_time = Column(Float)
-    user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
+    user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'))
     dependence_uuid = Column(String, ForeignKey('tasks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
     status = Column(String) # init, start, finish
     resource = Column(String) # node, domain, network...

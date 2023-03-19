@@ -13,11 +13,16 @@ from module import xmllib
 
 from time import time
 
+from task.functions import TaskBase
 
+
+worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
-def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
+@worker_task(key="put.storage.list")
+def put_storage_list(self: TaskBase, task: TaskModel):
+    db = self.db
     nodes = db.query(NodeModel).all()
 
     token = time()
@@ -61,7 +66,10 @@ def put_storage_list(db:Session, bg: BackgroundTasks, task: TaskModel):
     db.commit()
     task.message = "Storage list updated has been successfull"
 
-def post_storage_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+
+@worker_task(key="post.storage.root")
+def post_storage_root(self: TaskBase, task: TaskModel):
+    db = self.db
     request: StorageInsert = StorageInsert(**loads(task.request))
 
     try:

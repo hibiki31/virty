@@ -17,12 +17,12 @@ import hashlib
 
 
 app = APIRouter(
-    prefix="/api/tasks",
+    prefix="/api",
     tags=["tasks"]
 )
 
 
-@app.get("", response_model=List[TaskSelect])
+@app.get("/tasks", response_model=List[TaskSelect])
 def get_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -39,7 +39,19 @@ def get_tasks(
     return task
 
 
-@app.delete("", response_model=List[TaskSelect])
+@app.get("/tasks/{uuid}", response_model=TaskSelect)
+def get_tasks(
+        uuid: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    task = db.query(TaskModel)\
+            .filter(TaskModel.uuid==uuid).one()
+    
+    return task
+
+
+@app.delete("/tasks/", response_model=List[TaskSelect])
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -52,7 +64,7 @@ def delete_tasks(
     return model
 
 
-@app.get("/incomplete")
+@app.get("/tasks/incomplete")
 def get_tasks_incomplete(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

@@ -17,11 +17,36 @@ from mixin.log import setup_logger
 from node.models import NodeModel
 
 
-app = APIRouter(prefix="/api", tags=["nodes"])
+app = APIRouter(prefix="/api")
 logger = setup_logger(__name__)
 
 
-@app.post("/nodes/key")
+@app.get("/nodes", response_model=List[GetNode], tags=["nodes"])
+def get_api_nodes(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    return db.query(NodeModel).all()
+
+
+@app.delete("/nodes/{node_name}", tags=["nodes"])
+def delete_api_nodes(
+        node_name: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    
+    db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node_name).delete()
+    db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node_name).delete()
+    db.commit()
+    db.query(NodeModel).filter(NodeModel.name==node_name).delete()
+    db.commit()
+
+    return {}
+
+
+@app.post("/nodes/key", tags=["nodes"])
 def post_ssh_key_pair(
         model: SSHKeyPair,
         current_user: CurrentUser = Depends(get_current_user)
@@ -40,7 +65,7 @@ def post_ssh_key_pair(
     return {}
 
 
-@app.get("/nodes/key", response_model=SSHKeyPair)
+@app.get("/nodes/key", response_model=SSHKeyPair, tags=["nodes"])
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     public_key = ""
@@ -55,128 +80,81 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     return SSHKeyPair(private_key=private_key, public_key=public_key)
 
 
-@app.post("/tasks/nodes", response_model=TaskSelect)
+@app.post("/tasks/nodes", tags=["tasks-nodes"], response_model=List[TaskSelect])
 def post_api_nodes(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: NodeInsert = None
     ):
     # ノード追加タスク
-    task = TaskManager(db=db, bg=bg)
-    task.select(method="post", resource="node", object="root")
-    task.commit(request=request, user=current_user)
-
-    dependence_uuid = task.model.uuid
+    task = TaskManager(db=db)
+    task.select(method='post', resource='node', object='root')
+    task.commit(user=current_user, request=request)
 
     if request.libvirt_role:
         libvirt_request = NodeRolePatch(node_name=request.name, role_name="libvirt")
-        libvirt_task = TaskManager(db=db, bg=bg)
+        libvirt_task = TaskManager(db=db)
         libvirt_task.select(method="patch", resource="node", object="role")
-        libvirt_task.commit(request=libvirt_request, user=current_user, dependence_uuid=dependence_uuid)
+        libvirt_task.commit(user=current_user, dependence_uuid=task.model.uuid, request=libvirt_request)
         dependence_uuid = libvirt_task.model.uuid
 
 
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "vm", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "network", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "storage", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    return task.model
+    return [task.model, libvirt_task.model]
 
 
-@app.get("/nodes", response_model=List[GetNode])
-def get_api_nodes(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-
-    return db.query(NodeModel).all()
-
-
-@app.delete("")
-def delete_api_nodes(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        node: NodeDelete = None,
-    ):
-    
-    db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node.name).delete()
-    db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node.name).delete()
-    db.commit()
-    db.query(NodeModel).filter(NodeModel.name==node.name).delete()
-    db.commit()
-
-    return node
-
-
-
-
-
-
-
-
-@app.patch("/roles", response_model=TaskSelect)
+@app.patch("/tasks/nodes/roles", tags=["tasks-nodes"], response_model=TaskSelect)
 def patch_api_node_role(
-        model: NodeRolePatch,
-        bg: BackgroundTasks,
+        request: NodeRolePatch,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    task = TaskManager(db=db, bg=bg)
+    task = TaskManager(db=db)
     task.select('patch', 'node', 'role')
-    task.commit(user=current_user,request=model)
+    task.commit(user=current_user, request=request)
     
     return task.model
 
 
-@app.get("/pools")
-def get_api_nodes_pools(
-        db: Session = Depends(get_db)
-    ):
+# @app.get("/nodes/pools", tags=["nodes"])
+# def get_api_nodes_pools(
+#         db: Session = Depends(get_db)
+#     ):
 
-    return db.query(PoolCpu).all()
-
-
-@app.post("/pools")
-def post_api_nodes_pools(
-        model: NodeBase,
-        db: Session = Depends(get_db),
-    ):
-    pool_model = PoolCpu(name=model.name)
-    db.add(pool_model)
-    db.commit()
-    return True
+#     return db.query(PoolCpu).all()
 
 
-@app.patch("/pools")
-def patch_api_nodes_pools(
-        model: PatchNodePool,
-        db: Session = Depends(get_db),
-    ):
-    ass = AssociationPoolsCpu(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
-    db.add(ass)
-    db.commit()
-    return True
+# @app.post("/nodes/pools", tags=["nodes"])
+# def post_api_nodes_pools(
+#         model: NodeBase,
+#         db: Session = Depends(get_db),
+#     ):
+#     pool_model = PoolCpu(name=model.name)
+#     db.add(pool_model)
+#     db.commit()
+#     return True
 
 
-@app.get("/{node_name}/facts")
-def get_node_name_facts(
-        node_name: str,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
+# @app.patch("/nodes/pools", tags=["nodes"])
+# def patch_api_nodes_pools(
+#         model: PatchNodePool,
+#         db: Session = Depends(get_db),
+#     ):
+#     ass = AssociationPoolsCpu(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
+#     db.add(ass)
+#     db.commit()
+#     return True
 
-    node = db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
+
+# @app.get("/nodes/{node_name}/facts", tags=["nodes"])
+# def get_node_name_facts(
+#         node_name: str,
+#         current_user: CurrentUser = Depends(get_current_user),
+#         db: Session = Depends(get_db),
+#     ):
+
+#     node = db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
     
-    if node == None:
-        raise HTTPException(status_code=404, detail="Node not found")
+#     if node == None:
+#         raise HTTPException(status_code=404, detail="Node not found")
 
-    return node.ansible_facts["result"]
+#     return node.ansible_facts["result"]

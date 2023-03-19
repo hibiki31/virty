@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from fastapi_camelcase import CamelModel
 from typing import List, Optional
+from pydantic import BaseModel, Field
+
 
 from user.models import UserModel
 

@@ -27,7 +27,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storage"], response_model=List[StorageSelect])
+@app.get("/api/storages", tags=["storages"], response_model=List[StorageSelect])
 def get_api_storages(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -59,7 +59,7 @@ def get_api_storages(
     return res
 
 
-@app.get("/api/images", tags=["storage"], response_model=List[ImageSelect])
+@app.get("/api/images", tags=["images"], response_model=List[ImageSelect])
 def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -117,21 +117,20 @@ def get_api_images(
     return res
 
 
-@app.put("/api/images", tags=["storage"])
+@app.put("/api/tasks/images", tags=["tasks-images"])
 def put_api_images(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
     # タスクを追加
-    task = TaskManager(db=db, bg=bg)
+    task = TaskManager(db=db)
     task.select('put', 'storage', 'list')
     task.commit(user=current_user)
    
     return task.model
 
 
-@app.patch("/api/images", tags=["storage"])
+@app.patch("/api/images", tags=["storages"])
 def patch_api_images(
         req: PatchImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
@@ -153,25 +152,24 @@ def patch_api_images(
 
 
 
-@app.post("/api/storages", tags=["storage"], response_model=TaskSelect)
+@app.post("/api/tasks/storages", tags=["tasks-storages"], response_model=List[TaskSelect])
 def post_api_storage(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: StorageInsert = None
     ):
-    task = TaskManager(db=db, bg=bg)
+    task = TaskManager(db=db)
     task.select('post', 'storage', 'root')
     task.commit(user=current_user, request=request)
 
-    put_task = TaskManager(db=db, bg=bg)
+    put_task = TaskManager(db=db)
     put_task.select('put', 'storage', 'list')
     put_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 
-    return task.model
+    return [task.model, put_task.model]
 
 
-@app.patch("/api/storages", tags=["storage"])
+@app.patch("/api/storages", tags=["storages"])
 def post_api_storage(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -182,21 +180,20 @@ def post_api_storage(
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
-@app.delete("/api/storages", tags=["storage"], response_model=TaskSelect)
+@app.delete("/api/tasks/storages", tags=["tasks-storages"], response_model=List[TaskSelect])
 def delete_api_storages(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageDelete = None
+        request: StorageDelete = None
     ):
-    # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("storage","base","delete", bg)
+    task = TaskManager(db=db)
+    task.select('delete', 'storage', 'root')
+    task.commit(user=current_user, request=request)
 
-    return task_model
+    return [task.model]
 
 
-@app.get("/api/storages/pools", tags=["storage"], response_model=List[GetStoragePool])
+@app.get("/api/storages/pools", tags=["storages"], response_model=List[GetStoragePool])
 def get_api_storages_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -205,7 +202,7 @@ def get_api_storages_pools(
     return db.query(StoragePoolModel).all()
 
 
-@app.post("/api/storages/pools", tags=["storage"])
+@app.post("/api/storages/pools", tags=["storages"])
 def post_api_storages_pools(
         request_model: PostStoragePool,
         current_user: CurrentUser = Depends(get_current_user),
@@ -221,7 +218,7 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.patch("/api/storages/pools", tags=["storage"])
+@app.patch("/api/storages/pools", tags=["storages"])
 def post_api_storages_pools(
         request_model: PatchStoragePool,
         current_user: CurrentUser = Depends(get_current_user),
@@ -236,7 +233,7 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.put("/api/images/scp", tags=["storage"])
+@app.put("/api/images/scp", tags=["storages"])
 def put_api_images_scp(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
