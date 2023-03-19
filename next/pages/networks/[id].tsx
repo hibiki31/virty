@@ -5,8 +5,10 @@ import useSWR from 'swr';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { AddPortDialog } from '~/components/dialogs/AddPortDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { BaseTable } from '~/components/tables/BaseTable';
 import { PortsTable } from '~/components/tables/PortsTable';
 import { networkApi } from '~/lib/api';
+import { formatDate } from '~/lib/utils/date';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import Error404Page from '../404';
@@ -97,20 +99,43 @@ const Page: NextPage<Props> = ({ id }) => {
         </Grid>
       </Grid>
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
-        <Grid item>
-          <Typography variant="h4">Virtual Port</Typography>
-        </Grid>
-        <Grid item>
-          <OpenDialogButton
-            label="Add"
-            DialogComponent={AddPortDialog}
-            buttonProps={{ variant: 'contained' }}
-            dialogProps={{ networkUuid: data.uuid }}
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={6}>
+          <BaseTable
+            cols={[{ getItem: (item) => item.name }, { getItem: (item) => item.value }]}
+            items={[
+              { name: 'Description', value: data.description },
+              { name: 'Node', value: data.nodeName },
+              { name: 'Bridge', value: data.bridge },
+              { name: 'Type', value: data.type },
+              { name: 'Active', value: data.active },
+              { name: 'Auto Start', value: data.autoStart },
+              { name: 'DHCP', value: data.dhcp },
+              { name: 'Token Updated At', value: formatDate(Number(data.updateToken) * 1000) },
+            ]}
+            hiddenHeader
+            disableElevation
           />
         </Grid>
+        <Grid item container xs={12} lg={6} direction="column" spacing={2}>
+          <Grid item container spacing={2} alignItems="center">
+            <Grid item>
+              <Typography variant="h5">Virtual Port</Typography>
+            </Grid>
+            <Grid item>
+              <OpenDialogButton
+                label="Add"
+                DialogComponent={AddPortDialog}
+                buttonProps={{ variant: 'contained' }}
+                dialogProps={{ networkUuid: data.uuid }}
+              />
+            </Grid>
+          </Grid>
+          <Grid item>
+            <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
+          </Grid>
+        </Grid>
       </Grid>
-      <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
     </DefaultLayout>
   );
 };
