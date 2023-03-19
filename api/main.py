@@ -27,6 +27,7 @@ tags_metadata = [
     {"name": "auth", "description": "トークン関係のリクエストはRFCの関係でスネークケース"},
     {"name": "users", "description": ""},
     {"name": "nodes", "description": ""},
+    {"name": "tasks-nodes", "description": ""},
 ]
 
 app = FastAPI(

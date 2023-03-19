@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: a7ee5cb9b339
+Revision ID: 3be8943edc14
 Revises: 
-Create Date: 2022-07-29 18:44:12.536099
+Create Date: 2023-03-19 03:43:13.504474
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a7ee5cb9b339'
+revision = '3be8943edc14'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -82,11 +82,11 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
-    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('username', sa.String(), nullable=False),
     sa.Column('hashed_password', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('username')
     )
-    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=False)
     op.create_table('association_node_to_role',
     sa.Column('node_name', sa.String(), nullable=False),
     sa.Column('role_name', sa.String(), nullable=False),
@@ -113,12 +113,13 @@ def upgrade():
     sa.Column('update_token', sa.String(), nullable=True),
     sa.Column('vnc_port', sa.String(), nullable=True),
     sa.Column('vnc_password', sa.String(), nullable=True),
+    sa.Column('storage_used', sa.Integer(), nullable=True),
     sa.Column('node_name', sa.String(), nullable=True),
     sa.Column('owner_user_id', sa.String(), nullable=True),
     sa.Column('owner_project_id', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['node_name'], ['nodes.name'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['owner_project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['owner_user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['owner_user_id'], ['users.username'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_domains_uuid'), 'domains', ['uuid'], unique=False)
@@ -193,21 +194,21 @@ def upgrade():
     sa.Column('result', sa.JSON(), nullable=True),
     sa.Column('message', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['dependence_uuid'], ['tasks.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.username'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_tasks_uuid'), 'tasks', ['uuid'], unique=False)
     op.create_table('users_scope',
     sa.Column('user_id', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.username'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('user_id', 'name')
     )
     op.create_table('users_to_projects',
     sa.Column('user_id', sa.String(), nullable=True),
     sa.Column('project_id', sa.String(length=6), nullable=True),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE')
+    sa.ForeignKeyConstraint(['user_id'], ['users.username'], onupdate='CASCADE', ondelete='CASCADE')
     )
     op.create_table('associations_networks',
     sa.Column('pool_id', sa.Integer(), nullable=True),
@@ -249,6 +250,7 @@ def upgrade():
     sa.Column('storage_uuid', sa.String(), nullable=False),
     sa.Column('capacity', sa.Integer(), nullable=True),
     sa.Column('allocation', sa.Integer(), nullable=True),
+    sa.Column('domain_uuid', sa.String(), nullable=True),
     sa.Column('path', sa.String(), nullable=False),
     sa.Column('update_token', sa.String(), nullable=True),
     sa.Column('flavor_id', sa.Integer(), nullable=True),
@@ -310,7 +312,7 @@ def downgrade():
     op.drop_table('domains')
     op.drop_table('association_pools_cpu')
     op.drop_table('association_node_to_role')
-    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_table('users')
     op.drop_table('storages_pools')
     op.drop_index(op.f('ix_projects_id'), table_name='projects')

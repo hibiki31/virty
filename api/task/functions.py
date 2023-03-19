@@ -11,22 +11,46 @@ from fastapi import BackgroundTasks
 from task.models import TaskModel
 from mixin.log import setup_logger
 
-from worker import task_error, task_success, error_handler
+
+from mixin.database import SessionLocal
 
 
 logger = setup_logger(__name__)
+
+class TaskBase:
+    def __init__(self):
+        self.task_func = {}
+        self.db = SessionLocal()
+
+    def __call__(self, key):
+        def receive_func(f):
+            logger.info(f"register {key} {f}")
+            self.task_func[key] = f
+
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs)
+            return wrapper
+        return receive_func
+    
+    def include_task(self, tb):
+        self.task_func.update(tb.task_func)
+    
+    def run(self, key, task_model):
+        try:
+            self.task_func[key](self, task_model)
+        except KeyError:
+            raise Exception("Task not found")
+
 
 
 class TaskManager():
     def __init__(self, db:Session):
         self.db = db
 
-
-    def select(self, method, resource, object, celery_task):
+    def select(self, method, resource, object):
         self.method = method
         self.resource = resource
         self.object = object
-        self.celery_task = celery_task
     
     def commit(self, user, dependence_uuid=None, request: BaseModel= BaseModel()):
         status = "wait" if dependence_uuid else "init"
@@ -48,11 +72,7 @@ class TaskManager():
         self.db.commit()
 
         self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        self.celery_task.apply_async(
-            link_error=error_handler.s(virty_task_uuid=task_uuid),
-            link=task_success.s(virty_task_uuid=task_uuid)
-        )
+       
 
 def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
     tasks = db.query(
@@ -133,11 +153,3 @@ def task_runner(db:Session, bg: BackgroundTasks, task: TaskModel):
 
     task.run_time = time() - start_time
     db.commit()
-
-
-
-from project.tasks import *
-from domain.tasks import *
-from node.tasks import *
-from network.tasks import *
-from storage.tasks import *

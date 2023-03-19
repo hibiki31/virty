@@ -15,7 +15,6 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
-from .tasks import put_vm_list
 from celery import chain, group
 
 from module.virtlib import VirtManager
@@ -42,7 +41,7 @@ def get_api_domain(
     else:
         query = query.filter(or_(
                 DomainModel.owner_user_id==current_user.id,
-                DomainModel.project.has(ProjectModel.users.any(id=current_user.id))
+                DomainModel.project.has(ProjectModel.users.any(username=current_user.id))
         ))
 
     return query.all()
@@ -72,8 +71,7 @@ def publish_task_to_update_vm_list(
     task.select(
         method='put',
         resource='vm', 
-        object='base',
-        celery_task=put_vm_list.si(node_name="shiori")
+        object='root',
     )
     task.commit(user=current_user)
 
@@ -96,16 +94,15 @@ def delete_api_domains(
 
 @app.post("/api/task/vms", response_model=TaskSelect)
 def post_api_vms(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: DomainInsert = None
     ):
-    task = TaskManager(db=db, bg=bg)
+    task = TaskManager(db=db)
     task.select('post', 'vm', 'root')
     task.commit(user=current_user, request=request)
 
-    storage_task = TaskManager(db=db, bg=bg)
+    storage_task = TaskManager(db=db)
     storage_task.select('put', 'storage', 'list')
     storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 

@@ -1,5 +1,4 @@
 import jwt
-import os
 
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -150,13 +149,12 @@ def get_current_user(
 @app.post("/setup", tags=["auth"])
 def api_auth_setup(
         model: Setup, 
-        bg: BackgroundTasks,
         db: Session = Depends(get_db)
     ):
-    if model.user_id == "":
+    if model.username == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Blanks are not allowed in id"
+            detail="Blanks are not allowed in username"
         )
 
     # ユーザがいる場合はセットアップ済みなのでイジェクト
@@ -168,21 +166,16 @@ def api_auth_setup(
 
     # ユーザ追加
     user_model = UserModel(
-        id=model.user_id, 
+        username=model.username, 
         hashed_password=pwd_context.hash(model.password)
     )
 
     db.add(user_model)
 
-    db.add(UserScope(user_id=user_model.id,name="admin"))
-    db.add(UserScope(user_id=user_model.id,name="user"))
+    db.add(UserScope(user_id=user_model.username,name="admin"))
+    db.add(UserScope(user_id=user_model.username,name="user"))
 
     db.commit()
-
-    # project_reqeust = PostProject(project_name='default', user_ids=[model.user_id])
-    # task = TaskManager(db=db, bg=bg)
-    # task.select('post', 'project', 'root')
-    # task.commit(user=user_model, request=project_reqeust)
 
     return model
 
@@ -194,7 +187,7 @@ def login_for_access_token(
     ):
 
     try:
-        user = db.query(UserModel).filter(UserModel.id==form_data.username).one()
+        user = db.query(UserModel).filter(UserModel.username==form_data.username).one()
     except:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     
@@ -204,7 +197,7 @@ def login_for_access_token(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={
-            "sub": user.id,
+            "sub": user.username,
             # "scopes": form_data.scopes,
             "scopes": [i.name for i in list(user.scopes)],
             "projects": [i.id for i in list(user.projects)]

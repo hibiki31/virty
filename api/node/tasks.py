@@ -10,16 +10,18 @@ from task.models import TaskModel
 
 from module import sshlib
 from module.ansiblelib import AnsibleManager
+from task.functions import TaskBase
 
-from worker import celery, BaseTask
-
-
+worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
-@celery.task(bind=True, base=BaseTask)
-def post_node_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+@worker_task(key="post.node.root")
+def post_node_root(self: TaskBase, task: TaskModel):
+    db = self.db
+    logger.info(task.request)
     request = NodeInsert(**loads(task.request))
+
     user = request.user_name
     domain = request.domain
     port = request.port
@@ -27,29 +29,46 @@ def post_node_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
     ssh_manager.add_known_hosts()
     
-    ansible_manager = AnsibleManager(user=user, domain=domain)
+    # ansible_manager = AnsibleManager(user=user, domain=domain)
     
-    node_infomation = ansible_manager.node_infomation()
+    # node_infomation = ansible_manager.node_infomation()
 
     ssh_role = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ssh").one_or_none()
     if ssh_role == None:
         ssh_role = NodeRoleModel(name="ssh")
         db.add(ssh_role)
 
+    # row = NodeModel(
+    #     name = request.name,
+    #     domain = domain,
+    #     description = request.description,
+    #     user_name = user,
+    #     port = port,
+    #     core = node_infomation["result"]["ansible_facts"]["ansible_processor_nproc"],
+    #     memory = int(float(node_infomation["result"]["ansible_facts"]["ansible_memtotal_mb"])/1024),
+    #     cpu_gen = node_infomation["result"]["ansible_facts"]["ansible_processor"][2],
+    #     os_like = node_infomation["result"]["ansible_facts"]["ansible_os_family"],
+    #     os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
+    #     os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
+    #     status = 10,
+    #     ansible_facts = node_infomation,
+    #     qemu_version = None,
+    #     libvirt_version = None,
+    # )
     row = NodeModel(
         name = request.name,
         domain = domain,
         description = request.description,
         user_name = user,
         port = port,
-        core = node_infomation["result"]["ansible_facts"]["ansible_processor_nproc"],
-        memory = int(float(node_infomation["result"]["ansible_facts"]["ansible_memtotal_mb"])/1024),
-        cpu_gen = node_infomation["result"]["ansible_facts"]["ansible_processor"][2],
-        os_like = node_infomation["result"]["ansible_facts"]["ansible_os_family"],
-        os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
-        os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
+        core = ssh_manager.get_node_cpu_core(),
+        memory = int(ssh_manager.get_node_mem()),
+        cpu_gen = ssh_manager.get_node_cpu_name(),
+        os_like = ssh_manager.get_node_os_release()["ID_LIKE"],
+        os_name = ssh_manager.get_node_os_release()["PRETTY_NAME"],
+        os_version = ssh_manager.get_node_os_release()["VERSION_ID"],
         status = 10,
-        ansible_facts = node_infomation,
+        ansible_facts = {},
         qemu_version = None,
         libvirt_version = None,
     )
@@ -61,8 +80,9 @@ def post_node_root(db:Session, bg: BackgroundTasks, task: TaskModel):
 
     task.message = "Node added has been successfull"
 
-
-def patch_node_role(db:Session, bg: BackgroundTasks, task: TaskModel):
+@worker_task(key="patch.node.role")
+def patch_node_role(self: TaskBase, task: TaskModel):
+    db = self.db
     request = NodeRolePatch(**loads(task.request))
     node_name = request.node_name
     add_role_name = request.role_name
@@ -73,6 +93,7 @@ def patch_node_role(db:Session, bg: BackgroundTasks, task: TaskModel):
         patch_node_role_libvirt(db=db, task=task, node=node)
     elif add_role_name == "ovs":
         patch_node_role_ovs(db=db, task=task, node=node, request=request)
+
 
 def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     
