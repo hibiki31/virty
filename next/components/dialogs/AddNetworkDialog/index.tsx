@@ -2,7 +2,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { nodeApi } from '~/lib/api';
+import { nodesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
@@ -33,7 +33,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('nodes', () =>
-      nodeApi
+      nodesApi
         .getApiNodesApiNodesGet()
         .then((res) => res.data.map((node) => ({ label: `${node.name} - ${node.domain}`, value: node.name })))
     );

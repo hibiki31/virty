@@ -3,20 +3,22 @@ import { Card, CardActions, CardContent, CardHeader, Grid, Typography } from '@m
 import { JTDDataType } from 'ajv/dist/core';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { NoAuthLayout } from '~/components/layouts/NoAuthLayout';
-import { authApi } from '~/lib/api';
-import { VersionResponse } from '~/lib/api/auth';
+import { authApi, mixinApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { makeRequireLogoutProps } from '~/lib/utils/makeGetServerSideProps';
+import { useNotistack } from '~/lib/utils/notistack';
 
 type FormData = JTDDataType<typeof formJtd>;
 
 export const getServerSideProps = makeRequireLogoutProps(async () => {
-  const initialized = await authApi
-    .getVersionApiAuthVersionGet()
-    .then((res) => (res.data as VersionResponse).initialized)
+  const initialized = await mixinApi
+    .getVersionApiVersionGet()
+    .then((res) => res.data.initialized)
     .catch(() => false);
 
   if (initialized) {
@@ -41,9 +43,20 @@ const Page: NextPage = () => {
     handleSubmit,
     formState: { isSubmitting, isValid },
   } = formMethods;
+  const router = useRouter();
+  const { openPersistNotistack } = useNotistack();
+  const [isError, setIsError] = useState<boolean>(false);
 
-  const handleSetup = (data: FormData) => {
-    console.log('handleSetup', data);
+  const handleSetup = async (data: FormData) => {
+    await authApi
+      .apiAuthSetupApiAuthSetupPost(data)
+      .then(() => {
+        router.push('/login');
+      })
+      .catch(() => {
+        openPersistNotistack('Setup failed.', { variant: 'error' });
+        setIsError(true);
+      });
   };
 
   return (
@@ -59,7 +72,7 @@ const Page: NextPage = () => {
             {'Create an administrative user.\nThis will fail if a user with administrative privileges already exists.'}
           </Typography>
           <FormProvider {...formMethods}>
-            <JtdForm rootJtd={formJtd} isEditing />
+            <JtdForm rootJtd={formJtd} isEditing isError={isError} />
           </FormProvider>
         </CardContent>
         <CardActions>

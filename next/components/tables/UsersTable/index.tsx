@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
-import { userApi } from '~/lib/api';
+import { usersApi } from '~/lib/api';
 import useSWR from 'swr';
 import { ScopeChip } from './ScopeChip';
 import { GroupChip } from './GroupChip';
@@ -10,8 +10,8 @@ import { GroupChip } from './GroupChip';
 export const UsersTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'userApi.getApiUsersApiUsersGet',
-    () => userApi.getApiUsersApiUsersGet().then((res) => res.data),
+    'usersApi.getApiUsersApiUsersGet',
+    () => usersApi.getApiUsersApiUsersGet().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -25,12 +25,12 @@ export const UsersTable: FC = () => {
         disableSelectionOnClick
         rowHeight={40}
         pageSize={25}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.username}
         rows={data || []}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
-          { headerName: 'ID', field: 'id', disableColumnMenu: true, flex: 1, minWidth: 100 },
+          { headerName: 'Username', field: 'username', disableColumnMenu: true, flex: 1, minWidth: 100 },
           {
             headerName: 'Scopes',
             field: 'scopes',

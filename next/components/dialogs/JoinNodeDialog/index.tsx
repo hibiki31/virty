@@ -1,8 +1,10 @@
 import { JTDDataType } from 'ajv/dist/core';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { tasksNodesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -21,6 +23,7 @@ export const JoinNodeDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (open) {
@@ -28,9 +31,17 @@ export const JoinNodeDialog: FC<Props> = ({ open, onClose }) => {
     }
   }, [open, reset]);
 
-  const handleJoinNode = useCallback((data: FormData) => {
-    console.log('handleJoinNode', data);
-  }, []);
+  const handleJoinNode = (data: FormData) => {
+    return tasksNodesApi
+      .postApiNodesApiTasksNodesPost(data)
+      .then(() => {
+        enqueueNotistack('Please wait for the task to be completed.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add the task.', { variant: 'error' });
+      });
+  };
 
   return (
     <BaseDialog
@@ -95,7 +106,7 @@ const formJtd = {
       metadata: {
         name: 'Provisioning as kvm host',
         required: false,
-        default: false,
+        default: true,
       },
       type: 'boolean',
     },

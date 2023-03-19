@@ -2,7 +2,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { storageApi } from '~/lib/api';
+import { storagesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
@@ -33,7 +33,7 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('storages', () =>
-      storageApi.getApiStoragesApiStoragesGet().then((res) =>
+      storagesApi.getApiStoragesApiStoragesGet().then((res) =>
         res.data.map((storage) => ({
           label: storage.name,
           value: storage.name,

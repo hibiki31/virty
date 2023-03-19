@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
-import { storageApi } from '~/lib/api';
+import { storagesApi } from '~/lib/api';
 import useSWR from 'swr';
 import { GetStoragePoolStorages } from '~/lib/api/generated';
 import { StorageChip } from './StorageChip';
@@ -10,8 +10,8 @@ import { StorageChip } from './StorageChip';
 export const StoragePoolsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'storageApi.getApiStoragesPoolsApiStoragesPoolsGet',
-    () => storageApi.getApiStoragesPoolsApiStoragesPoolsGet().then((res) => res.data),
+    'storagesApi.getApiStoragesPoolsApiStoragesPoolsGet',
+    () => storagesApi.getApiStoragesPoolsApiStoragesPoolsGet().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
