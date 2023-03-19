@@ -62,10 +62,10 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users")
+@app.get("/users", response_model=List[GetUsers])
 def get_api_users(
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ):
     users = db.query(UserModel).all()
     

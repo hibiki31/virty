@@ -17,6 +17,25 @@ class UserBase(CamelModel):
     class Config:
         orm_mode = True
 
+
+class GetUserScope(CamelModel):
+    name: str
+    class Config:
+        orm_mode = True
+
+class GetUserProject(CamelModel):
+    name: str
+    class Config:
+        orm_mode = True
+
+class GetUsers(CamelModel):
+    username: str
+    scopes: List[GetUserScope]
+    projects: List[GetUserProject]
+    class Config:
+        orm_mode = True
+    
+
 class UserInsert(CamelModel):
     user_id: str
     password: str

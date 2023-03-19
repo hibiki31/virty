@@ -1,5 +1,6 @@
 from urllib import request
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends
+from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -56,7 +57,7 @@ def get_api_domain_uuid(
     try:
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
     except:
-        raise notfound_exception(msg="not found domain")
+        raise HTTPException(status_code=404, detail="Not found domain")
 
     return domain
 
@@ -80,13 +81,12 @@ def publish_task_to_update_vm_list(
 
 @app.delete("/api/task/vms", response_model=TaskSelect)
 def delete_api_domains(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: DomainDelete = None
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('delete', 'vm', 'root')
+    task = TaskManager(db=db)
+    task.select(method='delete', resource='vm', object='root')
     task.commit(user=current_user, request=request)
 
     return task.model
@@ -111,17 +111,16 @@ def post_api_vms(
 
 @app.post("/api/task/vms/ticket")
 def post_api_vms(
-        bg: BackgroundTasks,
         request: PostDomainTicket,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'vm', 'root')
+    task = TaskManager(db=db)
+    task.select(method='post', resource='vm', object='root')
     task.commit(user=current_user, request=request)
 
-    storage_task = TaskManager(db=db, bg=bg)
-    storage_task.select('put', 'storage', 'list')
+    storage_task = TaskManager(db=db)
+    storage_task.select(method='put', resource='storage', object='list')
     storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 
     return task.model
@@ -129,13 +128,12 @@ def post_api_vms(
 
 @app.patch("/api/task/vms", response_model=TaskSelect)
 def patch_api_domains(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: DomainPatch = None
     ):
     task = TaskManager(db=db, bg=bg)
-    task.select('patch', 'vm', 'root')
+    task.select(method='patch', resource='vm', object='root')
     task.commit(user=current_user, request=request)
 
     return task.model
@@ -143,19 +141,19 @@ def patch_api_domains(
 
 @app.patch("/api/task/vms/name")
 def path_vms_name(
-        model: DomainPatchName,
+        request: DomainPatchName,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
     try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
     except:
         raise notfound_exception(msg="not found vm")
     
-    if model.name != vm.name:
+    if request.name != vm.name:
         virt = VirtManager(vm.node)
-        virt.domain_rename(uuid=vm.uuid, new_name=model.name)
-        vm.name = model.name
+        virt.domain_rename(uuid=vm.uuid, new_name=request.name)
+        vm.name = request.name
         db.commit()
 
     return True
@@ -163,19 +161,19 @@ def path_vms_name(
 
 @app.patch("/api/task/vms/core")
 def path_vms_core(
-        model: DomainPatchCore,
+        request: DomainPatchCore,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
     try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
     except:
         raise notfound_exception(msg="not found vm")
     
-    if model.core != vm.core:
+    if request.core != vm.core:
         virt = VirtManager(vm.node)
-        virt.domain_core(uuid=model.uuid, core=model.core)
-        vm.core = model.core
+        virt.domain_core(uuid=request.uuid, core=request.core)
+        vm.core = request.core
         db.commit()
 
     return True
@@ -183,17 +181,17 @@ def path_vms_core(
 
 @app.patch("/api/task/vms/user")
 def path_vms_user(
-        model: DomainPatchUser,
+        request: DomainPatchUser,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
     try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
-        db.query(UserModel).filter(UserModel.id==model.user_id).one()
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
+        db.query(UserModel).filter(UserModel.id==request.user_id).one()
     except:
         raise notfound_exception(msg="not found vm or user")
     
-    vm.owner_user_id = model.user_id
+    vm.owner_user_id = request.user_id
     db.commit()
 
     return vm
@@ -201,17 +199,17 @@ def path_vms_user(
 
 @app.patch("/api/task/vms/project")
 def path_vms_project(
-        model: DomainProjectPatch,
+        request: DomainProjectPatch,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
     try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==model.uuid).one()
-        db.query(ProjectModel).filter(ProjectModel.id==model.project_id).one()
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
+        db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
     except:
         raise notfound_exception(msg="not found vm or group")
     
-    vm.owner_project_id = model.project_id
+    vm.owner_project_id = request.project_id
     db.commit()
 
     return vm
@@ -219,16 +217,16 @@ def path_vms_project(
 
 @app.patch("/api/task/vms/network", response_model=TaskSelect)
 def patch_api_vm_network(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: DomainNetworkChange = None
+        request: DomainNetworkChange = None
     ):
     # タスクを追加
-    post_task = PostTask(db=db, user=current_user, model=request_model)
-    task_model = post_task.commit("vm","network","patch", bg)
+    task = TaskManager(db=db)
+    task.select(method='patch', resource='vm', object='network')
+    task.commit(user=current_user, request=request)
    
-    return task_model
+    return task.model
 
 
 @app.get("/api/vms/vnc/{token}")

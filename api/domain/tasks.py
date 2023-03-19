@@ -1,7 +1,6 @@
 from email.mime import base
 from json import loads
 from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
 from mixin.log import setup_logger
 
 from .models import *
@@ -347,7 +346,7 @@ def post_vm_root(self: TaskBase, task: TaskModel):
     task.message = "Virtual machine has been added successfully"
 
 
-def delete_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+def delete_vm_root(db:Session, task: TaskModel):
     request: DomainInsert = DomainDelete(**loads(task.request))
 
     try:
@@ -371,7 +370,7 @@ def delete_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     task.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
-def patch_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
+def patch_vm_root(db:Session, task: TaskModel):
     request: DomainPatch = DomainPatch(**loads(task.request))
 
     try:
@@ -403,7 +402,7 @@ def patch_vm_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
 
 
-def patch_vm_network(db:Session, bg: BackgroundTasks, task: TaskModel):
+def patch_vm_network(db:Session, task: TaskModel):
     request: DomainNetworkChange = DomainNetworkChange(**loads(task.request))
 
     try:

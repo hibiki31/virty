@@ -124,7 +124,7 @@ def put_api_images(
     ):
     # タスクを追加
     task = TaskManager(db=db)
-    task.select('put', 'storage', 'list')
+    task.select(method='put', resource='storage', object='list')
     task.commit(user=current_user)
    
     return task.model
@@ -187,7 +187,7 @@ def delete_api_storages(
         request: StorageDelete = None
     ):
     task = TaskManager(db=db)
-    task.select('delete', 'storage', 'root')
+    task.select(method='delete', resource='storage', object='root')
     task.commit(user=current_user, request=request)
 
     return [task.model]

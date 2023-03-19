@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Security, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, Security, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
 
