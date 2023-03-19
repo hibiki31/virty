@@ -3,7 +3,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { userApi } from '~/lib/api';
+import { usersApi } from '~/lib/api';
 import { ProjectSelect } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
@@ -36,7 +36,7 @@ export const AddProjectMemberDialog: FC<Props> = ({ open, project, onClose }) =>
     resetFetchers();
 
     setFetcher('users', () =>
-      userApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
+      usersApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 

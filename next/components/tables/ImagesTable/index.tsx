@@ -2,14 +2,14 @@ import { Box } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
-import { storageApi } from '~/lib/api';
+import { imagesApi } from '~/lib/api';
 import useSWR from 'swr';
 
 export const ImagesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'storageApi.getApiImagesApiImagesGet',
-    () => storageApi.getApiImagesApiImagesGet().then((res) => res.data),
+    'imagesApi.getApiImagesApiImagesGet',
+    () => imagesApi.getApiImagesApiImagesGet().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

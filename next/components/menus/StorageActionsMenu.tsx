@@ -1,7 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { storageApi } from '~/lib/api';
+import { imagesApi } from '~/lib/api';
 import { GetDomainDrives } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -41,7 +41,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
     reset();
     resetFetchers();
     setFetcher('images', () =>
-      storageApi
+      imagesApi
         .getApiImagesApiImagesGet(nodeName, undefined, undefined, 'iso')
         .then((res) => res.data.map((image) => ({ value: image.path, label: image.name })))
     );

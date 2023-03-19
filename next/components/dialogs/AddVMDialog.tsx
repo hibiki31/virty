@@ -1,7 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { networkApi, nodeApi, storageApi } from '~/lib/api';
+import { imagesApi, networkApi, nodesApi, storagesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
@@ -43,7 +43,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     }
     setValue('form.spec.nodeName', '');
     setFetcher('nodes', () =>
-      nodeApi.getApiNodesApiNodesGet().then((res) => res.data.map((node) => ({ value: node.name, label: node.name })))
+      nodesApi.getApiNodesApiNodesGet().then((res) => res.data.map((node) => ({ value: node.name, label: node.name })))
     );
   }, [open, setValue, setFetcher]);
 
@@ -63,7 +63,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           }
           setValue('form.storage.savePoolUuid', '');
           setFetcher('storages', () =>
-            storageApi
+            storagesApi
               .getApiStoragesApiStoragesGet()
               .then((res) =>
                 res.data
@@ -98,7 +98,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           const originalPoolUuid = (data.form?.storage as any)?.originalPoolUuid;
           setValue('form.storage.originalName', '');
           setFetcher('images', () =>
-            storageApi
+            imagesApi
               .getApiImagesApiImagesGet()
               .then((res) =>
                 res.data

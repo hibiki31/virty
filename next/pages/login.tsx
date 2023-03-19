@@ -8,8 +8,7 @@ import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { NoAuthLayout } from '~/components/layouts/NoAuthLayout';
-import { authApi } from '~/lib/api';
-import { VersionResponse } from '~/lib/api/auth';
+import { mixinApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { makeRequireLogoutProps } from '~/lib/utils/makeGetServerSideProps';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -18,9 +17,9 @@ import { useAuth } from '~/store/userState';
 type LoginForm = JTDDataType<typeof loginFormJtd>;
 
 export const getServerSideProps = makeRequireLogoutProps(async () => {
-  const initialized = await authApi
-    .getVersionApiAuthVersionGet()
-    .then((res) => (res.data as VersionResponse).initialized)
+  const initialized = await mixinApi
+    .getVersionApiVersionGet()
+    .then((res) => res.data.initialized)
     .catch(() => false);
 
   if (!initialized) {

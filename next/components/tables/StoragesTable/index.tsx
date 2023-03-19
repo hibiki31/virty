@@ -2,15 +2,15 @@ import { Box, Grid, LinearProgress, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
-import { storageApi } from '~/lib/api';
+import { storagesApi } from '~/lib/api';
 import useSWR from 'swr';
 import { CheckboxBlankOutline, CheckboxOutline } from 'mdi-material-ui';
 
 export const StoragesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'storageApi.getApiStoragesApiStoragesGet',
-    () => storageApi.getApiStoragesApiStoragesGet().then((res) => res.data),
+    'storagesApi.getApiStoragesApiStoragesGet',
+    () => storagesApi.getApiStoragesApiStoragesGet().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

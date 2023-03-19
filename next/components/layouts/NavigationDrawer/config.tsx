@@ -35,16 +35,6 @@ export const DRAWER_ITEMS: DrawerItem[] = [
     title: 'Nodes',
     path: '/nodes',
     icon: <Server />,
-    children: [
-      {
-        title: 'Nodes',
-        path: '',
-      },
-      {
-        title: 'Node Pools',
-        path: '/pools',
-      },
-    ],
   },
   {
     title: 'Networks',

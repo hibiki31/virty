@@ -4,7 +4,7 @@ import { DotsVertical } from 'mdi-material-ui';
 import { FC, useState } from 'react';
 import useSWR from 'swr';
 import { NodeDetailsDialog } from '~/components/dialogs/NodeDetailsDialog';
-import { nodeApi } from '~/lib/api';
+import { nodesApi } from '~/lib/api';
 import { GetNode, GetNodeRole } from '~/lib/api/generated';
 import { useNotistack } from '~/lib/utils/notistack';
 import { RoleChip } from './RoleChip';
@@ -12,8 +12,8 @@ import { RoleChip } from './RoleChip';
 export const NodesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'nodeApi.getApiNodesApiNodesGet',
-    () => nodeApi.getApiNodesApiNodesGet().then((res) => res.data),
+    'nodesApi.getApiNodesApiNodesGet',
+    () => nodesApi.getApiNodesApiNodesGet().then((res) => res.data),
     { revalidateOnFocus: false }
   );
   const [selectedNode, setSelectedNode] = useState<GetNode | undefined>(undefined);

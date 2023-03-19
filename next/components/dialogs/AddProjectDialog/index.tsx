@@ -3,7 +3,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { userApi } from '~/lib/api';
+import { usersApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
@@ -34,7 +34,7 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('users', () =>
-      userApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
+      usersApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 

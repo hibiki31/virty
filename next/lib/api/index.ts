@@ -2,14 +2,17 @@ import { Configuration } from './generated/configuration';
 import {
   AuthApi,
   FlavorsApi,
-  MetricsApi,
+  ImagesApi,
+  MixinApi,
   NetworkApi,
-  NodeApi,
+  NodesApi,
   ProjectApi,
-  StorageApi,
+  StoragesApi,
   TasksApi,
-  TicketsApi,
-  UserApi,
+  TasksImagesApi,
+  TasksNodesApi,
+  TasksStoragesApi,
+  UsersApi,
   VmsApi,
 } from './generated/api';
 import { parseCookies } from 'nookies';
@@ -24,14 +27,17 @@ const config = new Configuration({
   },
 });
 
+export const mixinApi = new MixinApi(config);
 export const authApi = new AuthApi(config);
-export const flavorsApi = new FlavorsApi(config);
-export const metricsApi = new MetricsApi(config);
-export const networkApi = new NetworkApi(config);
-export const nodeApi = new NodeApi(config);
-export const projectApi = new ProjectApi(config);
-export const storageApi = new StorageApi(config);
+export const usersApi = new UsersApi(config);
+export const nodesApi = new NodesApi(config);
+export const tasksNodesApi = new TasksNodesApi(config);
 export const tasksApi = new TasksApi(config);
-export const ticketsApi = new TicketsApi(config);
-export const userApi = new UserApi(config);
 export const vmsApi = new VmsApi(config);
+export const storagesApi = new StoragesApi(config);
+export const imagesApi = new ImagesApi(config);
+export const tasksImagesApi = new TasksImagesApi(config);
+export const tasksStoragesApi = new TasksStoragesApi(config);
+export const networkApi = new NetworkApi(config);
+export const projectApi = new ProjectApi(config);
+export const flavorsApi = new FlavorsApi(config);
