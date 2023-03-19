@@ -34,7 +34,9 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('users', () =>
-      usersApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
+      usersApi
+        .getApiUsersApiUsersGet()
+        .then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 

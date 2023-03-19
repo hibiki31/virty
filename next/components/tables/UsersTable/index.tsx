@@ -25,12 +25,12 @@ export const UsersTable: FC = () => {
         disableSelectionOnClick
         rowHeight={40}
         pageSize={25}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.username}
         rows={data || []}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
-          { headerName: 'ID', field: 'id', disableColumnMenu: true, flex: 1, minWidth: 100 },
+          { headerName: 'Username', field: 'username', disableColumnMenu: true, flex: 1, minWidth: 100 },
           {
             headerName: 'Scopes',
             field: 'scopes',
