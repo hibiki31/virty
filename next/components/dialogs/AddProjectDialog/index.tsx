@@ -3,8 +3,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { usersApi } from '~/lib/api';
+import { projectApi, usersApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
@@ -25,6 +26,7 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (!open) {
@@ -41,7 +43,15 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
   }, [open, reset, resetFetchers, setFetcher]);
 
   const handleAddProject = (data: FormData) => {
-    console.log('handleAddProject', data);
+    return projectApi
+      .postApiProjectsApiProjectsPost(data)
+      .then(() => {
+        enqueueNotistack('Project added', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add project', { variant: 'error' });
+      });
   };
 
   return (

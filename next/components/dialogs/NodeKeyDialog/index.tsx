@@ -1,8 +1,10 @@
 import { JTDDataType } from 'ajv/dist/core';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { nodesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -21,24 +23,43 @@ export const NodeKeyDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
-    if (open) {
-      reset();
+    if (!open) {
+      return;
     }
-  }, [open, reset]);
+    reset();
+    nodesApi
+      .getSshKeyPairApiNodesKeyGet()
+      .then((res) => {
+        reset(res.data);
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to get SSH key pair', { variant: 'error' });
+      });
+  }, [open, reset, enqueueNotistack]);
 
-  const handleUpdateKeys = useCallback((data: FormData) => {
-    console.log('handleUpdateKeys', data);
-  }, []);
+  const handleUpdateKeys = (data: FormData) => {
+    return nodesApi
+      .postSshKeyPairApiNodesKeyPost(data)
+      .then(() => {
+        enqueueNotistack('SSH key pair updated', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to update SSH key pair', { variant: 'error' });
+      });
+  };
 
   return (
     <BaseDialog
       open={open}
       title="Update SSH Keys"
-      submitDisabled={!isValid}
+      submitDisabled={!isValid || !isDirty}
       submitLoading={isSubmitting}
       persistent={isDirty}
+      maxWidth="md"
       onClose={onClose}
       onSubmit={handleSubmit(handleUpdateKeys)}
     >
@@ -54,14 +75,14 @@ const formJtd = {
     spread: true,
   },
   properties: {
-    key: {
+    privateKey: {
       metadata: {
         name: 'Key',
         customType: 'textarea',
       },
       type: 'string',
     },
-    pub: {
+    publicKey: {
       metadata: {
         name: 'Pub',
         customType: 'textarea',

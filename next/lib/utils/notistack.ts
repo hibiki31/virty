@@ -1,5 +1,5 @@
 import { OptionsObject, SnackbarKey, useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useNotistack = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -10,10 +10,17 @@ export const useNotistack = () => {
   }>();
   const [snackbarKey, setSnackbarKey] = useState<SnackbarKey>();
 
-  const openPersistNotistack = (message: string, options?: OptionsObject): void => {
-    closePersistNotistack();
-    setEnqueueArgs({ message, options });
-  };
+  const closePersistNotistack = useCallback((): void => {
+    setSnackbarKey(undefined);
+  }, []);
+
+  const openPersistNotistack = useCallback(
+    (message: string, options?: OptionsObject): void => {
+      closePersistNotistack();
+      setEnqueueArgs({ message, options });
+    },
+    [closePersistNotistack]
+  );
   // enqueueSnackbar when notistack is exited
   useEffect(() => {
     if (isExited && enqueueArgs) {
@@ -31,9 +38,6 @@ export const useNotistack = () => {
     }
   }, [isExited, enqueueArgs, enqueueSnackbar]);
 
-  const closePersistNotistack = (): void => {
-    setSnackbarKey(undefined);
-  };
   // closeSnackbar when snackbarKey is changed or unmounted
   useEffect(() => {
     return () => {
