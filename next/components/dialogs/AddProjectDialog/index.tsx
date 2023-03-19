@@ -3,7 +3,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { userApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -14,6 +16,7 @@ type Props = {
 type FormData = JTDDataType<typeof formJtd>;
 
 export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
+  const { setFetcher, reset: resetFetchers } = useChoicesFetchers();
   const formMethods = useForm<FormData>({
     defaultValues: generateProperty(formJtd),
   });
@@ -24,10 +27,16 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
   } = formMethods;
 
   useEffect(() => {
-    if (open) {
-      reset();
+    if (!open) {
+      return;
     }
-  }, [open, reset]);
+    reset();
+    resetFetchers();
+
+    setFetcher('users', () =>
+      userApi.getApiUsersApiUsersGet().then((res) => res.data.map((user: any) => ({ label: user.id, value: user.id })))
+    );
+  }, [open, reset, resetFetchers, setFetcher]);
 
   const handleAddProject = (data: FormData) => {
     console.log('handleAddProject', data);
@@ -65,6 +74,16 @@ const formJtd = {
         default: '',
       },
       type: 'string',
+    },
+    userIds: {
+      metadata: {
+        name: 'Users',
+        default: [],
+        choices: 'users',
+      },
+      elements: {
+        type: 'string',
+      },
     },
   },
 } as const;
