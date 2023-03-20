@@ -62,7 +62,7 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.put('/api/task/vms', response_model=TaskSelect)
+@app.put('/api/tasks/vms', response_model=TaskSelect)
 def publish_task_to_update_vm_list(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -79,7 +79,7 @@ def publish_task_to_update_vm_list(
     return task.model
 
 
-@app.delete("/api/task/vms", response_model=TaskSelect)
+@app.delete("/api/tasks/vms", response_model=TaskSelect)
 def delete_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -92,7 +92,7 @@ def delete_api_domains(
     return task.model
 
 
-@app.post("/api/task/vms", response_model=TaskSelect)
+@app.post("/api/tasks/vms", response_model=TaskSelect)
 def post_api_vms(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -109,7 +109,7 @@ def post_api_vms(
     return task.model
 
 
-@app.post("/api/task/vms/ticket")
+@app.post("/api/tasks/vms/ticket")
 def post_api_vms(
         request: PostDomainTicket,
         current_user: CurrentUser = Depends(get_current_user),
@@ -126,7 +126,7 @@ def post_api_vms(
     return task.model
 
 
-@app.patch("/api/task/vms", response_model=TaskSelect)
+@app.patch("/api/tasks/vms", response_model=TaskSelect)
 def patch_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -139,7 +139,7 @@ def patch_api_domains(
     return task.model
 
 
-@app.patch("/api/task/vms/name")
+@app.patch("/api/tasks/vms/name")
 def path_vms_name(
         request: DomainPatchName,
         current_user: CurrentUser = Depends(get_current_user),
@@ -159,7 +159,7 @@ def path_vms_name(
     return True
 
 
-@app.patch("/api/task/vms/core")
+@app.patch("/api/tasks/vms/core")
 def path_vms_core(
         request: DomainPatchCore,
         current_user: CurrentUser = Depends(get_current_user),
@@ -179,7 +179,7 @@ def path_vms_core(
     return True
 
 
-@app.patch("/api/task/vms/user")
+@app.patch("/api/tasks/vms/user")
 def path_vms_user(
         request: DomainPatchUser,
         current_user: CurrentUser = Depends(get_current_user),
@@ -197,7 +197,7 @@ def path_vms_user(
     return vm
 
 
-@app.patch("/api/task/vms/project")
+@app.patch("/api/tasks/vms/project")
 def path_vms_project(
         request: DomainProjectPatch,
         current_user: CurrentUser = Depends(get_current_user),
@@ -215,7 +215,7 @@ def path_vms_project(
     return vm
 
 
-@app.patch("/api/task/vms/network", response_model=TaskSelect)
+@app.patch("/api/tasks/vms/network", response_model=TaskSelect)
 def patch_api_vm_network(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

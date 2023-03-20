@@ -14,14 +14,19 @@ from module import virtlib
 from module import xmllib
 from module.ovslib import OVSManager
 
+from task.functions import TaskBase
+
 from time import time
 
 
+worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
-def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
-    nodes = db.query(NodeModel).all()
+@worker_task(key="put.network.list")
+def put_network_list(self: TaskBase, task: TaskModel):
+
+    nodes = self.db.query(NodeModel).all()
 
     token = str(time())
 
@@ -41,7 +46,7 @@ def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
                 update_token = token,
                 node_name = node.name,
             )
-            db.merge(merge_model)
+            self.db.merge(merge_model)
             for port in network.portgroups:
                 port_model = NetworkPortgroupModel(
                     network_uuid = network.uuid, 
@@ -50,18 +55,18 @@ def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
                     vlan_id=port.vlan_id,
                     is_default=port.is_default
                 )
-                db.merge(port_model)
-            db.commit()
-        db.query(NetworkPortgroupModel).filter(
+                self.db.merge(port_model)
+            self.db.commit()
+        self.db.query(NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==network.uuid, 
             NetworkPortgroupModel.update_token!=token
         ).delete()
-        db.query(NetworkModel).filter(
+        self.db.query(NetworkModel).filter(
             NetworkModel.node_name==node.name,
             NetworkModel.update_token!=token
         ).delete()
         
-        db.commit()
+        self.db.commit()
     task.message = "Network list updated has been successfull"
 
 def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):

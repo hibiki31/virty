@@ -98,16 +98,14 @@ def post_storage_root(self: TaskBase, task: TaskModel):
 @worker_task(key="delete.storage.root")
 def delete_storage_root(self: TaskBase, task: TaskModel):
     db = self.db
+    request: StorageDelete = StorageDelete(**loads(task.request))
 
-    try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == task.node_name).one()
-    except:
-        raise Exception("node not found")
+    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.storage_undefine(task.uuid)
+    manager.storage_undefine(request.uuid)
 
-    db.query(StorageModel).filter(StorageModel.uuid==task.uuid).delete()
+    db.query(StorageModel).filter(StorageModel.uuid==request.uuid).delete()
     db.commit()
 
     return task
