@@ -14,6 +14,9 @@ class ImageBase(CamelModel):
     pass
 
 
+class StorageQuery(CamelModel):
+    name: str = None
+    node_name: str = None
 
 
 class StorageMetadataSelect(CamelModel):

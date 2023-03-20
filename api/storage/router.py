@@ -29,8 +29,9 @@ logger = setup_logger(__name__)
 
 @app.get("/api/storages", tags=["storages"], response_model=List[StorageSelect])
 def get_api_storages(
+        param: StorageQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
     ):
 
     image_sum = db.query(
@@ -39,14 +40,23 @@ def get_api_storages(
         func.sum(ImageModel.allocation).label('sum_allocation')
     ).group_by(ImageModel.storage_uuid).subquery('image_sum')
 
-    models = db.query(
+    query = db.query(
         StorageModel,
         image_sum.c.sum_capacity,
         image_sum.c.sum_allocation
     ).outerjoin(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
-    ).order_by(StorageModel.node_name,StorageModel.name).all()
+    ).order_by(StorageModel.node_name,StorageModel.name)
+    
+    if param.node_name != None:
+        query = query.filter(NodeModel.name==param.node_name)
+    
+    if param.name != None:
+        query = query.filter(StorageModel.name.like(f'%{param.name}%'))
+
+    
+    models = query.all()
 
     res = []
 

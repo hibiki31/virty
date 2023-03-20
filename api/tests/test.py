@@ -58,10 +58,12 @@ def main():
     print("Setup done")
     api_auth_validate()
     api_users_me()
-    post_nodes_key()
+    # post_nodes_key()
     # delete_nodes()
     # post_nodes()
-    post_storage()
+    # delete_storage()
+    # post_storage()
+    put_list()
 
 
 
@@ -78,6 +80,15 @@ def print_resp(resp: httpx.Response):
     print()
 
 
+def put_list():
+    resp = httpx.put(f'{BASE_URL}/api/tasks/images',headers=HEADERS)
+    print_resp(resp=resp)
+    
+    resp = httpx.put(f'{BASE_URL}/api/tasks/vms',headers=HEADERS)
+    print_resp(resp=resp)
+
+    resp = httpx.put(f'{BASE_URL}/api/tasks/networks',headers=HEADERS)
+    print_resp(resp=resp)
 
 
 def api_auth_validate():
@@ -124,6 +135,38 @@ def post_nodes():
     wait_tasks(resp)
 
 
+def delete_storage():
+    req_datas = [
+        {
+            "name": "test-img",
+            "nodeName": "test-node",
+        },
+        {
+            "name": "test-iso",
+            "nodeName": "test-node",
+        },
+        {
+            "name": "test-cloud",
+            "nodeName": "test-node",
+        },
+    ]
+    for req_data in req_datas:
+        api_delete_storage(pool_name=req_data["name"], node_name=req_data["nodeName"])
+
+def api_delete_storage(pool_name, node_name):
+    resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": pool_name, "nodeName": node_name})
+    print_resp(resp=resp)
+
+    pool_uuid = resp.json()[0]["uuid"]
+
+    resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/storages', headers=HEADERS, json={
+        "uuid": pool_uuid,
+        "node_name": node_name
+    })
+    print_resp(resp=resp)
+    wait_tasks(resp)
+
+
 def post_storage():
     req_datas = [
         {
@@ -131,16 +174,16 @@ def post_storage():
             "nodeName": "test-node",
             "path": "/var/lib/libvirt/test/images"
         },
-        # {
-        #     "name": "test-iso",
-        #     "nodeName": "test-node",
-        #     "path": "/var/lib/libvirt/test/iso"
-        # },
-        # {
-        #     "name": "test-cloud",
-        #     "nodeName": "test-node",
-        #     "path": "/var/lib/libvirt/test/cloud-init"
-        # },
+        {
+            "name": "test-iso",
+            "nodeName": "test-node",
+            "path": "/var/lib/libvirt/test/iso"
+        },
+        {
+            "name": "test-cloud",
+            "nodeName": "test-node",
+            "path": "/var/lib/libvirt/test/cloud-init"
+        },
     ]
     for req_data in req_datas:
         resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/storages', headers=HEADERS, json=req_data)
@@ -169,7 +212,7 @@ def print_tasks():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks', headers=HEADERS).json()
     count = 0
     for task in resp:
-        print ("{:<20} {:<5} {:<8} {:<5} {:<9} {:<5} {:<9}".format(
+        print ("{:<20} {:<4} {:<8} {:<7} {:<9} {:<5} {:<9}".format(
             datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S'),
             f'{int(task["runTime"])}s',
             task["status"],
@@ -185,7 +228,8 @@ def print_tasks():
 def print_storages():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/storages', headers=HEADERS).json()
     for task in resp:
-        print ("{:<15} {:<8} {:<5} {:<5} {:<5} {:<9}".format(
+        print ("{:<38} {:<15} {:<8} {:<5} {:<5} {:<5} {:<9}".format(
+            task["uuid"],
             task["name"],
             task["status"],
             task["capacity"],

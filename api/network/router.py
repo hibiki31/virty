@@ -30,14 +30,13 @@ def get_api_networks(
     return db.query(NetworkModel).all()
 
 
-@app.put("/api/networks", tags=["network"])
+@app.put("/api/tasks/networks", tags=["network"])
 def put_api_networks(
-        bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('put', 'network', 'list')
+    task = TaskManager(db=db)
+    task.select(method='put', resource='network', object='list')
     task.commit(user=current_user)
    
     return task.model
