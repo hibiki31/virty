@@ -1,8 +1,9 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { imagesApi, networkApi, nodesApi, storagesApi } from '~/lib/api';
+import { imagesApi, networkApi, nodesApi, storagesApi, vmsApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
@@ -29,6 +30,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
   const { openConfirmDialog } = useConfirmDialog();
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (open) {
@@ -74,7 +76,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.networks', [
             {
               type: 'network',
-              network: '',
+              networkName: '',
               port: '',
             },
           ]);
@@ -109,8 +111,8 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           break;
       }
       const path = name.split('.');
-      const networkUuid = data.form?.networks?.[Number(path[2])]?.network;
-      if (path[1] === 'networks' && path[3] === 'network' && networkUuid) {
+      const networkUuid = data.form?.networks?.[Number(path[2])]?.networkName;
+      if (path[1] === 'networks' && path[3] === 'networkName' && networkUuid) {
         const portName = (path.slice(0, 3).join('.') + '.port') as any;
         setValue(portName, '');
         setFetcher('', () => Promise.resolve([]));
@@ -135,7 +137,27 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
       return;
     }
 
-    console.log('submit', data);
+    return vmsApi
+      .postApiVmsApiTasksVmsPost({
+        type: 'manual',
+        ...data.form.spec,
+        disks: [data.form.storage],
+        interface: data.form.networks,
+        cloudInit:
+          data.form.cloudInit.useCloudInit === 'true'
+            ? {
+                hostname: (data.form.cloudInit as any).hostname || '',
+                userData: (data.form.cloudInit as any).userData || '',
+              }
+            : undefined,
+      })
+      .then(() => {
+        enqueueNotistack('Please wait for the task to be completed.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add the task.', { variant: 'error' });
+      });
   };
 
   return (
@@ -183,16 +205,16 @@ const addVMFormJtd = {
                 default: '',
                 required: true,
                 choices: [
-                  { value: '512', label: '512 MB' },
-                  { value: '1024', label: '1 GB' },
-                  { value: '2048', label: '2 GB' },
-                  { value: '4096', label: '4 GB' },
-                  { value: '8192', label: '8 GB' },
-                  { value: '16384', label: '16 GB' },
-                  { value: '32768', label: '32 GB' },
+                  { value: 512, label: '512 MB' },
+                  { value: 1024, label: '1 GB' },
+                  { value: 2048, label: '2 GB' },
+                  { value: 4096, label: '4 GB' },
+                  { value: 8192, label: '8 GB' },
+                  { value: 16384, label: '16 GB' },
+                  { value: 32768, label: '32 GB' },
                 ],
               },
-              type: 'string',
+              type: 'float64',
             },
             cpu: {
               metadata: {
@@ -200,15 +222,16 @@ const addVMFormJtd = {
                 default: '',
                 required: true,
                 choices: [
-                  { value: '1', label: '1 Core' },
-                  { value: '2', label: '2 Cores' },
-                  { value: '4', label: '4 Cores' },
-                  { value: '8', label: '8 Cores' },
-                  { value: '12', label: '12 Cores' },
-                  { value: '16', label: '16 Cores' },
-                  { value: '24', label: '24 Cores' },
+                  { value: 1, label: '1 Core' },
+                  { value: 2, label: '2 Cores' },
+                  { value: 4, label: '4 Cores' },
+                  { value: 8, label: '8 Cores' },
+                  { value: 12, label: '12 Cores' },
+                  { value: 16, label: '16 Cores' },
+                  { value: 24, label: '24 Cores' },
                 ],
               },
+              type: 'float64',
             },
             nodeName: {
               metadata: {
@@ -316,7 +339,7 @@ const addVMFormJtd = {
                 },
                 type: 'string',
               },
-              network: {
+              networkName: {
                 metadata: {
                   name: 'Network',
                   default: '',
@@ -330,9 +353,9 @@ const addVMFormJtd = {
                   name: 'Port',
                   default: '',
                   required: true,
-                  hidden: (get: any) => !get(1, 'network'),
+                  hidden: (get: any) => !get(1, 'networkName'),
                   choices: (get: any) => {
-                    const network = get(1, 'network');
+                    const network = get(1, 'networkName');
                     return network ? `ports-${network}` : '';
                   },
                 },
