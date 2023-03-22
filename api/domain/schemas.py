@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Literal
 from pydantic import BaseModel, Field
 
 from fastapi_camelcase import CamelModel
@@ -144,7 +144,7 @@ class CloudInitInsert(CamelModel):
     userData: str
 
 class DomainInsert(CamelModel):
-    type: str = Field(regex=r"[0-9]{2,3}")
+    type: Literal['manual', 'project']
     name: str
     node_name: str
     memory_mega_byte: int
