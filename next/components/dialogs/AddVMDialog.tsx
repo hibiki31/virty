@@ -276,6 +276,14 @@ const addVMFormJtd = {
             },
             copy: {
               properties: {
+                sizeGigaByte: {
+                  metadata: {
+                    name: 'Size (GB)',
+                    default: 32,
+                    required: true,
+                  },
+                  type: 'float64',
+                },
                 originalPoolUuid: {
                   metadata: {
                     name: 'Src Pool',
