@@ -5,13 +5,13 @@ import { useNotistack } from '~/lib/utils/notistack';
 import { tasksApi } from '~/lib/api';
 import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
-import { CheckCircle, DotsVertical } from 'mdi-material-ui';
-import { TASK_STATUS } from '~/lib/api/task';
+import { DotsVertical } from 'mdi-material-ui';
 import { useAuth } from '~/store/userState';
 import { TaskSelect } from '~/lib/api/generated';
 import { TaskDetailsDialog } from '~/components/dialogs/TaskDetailsDialog';
 import NextLink from 'next/link';
 import { ResourceIcon } from './ResourceIcon';
+import { TaskStatusIcon } from './TaskStatusIcon';
 
 export const TasksTable: FC = () => {
   const { user } = useAuth();
@@ -46,7 +46,7 @@ export const TasksTable: FC = () => {
               flex: 1,
               renderCell: (params) => (
                 <>
-                  <StatusIcon status={params.value} />
+                  <TaskStatusIcon status={params.value} />
                   <Typography variant="body2" sx={{ ml: 1 }}>
                     {params.value}
                   </Typography>
@@ -90,7 +90,7 @@ export const TasksTable: FC = () => {
               renderCell: (params) => formatDate(params.row.postTime!),
             },
             {
-              headerName: 'TunTime',
+              headerName: 'RunTime',
               field: 'runTime',
               disableColumnMenu: true,
               flex: 1,
@@ -116,20 +116,4 @@ export const TasksTable: FC = () => {
       <TaskDetailsDialog open={!!selectedTask} task={selectedTask} onClose={() => setSelectedTask(undefined)} />
     </>
   );
-};
-
-type StatusIconProps = {
-  status: string;
-};
-
-const StatusIcon: FC<StatusIconProps> = ({ status }) => {
-  const color =
-    status === TASK_STATUS.FINISH
-      ? 'primary.main'
-      : status === TASK_STATUS.INIT
-      ? 'grey.500'
-      : status === TASK_STATUS.ERROR
-      ? 'error.main'
-      : 'warning.main';
-  return <CheckCircle sx={{ color }} />;
 };

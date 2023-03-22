@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import {
   IconButton,
   LinearProgress,
@@ -15,23 +15,28 @@ import {
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import NextLink from 'next/link';
 
-type Props = {
+type Props<P = Record<string, any>> = {
   isLoading?: boolean;
   cols: {
-    name?: string;
+    name?: ReactNode;
     align?: TableCellProps['align'];
-    getItem: (item: Record<string, any>, i: number) => any;
-    getUrl?: (item: Record<string, any>, i: number) => string;
+    width?: string | number;
+    getItem: (item: P, i: number) => ReactNode;
+    getUrl?: (item: P, i: number) => string;
   }[];
-  items: Record<string, any>[];
-  onClick?: (item: Record<string, any>) => void;
+  items: P[];
+  onClick?: (item: P) => void;
   hiddenHeader?: boolean;
   hiddenBorder?: boolean;
   disableElevation?: boolean;
   dense?: boolean;
 };
 
-export const BaseTable: FC<Props> = ({
+type BaseTableComponent = {
+  <P = any>(props: Props<P>): JSX.Element;
+};
+
+export const BaseTable: BaseTableComponent = ({
   isLoading = false,
   cols,
   items,
@@ -47,9 +52,9 @@ export const BaseTable: FC<Props> = ({
       <Table size={dense ? 'small' : 'medium'}>
         {!hiddenHeader && (
           <TableHead>
-            <TableRow>
+            <TableRow sx={hiddenBorder ? { '& td, & th': { border: 'none' } } : undefined}>
               {cols.map((col, i) => (
-                <TableCell key={i} align={col.align}>
+                <TableCell key={i} align={col.align} sx={{ width: col.width }}>
                   {col.name}
                 </TableCell>
               ))}
