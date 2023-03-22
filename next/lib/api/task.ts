@@ -1,7 +1,10 @@
 export const TASK_STATUS = {
+  START: 'start',
   FINISH: 'finish',
   INIT: 'init',
+  WAIT: 'wait',
   ERROR: 'error',
+  LOST: 'lost',
 } as const;
 
 export const TASK_METHOD = {
