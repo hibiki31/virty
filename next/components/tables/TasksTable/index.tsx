@@ -90,7 +90,7 @@ export const TasksTable: FC = () => {
               renderCell: (params) => formatDate(params.row.postTime!),
             },
             {
-              headerName: 'TunTime',
+              headerName: 'RunTime',
               field: 'runTime',
               disableColumnMenu: true,
               flex: 1,
