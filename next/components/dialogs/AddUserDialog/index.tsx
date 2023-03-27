@@ -2,7 +2,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { usersApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -21,6 +23,7 @@ export const AddUserDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (open) {
@@ -29,7 +32,15 @@ export const AddUserDialog: FC<Props> = ({ open, onClose }) => {
   }, [open, reset]);
 
   const handleAddUser = (data: FormData) => {
-    console.log('handleAddUser', data);
+    return usersApi
+      .postApiUsersApiUsersPost(data)
+      .then(() => {
+        enqueueNotistack('User added successfully.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add the user.', { variant: 'error' });
+      });
   };
 
   return (
@@ -55,7 +66,7 @@ const formJtd = {
     spread: true,
   },
   properties: {
-    id: {
+    userId: {
       metadata: {
         name: 'ID',
         default: '',
