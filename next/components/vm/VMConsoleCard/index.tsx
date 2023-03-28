@@ -51,15 +51,8 @@ export const VMConsoleCard: FC<Props> = memo(function NotMemoVMConsoleCard({ uui
   }/novnc/vnc.html?resize=remote&autoconnect=true&path=novnc/websockify?token=${uuid}`;
 
   return (
-    <Card>
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width={384}
-        height={288}
-        sx={{ bgcolor: 'grey.500' }}
-      >
+    <Card sx={{ width: '100%', height: '100%', backgroundColor: 'grey.700' }}>
+      <Box display="flex" justifyContent="center" alignItems="center" maxWidth={384} minHeight={288} margin="auto">
         {status !== VM_STATUS.POWER_ON ? (
           <Typography variant="h6">VM is not running</Typography>
         ) : imageUrl ? (
@@ -80,8 +73,8 @@ export const VMConsoleCard: FC<Props> = memo(function NotMemoVMConsoleCard({ uui
               sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
             <Box position="absolute">
-              <Console fontSize="large" />
-              <OpenInNew fontSize="large" />
+              <Console />
+              <OpenInNew />
             </Box>
           </Link>
         ) : disconnected ? (

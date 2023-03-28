@@ -7,7 +7,7 @@ import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import useSWR from 'swr';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { GetDomainDrives, GetDomainInterfaces } from '~/lib/api/generated';
-import { Pencil } from 'mdi-material-ui';
+import { Delete, Pencil, Play, Stop } from 'mdi-material-ui';
 import Error404Page from '../404';
 import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
@@ -15,6 +15,7 @@ import { MouseEvent, useState } from 'react';
 import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
 import { VMStatusController } from '~/components/VMStatusController';
 import { VMConsoleCard } from '~/components/vm/VMConsoleCard';
+import { VM_STATUS } from '~/lib/api/vm';
 
 type Props = {
   id: string;
@@ -112,67 +113,79 @@ const VMPage: NextPage<Props> = ({ id }) => {
         </Grid>
       </Grid>
 
-      <Grid container>
-        <Grid item>
+      <Grid container spacing={2} mb={2}>
+        <Grid item xs={12} md={5} lg={4} xl={3}>
           <VMConsoleCard uuid={data.uuid} status={data.status} />
         </Grid>
-      </Grid>
-
-      <Grid container spacing={2}>
-        <Grid item container spacing={2} direction="column" xs={12} md={6} lg={3}>
+        <Grid item container spacing={2} xs={12} md direction="column">
           <Grid item>
             <Card>
-              <Grid container sx={{ p: 2 }}>
-                <Grid item xs={12}>
-                  <Button variant="contained" color="error" disableElevation fullWidth size="small">
+              <Grid container spacing={2} sx={{ p: 1 }}>
+                <Grid item>
+                  <Button color="success" size="small" disabled={data.status === VM_STATUS.POWER_ON}>
+                    <Play sx={{ mr: 1 }} />
+                    Start
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button color="error" size="small" disabled={data.status === VM_STATUS.POWER_OFF}>
+                    <Stop sx={{ mr: 1 }} />
+                    Stop
+                  </Button>
+                </Grid>
+                <Grid item ml="auto">
+                  <Button color="error" size="small">
+                    <Delete sx={{ mr: 1 }} />
                     Delete
                   </Button>
                 </Grid>
               </Grid>
             </Card>
           </Grid>
-
-          <Grid item>
-            <Card>
-              <CardHeader title={<Typography variant="h6">Spec</Typography>} />
-              <Grid item pb={2}>
-                <BaseTable
-                  cols={[{ getItem: (item) => item.name }, { getItem: (item) => item.value }]}
-                  items={[
-                    { name: 'CPU', value: `${data.core} Core` },
-                    { name: 'Memory', value: `${data.memory / 1024} GB` },
-                  ]}
-                  hiddenHeader
-                  hiddenBorder
-                  disableElevation
-                  dense
-                />
-              </Grid>
-            </Card>
+          <Grid item container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Card sx={{ height: '100%' }}>
+                <CardHeader title={<Typography variant="h6">Spec</Typography>} />
+                <Grid item pb={2}>
+                  <BaseTable
+                    cols={[{ getItem: (item) => item.name }, { getItem: (item) => item.value }]}
+                    items={[
+                      { name: 'CPU', value: `${data.core} Core` },
+                      { name: 'Memory', value: `${data.memory / 1024} GB` },
+                    ]}
+                    hiddenHeader
+                    hiddenBorder
+                    disableElevation
+                    dense
+                  />
+                </Grid>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Card>
+                <CardHeader title={<Typography variant="h6">Node</Typography>} />
+                <Grid item pb={2}>
+                  <BaseTable
+                    cols={[{ getItem: (item) => item.name }, { getItem: (item) => item.value }]}
+                    items={[
+                      { name: 'Name', value: data.node.name },
+                      { name: 'IP', value: data.node.domain },
+                      { name: 'Status', value: data.node.status },
+                      { name: 'VNC Port', value: data.vncPort },
+                    ]}
+                    hiddenHeader
+                    hiddenBorder
+                    disableElevation
+                    dense
+                  />
+                </Grid>
+              </Card>
+            </Grid>
           </Grid>
         </Grid>
+      </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
-          <Card>
-            <CardHeader title={<Typography variant="h6">Node</Typography>} />
-            <Grid item pb={2}>
-              <BaseTable
-                cols={[{ getItem: (item) => item.name }, { getItem: (item) => item.value }]}
-                items={[
-                  { name: 'Name', value: data.node.name },
-                  { name: 'IP', value: data.node.domain },
-                  { name: 'Status', value: data.node.status },
-                  { name: 'VNC Port', value: data.vncPort },
-                ]}
-                hiddenHeader
-                hiddenBorder
-                disableElevation
-                dense
-              />
-            </Grid>
-          </Card>
-        </Grid>
-
+      <Grid container spacing={2}>
         <Grid item xs={12} lg={6}>
           <Card>
             <CardHeader title={<Typography variant="h6">Network</Typography>} />
@@ -201,7 +214,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} lg={6}>
+        <Grid item xs={12} lg={6} mb={2}>
           <Card>
             <CardHeader title={<Typography variant="h6">Storage</Typography>} />
             <BaseTable
