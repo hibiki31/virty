@@ -13,11 +13,11 @@ import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { MouseEvent, useState } from 'react';
 import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
-import { VMStatusController } from '~/components/vm/VMStatusController';
 import { VMConsoleCard } from '~/components/vm/VMConsoleCard';
 import { VM_STATUS } from '~/lib/api/vm';
 import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
+import { VMStatusIcon } from '~/components/vm/VMStatusIcon';
 
 type Props = {
   id: string;
@@ -129,7 +129,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 2 }}>
         <Grid item>
-          <VMStatusController uuid={id} status={data.status} />
+          <VMStatusIcon status={data.status} />
         </Grid>
         <Grid item>
           <Typography variant="h6">{data.name}</Typography>

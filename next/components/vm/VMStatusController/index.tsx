@@ -1,8 +1,9 @@
 import { Box, Grid, Tooltip } from '@mui/material';
-import { AlertOutline, DeleteForever, DotsVertical, PowerStandby, ServerRemove, Wrench } from 'mdi-material-ui';
+import { DotsVertical } from 'mdi-material-ui';
 import { FC, memo } from 'react';
 import { VM_STATUS } from '~/lib/api/vm';
 import { OpenMenuButton } from '../../buttons/OpenMenuButton';
+import { VMStatusIcon } from '../VMStatusIcon';
 import { PowerControlMenu } from './PowerControlMenu';
 
 type VMStatusControllerProps = {
@@ -32,15 +33,8 @@ export const VMStatusController: FC<VMStatusControllerProps> = memo(function Not
         }
         placement="right"
       >
-        <Box
-          sx={{
-            mr: 1,
-            '> *': {
-              display: 'block !important',
-            },
-          }}
-        >
-          <StatusIcon status={status} />
+        <Box sx={{ mr: 1 }}>
+          <VMStatusIcon status={status} />
         </Box>
       </Tooltip>
       <OpenMenuButton
@@ -53,23 +47,3 @@ export const VMStatusController: FC<VMStatusControllerProps> = memo(function Not
     </Grid>
   );
 });
-
-type StatusIconProps = {
-  status: number;
-};
-
-const StatusIcon: FC<StatusIconProps> = ({ status }) => {
-  switch (status) {
-    case VM_STATUS.POWER_ON:
-      return <PowerStandby color="primary" />;
-    case VM_STATUS.POWER_OFF:
-      return <PowerStandby color="disabled" />;
-    case VM_STATUS.MAINTENANCE_MODE:
-      return <Wrench color="secondary" />;
-    case VM_STATUS.DELETED_DOMAIN:
-      return <DeleteForever color="error" />;
-    case VM_STATUS.LOST_NODE:
-      return <ServerRemove color="secondary" />;
-  }
-  return <AlertOutline color="warning" />;
-};
