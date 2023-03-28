@@ -13,7 +13,7 @@ import ErrorPage from '../error';
 import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { MouseEvent, useState } from 'react';
 import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
-import { VMStatusController } from '~/components/VMStatusController';
+import { VMStatusController } from '~/components/vm/VMStatusController';
 import { VMConsoleCard } from '~/components/vm/VMConsoleCard';
 import { VM_STATUS } from '~/lib/api/vm';
 

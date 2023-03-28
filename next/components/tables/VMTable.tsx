@@ -6,7 +6,7 @@ import { vmsApi } from '~/lib/api';
 import { DotsVertical } from 'mdi-material-ui';
 import NextLink from 'next/link';
 import useSWR from 'swr';
-import { VMStatusController } from '../VMStatusController';
+import { VMStatusController } from '../vm/VMStatusController';
 import { useAuth } from '~/store/userState';
 
 export const VMTable: FC = () => {

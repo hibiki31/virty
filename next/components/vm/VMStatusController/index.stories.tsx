@@ -6,12 +6,6 @@ export default {
   component: VMStatusController,
 } as ComponentMeta<typeof VMStatusController>;
 
-export const Default = {
-  args: {
-    statusCode: 0,
-  },
-};
-
 export const On = {
   args: {
     statusCode: 1,
@@ -39,5 +33,11 @@ export const DeletedDomain = {
 export const LostNode = {
   args: {
     statusCode: 20,
+  },
+};
+
+export const Other = {
+  args: {
+    statusCode: 0,
   },
 };

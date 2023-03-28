@@ -2,7 +2,7 @@ import { Box, Grid, Tooltip } from '@mui/material';
 import { AlertOutline, DeleteForever, DotsVertical, PowerStandby, ServerRemove, Wrench } from 'mdi-material-ui';
 import { FC, memo } from 'react';
 import { VM_STATUS } from '~/lib/api/vm';
-import { OpenMenuButton } from '../buttons/OpenMenuButton';
+import { OpenMenuButton } from '../../buttons/OpenMenuButton';
 import { PowerControlMenu } from './PowerControlMenu';
 
 type Props = {
