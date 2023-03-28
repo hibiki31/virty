@@ -2563,6 +2563,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@novnc/novnc@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "@novnc/novnc@npm:1.4.0"
+  checksum: 853da7f8da9e4e4b6ad287146a02156ac627097385f9e5890c1fbe8498ce8d4dfe4c69f271fa835bbea9ca8feaa5360f97e6478e7e6d357270ef482e4782ea85
+  languageName: node
+  linkType: hard
+
 "@npmcli/fs@npm:^1.0.0":
   version: 1.1.1
   resolution: "@npmcli/fs@npm:1.1.1"
@@ -4220,6 +4227,13 @@ __metadata:
   version: 2.4.1
   resolution: "@types/normalize-package-data@npm:2.4.1"
   checksum: e87bccbf11f95035c89a132b52b79ce69a1e3652fe55962363063c9c0dae0fe2477ebc585e03a9652adc6f381d24ba5589cc5e51849df4ced3d3e004a7d40ed5
+  languageName: node
+  linkType: hard
+
+"@types/novnc__novnc@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@types/novnc__novnc@npm:1.3.0"
+  checksum: a38dfcbdb706cf671100e17ea1551e5b7b5c2dc820ef615a81542e6b65fcf385816fec3145e561e255662de452bd814d63c7e40670432e82fe8d0a15a78600a0
   languageName: node
   linkType: hard
 
@@ -16331,6 +16345,7 @@ __metadata:
     "@mui/lab": ^5.0.0-alpha.114
     "@mui/material": ^5.11.2
     "@mui/x-data-grid": ^5.17.17
+    "@novnc/novnc": ^1.4.0
     "@openapitools/openapi-generator-cli": ^2.5.2
     "@storybook/addon-actions": ^6.5.16
     "@storybook/addon-docs": ^6.5.16
@@ -16342,6 +16357,7 @@ __metadata:
     "@storybook/react": ^6.5.16
     "@storybook/testing-library": ^0.0.13
     "@types/node": 18.7.23
+    "@types/novnc__novnc": ^1.3.0
     "@types/react": 18.0.21
     "@types/react-dom": 18.0.6
     ajv: ^8.11.2

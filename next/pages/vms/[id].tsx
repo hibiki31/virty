@@ -14,6 +14,7 @@ import { ChangeNetworkDialog } from '~/components/dialogs/ChangeNetworkDialog';
 import { MouseEvent, useState } from 'react';
 import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
 import { VMStatusController } from '~/components/VMStatusController';
+import { VMConsoleCard } from '~/components/vm/VMConsoleCard';
 
 type Props = {
   id: string;
@@ -111,17 +112,18 @@ const VMPage: NextPage<Props> = ({ id }) => {
         </Grid>
       </Grid>
 
+      <Grid container>
+        <Grid item>
+          <VMConsoleCard uuid={data.uuid} status={data.status} />
+        </Grid>
+      </Grid>
+
       <Grid container spacing={2}>
         <Grid item container spacing={2} direction="column" xs={12} md={6} lg={3}>
           <Grid item>
             <Card>
-              <Grid container spacing={2} sx={{ p: 2 }}>
-                <Grid item xs={6}>
-                  <Button variant="contained" disableElevation fullWidth size="small" disabled>
-                    Console
-                  </Button>
-                </Grid>
-                <Grid item xs={6}>
+              <Grid container sx={{ p: 2 }}>
+                <Grid item xs={12}>
                   <Button variant="contained" color="error" disableElevation fullWidth size="small">
                     Delete
                   </Button>
