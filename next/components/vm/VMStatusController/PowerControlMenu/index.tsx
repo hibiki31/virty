@@ -1,13 +1,45 @@
 import { FC } from 'react';
 import { BaseMenu } from '~/components/menus/BaseMenu';
+import { vmsApi } from '~/lib/api';
+import { VM_STATUS } from '~/lib/api/vm';
+import { useNotistack } from '~/lib/utils/notistack';
+import { useConfirmDialog } from '~/store/confirmDialogState';
 
 type Props = {
   open: boolean;
   anchorEl: HTMLElement | null;
+  uuid: string;
+  status: number;
   onClose: () => void;
 };
 
-export const PowerControlMenu: FC<Props> = ({ open, anchorEl, onClose }) => {
+export const PowerControlMenu: FC<Props> = ({ open, anchorEl, uuid, status, onClose }) => {
+  const { enqueueNotistack } = useNotistack();
+  const { openConfirmDialog } = useConfirmDialog();
+
+  const startVM = () => {
+    vmsApi
+      .patchApiDomainsApiTasksVmsPatch({ uuid, status: 'on' })
+      .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
+  };
+
+  const stopVM = async () => {
+    const confirmed = await openConfirmDialog({
+      title: 'Stop VM',
+      description: `Are you sure you want to stop VM "${uuid}"?`,
+      submitText: 'Stop',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+    vmsApi
+      .patchApiDomainsApiTasksVmsPatch({ uuid, status: 'off' })
+      .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
+  };
+
   return (
     <BaseMenu
       open={open}
@@ -15,13 +47,15 @@ export const PowerControlMenu: FC<Props> = ({ open, anchorEl, onClose }) => {
       onClose={onClose}
       items={[
         {
-          primary: 'Power ON',
-          onClick: () => console.log('Power ON'),
+          primary: 'Start',
+          disabled: status === VM_STATUS.POWER_ON,
+          onClick: startVM,
         },
         {
-          primary: 'Power OFF',
+          primary: 'Stop',
           color: 'error',
-          onClick: () => console.log('Power OFF'),
+          disabled: status === VM_STATUS.POWER_OFF,
+          onClick: stopVM,
         },
       ]}
     />

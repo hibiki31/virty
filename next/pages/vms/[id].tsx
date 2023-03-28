@@ -16,6 +16,8 @@ import { StorageActionsMenu } from '~/components/menus/StorageActionsMenu';
 import { VMStatusController } from '~/components/vm/VMStatusController';
 import { VMConsoleCard } from '~/components/vm/VMConsoleCard';
 import { VM_STATUS } from '~/lib/api/vm';
+import { useNotistack } from '~/lib/utils/notistack';
+import { useConfirmDialog } from '~/store/confirmDialogState';
 
 type Props = {
   id: string;
@@ -57,6 +59,8 @@ const VMPage: NextPage<Props> = ({ id }) => {
   const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
   const [storageAnchorEl, setStorageAnchorEl] = useState<null | HTMLElement>(null);
   const [storage, setStorage] = useState<GetDomainDrives | undefined>(undefined);
+  const { enqueueNotistack } = useNotistack();
+  const { openConfirmDialog } = useConfirmDialog();
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -69,6 +73,28 @@ const VMPage: NextPage<Props> = ({ id }) => {
   if (!data) {
     return <Error404Page />;
   }
+
+  const startVM = () =>
+    vmsApi
+      .patchApiDomainsApiTasksVmsPatch({ uuid: id, status: 'on' })
+      .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
+
+  const stopVM = async () => {
+    const confirmed = await openConfirmDialog({
+      title: 'Stop VM',
+      description: 'Are you sure you want to stop this VM?',
+      submitText: 'Stop',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+    vmsApi
+      .patchApiDomainsApiTasksVmsPatch({ uuid: id, status: 'off' })
+      .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
+  };
 
   const openChangeNetworkDialog = (item: GetDomainInterfaces) => {
     setMacAddress(item.mac);
@@ -103,7 +129,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
       <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 2 }}>
         <Grid item>
-          <VMStatusController statusCode={data.status} />
+          <VMStatusController uuid={id} status={data.status} />
         </Grid>
         <Grid item>
           <Typography variant="h6">{data.name}</Typography>
@@ -122,13 +148,13 @@ const VMPage: NextPage<Props> = ({ id }) => {
             <Card>
               <Grid container spacing={2} sx={{ p: 1 }}>
                 <Grid item>
-                  <Button color="success" size="small" disabled={data.status === VM_STATUS.POWER_ON}>
+                  <Button color="success" size="small" disabled={data.status === VM_STATUS.POWER_ON} onClick={startVM}>
                     <Play sx={{ mr: 1 }} />
                     Start
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button color="error" size="small" disabled={data.status === VM_STATUS.POWER_OFF}>
+                  <Button color="error" size="small" disabled={data.status === VM_STATUS.POWER_OFF} onClick={stopVM}>
                     <Stop sx={{ mr: 1 }} />
                     Stop
                   </Button>

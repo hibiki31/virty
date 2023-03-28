@@ -8,7 +8,7 @@ type Item<P> = {
   disabled?: boolean;
   DialogComponent?: FC<P>;
   dialogProps?: Omit<P, 'open' | 'onClose'>;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
 };
 
 type Props<P> = {
@@ -51,8 +51,8 @@ type CustomMenuItemComponent = {
 const CustomMenuItem: CustomMenuItemComponent = ({ item, onClose }) => {
   const [open, setOpen] = useState(false);
 
-  const handleMenuClick = (func: () => void) => () => {
-    func();
+  const handleMenuClick = (func: () => void | Promise<void>) => async () => {
+    await func();
     onClose();
   };
 

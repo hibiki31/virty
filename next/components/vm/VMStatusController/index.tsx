@@ -5,26 +5,30 @@ import { VM_STATUS } from '~/lib/api/vm';
 import { OpenMenuButton } from '../../buttons/OpenMenuButton';
 import { PowerControlMenu } from './PowerControlMenu';
 
-type Props = {
-  statusCode: number;
+type VMStatusControllerProps = {
+  uuid: string;
+  status: number;
 };
 
-export const VMStatusController: FC<Props> = memo(function NotMemoVMStatusController({ statusCode }) {
+export const VMStatusController: FC<VMStatusControllerProps> = memo(function NotMemoVMStatusController({
+  uuid,
+  status,
+}) {
   return (
     <Grid container alignItems="center">
       <Tooltip
         title={
-          statusCode === VM_STATUS.POWER_ON
+          status === VM_STATUS.POWER_ON
             ? 'Power ON'
-            : statusCode === VM_STATUS.POWER_OFF
+            : status === VM_STATUS.POWER_OFF
             ? 'Power OFF'
-            : statusCode === VM_STATUS.MAINTENANCE_MODE
+            : status === VM_STATUS.MAINTENANCE_MODE
             ? 'Maintenance mode'
-            : statusCode === VM_STATUS.DELETED_DOMAIN
+            : status === VM_STATUS.DELETED_DOMAIN
             ? 'Deleted domain'
-            : statusCode === VM_STATUS.LOST_NODE
+            : status === VM_STATUS.LOST_NODE
             ? 'Lost node'
-            : `Unknown status code: ${statusCode}`
+            : `Unknown status code: ${status}`
         }
         placement="right"
       >
@@ -36,7 +40,7 @@ export const VMStatusController: FC<Props> = memo(function NotMemoVMStatusContro
             },
           }}
         >
-          <StatusIcon statusCode={statusCode} />
+          <StatusIcon status={status} />
         </Box>
       </Tooltip>
       <OpenMenuButton
@@ -44,13 +48,18 @@ export const VMStatusController: FC<Props> = memo(function NotMemoVMStatusContro
         label={<DotsVertical />}
         MenuComponent={PowerControlMenu}
         buttonProps={{ size: 'small' }}
+        menuProps={{ uuid, status }}
       />
     </Grid>
   );
 });
 
-const StatusIcon: FC<Props> = ({ statusCode }) => {
-  switch (statusCode) {
+type StatusIconProps = {
+  status: number;
+};
+
+const StatusIcon: FC<StatusIconProps> = ({ status }) => {
+  switch (status) {
     case VM_STATUS.POWER_ON:
       return <PowerStandby color="primary" />;
     case VM_STATUS.POWER_OFF:

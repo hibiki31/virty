@@ -8,36 +8,42 @@ export default {
 
 export const On = {
   args: {
-    statusCode: 1,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 1,
   },
 };
 
 export const Off = {
   args: {
-    statusCode: 5,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 5,
   },
 };
 
 export const NodeIsMaintenanceMode = {
   args: {
-    statusCode: 7,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 7,
   },
 };
 
 export const DeletedDomain = {
   args: {
-    statusCode: 10,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 10,
   },
 };
 
 export const LostNode = {
   args: {
-    statusCode: 20,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 20,
   },
 };
 
 export const Other = {
   args: {
-    statusCode: 0,
+    uuid: '550e8400-e29b-41d4-a716-446655440000',
+    status: 0,
   },
 };

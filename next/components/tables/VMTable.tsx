@@ -36,7 +36,7 @@ export const VMTable: FC = () => {
             headerName: 'Status',
             field: 'status',
             disableColumnMenu: true,
-            renderCell: (params) => <VMStatusController statusCode={params.value} />,
+            renderCell: (params) => <VMStatusController uuid={params.row.uuid} status={params.value} />,
           },
           { headerName: 'Name', field: 'name', disableColumnMenu: true, flex: 1, minWidth: 150 },
           { headerName: 'Node', field: 'nodeName', disableColumnMenu: true, flex: 1, minWidth: 150 },
