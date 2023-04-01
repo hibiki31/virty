@@ -1,8 +1,10 @@
 import { JTDDataType } from 'ajv/dist/core';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { networkApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -21,6 +23,7 @@ export const AddNetworkPoolDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (open) {
@@ -28,9 +31,17 @@ export const AddNetworkPoolDialog: FC<Props> = ({ open, onClose }) => {
     }
   }, [open, reset]);
 
-  const handleAddNetworkPool = useCallback((data: FormData) => {
-    console.log('handleAddNetworkPool', data.name);
-  }, []);
+  const handleAddNetworkPool = (data: FormData) => {
+    return networkApi
+      .postApiNetworksPoolsApiNetworksPoolsPost(data)
+      .then(() => {
+        enqueueNotistack('Network pool added.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add network pool.', { variant: 'error' });
+      });
+  };
 
   return (
     <BaseDialog
