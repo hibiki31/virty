@@ -28,7 +28,13 @@ export const ImagesTable: FC = () => {
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
-          { headerName: 'Name', field: 'name', disableColumnMenu: true, flex: 3, minWidth: 500 },
+          {
+            headerName: 'Name',
+            field: 'name',
+            disableColumnMenu: true,
+            flex: 3,
+            minWidth: 500,
+          },
           {
             headerName: 'Node',
             field: 'storage.node.name',
