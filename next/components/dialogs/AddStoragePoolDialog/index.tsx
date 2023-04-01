@@ -1,9 +1,11 @@
 import { JTDDataType } from 'ajv/dist/core';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { useSWRConfig } from 'swr';
 import { JtdForm } from '~/components/JtdForm';
 import { storagesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
@@ -24,6 +26,8 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
+  const { mutate } = useSWRConfig();
 
   useEffect(() => {
     if (!open) {
@@ -42,9 +46,18 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
     );
   }, [open, reset, resetFetchers, setFetcher]);
 
-  const handleAddStoragePool = useCallback((data: FormData) => {
-    console.log('handleAddStoragePool', data);
-  }, []);
+  const handleAddStoragePool = (data: FormData) => {
+    return storagesApi
+      .postApiStoragesPoolsApiStoragesPoolsPost(data)
+      .then(() => {
+        enqueueNotistack('Storage pool added.', { variant: 'success' });
+        mutate('storagesApi.getApiStoragesPoolsApiStoragesPoolsGet');
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add storage pool.', { variant: 'error' });
+      });
+  };
 
   return (
     <BaseDialog
