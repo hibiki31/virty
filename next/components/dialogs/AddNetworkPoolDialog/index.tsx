@@ -1,6 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { useSWRConfig } from 'swr';
 import { JtdForm } from '~/components/JtdForm';
 import { networkApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
@@ -24,6 +25,7 @@ export const AddNetworkPoolDialog: FC<Props> = ({ open, onClose }) => {
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
   const { enqueueNotistack } = useNotistack();
+  const { mutate } = useSWRConfig();
 
   useEffect(() => {
     if (open) {
@@ -36,6 +38,7 @@ export const AddNetworkPoolDialog: FC<Props> = ({ open, onClose }) => {
       .postApiNetworksPoolsApiNetworksPoolsPost(data)
       .then(() => {
         enqueueNotistack('Network pool added.', { variant: 'success' });
+        mutate('networkApi.getApiNetworksPoolsApiNetworksPoolsGet');
         onClose();
       })
       .catch(() => {
