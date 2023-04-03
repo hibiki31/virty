@@ -4,6 +4,7 @@ import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { imagesApi } from '~/lib/api';
 import useSWR from 'swr';
+import { FilterSettingsDrawer } from '~/components/utils/FilterSettingsDrawer';
 
 export const ImagesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
@@ -91,6 +92,8 @@ export const ImagesTable: FC = () => {
           },
         }}
       />
+
+      <FilterSettingsDrawer />
     </Box>
   );
 };

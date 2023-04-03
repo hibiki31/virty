@@ -2,7 +2,7 @@ import { Box, Divider, Drawer, IconButton, List, Toolbar, Typography, useTheme }
 import { PageFirst } from 'mdi-material-ui';
 import { useRouter } from 'next/router';
 import { FC, memo, useMemo, useState } from 'react';
-import { closedMixin, opendMixin } from '~/lib/utils/drawer';
+import { closedMixin, openedMixin } from '~/lib/utils/drawer';
 import { useDrawer } from '~/store/drawerState';
 import { DRAWER_ITEMS } from '../config';
 import { DrawerListItem } from '../DrawerListItem';
@@ -37,8 +37,8 @@ export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer(
       sx={
         leftDrawer || open
           ? {
-              ...opendMixin(theme),
-              '& .MuiDrawer-paper': opendMixin(theme),
+              ...openedMixin(theme),
+              '& .MuiDrawer-paper': openedMixin(theme),
             }
           : {
               ...closedMixin(theme),
