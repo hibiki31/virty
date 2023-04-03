@@ -1,6 +1,7 @@
 import { Drawer, List, Toolbar, useTheme } from '@mui/material';
 import { FC, memo } from 'react';
-import { DRAWER_ITEMS, DRAWER_WIDTH } from './config';
+import { DRAWER_WIDTH } from '~/lib/utils/drawer';
+import { DRAWER_ITEMS } from './config';
 import { DrawerListItem } from './DrawerListItem';
 
 type Props = {
