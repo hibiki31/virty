@@ -1,5 +1,5 @@
 import { LoadingButton } from '@mui/lab';
-import { Box, Divider, Drawer, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Drawer, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { JTDDataType } from 'ajv/dist/core';
 import { Schema } from 'jtd';
 import { FilterSettings } from 'mdi-material-ui';
@@ -35,6 +35,7 @@ export const FilterSettingsDrawer: FilterSettingsDrawerComponent = ({
 }) => {
   const { rightDrawer, setRightDrawer, toggleRightDrawer, setRightDrawerOptions, resetRightDrawer } = useDrawer();
   const theme = useTheme();
+  const isMediumScreen = useMediaQuery(theme.breakpoints.down('md'));
   const formMethods = useForm({
     defaultValues: generateProperty(filtersJtd as JtdSchema),
   });
@@ -66,20 +67,17 @@ export const FilterSettingsDrawer: FilterSettingsDrawerComponent = ({
     <Drawer
       open={rightDrawer}
       onClose={() => setRightDrawer(false)}
-      variant="permanent"
+      variant={isMediumScreen ? 'temporary' : 'permanent'}
       anchor="right"
       sx={
         rightDrawer
           ? {
               ...openedMixin(theme),
-              '& .MuiDrawer-paper': openedMixin(theme, DRAWER_WIDTH),
+              '& .MuiDrawer-paper': !isMediumScreen ? openedMixin(theme, DRAWER_WIDTH) : undefined,
             }
           : {
               ...closedMixin(theme),
-              '& .MuiDrawer-paper': closedMixin(theme),
-              '& span': {
-                opacity: 0,
-              },
+              '& .MuiDrawer-paper': !isMediumScreen ? closedMixin(theme) : undefined,
             }
       }
     >
@@ -100,18 +98,20 @@ export const FilterSettingsDrawer: FilterSettingsDrawerComponent = ({
         </IconButton>
       </Box>
       <Divider />
-      <FormProvider {...formMethods}>
-        <JtdForm rootJtd={filtersJtd as JtdSchema} isEditing={true} />
-      </FormProvider>
-      <LoadingButton
-        onClick={handleSubmit(onSubmit)}
-        variant="contained"
-        disableElevation
-        loading={submitLoading}
-        sx={{ mx: 2 }}
-      >
-        Search
-      </LoadingButton>
+      <Box className="FilterSettingsDrawer-body" display="grid" sx={!rightDrawer ? { opacity: 0 } : undefined}>
+        <FormProvider {...formMethods}>
+          <JtdForm rootJtd={filtersJtd as JtdSchema} isEditing={true} />
+        </FormProvider>
+        <LoadingButton
+          onClick={handleSubmit(onSubmit)}
+          variant="contained"
+          disableElevation
+          loading={submitLoading}
+          sx={{ mx: 2 }}
+        >
+          Search
+        </LoadingButton>
+      </Box>
     </Drawer>
   );
 };

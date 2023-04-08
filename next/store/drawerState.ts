@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useMediaQuery, useTheme } from '@mui/material';
+import { useCallback, useEffect } from 'react';
 import { atom, useRecoilState } from 'recoil';
 
 export const leftDrawerState = atom<boolean>({
@@ -25,9 +26,19 @@ export const rightDrawerOptionsState = atom<DrawerOptions>({
 });
 
 export const useDrawer = () => {
+  const theme = useTheme();
+  const isMediumScreen = useMediaQuery(theme.breakpoints.down('md'));
   const [leftDrawer, setLeftDrawer] = useRecoilState(leftDrawerState);
   const [rightDrawer, setRightDrawer] = useRecoilState(rightDrawerState);
   const [rightDrawerOptions, _setRightDrawerOptions] = useRecoilState(rightDrawerOptionsState);
+
+  useEffect(() => {
+    if (isMediumScreen) {
+      setRightDrawer(false);
+    } else {
+      setRightDrawer(true);
+    }
+  }, [isMediumScreen, setRightDrawer]);
 
   const toggleLeftDrawer = useCallback(() => {
     setLeftDrawer((prev) => !prev);

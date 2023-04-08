@@ -1,4 +1,4 @@
-import { Box, Container, Toolbar, useTheme } from '@mui/material';
+import { Box, Container, Toolbar, useMediaQuery, useTheme } from '@mui/material';
 import { FC, PropsWithChildren } from 'react';
 import { closedMixin, openedMixin } from '~/lib/utils/drawer';
 import { useDrawer } from '~/store/drawerState';
@@ -12,6 +12,7 @@ type Props = PropsWithChildren<{
 export const DefaultLayout: FC<Props> = ({ children, isLoading }) => {
   const { rightDrawer, rightDrawerOptions } = useDrawer();
   const theme = useTheme();
+  const isMediumScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <Box display="flex">
@@ -25,9 +26,10 @@ export const DefaultLayout: FC<Props> = ({ children, isLoading }) => {
           flexDirection: 'column',
           height: 'calc(100vh - 16px)',
           marginLeft: rightDrawerOptions.enable ? 0 : undefined,
-          ...(rightDrawer
-            ? openedMixin(theme, `calc(100% - ${rightDrawerOptions.openedWidth})`)
-            : rightDrawerOptions.enable && closedMixin(theme, `calc(100% - ${rightDrawerOptions.closedWidth})`)),
+          ...(!isMediumScreen &&
+            (rightDrawer
+              ? openedMixin(theme, `calc(100% - ${rightDrawerOptions.openedWidth})`)
+              : rightDrawerOptions.enable && closedMixin(theme, `calc(100% - ${rightDrawerOptions.closedWidth})`))),
         }}
       >
         <Toolbar />
