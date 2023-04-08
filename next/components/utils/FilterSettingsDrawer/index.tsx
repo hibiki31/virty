@@ -1,14 +1,45 @@
+import { LoadingButton } from '@mui/lab';
 import { Box, Divider, Drawer, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
+import { JTDDataType } from 'ajv/dist/core';
+import { Schema } from 'jtd';
 import { FilterSettings } from 'mdi-material-ui';
-import { FC, useEffect } from 'react';
+import { useEffect } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { JtdForm } from '~/components/JtdForm';
+import { generateProperty } from '~/lib/jtd';
+import { Choice, MetaData } from '~/lib/jtd/types';
 import { closedMixin, openedMixin } from '~/lib/utils/drawer';
 import { useDrawer } from '~/store/drawerState';
+import { useChoicesFetchers } from '~/store/formState';
 
 const DRAWER_WIDTH = 350;
 
-export const FilterSettingsDrawer: FC = () => {
+type JtdSchema = Schema & { metadata?: MetaData };
+
+type Props<F> = {
+  filtersJtd: F;
+  choicesFetchers?: Record<string, () => Promise<Choice[]>>;
+  submitLoading?: boolean;
+  onSubmit: (filters: JTDDataType<F>) => void;
+};
+
+type FilterSettingsDrawerComponent = {
+  <F = JtdSchema>(props: Props<F>): JSX.Element;
+};
+
+export const FilterSettingsDrawer: FilterSettingsDrawerComponent = ({
+  filtersJtd,
+  choicesFetchers,
+  submitLoading,
+  onSubmit,
+}) => {
   const { rightDrawer, setRightDrawer, toggleRightDrawer, setRightDrawerOptions, resetRightDrawer } = useDrawer();
   const theme = useTheme();
+  const formMethods = useForm({
+    defaultValues: generateProperty(filtersJtd as JtdSchema),
+  });
+  const { handleSubmit } = formMethods;
+  const { setFetcher, reset: resetFetchers } = useChoicesFetchers();
 
   useEffect(() => {
     setRightDrawerOptions({
@@ -16,12 +47,20 @@ export const FilterSettingsDrawer: FC = () => {
       openedWidth: `${DRAWER_WIDTH}px`,
       closedWidth: `calc(${theme.spacing(9)} + 1px)`,
     });
-    console.log('setRightDrawerOptions');
     return () => {
-      console.log('resetRightDrawer');
       resetRightDrawer();
     };
   }, [setRightDrawerOptions, resetRightDrawer, theme]);
+
+  useEffect(() => {
+    if (!choicesFetchers) {
+      return;
+    }
+    resetFetchers();
+    Object.entries(choicesFetchers).forEach(([key, fetcher]) => {
+      setFetcher(key, fetcher);
+    });
+  }, [choicesFetchers, setFetcher, resetFetchers]);
 
   return (
     <Drawer
@@ -61,6 +100,18 @@ export const FilterSettingsDrawer: FC = () => {
         </IconButton>
       </Box>
       <Divider />
+      <FormProvider {...formMethods}>
+        <JtdForm rootJtd={filtersJtd as JtdSchema} isEditing={true} />
+      </FormProvider>
+      <LoadingButton
+        onClick={handleSubmit(onSubmit)}
+        variant="contained"
+        disableElevation
+        loading={submitLoading}
+        sx={{ mx: 2 }}
+      >
+        Search
+      </LoadingButton>
     </Drawer>
   );
 };
