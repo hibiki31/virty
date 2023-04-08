@@ -5,6 +5,7 @@ import { useNotistack } from '~/lib/utils/notistack';
 import { storagesApi } from '~/lib/api';
 import useSWR from 'swr';
 import { CheckboxBlankOutline, CheckboxOutline } from 'mdi-material-ui';
+import { NextLink } from '~/components/utils/NextLink';
 
 export const StoragesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
@@ -37,6 +38,7 @@ export const StoragesTable: FC = () => {
             disableColumnMenu: true,
             flex: 2,
             minWidth: 290,
+            renderCell: (params) => <NextLink pathname={`/storages/${params.value}`}>{params.value}</NextLink>,
           },
           {
             headerName: 'Capacity',

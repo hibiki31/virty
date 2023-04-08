@@ -1,31 +1,16 @@
-import { Box, CSSObject, Divider, Drawer, IconButton, List, Theme, Toolbar, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Drawer, IconButton, List, Toolbar, Typography, useTheme } from '@mui/material';
 import { PageFirst } from 'mdi-material-ui';
 import { useRouter } from 'next/router';
 import { FC, memo, useMemo, useState } from 'react';
+import { closedMixin, openedMixin } from '~/lib/utils/drawer';
 import { useDrawer } from '~/store/drawerState';
-import { DRAWER_ITEMS, DRAWER_WIDTH } from '../config';
+import { DRAWER_ITEMS } from '../config';
 import { DrawerListItem } from '../DrawerListItem';
-
-const opendMixin = (theme: Theme): CSSObject => ({
-  width: DRAWER_WIDTH,
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.easeOut,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-});
-
-const closedMixin = (theme: Theme): CSSObject => ({
-  width: `calc(${theme.spacing(9)} + 1px)`,
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-});
 
 export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer() {
   const theme = useTheme();
   const router = useRouter();
-  const { drawer, closeDrawer, toggleDrawer } = useDrawer();
+  const { leftDrawer, setLeftDrawer, toggleLeftDrawer } = useDrawer();
   const [open, setOpen] = useState(false);
   const [groupItem, drawerItems] = useMemo(() => {
     const group = router.pathname.split('/')[1];
@@ -44,16 +29,16 @@ export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer(
 
   return drawerItems.length ? (
     <Drawer
-      open={drawer || open}
-      onClose={closeDrawer}
+      open={leftDrawer || open}
+      onClose={() => setLeftDrawer(false)}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       variant="permanent"
       sx={
-        drawer || open
+        leftDrawer || open
           ? {
-              ...opendMixin(theme),
-              '& .MuiDrawer-paper': opendMixin(theme),
+              ...openedMixin(theme),
+              '& .MuiDrawer-paper': openedMixin(theme),
             }
           : {
               ...closedMixin(theme),
@@ -78,7 +63,7 @@ export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer(
         ))}
       </List>
       <IconButton
-        onClick={toggleDrawer}
+        onClick={toggleLeftDrawer}
         sx={{
           position: 'absolute',
           bottom: theme.spacing(2),
@@ -87,7 +72,7 @@ export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer(
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
-          transform: drawer ? 'rotate(0deg)' : 'rotate(180deg)',
+          transform: leftDrawer ? 'rotate(0deg)' : 'rotate(180deg)',
         }}
       >
         <PageFirst />

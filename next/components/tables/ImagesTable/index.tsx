@@ -1,16 +1,59 @@
 import { Box } from '@mui/material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { FC } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import { FC, useMemo, useState } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
-import { imagesApi } from '~/lib/api';
+import { imagesApi, nodesApi, storagesApi } from '~/lib/api';
 import useSWR from 'swr';
+import { FilterSettingsDrawer } from '~/components/utils/FilterSettingsDrawer';
+import { JTDDataType } from 'ajv/dist/core';
+import { generateProperty } from '~/lib/jtd';
+
+type Filters = JTDDataType<typeof filtersJtd>;
 
 export const ImagesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
+  const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
   const { data, error, isValidating } = useSWR(
-    'imagesApi.getApiImagesApiImagesGet',
-    () => imagesApi.getApiImagesApiImagesGet().then((res) => res.data),
+    ['imagesApi.getApiImagesApiImagesGet', filters],
+    ([_, f]) =>
+      imagesApi
+        .getApiImagesApiImagesGet(
+          f.node || undefined,
+          f.poolUuid || undefined,
+          f.name || undefined,
+          f.rool || undefined
+        )
+        .then((res) => res.data),
     { revalidateOnFocus: false }
+  );
+
+  const handleFiltersChange = (newFilters: Filters) => setFilters(newFilters);
+
+  const choicesFetchers = useMemo(
+    () => ({
+      nodes: () =>
+        nodesApi
+          .getApiNodesApiNodesGet()
+          .then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
+      pools: async () => {
+        const results = await Promise.all([
+          storagesApi.getApiStoragesApiStoragesGet().then((res) =>
+            res.data.map((storage) => ({
+              label: storage.name,
+              value: storage.uuid,
+            }))
+          ),
+          storagesApi.getApiStoragesPoolsApiStoragesPoolsGet().then((res) =>
+            res.data.map((storage) => ({
+              label: storage.name,
+              value: storage.id,
+            }))
+          ),
+        ]);
+        return results.flat();
+      },
+    }),
+    []
   );
 
   if (error) {
@@ -28,7 +71,13 @@ export const ImagesTable: FC = () => {
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
-          { headerName: 'Name', field: 'name', disableColumnMenu: true, flex: 3, minWidth: 500 },
+          {
+            headerName: 'Name',
+            field: 'name',
+            disableColumnMenu: true,
+            flex: 3,
+            minWidth: 500,
+          },
           {
             headerName: 'Node',
             field: 'storage.node.name',
@@ -75,16 +124,48 @@ export const ImagesTable: FC = () => {
         disableColumnFilter
         disableColumnSelector
         disableDensitySelector
-        components={{ Toolbar: GridToolbar }}
-        componentsProps={{
-          toolbar: {
-            csvOptions: { disableToolbarButton: true },
-            printOptions: { disableToolbarButton: true },
-            showQuickFilter: true,
-            quickFilterProps: { debounceMs: 500 },
-          },
-        }}
       />
+
+      <FilterSettingsDrawer filtersJtd={filtersJtd} choicesFetchers={choicesFetchers} onSubmit={handleFiltersChange} />
     </Box>
   );
 };
+
+const filtersJtd = {
+  properties: {
+    name: {
+      metadata: {
+        name: 'Name',
+        default: '',
+        required: false,
+      },
+      type: 'string',
+    },
+    node: {
+      metadata: {
+        name: 'Node',
+        default: '',
+        required: false,
+        choices: 'nodes',
+      },
+      type: 'string',
+    },
+    poolUuid: {
+      metadata: {
+        name: 'Pool',
+        default: '',
+        required: false,
+        choices: 'pools',
+      },
+      type: 'string',
+    },
+    rool: {
+      metadata: {
+        name: 'Rool',
+        default: '',
+        required: false,
+      },
+      type: 'string',
+    },
+  },
+} as const;
