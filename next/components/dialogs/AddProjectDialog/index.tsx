@@ -46,11 +46,11 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
     return projectApi
       .postApiProjectsApiProjectsPost(data)
       .then(() => {
-        enqueueNotistack('Project added', { variant: 'success' });
+        enqueueNotistack('Project added successfully.', { variant: 'success' });
         onClose();
       })
       .catch(() => {
-        enqueueNotistack('Failed to add project', { variant: 'error' });
+        enqueueNotistack('Failed to add the project.', { variant: 'error' });
       });
   };
 
