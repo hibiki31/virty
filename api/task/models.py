@@ -7,7 +7,9 @@ from user.models import UserModel
 class TaskModel(Base):
     __tablename__ = "tasks"
     uuid = Column(String, primary_key=True, index=True)
-    post_time = Column(DateTime)
+    post_time = Column(DateTime(timezone=True))
+    start_time = Column(DateTime(timezone=True))
+    update_time = Column(DateTime(timezone=True))
     run_time = Column(Float)
     user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'))
     dependence_uuid = Column(String, ForeignKey('tasks.uuid', onupdate='CASCADE', ondelete='CASCADE'))

@@ -58,8 +58,8 @@ class TaskManager():
 
         self.db.add(TaskModel(
             uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
+            post_time = datetime.now().astimezone(),
+            run_time = None,
             user_id = user.id,
             status = status,
             dependence_uuid = dependence_uuid,

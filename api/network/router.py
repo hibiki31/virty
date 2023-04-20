@@ -106,18 +106,7 @@ def patch_api_networks_pools(
     db.commit()
     return True
 
-@app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
-def get_api_networks_uuid(
-        uuid:str,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
-    except NoResultFound:
-        raise notfound_exception()
 
-    return network
 
 @app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
 def post_api_networks_uuid_ovs(
@@ -156,3 +145,17 @@ def post_api_networks_uuid_ovs(
     return main_task.model
 
 
+
+
+@app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
+def get_api_networks_uuid(
+        uuid: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    try:
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
+    except NoResultFound:
+        raise notfound_exception(msg="Network not found")
+
+    return network

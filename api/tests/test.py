@@ -9,6 +9,7 @@ import sys
 from common import BASE_URL, TEST_ENV, HEADERS, print_resp, wait_tasks
 from test_node import post_nodes, post_nodes_key, delete_nodes
 from test_storage import post_storage, delete_storage
+from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm
 
 args = sys.argv
 
@@ -18,13 +19,19 @@ def main():
     api_auth_validate()
     api_users_me()
     
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
 
-    # delete_storage()
-    # post_storage()
     put_list()
+    delete_storage()
+    post_storage()
+    
+    put_list()
+    delete_vm()
+    post_vm()
+    poweron_vm()
+    poweroff_vm()
 
 
 

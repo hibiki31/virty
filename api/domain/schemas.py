@@ -87,6 +87,10 @@ class DomainPatch(DomainBase):
     target: str = None
 
 
+class PatchDomainPower(CamelModel):
+    status: str = None
+
+
 class DomainDetailXmlInterface(CamelModel):
     type: str
     mac: str

@@ -12,7 +12,7 @@ from common import BASE_URL, TEST_ENV, HEADERS, print_resp, wait_tasks
 def delete_nodes():
     node_name = "test-node"
     resp = httpx.request(method="delete",url=f'{BASE_URL}/api/nodes/{node_name}', headers=HEADERS)
-    print_resp(resp=resp)
+    print_resp(resp=resp, allow_not_found=True)
 
 
 def post_nodes_key():

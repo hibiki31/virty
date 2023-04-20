@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 3be8943edc14
+Revision ID: 1a211d1155f6
 Revises: 
-Create Date: 2023-03-19 03:43:13.504474
+Create Date: 2023-04-20 17:54:39.483503
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3be8943edc14'
+revision = '1a211d1155f6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -182,7 +182,9 @@ def upgrade():
     op.create_index(op.f('ix_storages_uuid'), 'storages', ['uuid'], unique=False)
     op.create_table('tasks',
     sa.Column('uuid', sa.String(), nullable=False),
-    sa.Column('post_time', sa.DateTime(), nullable=True),
+    sa.Column('post_time', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('start_time', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('update_time', sa.DateTime(timezone=True), nullable=True),
     sa.Column('run_time', sa.Float(), nullable=True),
     sa.Column('user_id', sa.String(), nullable=True),
     sa.Column('dependence_uuid', sa.String(), nullable=True),
