@@ -12,6 +12,8 @@ import json
 class TaskBase(CamelModel):
     post_time: datetime = None
     run_time: float = None
+    start_time: datetime = None
+    update_time: datetime = None
     user_id: str = None
     status: str = None
     resource: str = None
@@ -42,4 +44,4 @@ class TaskSelect(TaskBase):
 class TaskRequest(CamelModel):
     url: str
     path_param: Any
-    request: Any
+    body: Any

@@ -142,7 +142,7 @@ def patch_api_tasks_vms_uuid_power(
         db: Session = Depends(get_db),
         body: PatchDomainPower = None,
     ):
-    task_req = TaskRequest(url=request.url._url, request=body, path_param={"uuid":uuid})
+    task_req = TaskRequest(url=request.url._url, body=body, path_param={"uuid":uuid})
 
 
     task = TaskManager(db=db)

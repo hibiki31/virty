@@ -63,8 +63,8 @@ def wait_tasks(resp):
             elif resp["status"] == "error":
                 print("error")
                 break
-            time.sleep(1)
-            counter += 1
+            time.sleep(5)
+            counter += 5
 
 
 def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):

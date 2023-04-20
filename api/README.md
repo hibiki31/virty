@@ -17,6 +17,7 @@ celery --app=worker worker --autoscale=32,4
 ## Alembic
 
 ```bash
+alembic revision --autogenerate -m "Added columns."
 alembic revision --autogenerate
 alembic upgrade head
 alembic downgrade base

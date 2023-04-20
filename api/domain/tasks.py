@@ -363,7 +363,7 @@ def delete_vm_root(self: TaskBase, task: TaskModel):
 @worker_task(key="patch.vm.power")
 def patch_vm_root(self: TaskBase, task: TaskModel):
     request:TaskRequest = TaskRequest(**loads(task.request))
-    body:PatchDomainPower = PatchDomainPower(**request.request)
+    body:PatchDomainPower = PatchDomainPower(**request.body)
     uuid = request.path_param["uuid"]
 
     try:

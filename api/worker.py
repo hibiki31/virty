@@ -113,9 +113,10 @@ def run_scheduler(task_manager: TaskBase):
 
 
 
-def exec_task(db, task, tasks):
+def exec_task(db, task: TaskModel, tasks):
     logger.info(f'start {task.uuid} {task.method}.{task.resource}.{task.object}')
     task.status = "start"
+    task.start_time = datetime.now().astimezone()
     db.commit()
 
     start_time = time()
@@ -129,6 +130,7 @@ def exec_task(db, task, tasks):
         task.status = "error"
         task.message = str(e)
 
+    task.update_time = datetime.now().astimezone()
     task.run_time = time() - start_time
     db.commit()
 

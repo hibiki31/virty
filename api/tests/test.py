@@ -19,18 +19,19 @@ def main():
     api_auth_validate()
     api_users_me()
     
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
 
-    # delete_storage()
-    # post_storage()
+    put_list()
+    delete_storage()
+    post_storage()
     
-    # put_list()
-    # delete_vm()
-    # post_vm()
+    put_list()
+    delete_vm()
+    post_vm()
     poweron_vm()
-    # poweroff_vm()
+    poweroff_vm()
 
 
 

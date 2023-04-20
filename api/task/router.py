@@ -35,7 +35,7 @@ def get_tasks(
         task = db.query(TaskModel)\
             .filter(TaskModel.user_id==current_user.id)\
             .order_by(desc(TaskModel.post_time)).all()
-    
+
     return task
 
 
