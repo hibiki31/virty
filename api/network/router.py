@@ -30,7 +30,7 @@ def get_api_networks(
     return db.query(NetworkModel).all()
 
 
-@app.put("/api/tasks/networks", tags=["network"])
+@app.put("/api/tasks/networks", tags=["network"], response_model=List[TaskSelect])
 def put_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -39,7 +39,7 @@ def put_api_networks(
     task.select(method='put', resource='network', object='list')
     task.commit(user=current_user)
    
-    return task.model
+    return [task.model]
 
 @app.post("/api/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(

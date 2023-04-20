@@ -79,15 +79,13 @@ def get_tasks_incomplete(
         current_user.verify_scope(["admin.tasks"])
  
     for i in range(0,20):
-        if admin:
-            task = db.query(TaskModel)\
-                .filter(TaskModel.status!="error")\
-                .filter(TaskModel.status!="finish").all()
-        else:
-            task = db.query(TaskModel)\
-                .filter(TaskModel.user_id==current_user.id)\
-                .filter(TaskModel.status!="error")\
-                .filter(TaskModel.status!="finish").all()
+        query = db.query(TaskModel)
+        if not admin:
+            query = query.filter(TaskModel.user_id==current_user.id)
+    
+        task = query.filter(TaskModel.status!="error")\
+            .filter(TaskModel.status!="lost")\
+            .filter(TaskModel.status!="finish").all()        
         
         task_count = len(task)
         task_hash = str(hashlib.md5(str([i.uuid for i in task]).encode()).hexdigest())

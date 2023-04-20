@@ -137,7 +137,7 @@ def put_api_images(
     task.select(method='put', resource='storage', object='list')
     task.commit(user=current_user)
    
-    return task.model
+    return [task.model]
 
 
 @app.patch("/api/images", tags=["storages"])

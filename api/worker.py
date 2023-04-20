@@ -114,7 +114,7 @@ def run_scheduler(task_manager: TaskBase):
 
 
 def exec_task(db, task, tasks):
-    logger.info(f'start tasks: {task.method}.{task.resource}.{task.object} {task.uuid}')
+    logger.info(f'start {task.uuid} {task.method}.{task.resource}.{task.object}')
     task.status = "start"
     db.commit()
 

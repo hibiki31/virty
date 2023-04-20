@@ -62,7 +62,7 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.put('/api/tasks/vms', response_model=TaskSelect)
+@app.put('/api/tasks/vms', response_model=List[TaskSelect])
 def publish_task_to_update_vm_list(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -76,7 +76,7 @@ def publish_task_to_update_vm_list(
     )
     task.commit(user=current_user)
 
-    return task.model
+    return [task.model]
 
 
 @app.delete("/api/tasks/vms", response_model=TaskSelect)
