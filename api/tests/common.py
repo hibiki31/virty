@@ -55,16 +55,16 @@ def wait_tasks(resp):
         uuid = task["uuid"]
         counter = 0
         while True:
-            print(f"wait {uuid} {counter}s")
-            resp = httpx.request(method="get",url=f'{BASE_URL}/api/task/{uuid}', headers=HEADERS).json()
+            resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks/{uuid}', headers=HEADERS).json()
+            print(f"wait {uuid} {resp['object']} {counter}s")
             if resp["status"] == "finish":
                 print("finish")
                 break
             elif resp["status"] == "error":
                 print("error")
                 break
-            time.sleep(5)
-            counter += 5
+            time.sleep(1)
+            counter += 1
 
 
 def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):

@@ -31,7 +31,7 @@ logger = setup_logger(__name__)
 
 
 
-@worker_task(key="put.vm.root")
+@worker_task(key="put.vm.list")
 def put_vm_list(self: TaskBase, task: TaskModel) -> float:
     nodes:NodeModel = self.db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
@@ -335,27 +335,20 @@ def post_vm_root(self: TaskBase, task: TaskModel):
     node = virtlib.VirtManager(node_model=node)
     node.domain_define(xml_str=editor.dump_str())
 
-    put_task = TaskManager(db=db)
-    put_task.select('put', 'vm', 'list')
-    put_task.folk(task=task)
-
-    domain = db.query(DomainModel).filter(DomainModel.uuid==domain_uuid).one()
-    domain.owner_user_id = task.user_id
-    db.commit()
-
     task.message = "Virtual machine has been added successfully"
 
 
-def delete_vm_root(db:Session, task: TaskModel):
+@worker_task(key="delete.vm.root")
+def delete_vm_root(self: TaskBase, task: TaskModel):
     request: DomainInsert = DomainDelete(**loads(task.request))
 
     try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
     except:
         raise Exception("domain not found")
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
     except:
         raise Exception("node not found")
 
@@ -363,15 +356,13 @@ def delete_vm_root(db:Session, task: TaskModel):
     manager.domain_destroy(uuid=request.uuid)
     manager.domain_undefine(request.uuid)
 
-    put_task = TaskManager(db=db, bg=bg)
-    put_task.select('put', 'vm', 'list')
-    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
-
     task.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
-def patch_vm_root(db:Session, task: TaskModel):
+@worker_task(key="patch.vm.root")
+def patch_vm_root(self: TaskBase, task: TaskModel):
     request: DomainPatch = DomainPatch(**loads(task.request))
+    db = self.db
 
     try:
         domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
@@ -396,10 +387,6 @@ def patch_vm_root(db:Session, task: TaskModel):
         manager.domain_cdrom(request.uuid, request.target, request.path)
     elif request.status == "unmount":
         manager.domain_cdrom(request.uuid, request.target)
-
-    put_task = TaskManager(db=db, bg=bg)
-    put_task.select('put', 'vm', 'list')
-    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
 
 
 def patch_vm_network(db:Session, task: TaskModel):

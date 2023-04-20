@@ -72,14 +72,14 @@ def publish_task_to_update_vm_list(
     task.select(
         method='put',
         resource='vm', 
-        object='root',
+        object='list',
     )
     task.commit(user=current_user)
 
     return [task.model]
 
 
-@app.delete("/api/tasks/vms", response_model=TaskSelect)
+@app.delete("/api/tasks/vms", response_model=List[TaskSelect])
 def delete_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -89,10 +89,14 @@ def delete_api_domains(
     task.select(method='delete', resource='vm', object='root')
     task.commit(user=current_user, request=request)
 
-    return task.model
+    vm_list_task = TaskManager(db=db)
+    vm_list_task.select('put', 'vm', 'list')
+    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+
+    return [task.model]
 
 
-@app.post("/api/tasks/vms", response_model=TaskSelect)
+@app.post("/api/tasks/vms", response_model=List[TaskSelect])
 def post_api_vms(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -102,11 +106,15 @@ def post_api_vms(
     task.select('post', 'vm', 'root')
     task.commit(user=current_user, request=request)
 
+    vm_list_task = TaskManager(db=db)
+    vm_list_task.select('put', 'vm', 'list')
+    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+
     storage_task = TaskManager(db=db)
     storage_task.select('put', 'storage', 'list')
     storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
 
-    return task.model
+    return [ task.model, storage_task.model ]
 
 
 @app.post("/api/tasks/vms/ticket")
@@ -126,17 +134,21 @@ def post_api_vms(
     return task.model
 
 
-@app.patch("/api/tasks/vms", response_model=TaskSelect)
+@app.patch("/api/tasks/vms", response_model=List[TaskSelect])
 def patch_api_domains(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request: DomainPatch = None
     ):
-    task = TaskManager(db=db, bg=bg)
+    task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='root')
     task.commit(user=current_user, request=request)
 
-    return task.model
+    vm_list_task = TaskManager(db=db)
+    vm_list_task.select('put', 'vm', 'list')
+    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+
+    return [task.model]
 
 
 @app.patch("/api/tasks/vms/name")
