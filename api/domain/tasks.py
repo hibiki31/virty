@@ -24,6 +24,7 @@ from module import cloudinitlib
 from module.ansiblelib import AnsibleManager
 
 from task.functions import TaskBase
+from task.schemas import TaskRequest
 
 
 worker_task = TaskBase()
@@ -359,34 +360,35 @@ def delete_vm_root(self: TaskBase, task: TaskModel):
     task.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
-@worker_task(key="patch.vm.root")
+@worker_task(key="patch.vm.power")
 def patch_vm_root(self: TaskBase, task: TaskModel):
-    request: DomainPatch = DomainPatch(**loads(task.request))
-    db = self.db
+    request:TaskRequest = TaskRequest(**loads(task.request))
+    body:PatchDomainPower = PatchDomainPower(**request.request)
+    uuid = request.path_param["uuid"]
 
     try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
     except:
         raise Exception("domain not found")
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
     except:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
 
     # 電源
-    if request.status == "on":
-        manager.domain_poweron(uuid=request.uuid)
-    elif request.status == "off":
-        manager.domain_destroy(uuid=request.uuid)
+    if body.status == "on":
+        manager.domain_poweron(uuid=uuid)
+    elif body.status == "off":
+        manager.domain_destroy(uuid=uuid)
     
     # CDROM 
-    if request.status == "mount":
-        manager.domain_cdrom(request.uuid, request.target, request.path)
-    elif request.status == "unmount":
-        manager.domain_cdrom(request.uuid, request.target)
+    # if request.status == "mount":
+    #     manager.domain_cdrom(request.uuid, request.target, request.path)
+    # elif request.status == "unmount":
+    #     manager.domain_cdrom(request.uuid, request.target)
 
 
 def patch_vm_network(db:Session, task: TaskModel):

@@ -9,7 +9,7 @@ import sys
 from common import BASE_URL, TEST_ENV, HEADERS, print_resp, wait_tasks
 from test_node import post_nodes, post_nodes_key, delete_nodes
 from test_storage import post_storage, delete_storage
-from test_vms import post_vm, delete_vm, poweron_vm
+from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm
 
 args = sys.argv
 
@@ -30,6 +30,7 @@ def main():
     # delete_vm()
     # post_vm()
     poweron_vm()
+    # poweroff_vm()
 
 
 

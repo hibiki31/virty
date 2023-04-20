@@ -26,8 +26,21 @@ def poweron_vm():
 
     for vm in resp.json():
         if vm["name"] == "testcode-vm":
-            request_data = {"uuid": vm["uuid"], "status": "on"}
-            resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms', headers=HEADERS, json=request_data)
+            request_data = {"status": "on"}
+            resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/power', headers=HEADERS, json=request_data)
+            print_resp(resp=resp)
+            wait_tasks(resp)
+
+
+
+def poweroff_vm():
+    resp = httpx.request(method="get", url=f'{BASE_URL}/api/vms', params={"admin":True},headers=HEADERS)
+    print_resp(resp=resp)
+
+    for vm in resp.json():
+        if vm["name"] == "testcode-vm":
+            request_data = {"status": "off"}
+            resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/power', headers=HEADERS, json=request_data)
             print_resp(resp=resp)
             wait_tasks(resp)
 
