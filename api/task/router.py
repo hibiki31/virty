@@ -39,18 +39,6 @@ def get_tasks(
     return task
 
 
-@app.get("/tasks/{uuid}", response_model=TaskSelect)
-def get_tasks(
-        uuid: str,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
-    task = db.query(TaskModel)\
-            .filter(TaskModel.uuid==uuid).one()
-    
-    return task
-
-
 @app.delete("/tasks/", response_model=List[TaskSelect])
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
@@ -94,3 +82,15 @@ def get_tasks_incomplete(
         time.sleep(0.5)
 
     return {"task_hash": task_hash, "task_count": task_count}
+
+
+@app.get("/tasks/{uuid}", response_model=TaskSelect)
+def get_tasks(
+        uuid: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    task = db.query(TaskModel)\
+            .filter(TaskModel.uuid==uuid).one()
+    
+    return task
