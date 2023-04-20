@@ -5,10 +5,9 @@ import time
 import datetime
 import sys
 
-BASE_URL = "http://localhost:8765"
-
 
 TEST_ENV = json.load(open('./tests/env.json', 'r'))
+BASE_URL = TEST_ENV["baseUrl"]
 
 class Color:
     BLACK     = '\033[30m'
