@@ -102,7 +102,7 @@ export interface DomainInsert {
      * @type {string}
      * @memberof DomainInsert
      */
-    'type': string;
+    'type': DomainInsertTypeEnum;
     /**
      * 
      * @type {string}
@@ -146,6 +146,14 @@ export interface DomainInsert {
      */
     'cloudInit'?: CloudInitInsert;
 }
+
+export const DomainInsertTypeEnum = {
+    Manual: 'manual',
+    Project: 'project'
+} as const;
+
+export type DomainInsertTypeEnum = typeof DomainInsertTypeEnum[keyof typeof DomainInsertTypeEnum];
+
 /**
  * 
  * @export
@@ -250,37 +258,6 @@ export interface DomainNetworkChange {
      * @memberof DomainNetworkChange
      */
     'port'?: string;
-}
-/**
- * 
- * @export
- * @interface DomainPatch
- */
-export interface DomainPatch {
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainPatch
-     */
-    'uuid': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainPatch
-     */
-    'status'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainPatch
-     */
-    'path'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainPatch
-     */
-    'target'?: string;
 }
 /**
  * 
@@ -1410,6 +1387,19 @@ export interface NodeRolePatch {
 /**
  * 
  * @export
+ * @interface PatchDomainPower
+ */
+export interface PatchDomainPower {
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchDomainPower
+     */
+    'status'?: string;
+}
+/**
+ * 
+ * @export
  * @interface PatchImageFlavor
  */
 export interface PatchImageFlavor {
@@ -1995,6 +1985,18 @@ export interface TaskSelect {
      * @memberof TaskSelect
      */
     'runTime'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskSelect
+     */
+    'startTime'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskSelect
+     */
+    'updateTime'?: string;
     /**
      * 
      * @type {string}
@@ -3456,7 +3458,7 @@ export const NetworkApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async putApiNetworksApiTasksNetworksPut(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async putApiNetworksApiTasksNetworksPut(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.putApiNetworksApiTasksNetworksPut(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3564,7 +3566,7 @@ export const NetworkApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        putApiNetworksApiTasksNetworksPut(options?: any): AxiosPromise<any> {
+        putApiNetworksApiTasksNetworksPut(options?: any): AxiosPromise<Array<TaskSelect>> {
             return localVarFp.putApiNetworksApiTasksNetworksPut(options).then((request) => request(axios, basePath));
         },
     };
@@ -6063,13 +6065,17 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
         },
         /**
          * 
-         * @summary Patch Api Domains
-         * @param {DomainPatch} [domainPatch] 
+         * @summary Patch Api Tasks Vms Uuid Power
+         * @param {string} uuid 
+         * @param {PatchDomainPower} [patchDomainPower] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        patchApiDomainsApiTasksVmsPatch: async (domainPatch?: DomainPatch, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/tasks/vms`;
+        patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch: async (uuid: string, patchDomainPower?: PatchDomainPower, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uuid' is not null or undefined
+            assertParamExists('patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch', 'uuid', uuid)
+            const localVarPath = `/api/tasks/vms/{uuid}/power`
+                .replace(`{${"uuid"}}`, encodeURIComponent(String(uuid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -6092,7 +6098,7 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainPatch, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchDomainPower, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6426,7 +6432,7 @@ export const VmsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+        async deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiDomainsApiTasksVmsDelete(domainDelete, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -6465,13 +6471,14 @@ export const VmsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Patch Api Domains
-         * @param {DomainPatch} [domainPatch] 
+         * @summary Patch Api Tasks Vms Uuid Power
+         * @param {string} uuid 
+         * @param {PatchDomainPower} [patchDomainPower] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async patchApiDomainsApiTasksVmsPatch(domainPatch?: DomainPatch, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiDomainsApiTasksVmsPatch(domainPatch, options);
+        async patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid: string, patchDomainPower?: PatchDomainPower, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, patchDomainPower, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -6536,7 +6543,7 @@ export const VmsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiVmsApiTasksVmsPost(domainInsert?: DomainInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+        async postApiVmsApiTasksVmsPost(domainInsert?: DomainInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.postApiVmsApiTasksVmsPost(domainInsert, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -6557,7 +6564,7 @@ export const VmsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async publishTaskToUpdateVmListApiTasksVmsPut(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+        async publishTaskToUpdateVmListApiTasksVmsPut(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.publishTaskToUpdateVmListApiTasksVmsPut(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -6578,7 +6585,7 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: any): AxiosPromise<TaskSelect> {
+        deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: any): AxiosPromise<Array<TaskSelect>> {
             return localVarFp.deleteApiDomainsApiTasksVmsDelete(domainDelete, options).then((request) => request(axios, basePath));
         },
         /**
@@ -6613,13 +6620,14 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
         },
         /**
          * 
-         * @summary Patch Api Domains
-         * @param {DomainPatch} [domainPatch] 
+         * @summary Patch Api Tasks Vms Uuid Power
+         * @param {string} uuid 
+         * @param {PatchDomainPower} [patchDomainPower] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        patchApiDomainsApiTasksVmsPatch(domainPatch?: DomainPatch, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.patchApiDomainsApiTasksVmsPatch(domainPatch, options).then((request) => request(axios, basePath));
+        patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid: string, patchDomainPower?: PatchDomainPower, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, patchDomainPower, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6678,7 +6686,7 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiVmsApiTasksVmsPost(domainInsert?: DomainInsert, options?: any): AxiosPromise<TaskSelect> {
+        postApiVmsApiTasksVmsPost(domainInsert?: DomainInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
             return localVarFp.postApiVmsApiTasksVmsPost(domainInsert, options).then((request) => request(axios, basePath));
         },
         /**
@@ -6697,7 +6705,7 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        publishTaskToUpdateVmListApiTasksVmsPut(options?: any): AxiosPromise<TaskSelect> {
+        publishTaskToUpdateVmListApiTasksVmsPut(options?: any): AxiosPromise<Array<TaskSelect>> {
             return localVarFp.publishTaskToUpdateVmListApiTasksVmsPut(options).then((request) => request(axios, basePath));
         },
     };
@@ -6760,14 +6768,15 @@ export class VmsApi extends BaseAPI {
 
     /**
      * 
-     * @summary Patch Api Domains
-     * @param {DomainPatch} [domainPatch] 
+     * @summary Patch Api Tasks Vms Uuid Power
+     * @param {string} uuid 
+     * @param {PatchDomainPower} [patchDomainPower] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsApi
      */
-    public patchApiDomainsApiTasksVmsPatch(domainPatch?: DomainPatch, options?: AxiosRequestConfig) {
-        return VmsApiFp(this.configuration).patchApiDomainsApiTasksVmsPatch(domainPatch, options).then((request) => request(this.axios, this.basePath));
+    public patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid: string, patchDomainPower?: PatchDomainPower, options?: AxiosRequestConfig) {
+        return VmsApiFp(this.configuration).patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, patchDomainPower, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
