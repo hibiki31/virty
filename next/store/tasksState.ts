@@ -1,4 +1,4 @@
-import { atom, useRecoilState } from 'recoil';
+import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import useSWR from 'swr';
 import { tasksApi } from '~/lib/api';
 import { IncompleteTasksResponse } from '~/lib/api/task';
@@ -9,12 +9,15 @@ type incompleteTasksState = {
   updateHash: string;
 };
 
-export const incompleteTasksState = atom<incompleteTasksState | undefined>({
+export const incompleteTasksState = atom<incompleteTasksState>({
   key: 'incompleteTasks',
-  default: undefined,
+  default: {
+    count: 0,
+    updateHash: '',
+  },
 });
 
-export const useIncompleteTasks = () => {
+export const useGetIncompleteTasks = () => {
   const [incompleteTasks, setIncompleteTasks] = useRecoilState(incompleteTasksState);
   const { user } = useAuth();
 
@@ -38,4 +41,8 @@ export const useIncompleteTasks = () => {
   );
 
   return incompleteTasks;
+};
+
+export const useIncompleteTasks = () => {
+  return useRecoilValue(incompleteTasksState);
 };

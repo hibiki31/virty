@@ -12,12 +12,12 @@ import { SnackbarProvider } from 'notistack';
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { ConfirmDialog } from '~/components/dialogs/ConfirmDialog';
-import { useIncompleteTasks } from '~/store/tasksState';
+import { useGetIncompleteTasks } from '~/store/tasksState';
 
 const InitRecoilState: FC<PropsWithChildren> = ({ children }) => {
   const user = useGetUser();
   const { confirmDialogProps } = useConfirmDialog();
-  useIncompleteTasks();
+  useGetIncompleteTasks();
 
   if (user === undefined) {
     return null;

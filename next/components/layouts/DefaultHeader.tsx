@@ -20,12 +20,15 @@ import { Menu as MdiMenu, Account, Cog, Logout } from 'mdi-material-ui';
 import { NavigationDrawer } from './NavigationDrawer';
 import { SubNavigationDrawer } from './NavigationDrawer/SubNavigationDrawer';
 import { SCOPE_TO_LABEL } from '~/lib/api/auth';
+import { useIncompleteTasks } from '~/store/tasksState';
+import { IncompleteTasksButton } from './IncompleteTasksButton';
 
 export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
   const isUserMenuOpen = Boolean(userMenuAnchorEl);
   const { user, logout, changeScope } = useAuth();
   const [open, setOpen] = useState(false);
+  const { count } = useIncompleteTasks();
 
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchorEl(event.currentTarget);
@@ -46,6 +49,7 @@ export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
             Virty
           </Typography>
           {children ? children : <Box component="div" sx={{ mr: 'auto' }} />}
+          <IncompleteTasksButton count={count} />
           <Box component="div" sx={{ display: 'flex', alignItems: 'center' }}>
             <Button variant="outlined" color="inherit" sx={{ borderRadius: 5 }} onClick={openUserMenu}>
               <Account sx={{ mr: 0.5 }} />
