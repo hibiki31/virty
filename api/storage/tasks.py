@@ -14,7 +14,7 @@ from module.ansiblelib import AnsibleManager
 
 from time import time
 
-from task.functions import TaskBase
+from task.functions import TaskBase, TaskRequest
 
 
 worker_task = TaskBase()
@@ -22,7 +22,7 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.storage.list")
-def put_storage_list(self: TaskBase, task: TaskModel):
+def put_storage_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
     db = self.db
     nodes = db.query(NodeModel).all()
 

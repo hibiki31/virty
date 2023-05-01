@@ -21,7 +21,9 @@ class TaskBase(CamelModel):
     method: str = None
     dependence_uuid: str = None
     request: dict = None
+    result: dict = None
     message: str = None
+    log: str = None
 
     class Config:
         orm_mode  =  True
@@ -42,6 +44,6 @@ class TaskSelect(TaskBase):
 
 
 class TaskRequest(CamelModel):
-    url: str
+    url: str = None
     path_param: Any
     body: Any

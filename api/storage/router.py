@@ -1,6 +1,6 @@
 from email.mime import image
 from pprint import pprint
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import false, func, true
 from domain.models import DomainDriveModel, DomainModel
@@ -129,13 +129,13 @@ def get_api_images(
 
 @app.put("/api/tasks/images", tags=["tasks-images"])
 def put_api_images(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    # タスクを追加
     task = TaskManager(db=db)
     task.select(method='put', resource='storage', object='list')
-    task.commit(user=current_user)
+    task.commit(user=cu, req=req)
    
     return [task.model]
 

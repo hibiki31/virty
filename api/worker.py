@@ -1,5 +1,6 @@
 import subprocess
 import uuid
+import traceback
 from time import time, sleep
 from sqlalchemy import desc, or_
 
@@ -129,6 +130,7 @@ def exec_task(db, task: TaskModel, tasks):
         logger.error(e, exc_info=True)
         task.status = "error"
         task.message = str(e)
+        task.write_log(traceback.format_exc())
 
     task.update_time = datetime.now().astimezone()
     task.run_time = time() - start_time

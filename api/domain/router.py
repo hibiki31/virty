@@ -137,21 +137,19 @@ def post_api_vms(
 @app.patch("/api/tasks/vms/{uuid}/power", response_model=List[TaskSelect])
 def patch_api_tasks_vms_uuid_power(
         uuid: str,
-        request: Request,
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         body: PatchDomainPower = None,
     ):
-    task_req = TaskRequest(url=request.url._url, body=body, path_param={"uuid":uuid})
-
-
+    
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='power')
-    task.commit(user=current_user, request=task_req)
+    task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
 
-    vm_list_task = TaskManager(db=db)
-    vm_list_task.select('put', 'vm', 'list')
-    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+    task_vm_list = TaskManager(db=db)
+    task_vm_list.select('put', 'vm', 'list')
+    task_vm_list.commit(user=cu, dependence_uuid=task.model.uuid)
 
     return [task.model]
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON, Float
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON, Float, Text
 from mixin.database import Base
 
 from user.models import UserModel
@@ -20,3 +20,7 @@ class TaskModel(Base):
     request = Column(JSON)
     result = Column(JSON)
     message = Column(String)
+    log = Column(Text)
+    
+    def write_log(self, msg):
+        self.log = self.log + str(msg) if self.log else str(msg)

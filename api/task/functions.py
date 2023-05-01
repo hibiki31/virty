@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
 
 from task.models import TaskModel
+from task.schemas import TaskRequest
 from mixin.log import setup_logger
 
 
@@ -36,8 +37,10 @@ class TaskBase:
         self.task_func.update(tb.task_func)
     
     def run(self, key, task_model):
+        request = TaskRequest(**json.loads(task_model.request))
+
         try:
-            self.task_func[key](self, task_model)
+            self.task_func[key](self, task_model, request)
         except KeyError:
             raise Exception("Task not found")
 
@@ -52,9 +55,13 @@ class TaskManager():
         self.resource = resource
         self.object = object
     
-    def commit(self, user, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
+    def commit(self, user, req=None, body: BaseModel=BaseModel(), param={}, dep_uuid=None):
+        status = "wait" if dep_uuid else "init"
         task_uuid = str(uuid.uuid4())
+
+        url = None if dep_uuid else req.url._url
+
+        task_request = TaskRequest(url=url, path_param=param, body=body)
 
         self.db.add(TaskModel(
             uuid = task_uuid,
@@ -62,11 +69,11 @@ class TaskManager():
             run_time = None,
             user_id = user.id,
             status = status,
-            dependence_uuid = dependence_uuid,
+            dependence_uuid = dep_uuid,
             resource = self.resource,
             object = self.object,
             method = self.method,
-            request = request.json(),
+            request = task_request.json(),
             message = "Task has been queued"
         ))
         self.db.commit()
