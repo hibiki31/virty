@@ -121,7 +121,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
       <StorageActionsMenu
         anchorEl={storageAnchorEl}
-        onClose={() => setStorage(undefined)}
+        onClose={() => setStorageAnchorEl(null)}
         vmUuid={data.uuid}
         storage={storage}
         nodeName={data.nodeName}

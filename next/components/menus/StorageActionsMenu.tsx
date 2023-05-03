@@ -1,7 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { imagesApi } from '~/lib/api';
+import { imagesApi, vmsApi } from '~/lib/api';
 import { GetDomainDrives } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -9,6 +9,7 @@ import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
 import { BaseDialog } from '../dialogs/BaseDialog';
 import { BaseMenu } from './BaseMenu';
+import { useNotistack } from '~/lib/utils/notistack';
 
 type Props = {
   anchorEl: HTMLElement | null;
@@ -33,6 +34,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
   } = formMethods;
   const [changeImageOpen, setChangeImageOpen] = useState(false);
   const { openConfirmDialog } = useConfirmDialog();
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (!changeImageOpen) {
@@ -56,17 +58,34 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
       return;
     }
 
-    console.log('unmount');
+    return vmsApi
+      .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target })
+      .then(() => {
+        enqueueNotistack('CD-ROM unmounted successfully.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to unmount the CD-ROM.', { variant: 'error' });
+      });
   };
 
   const handleChangeImage = async (data: ChangeImageForm) => {
-    console.log('submit', data);
+    return vmsApi
+      .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target, ...data })
+      .then(() => {
+        enqueueNotistack('CD-ROM changed successfully.', { variant: 'success' });
+        setChangeImageOpen(false);
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to change the CD-ROM.', { variant: 'error' });
+      });
   };
 
   return (
     <>
       <BaseMenu
-        open={!!storage}
+        open={!!anchorEl}
         anchorEl={anchorEl}
         onClose={onClose}
         menuProps={{
@@ -109,7 +128,7 @@ const changeImageFormJtd = {
     spread: true,
   },
   properties: {
-    image: {
+    path: {
       metadata: {
         name: 'Image',
         default: '',
