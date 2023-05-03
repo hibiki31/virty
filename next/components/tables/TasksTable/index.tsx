@@ -96,7 +96,7 @@ export const TasksTable: FC = () => {
               field: 'runTime',
               disableColumnMenu: true,
               flex: 1,
-              renderCell: (params) => `${Math.round(params.row.runTime! * 100) / 100} s`,
+              renderCell: (params) => (params.value ? `${Math.round(params.value! * 100) / 100} s` : '-'),
             },
             {
               headerName: '',

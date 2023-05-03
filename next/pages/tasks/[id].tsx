@@ -110,9 +110,23 @@ const Page: NextPage<Props> = ({ id }) => {
                 getItem: (item) => <Typography variant="subtitle1">{formatDate(item.postTime!)}</Typography>,
               },
               {
+                name: <Typography variant="body2">Started At</Typography>,
+                getItem: (item) => (
+                  <Typography variant="subtitle1">{item.startTime ? formatDate(item.startTime) : '-'}</Typography>
+                ),
+              },
+              {
+                name: <Typography variant="body2">Updated At</Typography>,
+                getItem: (item) => (
+                  <Typography variant="subtitle1">{item.updateTime ? formatDate(item.updateTime) : '-'}</Typography>
+                ),
+              },
+              {
                 name: <Typography variant="body2">Run Time</Typography>,
                 getItem: (item) => (
-                  <Typography variant="subtitle1">{Math.round(item.runTime! * 100) / 100} s</Typography>
+                  <Typography variant="subtitle1">
+                    {item.runTime ? `${Math.round(item.runTime! * 100) / 100} s` : '-'}
+                  </Typography>
                 ),
               },
               {
