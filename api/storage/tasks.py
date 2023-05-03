@@ -22,7 +22,7 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.storage.list")
-def put_storage_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
+def put_storage_list(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
     nodes = db.query(NodeModel).all()
 
@@ -69,23 +69,23 @@ def put_storage_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
 
 
 @worker_task(key="post.storage.root")
-def post_storage_root(self: TaskBase, task: TaskModel):
+def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    request: StorageInsert = StorageInsert(**loads(task.request))
+    body = StorageInsert(**request.body)
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
     except:
         raise Exception("node not found")
 
     # XMLを定義、設定
     editor = xmllib.XmlEditor("static","storage_dir")
-    editor.storage_base_edit(name=request.name, path=request.path)
+    editor.storage_base_edit(name=body.name, path=body.path)
 
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
     ansible_manager.run_playbook_file(
         yaml="pb_make_dir_recurse",
-        extra_vars=[{"path": request.path}]
+        extra_vars=[{"path": body.path}]
     )
 
     # ソイや！
@@ -96,16 +96,17 @@ def post_storage_root(self: TaskBase, task: TaskModel):
 
 
 @worker_task(key="delete.storage.root")
-def delete_storage_root(self: TaskBase, task: TaskModel):
+def delete_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    request: StorageDelete = StorageDelete(**loads(task.request))
+    uuid = request.path_param["uuid"]
 
-    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+    storage:StorageModel = db.query(StorageModel).filter(StorageModel.uuid == uuid).one()
+    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == storage.node_name).one()
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.storage_undefine(request.uuid)
+    manager.storage_undefine(uuid)
 
-    db.query(StorageModel).filter(StorageModel.uuid==request.uuid).delete()
+    db.query(StorageModel).filter(StorageModel.uuid==uuid).delete()
     db.commit()
 
-    return task
+    task.message = "Storage delete has been successfull"

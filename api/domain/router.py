@@ -64,17 +64,14 @@ def get_api_domain_uuid(
 
 @app.put('/api/tasks/vms', response_model=List[TaskSelect])
 def publish_task_to_update_vm_list(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
 
     task = TaskManager(db=db)
-    task.select(
-        method='put',
-        resource='vm', 
-        object='list',
-    )
-    task.commit(user=current_user)
+    task.select(method='put', resource='vm', object='list')
+    task.commit(user=cu, req=req)
 
     return [task.model]
 

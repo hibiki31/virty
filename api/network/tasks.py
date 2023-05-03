@@ -14,7 +14,7 @@ from module import virtlib
 from module import xmllib
 from module.ovslib import OVSManager
 
-from task.functions import TaskBase
+from task.functions import TaskBase, TaskRequest
 
 from time import time
 
@@ -24,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.network.list")
-def put_network_list(self: TaskBase, task: TaskModel):
+def put_network_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
 
     nodes = self.db.query(NodeModel).all()
 

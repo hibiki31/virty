@@ -19,13 +19,13 @@ def main():
     api_auth_validate()
     api_users_me()
     
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
 
     put_list()
-    # delete_storage()
-    # post_storage()
+    delete_storage()
+    post_storage()
     
     # put_list()
     # delete_vm()

@@ -33,7 +33,7 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.vm.list")
-def put_vm_list(self: TaskBase, task: TaskModel) -> float:
+def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
     nodes:NodeModel = self.db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
