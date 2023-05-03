@@ -27,11 +27,11 @@ def main():
     delete_storage()
     post_storage()
     
-    put_list()
-    delete_vm()
-    post_vm()
-    poweron_vm()
-    poweroff_vm()
+    # put_list()
+    # delete_vm()
+    # post_vm()
+    # poweron_vm()
+    # poweroff_vm()
 
 
 
@@ -58,9 +58,6 @@ def api_auth_validate():
 def api_users_me():
     resp = httpx.get(f'{BASE_URL}/api/users/me',headers=HEADERS)
     print_resp(resp=resp)
-
-
-            
 
 def print_tasks():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks', headers=HEADERS).json()

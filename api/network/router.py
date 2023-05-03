@@ -32,16 +32,18 @@ def get_api_networks(
 
 @app.put("/api/tasks/networks", tags=["network"], response_model=List[TaskSelect])
 def put_api_networks(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
+    
     task = TaskManager(db=db)
     task.select(method='put', resource='network', object='list')
-    task.commit(user=current_user)
+    task.commit(user=cu, req=req)
    
     return [task.model]
 
-@app.post("/api/networks", tags=["network"], response_model=TaskSelect)
+@app.post("/api/tasks/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -54,7 +56,7 @@ def post_api_storage(
 
     return task.model
 
-@app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
+@app.delete("/api/tasks/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -76,7 +78,7 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/api/networks/pools", tags=["network"])
+@app.post("/api/tasks/networks/pools", tags=["network"])
 def post_api_networks_pools(
         model: PostNetworkPool,
         db: Session = Depends(get_db),
@@ -88,7 +90,7 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/api/networks/pools", tags=["network"])
+@app.patch("/api/tasks/networks/pools", tags=["network"])
 def patch_api_networks_pools(
         model: PatchNetworkPool,
         db: Session = Depends(get_db),
@@ -108,7 +110,7 @@ def patch_api_networks_pools(
 
 
 
-@app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
+@app.post("/api/tasks/networks/ovs", tags=["network"], response_model=TaskSelect)
 def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
@@ -126,7 +128,7 @@ def post_api_networks_uuid_ovs(
 
     return main_task.model
 
-@app.delete("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
+@app.delete("/api/tasks/networks/ovs", tags=["network"], response_model=TaskSelect)
 def post_api_networks_uuid_ovs(
         bg: BackgroundTasks,
         request: NetworkOVSDelete,

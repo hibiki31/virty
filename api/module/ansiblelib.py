@@ -111,7 +111,7 @@ class ResultCallback(CallbackBase):
             "task_name": result.task_name,
             "result": result._result
         }
-        logger.debug(json.dumps(res, indent=4))
+        # logger.debug(json.dumps(res, indent=4))
         self.res.append(res)
         self.host_ok[host.get_name()] = result
 

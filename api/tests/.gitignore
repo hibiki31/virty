@@ -1,2 +1,2 @@
-env.json
+env*.json
 .pytest_cache

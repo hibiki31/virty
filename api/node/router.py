@@ -1,9 +1,9 @@
 from os import name, chmod, makedirs
 
-from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import true
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
+
 
 from .models import *
 from .schemas import *
@@ -30,28 +30,6 @@ def get_api_nodes(
     ):
 
     return db.query(NodeModel).all()
-
-
-@app.delete("/nodes/{node_name}", tags=["nodes"])
-def delete_api_nodes(
-        node_name: str,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
-
-    try:
-        db.query(NodeModel).filter(NodeModel.name==node_name).one()
-    except NoResultFound:
-        raise notfound_exception(msg="Not found node")
-
-    
-    db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node_name).delete()
-    db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node_name).delete()
-    db.commit()
-    db.query(NodeModel).filter(NodeModel.name==node_name).delete()
-    db.commit()
-
-    return
 
 
 @app.post("/nodes/key", tags=["nodes"])
@@ -89,25 +67,42 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
 
 
 @app.post("/tasks/nodes", tags=["tasks-nodes"], response_model=List[TaskSelect])
-def post_api_nodes(
-        current_user: CurrentUser = Depends(get_current_user),
+def post_tasks_nodes(
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: NodeInsert = None
+        body: NodeInsert = None
     ):
-    # ノード追加タスク
+    
     task = TaskManager(db=db)
     task.select(method='post', resource='node', object='root')
-    task.commit(user=current_user, request=request)
+    task.commit(user=cu, req=req, body=body)
 
-    if request.libvirt_role:
-        libvirt_request = NodeRolePatch(node_name=request.name, role_name="libvirt")
-        libvirt_task = TaskManager(db=db)
-        libvirt_task.select(method="patch", resource="node", object="role")
-        libvirt_task.commit(user=current_user, dependence_uuid=task.model.uuid, request=libvirt_request)
-        dependence_uuid = libvirt_task.model.uuid
+    if body.libvirt_role:
+        body_libvirt = NodeRolePatch(node_name=body.name, role_name="libvirt")
+        task_libvirt = TaskManager(db=db)
+        task_libvirt.select(method="patch", resource="node", object="role")
+        task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
+        dependence_uuid = task_libvirt.model.uuid
+
+        return [task.model, task_libvirt.model]
+
+    return [task.model]
 
 
-    return [task.model, libvirt_task.model]
+@app.delete("/tasks/nodes/{name}", tags=["tasks-nodes"], response_model=List[TaskSelect])
+def delete_tasks_nodes_name(
+        name: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    task = TaskManager(db=db)
+    task.select(method='delete', resource='node', object='root')
+    task.commit(user=cu, req=req, param={"name": name})
+
+    return [task.model]
 
 
 @app.patch("/tasks/nodes/roles", tags=["tasks-nodes"], response_model=TaskSelect)

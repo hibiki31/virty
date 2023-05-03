@@ -1,6 +1,6 @@
 from email.mime import image
 from pprint import pprint
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import false, func, true
 from domain.models import DomainDriveModel, DomainModel
@@ -129,13 +129,13 @@ def get_api_images(
 
 @app.put("/api/tasks/images", tags=["tasks-images"])
 def put_api_images(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-    # タスクを追加
     task = TaskManager(db=db)
     task.select(method='put', resource='storage', object='list')
-    task.commit(user=current_user)
+    task.commit(user=cu, req=req)
    
     return [task.model]
 
@@ -164,19 +164,21 @@ def patch_api_images(
 
 @app.post("/api/tasks/storages", tags=["tasks-storages"], response_model=List[TaskSelect])
 def post_api_storage(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: StorageInsert = None
+        body: StorageInsert = None
     ):
+
     task = TaskManager(db=db)
-    task.select('post', 'storage', 'root')
-    task.commit(user=current_user, request=request)
+    task.select(method='post', resource='storage', object='root')
+    task.commit(user=cu, req=req, body=body)
 
-    put_task = TaskManager(db=db)
-    put_task.select('put', 'storage', 'list')
-    put_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+    task_put_list = TaskManager(db=db)
+    task_put_list.select('put', 'storage', 'list')
+    task_put_list.commit(user=cu, req=req)
 
-    return [task.model, put_task.model]
+    return [task.model, task_put_list.model]
 
 
 @app.patch("/api/storages", tags=["storages"])
@@ -190,15 +192,17 @@ def post_api_storage(
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
-@app.delete("/api/tasks/storages", tags=["tasks-storages"], response_model=List[TaskSelect])
+@app.delete("/api/tasks/storages/{uuid}", tags=["tasks-storages"], response_model=List[TaskSelect])
 def delete_api_storages(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: StorageDelete = None
+        uuid: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
     ):
+
     task = TaskManager(db=db)
     task.select(method='delete', resource='storage', object='root')
-    task.commit(user=current_user, request=request)
+    task.commit(user=cu, req=req, param={"uuid": uuid})
 
     return [task.model]
 
