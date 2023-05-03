@@ -1,10 +1,11 @@
-import { Button, Grid, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useSWR from 'swr';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { ChangeStorageMetaDataDialog } from '~/components/dialogs/ChangeStorageMetaDataDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { storagesApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -32,11 +33,11 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    'storagesApi.getApiStoragesApiStoragesGet',
+    ['storagesApi.getApiStoragesApiStoragesGet', id],
     () =>
       storagesApi
-        .getApiStoragesApiStoragesGet()
-        .then((res) => res.data.find((storage) => storage.uuid === id))
+        .getApiStoragesUuidApiStoragesUuidGet(id)
+        .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {
             return null;
@@ -82,27 +83,17 @@ const Page: NextPage<Props> = ({ id }) => {
         <title>Virty - {data.name}</title>
       </Head>
 
-      <Grid container alignItems="baseline" spacing={2} sx={{ mt: 0, mb: 2 }}>
-        <Grid item>
-          <Typography variant="h6">{data.name}</Typography>
-        </Grid>
-        <Grid item>
-          <Typography variant="subtitle1">{data.uuid}</Typography>
-        </Grid>
-        <Grid item>
-          <OpenDialogButton
-            label="MetaData"
-            DialogComponent={ChangeStorageMetaDataDialog}
-            buttonProps={{ variant: 'contained', size: 'small' }}
-            dialogProps={{ uuid: id, metadata: data.metaData }}
-          />
-        </Grid>
-        <Grid item>
-          <Button variant="contained" color="error" disableElevation size="small" onClick={deleteStorage}>
-            Delete
-          </Button>
-        </Grid>
-      </Grid>
+      <TitleHeader primary={data.name} secondary={data.uuid}>
+        <OpenDialogButton
+          label="MetaData"
+          DialogComponent={ChangeStorageMetaDataDialog}
+          buttonProps={{ variant: 'contained', size: 'small' }}
+          dialogProps={{ uuid: id, metadata: data.metaData }}
+        />
+        <Button variant="contained" color="error" disableElevation size="small" onClick={deleteStorage}>
+          Delete
+        </Button>
+      </TitleHeader>
 
       <pre>{JSON.stringify(data, null, 2)}</pre>
     </DefaultLayout>

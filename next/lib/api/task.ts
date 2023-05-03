@@ -19,8 +19,3 @@ export const TASK_RESOURCE = {
   STORAGE: 'storage',
   NETWORK: 'network',
 } as const;
-
-export type IncompleteTasksResponse = {
-  task_count: number;
-  task_hash: string;
-};

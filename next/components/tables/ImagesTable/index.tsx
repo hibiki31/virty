@@ -161,9 +161,15 @@ const filtersJtd = {
     },
     rool: {
       metadata: {
-        name: 'Rool',
+        name: 'Role',
         default: '',
         required: false,
+        choices: [
+          { label: 'VM Image', value: 'img' },
+          { label: 'ISO installer', value: 'iso' },
+          { label: 'Template Image', value: 'template' },
+          { label: 'Cloud-init', value: 'init-iso' },
+        ],
       },
       type: 'string',
     },

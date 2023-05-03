@@ -18,6 +18,7 @@ import { VM_STATUS } from '~/lib/api/vm';
 import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { VMStatusIcon } from '~/components/vm/VMStatusIcon';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 
 type Props = {
   id: string;
@@ -145,17 +146,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
         nodeName={data.nodeName}
       />
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 2 }}>
-        <Grid item>
-          <VMStatusIcon status={data.status} />
-        </Grid>
-        <Grid item>
-          <Typography variant="h6">{data.name}</Typography>
-        </Grid>
-        <Grid item>
-          <Typography variant="subtitle1">{data.uuid}</Typography>
-        </Grid>
-      </Grid>
+      <TitleHeader prefix={<VMStatusIcon status={data.status} />} primary={data.name} secondary={data.uuid} />
 
       <Grid container spacing={2} mb={2}>
         <Grid item xs={12} md={5} lg={4} xl={3}>

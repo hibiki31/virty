@@ -2,6 +2,7 @@ import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
 export const getServerSideProps = makeRequireLoginProps();
@@ -13,11 +14,7 @@ const Page: NextPage = () => {
         <title>Virty - Dashboard</title>
       </Head>
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
-        <Grid item>
-          <Typography variant="h4">Dashboard</Typography>
-        </Grid>
-      </Grid>
+      <TitleHeader primary="Dashboard" />
     </DefaultLayout>
   );
 };

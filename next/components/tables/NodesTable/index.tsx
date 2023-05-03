@@ -4,6 +4,7 @@ import { DotsVertical } from 'mdi-material-ui';
 import { FC, useState } from 'react';
 import useSWR from 'swr';
 import { NodeDetailsDialog } from '~/components/dialogs/NodeDetailsDialog';
+import { NextLink } from '~/components/utils/NextLink';
 import { nodesApi } from '~/lib/api';
 import { GetNode, GetNodeRole } from '~/lib/api/generated';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -35,7 +36,14 @@ export const NodesTable: FC = () => {
           error={!!error || undefined}
           columns={[
             { headerName: 'Status', field: 'status', disableColumnMenu: true, flex: 1, minWidth: 80 },
-            { headerName: 'Name', field: 'name', disableColumnMenu: true, flex: 1, minWidth: 150 },
+            {
+              headerName: 'Name',
+              field: 'name',
+              disableColumnMenu: true,
+              flex: 1,
+              minWidth: 150,
+              renderCell: (params) => <NextLink pathname={`/nodes/${params.value}`}>{params.value}</NextLink>,
+            },
             { headerName: 'IP', field: 'domain', disableColumnMenu: true, flex: 2, minWidth: 150 },
             { headerName: 'Port', field: 'port', disableColumnMenu: true, align: 'right', flex: 1, minWidth: 80 },
             {

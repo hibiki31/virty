@@ -1,8 +1,11 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { useSWRConfig } from 'swr';
 import { JtdForm } from '~/components/JtdForm';
+import { flavorsApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -21,6 +24,8 @@ export const AddFlavorDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
+  const { mutate } = useSWRConfig();
 
   useEffect(() => {
     if (open) {
@@ -29,7 +34,16 @@ export const AddFlavorDialog: FC<Props> = ({ open, onClose }) => {
   }, [open, reset]);
 
   const handleAddFlavor = (data: FormData) => {
-    console.log('handleAddFlavor', data);
+    return flavorsApi
+      .postApiFlavorsApiFlavorsPost(data)
+      .then(() => {
+        enqueueNotistack('Flavor added.', { variant: 'success' });
+        mutate('flavorsApi.getApiFlavorsApiFlavorsGet');
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add flavor.', { variant: 'error' });
+      });
   };
 
   return (

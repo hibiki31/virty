@@ -1784,6 +1784,31 @@ export interface StorageSelect {
 /**
  * 
  * @export
+ * @interface TaskIncomplete
+ */
+export interface TaskIncomplete {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskIncomplete
+     */
+    'hash': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskIncomplete
+     */
+    'count': number;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TaskIncomplete
+     */
+    'uuids': Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface TaskSelect
  */
 export interface TaskSelect {
@@ -3563,10 +3588,10 @@ export class NetworkTaskApi extends BaseAPI {
 
 
 /**
- * NodesApi - axios parameter creator
+ * NodeApi - axios parameter creator
  * @export
  */
-export const NodesApiAxiosParamCreator = function (configuration?: Configuration) {
+export const NodeApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
@@ -3576,6 +3601,82 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          */
         getApiNodesApiNodesGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/nodes`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getApiNodesApiNodesNameGet: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('getApiNodesApiNodesNameGet', 'name', name)
+            const localVarPath = `/api/nodes/{name}`
+                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get Node Name Facts
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getNodeNameFactsApiNodesNameFactsGet: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('getNodeNameFactsApiNodesNameFactsGet', 'name', name)
+            const localVarPath = `/api/nodes/{name}/facts`
+                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3680,11 +3781,11 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
 };
 
 /**
- * NodesApi - functional programming interface
+ * NodeApi - functional programming interface
  * @export
  */
-export const NodesApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = NodesApiAxiosParamCreator(configuration)
+export const NodeApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = NodeApiAxiosParamCreator(configuration)
     return {
         /**
          * 
@@ -3694,6 +3795,28 @@ export const NodesApiFp = function(configuration?: Configuration) {
          */
         async getApiNodesApiNodesGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GetNode>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getApiNodesApiNodesGet(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getApiNodesApiNodesNameGet(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetNode>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getApiNodesApiNodesNameGet(name, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Get Node Name Facts
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getNodeNameFactsApiNodesNameFactsGet(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getNodeNameFactsApiNodesNameFactsGet(name, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3721,11 +3844,11 @@ export const NodesApiFp = function(configuration?: Configuration) {
 };
 
 /**
- * NodesApi - factory interface
+ * NodeApi - factory interface
  * @export
  */
-export const NodesApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = NodesApiFp(configuration)
+export const NodeApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = NodeApiFp(configuration)
     return {
         /**
          * 
@@ -3735,6 +3858,26 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
          */
         getApiNodesApiNodesGet(options?: any): AxiosPromise<Array<GetNode>> {
             return localVarFp.getApiNodesApiNodesGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getApiNodesApiNodesNameGet(name: string, options?: any): AxiosPromise<GetNode> {
+            return localVarFp.getApiNodesApiNodesNameGet(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get Node Name Facts
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getNodeNameFactsApiNodesNameFactsGet(name: string, options?: any): AxiosPromise<any> {
+            return localVarFp.getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3759,21 +3902,45 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
 };
 
 /**
- * NodesApi - object-oriented interface
+ * NodeApi - object-oriented interface
  * @export
- * @class NodesApi
+ * @class NodeApi
  * @extends {BaseAPI}
  */
-export class NodesApi extends BaseAPI {
+export class NodeApi extends BaseAPI {
     /**
      * 
      * @summary Get Api Nodes
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof NodesApi
+     * @memberof NodeApi
      */
     public getApiNodesApiNodesGet(options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getApiNodesApiNodesGet(options).then((request) => request(this.axios, this.basePath));
+        return NodeApiFp(this.configuration).getApiNodesApiNodesGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get Api Nodes
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodeApi
+     */
+    public getApiNodesApiNodesNameGet(name: string, options?: AxiosRequestConfig) {
+        return NodeApiFp(this.configuration).getApiNodesApiNodesNameGet(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get Node Name Facts
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodeApi
+     */
+    public getNodeNameFactsApiNodesNameFactsGet(name: string, options?: AxiosRequestConfig) {
+        return NodeApiFp(this.configuration).getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3781,10 +3948,10 @@ export class NodesApi extends BaseAPI {
      * @summary Get Ssh Key Pair
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof NodesApi
+     * @memberof NodeApi
      */
     public getSshKeyPairApiNodesKeyGet(options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getSshKeyPairApiNodesKeyGet(options).then((request) => request(this.axios, this.basePath));
+        return NodeApiFp(this.configuration).getSshKeyPairApiNodesKeyGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3793,10 +3960,263 @@ export class NodesApi extends BaseAPI {
      * @param {SSHKeyPair} sSHKeyPair 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof NodesApi
+     * @memberof NodeApi
      */
     public postSshKeyPairApiNodesKeyPost(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).postSshKeyPairApiNodesKeyPost(sSHKeyPair, options).then((request) => request(this.axios, this.basePath));
+        return NodeApiFp(this.configuration).postSshKeyPairApiNodesKeyPost(sSHKeyPair, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * NodeTaskApi - axios parameter creator
+ * @export
+ */
+export const NodeTaskApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteTasksNodesNameApiTasksNodesNameDelete: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('deleteTasksNodesNameApiTasksNodesNameDelete', 'name', name)
+            const localVarPath = `/api/tasks/nodes/{name}`
+                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Patch Api Node Role
+         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        patchApiNodeRoleApiTasksNodesRolesPatch: async (nodeRolePatch: NodeRolePatch, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'nodeRolePatch' is not null or undefined
+            assertParamExists('patchApiNodeRoleApiTasksNodesRolesPatch', 'nodeRolePatch', nodeRolePatch)
+            const localVarPath = `/api/tasks/nodes/roles`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeRolePatch, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Post Tasks Nodes
+         * @param {NodeInsert} [nodeInsert] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        postTasksNodesApiTasksNodesPost: async (nodeInsert?: NodeInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/tasks/nodes`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeInsert, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * NodeTaskApi - functional programming interface
+ * @export
+ */
+export const NodeTaskApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = NodeTaskApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteTasksNodesNameApiTasksNodesNameDelete(name, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Patch Api Node Role
+         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Post Tasks Nodes
+         * @param {NodeInsert} [nodeInsert] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postTasksNodesApiTasksNodesPost(nodeInsert, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * NodeTaskApi - factory interface
+ * @export
+ */
+export const NodeTaskApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = NodeTaskApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Patch Api Node Role
+         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Post Tasks Nodes
+         * @param {NodeInsert} [nodeInsert] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * NodeTaskApi - object-oriented interface
+ * @export
+ * @class NodeTaskApi
+ * @extends {BaseAPI}
+ */
+export class NodeTaskApi extends BaseAPI {
+    /**
+     * 
+     * @summary Delete Tasks Nodes Name
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodeTaskApi
+     */
+    public deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig) {
+        return NodeTaskApiFp(this.configuration).deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Patch Api Node Role
+     * @param {NodeRolePatch} nodeRolePatch 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodeTaskApi
+     */
+    public patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig) {
+        return NodeTaskApiFp(this.configuration).patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Post Tasks Nodes
+     * @param {NodeInsert} [nodeInsert] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodeTaskApi
+     */
+    public postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig) {
+        return NodeTaskApiFp(this.configuration).postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4788,10 +5208,16 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
          * 
          * @summary Get Tasks
          * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string} [resource] 
+         * @param {string} [object] 
+         * @param {string} [method] 
+         * @param {string} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksApiTasksGet: async (admin?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getTasksApiTasksGet: async (admin?: boolean, limit?: number, page?: number, resource?: string, object?: string, method?: string, status?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4810,6 +5236,30 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
 
             if (admin !== undefined) {
                 localVarQueryParameter['admin'] = admin;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (resource !== undefined) {
+                localVarQueryParameter['resource'] = resource;
+            }
+
+            if (object !== undefined) {
+                localVarQueryParameter['object'] = object;
+            }
+
+            if (method !== undefined) {
+                localVarQueryParameter['method'] = method;
+            }
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
             }
 
 
@@ -4864,12 +5314,12 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksIncompleteApiTasksIncompleteGet: async (updateHash?: string, admin?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getTasksIncompleteApiTasksIncompleteGet: async (hash?: string, admin?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/incomplete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4886,8 +5336,8 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
             // oauth required
             await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
 
-            if (updateHash !== undefined) {
-                localVarQueryParameter['update_hash'] = updateHash;
+            if (hash !== undefined) {
+                localVarQueryParameter['hash'] = hash;
             }
 
             if (admin !== undefined) {
@@ -4929,11 +5379,17 @@ export const TasksApiFp = function(configuration?: Configuration) {
          * 
          * @summary Get Tasks
          * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string} [resource] 
+         * @param {string} [object] 
+         * @param {string} [method] 
+         * @param {string} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTasksApiTasksGet(admin?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksApiTasksGet(admin, options);
+        async getTasksApiTasksGet(admin?: boolean, limit?: number, page?: number, resource?: string, object?: string, method?: string, status?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksApiTasksGet(admin, limit, page, resource, object, method, status, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4950,13 +5406,13 @@ export const TasksApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options);
+        async getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskIncomplete>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksIncompleteApiTasksIncompleteGet(hash, admin, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -4982,11 +5438,17 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
          * 
          * @summary Get Tasks
          * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string} [resource] 
+         * @param {string} [object] 
+         * @param {string} [method] 
+         * @param {string} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksApiTasksGet(admin?: boolean, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.getTasksApiTasksGet(admin, options).then((request) => request(axios, basePath));
+        getTasksApiTasksGet(admin?: boolean, limit?: number, page?: number, resource?: string, object?: string, method?: string, status?: string, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.getTasksApiTasksGet(admin, limit, page, resource, object, method, status, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -5001,13 +5463,13 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: any): AxiosPromise<any> {
-            return localVarFp.getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options).then((request) => request(axios, basePath));
+        getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: any): AxiosPromise<TaskIncomplete> {
+            return localVarFp.getTasksIncompleteApiTasksIncompleteGet(hash, admin, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -5034,12 +5496,18 @@ export class TasksApi extends BaseAPI {
      * 
      * @summary Get Tasks
      * @param {boolean} [admin] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {string} [resource] 
+     * @param {string} [object] 
+     * @param {string} [method] 
+     * @param {string} [status] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getTasksApiTasksGet(admin?: boolean, options?: AxiosRequestConfig) {
-        return TasksApiFp(this.configuration).getTasksApiTasksGet(admin, options).then((request) => request(this.axios, this.basePath));
+    public getTasksApiTasksGet(admin?: boolean, limit?: number, page?: number, resource?: string, object?: string, method?: string, status?: string, options?: AxiosRequestConfig) {
+        return TasksApiFp(this.configuration).getTasksApiTasksGet(admin, limit, page, resource, object, method, status, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5057,14 +5525,14 @@ export class TasksApi extends BaseAPI {
     /**
      * 
      * @summary Get Tasks Incomplete
-     * @param {string} [updateHash] 
+     * @param {string} [hash] 
      * @param {boolean} [admin] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: AxiosRequestConfig) {
-        return TasksApiFp(this.configuration).getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options).then((request) => request(this.axios, this.basePath));
+    public getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: AxiosRequestConfig) {
+        return TasksApiFp(this.configuration).getTasksIncompleteApiTasksIncompleteGet(hash, admin, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -5167,259 +5635,6 @@ export class TasksImagesApi extends BaseAPI {
      */
     public putApiImagesApiTasksImagesPut(options?: AxiosRequestConfig) {
         return TasksImagesApiFp(this.configuration).putApiImagesApiTasksImagesPut(options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-/**
- * TasksNodesApi - axios parameter creator
- * @export
- */
-export const TasksNodesApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @summary Delete Tasks Nodes Name
-         * @param {string} name 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteTasksNodesNameApiTasksNodesNameDelete: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'name' is not null or undefined
-            assertParamExists('deleteTasksNodesNameApiTasksNodesNameDelete', 'name', name)
-            const localVarPath = `/api/tasks/nodes/{name}`
-                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        patchApiNodeRoleApiTasksNodesRolesPatch: async (nodeRolePatch: NodeRolePatch, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'nodeRolePatch' is not null or undefined
-            assertParamExists('patchApiNodeRoleApiTasksNodesRolesPatch', 'nodeRolePatch', nodeRolePatch)
-            const localVarPath = `/api/tasks/nodes/roles`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(nodeRolePatch, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        postTasksNodesApiTasksNodesPost: async (nodeInsert?: NodeInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/tasks/nodes`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(nodeInsert, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * TasksNodesApi - functional programming interface
- * @export
- */
-export const TasksNodesApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = TasksNodesApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @summary Delete Tasks Nodes Name
-         * @param {string} name 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteTasksNodesNameApiTasksNodesNameDelete(name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postTasksNodesApiTasksNodesPost(nodeInsert, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-    }
-};
-
-/**
- * TasksNodesApi - factory interface
- * @export
- */
-export const TasksNodesApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = TasksNodesApiFp(configuration)
-    return {
-        /**
-         * 
-         * @summary Delete Tasks Nodes Name
-         * @param {string} name 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * TasksNodesApi - object-oriented interface
- * @export
- * @class TasksNodesApi
- * @extends {BaseAPI}
- */
-export class TasksNodesApi extends BaseAPI {
-    /**
-     * 
-     * @summary Delete Tasks Nodes Name
-     * @param {string} name 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TasksNodesApi
-     */
-    public deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig) {
-        return TasksNodesApiFp(this.configuration).deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Patch Api Node Role
-     * @param {NodeRolePatch} nodeRolePatch 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TasksNodesApi
-     */
-    public patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig) {
-        return TasksNodesApiFp(this.configuration).patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Post Tasks Nodes
-     * @param {NodeInsert} [nodeInsert] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TasksNodesApi
-     */
-    public postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig) {
-        return TasksNodesApiFp(this.configuration).postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

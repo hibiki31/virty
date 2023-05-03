@@ -1,8 +1,9 @@
-import { Button, Grid, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { TasksTable } from '~/components/tables/TasksTable';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 
@@ -32,16 +33,11 @@ const Page: NextPage = () => {
         <title>Virty - Tasks</title>
       </Head>
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
-        <Grid item>
-          <Typography variant="h4">Tasks</Typography>
-        </Grid>
-        <Grid item>
-          <Button variant="contained" color="error" onClick={deleteAllTasks}>
-            Delete
-          </Button>
-        </Grid>
-      </Grid>
+      <TitleHeader primary="Tasks">
+        <Button variant="contained" color="error" onClick={deleteAllTasks}>
+          Delete
+        </Button>
+      </TitleHeader>
 
       <TasksTable />
     </DefaultLayout>

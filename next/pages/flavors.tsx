@@ -1,10 +1,10 @@
-import { Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { AddFlavorDialog } from '~/components/dialogs/AddFlavorDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { FlavorsTable } from '~/components/tables/FlavorsTable';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 
 export const getServerSideProps = makeRequireLoginProps();
@@ -16,14 +16,9 @@ const Page: NextPage = () => {
         <title>Virty - Flavors</title>
       </Head>
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
-        <Grid item>
-          <Typography variant="h4">Flavors</Typography>
-        </Grid>
-        <Grid item>
-          <OpenDialogButton label="Add" DialogComponent={AddFlavorDialog} buttonProps={{ variant: 'contained' }} />
-        </Grid>
-      </Grid>
+      <TitleHeader primary="Flavors">
+        <OpenDialogButton label="Add" DialogComponent={AddFlavorDialog} buttonProps={{ variant: 'contained' }} />
+      </TitleHeader>
 
       <FlavorsTable />
     </DefaultLayout>

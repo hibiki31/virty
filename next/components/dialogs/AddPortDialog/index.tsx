@@ -2,7 +2,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
+import { tasksNetworksApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
@@ -22,6 +24,7 @@ export const AddPortDialog: FC<Props> = ({ open, networkUuid, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (open) {
@@ -30,7 +33,15 @@ export const AddPortDialog: FC<Props> = ({ open, networkUuid, onClose }) => {
   }, [open, reset]);
 
   const handleAddPort = (data: FormData) => {
-    console.log('handleAddPort', networkUuid, data);
+    return tasksNetworksApi
+      .postApiNetworksUuidOvsApiTasksNetworksOvsPost({ uuid: networkUuid, ...data })
+      .then(() => {
+        enqueueNotistack('Port added successfully.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add the port.', { variant: 'error' });
+      });
   };
 
   return (
@@ -70,12 +81,11 @@ const formJtd = {
       },
       type: 'float64',
     },
-    isDefault: {
+    default: {
       metadata: {
-        name: 'Default',
+        name: 'Change to default',
         default: false,
         required: false,
-        hidden: true,
       },
       type: 'boolean',
     },

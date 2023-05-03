@@ -6,12 +6,12 @@ import {
   MixinApi,
   NetworkApi,
   NetworkTaskApi,
-  NodesApi,
+  NodeApi,
+  NodeTaskApi,
   ProjectApi,
   StoragesApi,
   TasksApi,
   TasksImagesApi,
-  TasksNodesApi,
   TasksStoragesApi,
   UsersApi,
   VmApi,
@@ -32,8 +32,8 @@ const config = new Configuration({
 export const mixinApi = new MixinApi(config);
 export const authApi = new AuthApi(config);
 export const usersApi = new UsersApi(config);
-export const nodesApi = new NodesApi(config);
-export const tasksNodesApi = new TasksNodesApi(config);
+export const nodesApi = new NodeApi(config);
+export const tasksNodesApi = new NodeTaskApi(config);
 export const tasksApi = new TasksApi(config);
 export const vmsApi = new VmApi(config);
 export const tasksVmsApi = new VmTaskApi(config);
