@@ -2,6 +2,8 @@ import { Button, Grid, Typography } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useSWR from 'swr';
+import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
+import { ChangeStorageMetaDataDialog } from '~/components/dialogs/ChangeStorageMetaDataDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { storagesApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
@@ -30,7 +32,7 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    ['networkApi.getApiNetworksUuidApiNetworksUuidGet'],
+    'storagesApi.getApiStoragesApiStoragesGet',
     () =>
       storagesApi
         .getApiStoragesApiStoragesGet()
@@ -86,6 +88,14 @@ const Page: NextPage<Props> = ({ id }) => {
         </Grid>
         <Grid item>
           <Typography variant="subtitle1">{data.uuid}</Typography>
+        </Grid>
+        <Grid item>
+          <OpenDialogButton
+            label="MetaData"
+            DialogComponent={ChangeStorageMetaDataDialog}
+            buttonProps={{ variant: 'contained', size: 'small' }}
+            dialogProps={{ uuid: id, metadata: data.metaData }}
+          />
         </Grid>
         <Grid item>
           <Button variant="contained" color="error" disableElevation size="small" onClick={deleteStorage}>
