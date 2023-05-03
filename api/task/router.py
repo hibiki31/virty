@@ -52,11 +52,11 @@ def delete_tasks(
     return model
 
 
-@app.get("/tasks/incomplete")
+@app.get("/tasks/incomplete", response_model=TaskIncomplete)
 def get_tasks_incomplete(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        update_hash: str = None,
+        hash: str = None,
         admin: bool = False
     ):
 
@@ -79,11 +79,11 @@ def get_tasks_incomplete(
         task_count = len(task_model)
         task_hash = str(hashlib.md5(str([j.uuid for j in task_model]).encode()).hexdigest())
         
-        if task_hash != update_hash:
+        if task_hash != hash:
             break
         time.sleep(0.5)       
 
-    return {"task_hash": task_hash, "task_count": task_count, "uuids": [j.uuid for j in task_model]}
+    return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
 
 
 @app.get("/tasks/{uuid}", response_model=TaskSelect)

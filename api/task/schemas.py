@@ -47,3 +47,9 @@ class TaskRequest(CamelModel):
     url: str = None
     path_param: Any
     body: Any
+
+
+class TaskIncomplete(CamelModel):
+    hash: str
+    count: int
+    uuids: List[str]
