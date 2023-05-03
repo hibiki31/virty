@@ -76,7 +76,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.networks', [
             {
               type: 'network',
-              networkName: '',
+              networkUuid: '',
               port: '',
             },
           ]);
@@ -111,8 +111,8 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           break;
       }
       const path = name.split('.');
-      const networkUuid = data.form?.networks?.[Number(path[2])]?.networkName;
-      if (path[1] === 'networks' && path[3] === 'networkName' && networkUuid) {
+      const networkUuid = data.form?.networks?.[Number(path[2])]?.networkUuid;
+      if (path[1] === 'networks' && path[3] === 'networkUuid' && networkUuid) {
         const portName = (path.slice(0, 3).join('.') + '.port') as any;
         setValue(portName, '');
         setFetcher('', () => Promise.resolve([]));
@@ -347,7 +347,7 @@ const addVMFormJtd = {
                 },
                 type: 'string',
               },
-              networkName: {
+              networkUuid: {
                 metadata: {
                   name: 'Network',
                   default: '',
@@ -361,9 +361,9 @@ const addVMFormJtd = {
                   name: 'Port',
                   default: '',
                   required: true,
-                  hidden: (get: any) => !get(1, 'networkName'),
+                  hidden: (get: any) => !get(1, 'networkUuid'),
                   choices: (get: any) => {
-                    const network = get(1, 'networkName');
+                    const network = get(1, 'networkUuid');
                     return network ? `ports-${network}` : '';
                   },
                 },
