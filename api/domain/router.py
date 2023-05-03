@@ -28,7 +28,7 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.get("/api/vms",response_model=List[GetDomain])
+@app.get("/api/vms",response_model=GetDomainPagenation)
 def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -53,10 +53,12 @@ def get_api_domain(
     if node_name_like:
         query = query.filter(DomainModel.node_name.like(f'%{node_name_like}%'))
     
+    count = query.count()
+
     query = query.order_by(desc(DomainModel.name))
     vms = query.limit(limit).offset(int(limit*page)).all()
 
-    return vms
+    return {"count": count, "data": vms}
 
 
 @app.get("/api/vms/{uuid}",response_model=GetDomainDetail)
