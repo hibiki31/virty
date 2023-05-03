@@ -1,5 +1,5 @@
 from time import sleep
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -68,6 +68,25 @@ def patch_api_networks_pools(
         pool_model.networks.append(network_model)
     db.commit()
     return True
+
+
+@app.delete("/pools/{id}")
+def delete_pools_uuid(
+        id: int,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    cu.verify_scope(["admin.network.pools"])
+
+    net_pool = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==id).one_or_none()
+    
+    if net_pool == None:
+        raise HTTPException(status_code=404, detail="network pool is not found")
+    
+    db.delete(net_pool)
+    db.commit()
+
+    return {"detail": "success"}
 
 
 @app.get("/{uuid}", response_model=GetNetwork)
