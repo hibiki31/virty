@@ -18,6 +18,7 @@ import { styled } from '@mui/material';
 const StyledSnackbarProvider = styled(SnackbarProvider)`
   &.SnackbarItem-contentRoot {
     margin-top: 48px;
+    margin-bottom: -48px;
   }
 `;
 
