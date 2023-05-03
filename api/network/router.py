@@ -45,14 +45,20 @@ def put_api_networks(
 
 @app.post("/api/tasks/networks", tags=["network"], response_model=TaskSelect)
 def post_api_storage(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: NetworkInsert = None
+        body: NetworkInsert = None
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'network', 'root')
-    task.commit(user=current_user, request=request)
+
+    task = TaskManager(db=db)
+    task.select(method='post', resource='network', object='root')
+    task.commit(user=cu, req=req, body=body)
+
+    task_put_list = TaskManager(db=db)
+    task_put_list.select('put', 'network', 'list')
+    task_put_list.commit(user=cu, dependence_uuid=task.model.uuid)
+
 
     return task.model
 
@@ -78,7 +84,7 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/api/tasks/networks/pools", tags=["network"])
+@app.post("/api/networks/pools", tags=["network"])
 def post_api_networks_pools(
         model: PostNetworkPool,
         db: Session = Depends(get_db),
@@ -90,7 +96,7 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/api/tasks/networks/pools", tags=["network"])
+@app.patch("/api/networks/pools", tags=["network"])
 def patch_api_networks_pools(
         model: PatchNetworkPool,
         db: Session = Depends(get_db),

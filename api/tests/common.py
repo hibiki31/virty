@@ -60,7 +60,7 @@ def wait_tasks(resp):
                 print("finish")
                 break
             elif resp["status"] == "error":
-                print("error")
+                print(f"{Color.RED} ERROR{Color.END}")
                 break
             time.sleep(5)
             counter += 5
