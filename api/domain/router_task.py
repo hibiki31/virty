@@ -111,6 +111,13 @@ def patch_api_tasks_vms_uuid_cdrom(
         db: Session = Depends(get_db),
         body: PatchDominCdrom = None,
     ):
+    """
+    umount
+    - path = null
+    
+    mount
+    - path = iso file path
+    """
     
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='cdrom')
@@ -199,7 +206,7 @@ def patch_api_tasks_vms_uuid_cdrom(
 #     return vm
 
 
-@app.patch("/{uuid}/network", response_model=TaskSelect)
+@app.patch("/{uuid}/network", response_model=List[TaskSelect])
 def patch_api_vm_network(
         uuid: str,
         req: Request,
@@ -207,6 +214,11 @@ def patch_api_vm_network(
         db: Session = Depends(get_db),
         body: DomainNetworkChange = None
     ):
+    """
+    **Power off required**
+
+    Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on 'network' network type
+    """
     # タスクを追加
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='network')
@@ -216,4 +228,4 @@ def patch_api_vm_network(
     task_vm_list.select('put', 'vm', 'list')
     task_vm_list.commit(user=cu, dep_uuid=task.model.uuid)
    
-    return task.model
+    return [task.model]

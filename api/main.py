@@ -7,6 +7,7 @@ from auth.router import app as auth_router
 from node.router import app as node_router
 from task.router import app as task_router
 from domain.router import app as domain_router
+from domain.router_task import app as domain_task_router
 from storage.router import app as storage_router
 from network.router import app as network_router
 from network.router_task import app as network_task_router
@@ -27,8 +28,10 @@ tags_metadata = [
     {"name": "mixin", "description": ""},
     {"name": "auth", "description": "トークン関係のリクエストはRFCの関係でスネークケース"},
     {"name": "users", "description": ""},
-    {"name": "nodes", "description": ""},
-    {"name": "tasks-nodes", "description": ""},
+    {"name": "node", "description": ""},
+    {"name": "node-task", "description": ""},
+    {"name": "vm", "description": ""},
+    {"name": "vm-task", "description": ""},
 ]
 
 app = FastAPI(
@@ -54,6 +57,7 @@ app.include_router(task_router)
 app.include_router(auth_router)
 app.include_router(node_router)
 app.include_router(domain_router)
+app.include_router(domain_task_router)
 app.include_router(storage_router)
 app.include_router(network_router)
 app.include_router(network_task_router)
