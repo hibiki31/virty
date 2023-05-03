@@ -2,8 +2,9 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { nodesApi } from '~/lib/api';
+import { networkApi, nodesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
@@ -24,6 +25,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (!open) {
@@ -39,9 +41,20 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
     );
   }, [open, reset, resetFetchers, setFetcher]);
 
-  const handleAddNetwork = useCallback((data: FormData) => {
-    console.log('handleAddNetwork', data);
-  }, []);
+  const handleAddNetwork = useCallback(
+    ({ node, ...rest }: FormData) => {
+      return networkApi
+        .postApiStorageApiTasksNetworksPost({ nodeName: node, ...rest })
+        .then(() => {
+          enqueueNotistack('Network added successfully.', { variant: 'success' });
+          onClose();
+        })
+        .catch(() => {
+          enqueueNotistack('Failed to add the network.', { variant: 'error' });
+        });
+    },
+    [enqueueNotistack, onClose]
+  );
 
   return (
     <BaseDialog
