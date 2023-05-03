@@ -13,6 +13,13 @@ import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { ConfirmDialog } from '~/components/dialogs/ConfirmDialog';
 import { useGetIncompleteTasks } from '~/store/tasksState';
+import { styled } from '@mui/material';
+
+const StyledSnackbarProvider = styled(SnackbarProvider)`
+  &.SnackbarItem-contentRoot {
+    margin-top: 48px;
+  }
+`;
 
 const InitRecoilState: FC<PropsWithChildren> = ({ children }) => {
   const user = useGetUser();
@@ -46,13 +53,13 @@ function MyApp({ Component, pageProps }: AppProps) {
       <CssBaseline />
       <RecoilRoot>
         <InitRecoilState>
-          <SnackbarProvider
+          <StyledSnackbarProvider
             maxSnack={5}
             autoHideDuration={3000}
             anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
             <Component {...pageProps} />
-          </SnackbarProvider>
+          </StyledSnackbarProvider>
         </InitRecoilState>
       </RecoilRoot>
     </ThemeProvider>
