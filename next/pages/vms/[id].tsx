@@ -246,7 +246,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   align: 'center',
                   getItem: (item: GetDomainInterfaces) => (
                     <IconButton
-                      disabled={data.status !== VM_STATUS.POWER_ON}
+                      disabled={data.status !== VM_STATUS.POWER_OFF}
                       onClick={() => openChangeNetworkDialog(item)}
                     >
                       <Pencil />
