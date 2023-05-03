@@ -405,20 +405,21 @@ def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
 
     manager = virtlib.VirtManager(node_model=node)
 
-    if body.status == "mount":
-        manager.domain_cdrom(uuid, body.target, body.path)
-    elif body.status == "unmount":
+    if body.path == None or body.path == "":
         manager.domain_cdrom(uuid, body.target)
+    else:
+        manager.domain_cdrom(uuid, body.target, body.path)
 
 
 @worker_task(key="patch.vm.network")
 def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
     body: DomainNetworkChange = DomainNetworkChange(**request.body)
+    uuid = request.path_param["uuid"]
 
 
     try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == body.uuid).one()
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
     except:
         raise Exception("domain not found")
 
@@ -428,4 +429,4 @@ def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.domain_network(uuid=body.uuid, network=body.network_name, port=body.port, mac=body.mac)
+    manager.domain_network(uuid=uuid, network=body.network_name, port=body.port, mac=body.mac)
