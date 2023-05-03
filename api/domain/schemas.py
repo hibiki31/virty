@@ -143,7 +143,7 @@ class DomainInsertDisk(CamelModel):
 class DomainInsertInterface(CamelModel):
     type: str
     mac: str = None
-    network_name: str
+    network_uuid: str
     port: str = None
     class Config:
         orm_mode  =  True
@@ -166,7 +166,7 @@ class DomainInsert(CamelModel):
 
 class DomainNetworkChange(CamelModel):
     mac: str
-    network_name: str
+    network_uuid: str
     port: str = None
 
 

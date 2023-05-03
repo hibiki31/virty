@@ -11,6 +11,7 @@ from auth.router import CurrentUser, get_current_user
 from task.schemas import TaskSelect, TaskRequest
 from task.functions import TaskManager
 from user.models import UserModel
+from network.models import NetworkModel
 from project.models import ProjectModel
 from mixin.database import get_db
 from mixin.log import setup_logger
@@ -170,11 +171,13 @@ def patch_api_tasks_vms_uuid_cdrom(
 #     return True
 
 
-# @app.patch("/user")
+# @app.patch("/{uuid}/user")
 # def path_vms_user(
-#         request: DomainPatchUser,
-#         current_user: CurrentUser = Depends(get_current_user),
+#         uuid: str,
+#         req: Request,
+#         cu: CurrentUser = Depends(get_current_user),
 #         db: Session = Depends(get_db),
+#         body: DomainPatchUser = None
 #     ):
 #     try:
 #         vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
@@ -219,6 +222,16 @@ def patch_api_vm_network(
 
     Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on 'network' network type
     """
+
+    
+    vm = db.query(DomainModel).filter(DomainModel.uuid==uuid).one_or_none()
+    if vm == None:
+        raise HTTPException(status_code=404, detail="domain not found")
+    
+    net = db.query(NetworkModel).filter(NetworkModel.uuid==body.network_uuid).one_or_none()
+    if net == None:
+        raise HTTPException(status_code=400, detail="network uuid is worng")
+
     # タスクを追加
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='network')

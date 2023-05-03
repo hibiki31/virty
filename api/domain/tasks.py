@@ -246,9 +246,11 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     
     # ネットワークインターフェイス
     for interface in req.interface:
+        net: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==interface.network_uuid).one()
+
         interface: DomainInsertInterface
         editor.domain_interface_add(
-            network_name=interface.network_name, 
+            network_name=net.name, 
             mac_address=None, 
             port=interface.port
         )
@@ -418,15 +420,18 @@ def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
     uuid = request.path_param["uuid"]
 
 
-    try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except:
-        raise Exception("domain not found")
+    domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one_or_none()
+    if domain == None:
+        raise Exception("Domain uuid is not found")
 
-    try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
-    except:
-        raise Exception("node not found")
+    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one_or_none()
+    if node == None:
+        raise Exception("Node name is not found")
+
+    net: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == body.network_uuid).one_or_none()
+    if net == None:
+        raise Exception("Network uuid is not found")
+    
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.domain_network(uuid=uuid, network=body.network_name, port=body.port, mac=body.mac)
+    manager.domain_network(uuid=uuid, network=net.name, port=body.port, mac=body.mac)
