@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { BaseMenu } from '~/components/menus/BaseMenu';
-import { vmsApi } from '~/lib/api';
+import { tasksVmsApi } from '~/lib/api';
 import { VM_STATUS } from '~/lib/api/vm';
 import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -18,7 +18,7 @@ export const PowerControlMenu: FC<Props> = ({ open, anchorEl, uuid, status, onCl
   const { openConfirmDialog } = useConfirmDialog();
 
   const startVM = () => {
-    vmsApi
+    tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
@@ -34,7 +34,7 @@ export const PowerControlMenu: FC<Props> = ({ open, anchorEl, uuid, status, onCl
     if (!confirmed) {
       return;
     }
-    vmsApi
+    tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));

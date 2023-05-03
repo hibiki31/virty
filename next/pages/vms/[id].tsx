@@ -2,7 +2,7 @@ import { Box, Button, Card, CardHeader, Grid, IconButton, Typography } from '@mu
 import { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
-import { vmsApi } from '~/lib/api';
+import { vmsApi, tasksVmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import useSWR from 'swr';
 import { BaseTable } from '~/components/tables/BaseTable';
@@ -75,7 +75,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
   }
 
   const startVM = () =>
-    vmsApi
+    tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
@@ -90,7 +90,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
     if (!confirmed) {
       return;
     }
-    vmsApi
+    tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));

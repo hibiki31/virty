@@ -1,7 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { imagesApi, networkApi, nodesApi, storagesApi, vmsApi } from '~/lib/api';
+import { imagesApi, networkApi, nodesApi, storagesApi, tasksVmsApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -137,7 +137,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
       return;
     }
 
-    return vmsApi
+    return tasksVmsApi
       .postApiVmsApiTasksVmsPost({
         type: 'manual',
         ...data.form.spec,

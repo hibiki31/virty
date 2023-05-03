@@ -1,7 +1,7 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { imagesApi, vmsApi } from '~/lib/api';
+import { imagesApi, tasksVmsApi } from '~/lib/api';
 import { GetDomainDrives } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -58,7 +58,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
       return;
     }
 
-    return vmsApi
+    return tasksVmsApi
       .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target })
       .then(() => {
         enqueueNotistack('CD-ROM unmounted successfully.', { variant: 'success' });
@@ -70,7 +70,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
   };
 
   const handleChangeImage = async (data: ChangeImageForm) => {
-    return vmsApi
+    return tasksVmsApi
       .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target, ...data })
       .then(() => {
         enqueueNotistack('CD-ROM changed successfully.', { variant: 'success' });

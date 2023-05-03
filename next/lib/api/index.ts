@@ -5,6 +5,7 @@ import {
   ImagesApi,
   MixinApi,
   NetworkApi,
+  NetworkTaskApi,
   NodesApi,
   ProjectApi,
   StoragesApi,
@@ -13,7 +14,8 @@ import {
   TasksNodesApi,
   TasksStoragesApi,
   UsersApi,
-  VmsApi,
+  VmApi,
+  VmTaskApi,
 } from './generated/api';
 import { parseCookies } from 'nookies';
 
@@ -33,11 +35,13 @@ export const usersApi = new UsersApi(config);
 export const nodesApi = new NodesApi(config);
 export const tasksNodesApi = new TasksNodesApi(config);
 export const tasksApi = new TasksApi(config);
-export const vmsApi = new VmsApi(config);
+export const vmsApi = new VmApi(config);
+export const tasksVmsApi = new VmTaskApi(config);
 export const storagesApi = new StoragesApi(config);
 export const imagesApi = new ImagesApi(config);
 export const tasksImagesApi = new TasksImagesApi(config);
 export const tasksStoragesApi = new TasksStoragesApi(config);
 export const networkApi = new NetworkApi(config);
+export const tasksNetworksApi = new NetworkTaskApi(config);
 export const projectApi = new ProjectApi(config);
 export const flavorsApi = new FlavorsApi(config);

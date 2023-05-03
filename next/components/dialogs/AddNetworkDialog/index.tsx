@@ -2,7 +2,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { networkApi, nodesApi } from '~/lib/api';
+import { nodesApi, tasksNetworksApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
 import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
@@ -13,7 +13,9 @@ type Props = {
   onClose: () => void;
 };
 
-type FormData = JTDDataType<typeof formJtd>;
+type FormData = JTDDataType<typeof formJtd> & {
+  type: 'bridge' | 'ovs';
+};
 
 export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
   const { setFetcher, reset: resetFetchers } = useChoicesFetchers();
@@ -43,7 +45,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddNetwork = useCallback(
     ({ node, ...rest }: FormData) => {
-      return networkApi
+      return tasksNetworksApi
         .postApiStorageApiTasksNetworksPost({ nodeName: node, ...rest })
         .then(() => {
           enqueueNotistack('Network added successfully.', { variant: 'success' });
