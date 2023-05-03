@@ -78,6 +78,24 @@ class AnsibleManager():
         )
         return self.run_playbook(book=play_source)
     
+
+    def create_dir(self, path):
+        play_source = dict(
+            name = "Ansible Play",
+            hosts = 'all',
+            gather_facts = 'no',
+            tasks = [
+                dict(
+                    file = dict(
+                        path = path,
+                        state = "directory",
+                    ),
+                    become = "yes"
+                )
+            ]
+        )
+        return self.run_playbook(book=play_source)
+    
     def load_playbook_file(self, yaml_name):
         with open(f'{APP_ROOT}/static/ansible/{yaml_name}.yml', 'r') as yml:
             config = yaml.safe_load(yml)

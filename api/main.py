@@ -9,6 +9,7 @@ from task.router import app as task_router
 from domain.router import app as domain_router
 from storage.router import app as storage_router
 from network.router import app as network_router
+from network.router_task import app as network_task_router
 from user.router import app as user_router
 from project.router import app as project_router
 from flavor.router import app as flavor_router
@@ -55,11 +56,13 @@ app.include_router(node_router)
 app.include_router(domain_router)
 app.include_router(storage_router)
 app.include_router(network_router)
+app.include_router(network_task_router)
 app.include_router(user_router)
 app.include_router(project_router)
 app.include_router(flavor_router)
 app.include_router(exporter_router)
 app.include_router(mixin_router)
+
 
 
 if __name__ == "__main__":

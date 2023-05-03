@@ -319,16 +319,18 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
         iso_path = cloudinit_manager.make_iso()
 
         # cloud-initのisoを保存するpoolを探す
-        try:
-            query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
-            query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
-            init_pool_model:StorageModel = query.one()
-        except:
-            raise Exception("cloud-init pool not found")
+        # try:
+        #     query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
+        #     query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
+        #     init_pool_model:StorageModel = query.one()
+        # except:
+        #     raise Exception("cloud-init pool not found")
 
         # 生成したisoをノードに転送
-        send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
+        # send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
+        send_path = f"/var/virty/cloud-init/{domain_uuid}.iso"
         ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+        ansible_manager.create_dir(path="/var/virty/cloud-init/")
         ansible_manager.file_copy_to_node(src=iso_path,dest=send_path)
         editor.domain_cdrom(target=None,path=send_path)
 
@@ -337,7 +339,7 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     node = virtlib.VirtManager(node_model=node)
     node.domain_define(xml_str=editor.dump_str())
 
-    task.message = "Virtual machine has been added successfully"
+    task.message = f"Virtual machine ({req.name}@{task.user_id}) has been added successfully"
 
 
 @worker_task(key="delete.vm.root")
@@ -403,17 +405,20 @@ def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
 
     manager = virtlib.VirtManager(node_model=node)
 
-    if request.status == "mount":
+    if body.status == "mount":
         manager.domain_cdrom(uuid, body.target, body.path)
-    elif request.status == "unmount":
+    elif body.status == "unmount":
         manager.domain_cdrom(uuid, body.target)
 
 
-def patch_vm_network(db:Session, task: TaskModel):
-    request: DomainNetworkChange = DomainNetworkChange(**loads(task.request))
+@worker_task(key="patch.vm.network")
+def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    body: DomainNetworkChange = DomainNetworkChange(**request.body)
+
 
     try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == body.uuid).one()
     except:
         raise Exception("domain not found")
 
@@ -423,8 +428,4 @@ def patch_vm_network(db:Session, task: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.domain_network(uuid=request.uuid, network=request.network_name, port=request.port, mac=request.mac)
-
-    put_task = TaskManager(db=db, bg=bg)
-    put_task.select('put', 'vm', 'list')
-    put_task.folk(task=task, dependence_uuid=task.dependence_uuid)
+    manager.domain_network(uuid=body.uuid, network=body.network_name, port=body.port, mac=body.mac)

@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Literal
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from fastapi_camelcase import CamelModel
 
@@ -43,7 +43,7 @@ class GetNetwork(PaseNetwork):
 class NetworkInsert(CamelModel):
     name: str
     node_name: str
-    type: str
+    type: Literal['bridge', 'ovs'] = Field( description='brdige or ovs')
     bridge_device: str = None
     class Config:
         orm_mode  =  True
