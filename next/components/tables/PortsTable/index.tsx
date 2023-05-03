@@ -3,7 +3,9 @@ import { Box } from '@mui/system';
 import { DataGrid } from '@mui/x-data-grid';
 import { CheckboxOutline, Delete } from 'mdi-material-ui';
 import { FC } from 'react';
+import { tasksNetworksApi } from '~/lib/api';
 import { NetworkPortgroup } from '~/lib/api/generated';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
 
 export const PortsTable: FC<Props> = ({ networkUuid, ports }) => {
   const { openConfirmDialog } = useConfirmDialog();
+  const { enqueueNotistack } = useNotistack();
 
   const deletePort = async (name: string) => {
     const confirmed = await openConfirmDialog({
@@ -25,7 +28,10 @@ export const PortsTable: FC<Props> = ({ networkUuid, ports }) => {
       return;
     }
 
-    console.log('delete port', networkUuid, name);
+    return tasksNetworksApi
+      .postApiNetworksUuidOvsApiTasksNetworksOvsDelete({ uuid: networkUuid, name })
+      .then(() => enqueueNotistack('Port deleted successfully.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to delete the port.', { variant: 'error' }));
   };
 
   return (

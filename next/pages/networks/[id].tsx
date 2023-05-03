@@ -115,24 +115,26 @@ const Page: NextPage<Props> = ({ id }) => {
             disableElevation
           />
         </Grid>
-        <Grid item container xs={12} lg={6} direction="column" spacing={2}>
-          <Grid item container spacing={2} alignItems="center">
-            <Grid item>
-              <Typography variant="h5">Virtual Port</Typography>
+        {data.type === 'openvswitch' && (
+          <Grid item container xs={12} lg={6} direction="column" spacing={2}>
+            <Grid item container spacing={2} alignItems="center">
+              <Grid item>
+                <Typography variant="h5">Virtual Port</Typography>
+              </Grid>
+              <Grid item>
+                <OpenDialogButton
+                  label="Add"
+                  DialogComponent={AddPortDialog}
+                  buttonProps={{ variant: 'contained' }}
+                  dialogProps={{ networkUuid: data.uuid }}
+                />
+              </Grid>
             </Grid>
             <Grid item>
-              <OpenDialogButton
-                label="Add"
-                DialogComponent={AddPortDialog}
-                buttonProps={{ variant: 'contained' }}
-                dialogProps={{ networkUuid: data.uuid }}
-              />
+              <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
             </Grid>
           </Grid>
-          <Grid item>
-            <PortsTable networkUuid={data.uuid} ports={data.portgroups} />
-          </Grid>
-        </Grid>
+        )}
       </Grid>
     </DefaultLayout>
   );
