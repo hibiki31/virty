@@ -1784,6 +1784,31 @@ export interface StorageSelect {
 /**
  * 
  * @export
+ * @interface TaskIncomplete
+ */
+export interface TaskIncomplete {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskIncomplete
+     */
+    'hash': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskIncomplete
+     */
+    'count': number;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TaskIncomplete
+     */
+    'uuids': Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface TaskSelect
  */
 export interface TaskSelect {
@@ -4864,12 +4889,12 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksIncompleteApiTasksIncompleteGet: async (updateHash?: string, admin?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getTasksIncompleteApiTasksIncompleteGet: async (hash?: string, admin?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/incomplete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4886,8 +4911,8 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
             // oauth required
             await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
 
-            if (updateHash !== undefined) {
-                localVarQueryParameter['update_hash'] = updateHash;
+            if (hash !== undefined) {
+                localVarQueryParameter['hash'] = hash;
             }
 
             if (admin !== undefined) {
@@ -4950,13 +4975,13 @@ export const TasksApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options);
+        async getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskIncomplete>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getTasksIncompleteApiTasksIncompleteGet(hash, admin, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -5001,13 +5026,13 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {string} [updateHash] 
+         * @param {string} [hash] 
          * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: any): AxiosPromise<any> {
-            return localVarFp.getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options).then((request) => request(axios, basePath));
+        getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: any): AxiosPromise<TaskIncomplete> {
+            return localVarFp.getTasksIncompleteApiTasksIncompleteGet(hash, admin, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -5057,14 +5082,14 @@ export class TasksApi extends BaseAPI {
     /**
      * 
      * @summary Get Tasks Incomplete
-     * @param {string} [updateHash] 
+     * @param {string} [hash] 
      * @param {boolean} [admin] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getTasksIncompleteApiTasksIncompleteGet(updateHash?: string, admin?: boolean, options?: AxiosRequestConfig) {
-        return TasksApiFp(this.configuration).getTasksIncompleteApiTasksIncompleteGet(updateHash, admin, options).then((request) => request(this.axios, this.basePath));
+    public getTasksIncompleteApiTasksIncompleteGet(hash?: string, admin?: boolean, options?: AxiosRequestConfig) {
+        return TasksApiFp(this.configuration).getTasksIncompleteApiTasksIncompleteGet(hash, admin, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

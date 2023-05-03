@@ -17,9 +17,9 @@ import { useIncompleteTasks } from '~/store/tasksState';
 export const TasksTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
-  const { updateHash } = useIncompleteTasks();
+  const { hash } = useIncompleteTasks();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', user, updateHash],
+    ['tasksApi.getTasksApiTasksGet', user, hash],
     ([, user]) => tasksApi.getTasksApiTasksGet(user?.isAdminMode).then((res) => res.data),
     { revalidateOnFocus: false }
   );
