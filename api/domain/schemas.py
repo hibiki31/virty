@@ -53,6 +53,11 @@ class GetDomain(CamelModel):
         orm_mode  =  True
 
 
+class GetDomainPagenation(CamelModel):
+    count: int
+    data: List[GetDomain]
+
+
 class GetDomainDetail(GetDomain):
     node: GetNode
 

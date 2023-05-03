@@ -42,6 +42,10 @@ class TaskSelect(TaskBase):
             return dict(json.loads(v))
         return v
 
+class TaskPagesnation(CamelModel):
+    count: int
+    data: List[TaskSelect]
+
 
 class TaskRequest(CamelModel):
     url: str = None

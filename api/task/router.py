@@ -22,7 +22,7 @@ app = APIRouter(
 )
 
 
-@app.get("/tasks", response_model=List[TaskSelect])
+@app.get("/tasks", response_model=TaskPagesnation)
 def get_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -50,11 +50,13 @@ def get_tasks(
         query = query.filter(TaskModel.method==method)
     if status:
         query = query.filter(TaskModel.status==status)
+    
+    count = query.count()
 
     query = query.order_by(desc(TaskModel.post_time))
     task = query.limit(limit).offset(int(limit*page)).all()
 
-    return task
+    return { "count": count, "data": task }
 
 
 @app.delete("/tasks/", response_model=List[TaskSelect])
