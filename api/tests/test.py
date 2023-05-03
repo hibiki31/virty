@@ -6,33 +6,47 @@ import time
 import datetime
 import sys
 
-from common import BASE_URL, TEST_ENV, HEADERS, print_resp, wait_tasks
+from common import BASE_URL, HEADERS, print_resp, wait_tasks
 from test_node import post_nodes, post_nodes_key, delete_nodes
 from test_storage import post_storage, delete_storage
-from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm
+from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network
+from test_network import post_network, delete_network
 
 args = sys.argv
 
 
 def main():
-    print("Setup done")
+    # Setup
     api_auth_validate()
     api_users_me()
     
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    # Node
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
 
-    # put_list()
-    # delete_storage()
-    # post_storage()
+    # Storage
+    put_list()
+    delete_storage()
+    post_storage()
+
+    ## testnode only
+
+    # Network
+    put_list()
+    delete_network()
+    post_network()
     
-    # put_list()
+    # VM
+    put_list()    
     delete_vm()
     post_vm()
     poweron_vm()
     poweroff_vm()
-
+    delete_vm()
+    post_vm_copy()
+    patch_vm_cdrom()
+    patch_vm_network()
 
 
 

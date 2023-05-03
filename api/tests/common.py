@@ -6,8 +6,8 @@ import datetime
 import sys
 
 
-TEST_ENV = json.load(open('./tests/env.json', 'r'))
-BASE_URL = TEST_ENV["baseUrl"]
+env = json.load(open('./tests/env.json', 'r'))
+BASE_URL = env["base_url"]
 
 class Color:
     BLACK     = '\033[30m'
@@ -27,15 +27,15 @@ class Color:
 
 if not httpx.get(f'{BASE_URL}/api/version').json()["initialized"]:
     req_data = {
-        "username": str(TEST_ENV["username"]),
-        "password": str(TEST_ENV["password"])
+        "username": str(env["username"]),
+        "password": str(env["password"])
     }
     print(req_data)
     print(httpx.post(f'{BASE_URL}/api/auth/setup', json=req_data))
 
 req_data = {
-    "username": TEST_ENV["username"],
-    "password": TEST_ENV["password"]
+    "username": env["username"],
+    "password": env["password"]
 }
 
 
@@ -55,15 +55,15 @@ def wait_tasks(resp):
         counter = 0
         while True:
             resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks/{uuid}', headers=HEADERS).json()
-            print(f"wait {uuid} {resp['object']} {counter}s")
+            # print(f"wait {uuid} {resp['resource']} {resp['object']} {counter}s")
             if resp["status"] == "finish":
-                print("finish")
+                print(f"{Color.GREEN}Task Finish {Color.END}{uuid} {resp['resource']} {resp['object']} {counter}s")
                 break
             elif resp["status"] == "error":
-                print(f"{Color.RED} ERROR{Color.END}")
+                print(f"{Color.RED}Task Error {Color.END}{uuid} {resp['resource']} {resp['object']} {counter}s")
                 break
-            time.sleep(5)
-            counter += 5
+            time.sleep(0.5)
+            counter += 0.5
 
 
 def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
@@ -81,4 +81,5 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
     if allow_not_found and resp.status_code == 404:
         print(f"{Color.GREEN} Allow not found{Color.END}")
     elif resp.status_code != 200:
+        print(resp.json())
         raise Exception

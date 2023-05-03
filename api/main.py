@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from auth.router import app as auth_router
 from node.router import app as node_router
+from node.router_task import app as node_task_router
 from task.router import app as task_router
 from domain.router import app as domain_router
 from domain.router_task import app as domain_task_router
@@ -56,6 +57,7 @@ app.add_middleware(
 app.include_router(task_router)
 app.include_router(auth_router)
 app.include_router(node_router)
+app.include_router(node_task_router)
 app.include_router(domain_router)
 app.include_router(domain_task_router)
 app.include_router(storage_router)

@@ -30,9 +30,9 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
     ssh_manager.add_known_hosts()
     
-    # ansible_manager = AnsibleManager(user=user, domain=domain)
+    ansible_manager = AnsibleManager(user=user, domain=domain)
     
-    # node_infomation = ansible_manager.node_infomation()
+    node_infomation = ansible_manager.node_infomation()
 
     ssh_role = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ssh").one_or_none()
     if ssh_role == None:
@@ -69,7 +69,7 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
         os_name = ssh_manager.get_node_os_release()["PRETTY_NAME"],
         os_version = ssh_manager.get_node_os_release()["VERSION_ID"],
         status = 10,
-        ansible_facts = {},
+        ansible_facts = node_infomation["result"],
         qemu_version = None,
         libvirt_version = None,
     )
