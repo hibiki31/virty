@@ -1,7 +1,7 @@
 from urllib import request
 from fastapi import APIRouter, Depends, Request
 from fastapi import HTTPException
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -22,7 +22,7 @@ from module.virtlib import VirtManager
 
 
 app = APIRouter(
-    tags=["vm"]
+    tags=["vms"]
 )
 
 logger = setup_logger(__name__)
@@ -33,9 +33,13 @@ def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         admin: bool = False,
+        limit: int = 25,
+        page: int = 0,
+        name_like: str = None,
+        node_name_like: str = None
     ):
     
-    query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)\
+    query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)
 
     if admin:
         current_user.verify_scope(scopes=["admin"])
@@ -44,8 +48,15 @@ def get_api_domain(
                 DomainModel.owner_user_id==current_user.id,
                 DomainModel.project.has(ProjectModel.users.any(username=current_user.id))
         ))
+    if name_like:
+        query = query.filter(DomainModel.name.like(f'%{name_like}%'))
+    if node_name_like:
+        query = query.filter(DomainModel.node_name.like(f'%{node_name_like}%'))
+    
+    query = query.order_by(desc(DomainModel.name))
+    vms = query.limit(limit).offset(int(limit*page)).all()
 
-    return query.all()
+    return vms
 
 
 @app.get("/api/vms/{uuid}",response_model=GetDomainDetail)

@@ -1,5 +1,5 @@
 from time import sleep
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -16,7 +16,7 @@ from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
 
-app = APIRouter(prefix="/api/tasks/networks", tags=["network-task"])
+app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
 
 
@@ -54,6 +54,55 @@ def post_api_storage(
     return [ task.model, task_put_list.model ]
 
 
+@app.post("/{uuid}/ovs", response_model=List[TaskSelect])
+def post_uuid_ovs(
+        uuid: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        body: NetworkOVSAdd = None
+    ):
+
+    task = TaskManager(db=db)
+    task.select(method='post', resource='network', object='ovs')
+    task.commit(user=cu, req=req, param={"uuid": uuid}, body=body)
+
+    task_put_list = TaskManager(db=db)
+    task_put_list.select('put', 'network', 'list')
+    task_put_list.commit(user=cu, dep_uuid=task.model.uuid)
+
+    return [task.model, task_put_list.model ]
+
+
+@app.delete("/{uuid}/ovs/{name}", response_model=List[TaskSelect])
+def post_api_networks_uuid_ovs(
+        uuid: str,
+        name: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+
+    try:
+        db.query(NetworkModel).filter(NetworkModel.uuid == uuid).one()
+        db.query(
+            NetworkPortgroupModel).filter(
+            NetworkPortgroupModel.network_uuid==uuid
+            ).filter(NetworkPortgroupModel.name==name).one()
+    except:
+        raise HTTPException(status_code=404, detail="network or port is not found")
+
+    task = TaskManager(db=db)
+    task.select(method='delete', resource='network', object='ovs')
+    task.commit(user=cu, req=req, param={"uuid": uuid, "name": name})
+
+    task_put_list = TaskManager(db=db)
+    task_put_list.select('put', 'network', 'list')
+    task_put_list.commit(user=cu, dep_uuid=task.model.uuid)
+
+    return [ task.model, task_put_list.model ]
+
+
 @app.delete("/{uuid}", response_model=List[TaskSelect])
 def delete_api_storage(
         uuid: str,
@@ -71,41 +120,3 @@ def delete_api_storage(
     task_put_list.commit(user=cu, dep_uuid=task.model.uuid)
 
     return [ task.model, task_put_list.model ]
-
-
-@app.post("/ovs", response_model=List[TaskSelect])
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: NetworkOVSAdd = None,
-    ):
-
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('post', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return [main_task.model, reload_task.model ]
-
-
-@app.delete("/ovs", response_model=List[TaskSelect])
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
-        request: NetworkOVSDelete,
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
-    ):
-
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('delete', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return [ main_task.model, reload_task.model ]

@@ -10,7 +10,7 @@ from common import BASE_URL, HEADERS, print_resp, wait_tasks
 from test_node import post_nodes, post_nodes_key, delete_nodes
 from test_storage import post_storage, delete_storage
 from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network
-from test_network import post_network, delete_network
+from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs
 
 args = sys.argv
 
@@ -21,32 +21,34 @@ def main():
     api_users_me()
     
     # Node
-    post_nodes_key()
-    delete_nodes()
-    post_nodes()
+    # post_nodes_key()
+    # delete_nodes()
+    # post_nodes()
 
     # Storage
-    put_list()
-    delete_storage()
-    post_storage()
+    # put_list()
+    # delete_storage()
+    # post_storage()
 
     ## testnode only
 
     # Network
-    put_list()
-    delete_network()
-    post_network()
+    # put_list()
+    # delete_network()
+    # post_network()
+    delete_network_ovs()
+    post_network_ovs()
     
     # VM
-    put_list()    
-    delete_vm()
-    post_vm()
-    poweron_vm()
-    poweroff_vm()
-    delete_vm()
-    post_vm_copy()
-    patch_vm_cdrom()
-    patch_vm_network()
+    # put_list()    
+    # delete_vm()
+    # post_vm()
+    # poweron_vm()
+    # poweroff_vm()
+    # delete_vm()
+    # post_vm_copy()
+    # patch_vm_cdrom()
+    # patch_vm_network()
 
 
 

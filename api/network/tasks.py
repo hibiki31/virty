@@ -125,11 +125,14 @@ def delete_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     manager.network_undefine(uuid)    
 
 
-def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSAdd = NetworkOVSAdd(**loads(task.request))
+@worker_task(key="post.network.ovs")
+def post_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    body: NetworkOVSAdd = NetworkOVSAdd(**request.body)
+    network_uuid = request.path_param["uuid"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
     except:
         raise Exception("network not found")
     try:
@@ -138,14 +141,21 @@ def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_add(uuid=network.uuid, name=request.name, vlan=request.vlan_id)
+    manager.network_ovs_add(uuid=network.uuid, name=body.name, vlan=body.vlan_id)
     
 
-def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSDelete = NetworkOVSDelete(**loads(task.request))
+@worker_task(key="delete.network.ovs")
+def delete_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    network_uuid = request.path_param["uuid"]
+    ovs_name = request.path_param["name"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
+        port: NetworkPortgroupModel = db.query(
+            NetworkPortgroupModel).filter(
+            NetworkPortgroupModel.network_uuid==network_uuid
+            ).filter(NetworkPortgroupModel.name==ovs_name).one()
     except:
         raise Exception("network not found")
     try:
@@ -154,7 +164,7 @@ def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_delete(uuid=network.uuid, name=request.name)
+    manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
     
 
 

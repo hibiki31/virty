@@ -53,7 +53,6 @@ class NetworkDelete(CamelModel):
 
 class NetworkOVSAdd(CamelModel):
     default: bool
-    uuid: str
     name: str
     vlan_id: int = None
     class Config:

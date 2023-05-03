@@ -79,7 +79,7 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
         print()
 
     if allow_not_found and resp.status_code == 404:
-        print(f"{Color.GREEN} Allow not found{Color.END}")
+        print(f"{Color.GREEN}Allow not found{Color.END}")
     elif resp.status_code != 200:
         print(resp.json())
         raise Exception
