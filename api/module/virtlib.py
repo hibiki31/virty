@@ -153,7 +153,7 @@ class VirtManager():
         con.setVcpusFlags(nvcpus=core, flags=2)
 
 
-    def domain_cdrom(self, uuid, target=None, path=None):
+    def domain_cdrom(self, uuid, target=None, path=""):
         con = self.node.lookupByUUIDString(uuid)
 
         xml = XmlEditor(type="str",obj=con.XMLDesc())
