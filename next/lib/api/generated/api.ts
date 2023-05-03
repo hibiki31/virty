@@ -207,7 +207,7 @@ export interface DomainInsertInterface {
      * @type {string}
      * @memberof DomainInsertInterface
      */
-    'networkName': string;
+    'networkUuid': string;
     /**
      * 
      * @type {string}
@@ -232,7 +232,7 @@ export interface DomainNetworkChange {
      * @type {string}
      * @memberof DomainNetworkChange
      */
-    'networkName': string;
+    'networkUuid': string;
     /**
      * 
      * @type {string}
@@ -4216,6 +4216,44 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
         },
         /**
          * 
+         * @summary Get Api Storages Uuid
+         * @param {string} uuid 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getApiStoragesUuidApiStoragesUuidGet: async (uuid: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uuid' is not null or undefined
+            assertParamExists('getApiStoragesUuidApiStoragesUuidGet', 'uuid', uuid)
+            const localVarPath = `/api/storages/{uuid}`
+                .replace(`{${"uuid"}}`, encodeURIComponent(String(uuid)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Patch Api Images
          * @param {PatchImageFlavor} patchImageFlavor 
          * @param {*} [options] Override http request option.
@@ -4444,6 +4482,17 @@ export const StoragesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Get Api Storages Uuid
+         * @param {string} uuid 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getApiStoragesUuidApiStoragesUuidGet(uuid: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StorageSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getApiStoragesUuidApiStoragesUuidGet(uuid, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Patch Api Images
          * @param {PatchImageFlavor} patchImageFlavor 
          * @param {*} [options] Override http request option.
@@ -4529,6 +4578,16 @@ export const StoragesApiFactory = function (configuration?: Configuration, baseP
         },
         /**
          * 
+         * @summary Get Api Storages Uuid
+         * @param {string} uuid 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getApiStoragesUuidApiStoragesUuidGet(uuid: string, options?: any): AxiosPromise<StorageSelect> {
+            return localVarFp.getApiStoragesUuidApiStoragesUuidGet(uuid, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Patch Api Images
          * @param {PatchImageFlavor} patchImageFlavor 
          * @param {*} [options] Override http request option.
@@ -4609,6 +4668,18 @@ export class StoragesApi extends BaseAPI {
      */
     public getApiStoragesPoolsApiStoragesPoolsGet(options?: AxiosRequestConfig) {
         return StoragesApiFp(this.configuration).getApiStoragesPoolsApiStoragesPoolsGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get Api Storages Uuid
+     * @param {string} uuid 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StoragesApi
+     */
+    public getApiStoragesUuidApiStoragesUuidGet(uuid: string, options?: AxiosRequestConfig) {
+        return StoragesApiFp(this.configuration).getApiStoragesUuidApiStoragesUuidGet(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
