@@ -42,7 +42,7 @@ export const ChangeStorageMetaDataDialog: FC<Props> = ({ open, uuid, metadata, o
       .postApiStorageApiStoragesPatch({ uuid, ...data })
       .then(() => {
         enqueueNotistack('Storage metadata changed.', { variant: 'success' });
-        mutate('storagesApi.getApiStoragesApiStoragesGet');
+        mutate(['storagesApi.getApiStoragesApiStoragesGet', uuid]);
         onClose();
       })
       .catch(() => {

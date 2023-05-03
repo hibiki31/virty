@@ -33,11 +33,11 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    'storagesApi.getApiStoragesApiStoragesGet',
+    ['storagesApi.getApiStoragesApiStoragesGet', id],
     () =>
       storagesApi
-        .getApiStoragesApiStoragesGet()
-        .then((res) => res.data.find((storage) => storage.uuid === id))
+        .getApiStoragesUuidApiStoragesUuidGet(id)
+        .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {
             return null;
