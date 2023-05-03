@@ -22,7 +22,7 @@ from module.virtlib import VirtManager
 
 
 app = APIRouter(
-    tags=["vm"]
+    tags=["vms"]
 )
 
 logger = setup_logger(__name__)

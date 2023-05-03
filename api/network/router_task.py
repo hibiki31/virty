@@ -16,7 +16,7 @@ from mixin.log import setup_logger
 from mixin.exception import notfound_exception
 
 
-app = APIRouter(prefix="/api/tasks/networks", tags=["network-task"])
+app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
 
 

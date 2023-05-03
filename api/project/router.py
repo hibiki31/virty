@@ -15,7 +15,7 @@ from auth.router import CurrentUser, get_current_user
 logger = setup_logger(__name__)
 app = APIRouter(
     prefix="/api/projects",
-    tags=["project"],
+    tags=["projects"],
 )
 
 

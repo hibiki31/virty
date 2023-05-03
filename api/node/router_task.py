@@ -19,7 +19,7 @@ from mixin.exception import *
 from node.models import NodeModel
 
 
-app = APIRouter(prefix="/api/tasks/nodes", tags=["node-task"])
+app = APIRouter(prefix="/api/tasks/nodes", tags=["nodes-task"])
 logger = setup_logger(__name__)
 
 

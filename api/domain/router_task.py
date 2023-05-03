@@ -23,7 +23,7 @@ from module.virtlib import VirtManager
 
 
 app = APIRouter(
-    tags=["vm-task"],
+    tags=["vms-task"],
     prefix="/api/tasks/vms"
 )
 

@@ -10,6 +10,7 @@ from task.router import app as task_router
 from domain.router import app as domain_router
 from domain.router_task import app as domain_task_router
 from storage.router import app as storage_router
+from images.router import app as image_router
 from network.router import app as network_router
 from network.router_task import app as network_task_router
 from user.router import app as user_router
@@ -29,10 +30,18 @@ tags_metadata = [
     {"name": "mixin", "description": ""},
     {"name": "auth", "description": "トークン関係のリクエストはRFCの関係でスネークケース"},
     {"name": "users", "description": ""},
-    {"name": "node", "description": ""},
-    {"name": "node-task", "description": ""},
-    {"name": "vm", "description": ""},
-    {"name": "vm-task", "description": ""},
+    {"name": "projects", "description": ""},
+    {"name": "tasks", "description": ""},
+    {"name": "nodes", "description": ""},
+    {"name": "nodes-task", "description": ""},
+    {"name": "vms", "description": ""},
+    {"name": "vms-task", "description": ""},
+    {"name": "storages", "description": ""},
+    {"name": "storages-task", "description": ""},
+    {"name": "images", "description": ""},
+    {"name": "images-task", "description": ""},
+    {"name": "networks", "description": ""},
+    {"name": "networks-task", "description": ""},
 ]
 
 app = FastAPI(
@@ -61,6 +70,7 @@ app.include_router(node_task_router)
 app.include_router(domain_router)
 app.include_router(domain_task_router)
 app.include_router(storage_router)
+app.include_router(image_router)
 app.include_router(network_router)
 app.include_router(network_task_router)
 app.include_router(user_router)

@@ -18,7 +18,7 @@ from mixin.exception import notfound_exception
 from module import virtlib
 
 
-app = APIRouter(prefix="/api/networks", tags=["network"])
+app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
 
 
