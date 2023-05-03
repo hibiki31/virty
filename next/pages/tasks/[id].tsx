@@ -156,10 +156,22 @@ const Page: NextPage<Props> = ({ id }) => {
               <Typography>Message</Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ overflow: 'auto' }}>
-              <Typography>{data.message}</Typography>
+              <pre>{data.message}</pre>
             </AccordionDetails>
           </Accordion>
         </Grid>
+        {data.log && (
+          <Grid item xs={12}>
+            <Accordion defaultExpanded disableGutters>
+              <AccordionSummary expandIcon={<ChevronDown />}>
+                <Typography>Log</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ overflow: 'auto' }}>
+                <pre>{data.log}</pre>
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+        )}
         <Grid item xs={12} sx={{ mb: 2 }}>
           <Accordion defaultExpanded disableGutters>
             <AccordionSummary expandIcon={<ChevronDown />}>
