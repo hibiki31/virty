@@ -90,10 +90,28 @@ const VMPage: NextPage<Props> = ({ id }) => {
     if (!confirmed) {
       return;
     }
-    tasksVmsApi
+
+    return tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
+  };
+
+  const deleteVM = async () => {
+    const confirmed = await openConfirmDialog({
+      title: 'Delete VM',
+      description: 'Are you sure you want to delete this VM?',
+      submitText: 'Delete',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    return tasksVmsApi
+      .deleteApiDomainsApiTasksVmsUuidDelete(id)
+      .then(() => enqueueNotistack('VM is deleting.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to delete VM.', { variant: 'error' }));
   };
 
   const openChangeNetworkDialog = (item: GetDomainInterfaces) => {
@@ -160,7 +178,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   </Button>
                 </Grid>
                 <Grid item ml="auto">
-                  <Button color="error" size="small">
+                  <Button color="error" size="small" onClick={deleteVM}>
                     <Delete sx={{ mr: 1 }} />
                     Delete
                   </Button>

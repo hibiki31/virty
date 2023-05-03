@@ -7,9 +7,10 @@ import { AddPortDialog } from '~/components/dialogs/AddPortDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { PortsTable } from '~/components/tables/PortsTable';
-import { networkApi } from '~/lib/api';
+import { networkApi, tasksNetworksApi } from '~/lib/api';
 import { formatDate } from '~/lib/utils/date';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import Error404Page from '../404';
 import ErrorPage from '../error';
@@ -52,6 +53,7 @@ const Page: NextPage<Props> = ({ id }) => {
     }
   );
   const { openConfirmDialog } = useConfirmDialog();
+  const { enqueueNotistack } = useNotistack();
 
   if (isValidating) {
     return <DefaultLayout isLoading />;
@@ -76,7 +78,10 @@ const Page: NextPage<Props> = ({ id }) => {
       return;
     }
 
-    console.log('delete network');
+    return tasksNetworksApi
+      .deleteApiStorageApiTasksNetworksUuidDelete(id)
+      .then(() => enqueueNotistack('Network is deleting.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to delete network.', { variant: 'error' }));
   };
 
   return (
