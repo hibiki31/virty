@@ -8,6 +8,7 @@
     "start": "next start",
     "lint:eslint": "next lint",
     "lint:prettier": "prettier --check './**/*.{ts,tsx,css,html}'",
+    "lint:tsc": "tsc",
     "format:eslint": "next lint --fix",
     "format:prettier": "prettier --write './**/*.{ts,tsx,css,html}'",
     "generate:api": "openapi-generator-cli generate -i ./openapi.json -g typescript-axios -o ./lib/api/generated",
