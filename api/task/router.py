@@ -62,6 +62,7 @@ def get_tasks_incomplete(
 
     task_hash = None
     task_count = 0
+    task_model = None
 
     if admin:
         current_user.verify_scope(["admin.tasks"])
@@ -71,17 +72,18 @@ def get_tasks_incomplete(
         if not admin:
             query = query.filter(TaskModel.user_id==current_user.id)
     
-        task = query.filter(TaskModel.status!="error")\
+        task_model = query.filter(TaskModel.status!="error")\
             .filter(TaskModel.status!="lost")\
             .filter(TaskModel.status!="finish").all()        
         
-        task_count = len(task)
-        task_hash = str(hashlib.md5(str([i.uuid for i in task]).encode()).hexdigest())
+        task_count = len(task_model)
+        task_hash = str(hashlib.md5(str([j.uuid for j in task_model]).encode()).hexdigest())
+        
         if task_hash != update_hash:
-            return {"task_hash": task_hash, "task_count": task_count}
-        time.sleep(0.5)
+            break
+        time.sleep(0.5)       
 
-    return {"task_hash": task_hash, "task_count": task_count}
+    return {"task_hash": task_hash, "task_count": task_count, "uuids": [j.uuid for j in task_model]}
 
 
 @app.get("/tasks/{uuid}", response_model=TaskSelect)
