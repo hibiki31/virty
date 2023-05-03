@@ -1,9 +1,10 @@
 import { JTDDataType } from 'ajv/dist/core';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
-import { nodesApi } from '~/lib/api';
+import { nodesApi, tasksStoragesApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
@@ -24,6 +25,7 @@ export const AddStorageDialog: FC<Props> = ({ open, onClose }) => {
     handleSubmit,
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (!open) {
@@ -39,9 +41,17 @@ export const AddStorageDialog: FC<Props> = ({ open, onClose }) => {
     );
   }, [open, reset, resetFetchers, setFetcher]);
 
-  const handleAddStorage = useCallback((data: FormData) => {
-    console.log('handleAddStorage', data);
-  }, []);
+  const handleAddStorage = ({ node, ...rest }: FormData) => {
+    return tasksStoragesApi
+      .postApiStorageApiTasksStoragesPost({ nodeName: node, ...rest })
+      .then(() => {
+        enqueueNotistack('Storage added successfully.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to add the storage.', { variant: 'error' });
+      });
+  };
 
   return (
     <BaseDialog

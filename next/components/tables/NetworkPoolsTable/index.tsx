@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -7,9 +7,12 @@ import useSWR from 'swr';
 import { PortChip } from './PortChip';
 import { GetNEtworkPoolNetworksNetwork, GetNetworkPoolPort } from '~/lib/api/generated';
 import { NetworkChip } from './NetworkChip';
+import { Delete } from 'mdi-material-ui';
+import { useConfirmDialog } from '~/store/confirmDialogState';
 
 export const NetworkPoolsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
+  const { openConfirmDialog } = useConfirmDialog();
   const { data, error, isValidating } = useSWR(
     'networkApi.getApiNetworksPoolsApiNetworksPoolsGet',
     () => networkApi.getApiNetworksPoolsApiNetworksPoolsGet().then((res) => res.data),
@@ -19,6 +22,20 @@ export const NetworkPoolsTable: FC = () => {
   if (error) {
     enqueueNotistack('Failed to fetch network pools.', { variant: 'error' });
   }
+
+  const deleteNetworkPool = async (id: number) => {
+    const confirmed = await openConfirmDialog({
+      title: 'Delete Network Pool',
+      description: `Are you sure you want to delete network pool "${id}"?`,
+      submitText: 'Delete',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    console.log('delete network pool', id);
+  };
 
   return (
     <Box sx={{ height: '100%' }}>
@@ -71,6 +88,17 @@ export const NetworkPoolsTable: FC = () => {
                   <PortChip key={i} port={port} />
                 ))}
               </Box>
+            ),
+          },
+          {
+            headerName: '',
+            field: 'actions',
+            disableColumnMenu: true,
+            width: 40,
+            renderCell: (params) => (
+              <IconButton size="small" color="error" onClick={() => deleteNetworkPool(params.row.id!)}>
+                <Delete />
+              </IconButton>
             ),
           },
         ]}
