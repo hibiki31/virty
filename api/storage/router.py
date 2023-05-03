@@ -1,6 +1,6 @@
 from email.mime import image
 from pprint import pprint
-from fastapi import APIRouter, Depends, BackgroundTasks, Request
+from fastapi import APIRouter, Depends, BackgroundTasks, Request, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import false, func, true
 from domain.models import DomainDriveModel, DomainModel
@@ -66,6 +66,41 @@ def get_api_storages(
         tmp.allocation_commit = model[2]
         res.append(tmp)
 
+    return res
+
+
+
+@app.get("/api/storages/{uuid}", tags=["storages"], response_model=StorageSelect)
+def get_api_storages_uuid(
+        uuid: str,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    image_sum = db.query(
+        ImageModel.storage_uuid, 
+        func.sum(ImageModel.capacity).label('sum_capacity'),
+        func.sum(ImageModel.allocation).label('sum_allocation')
+    ).group_by(ImageModel.storage_uuid).subquery('image_sum')
+
+    query = db.query(
+        StorageModel,
+        image_sum.c.sum_capacity,
+        image_sum.c.sum_allocation
+    ).outerjoin(
+        image_sum,
+        StorageModel.uuid==image_sum.c.storage_uuid
+    ).order_by(StorageModel.node_name,StorageModel.name)
+    
+    model = query.filter(StorageModel.uuid==uuid).one_or_none()
+
+    if model == None:
+        raise HTTPException(status_code=404, detail="storage is not found")
+
+    res = model[0]
+    res.capacity_commit = model[1]
+    res.allocation_commit = model[2]
+    
     return res
 
 
