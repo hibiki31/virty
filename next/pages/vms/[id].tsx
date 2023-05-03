@@ -2,7 +2,7 @@ import { Box, Button, Card, CardHeader, Grid, IconButton, Typography } from '@mu
 import { NextPage } from 'next';
 import Head from 'next/head';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
-import { vmsApi } from '~/lib/api';
+import { vmsApi, tasksVmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import useSWR from 'swr';
 import { BaseTable } from '~/components/tables/BaseTable';
@@ -75,7 +75,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
   }
 
   const startVM = () =>
-    vmsApi
+    tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
@@ -90,10 +90,28 @@ const VMPage: NextPage<Props> = ({ id }) => {
     if (!confirmed) {
       return;
     }
-    vmsApi
+
+    return tasksVmsApi
       .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
+  };
+
+  const deleteVM = async () => {
+    const confirmed = await openConfirmDialog({
+      title: 'Delete VM',
+      description: 'Are you sure you want to delete this VM?',
+      submitText: 'Delete',
+      color: 'error',
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    return tasksVmsApi
+      .deleteApiDomainsApiTasksVmsUuidDelete(id)
+      .then(() => enqueueNotistack('VM is deleting.', { variant: 'success' }))
+      .catch(() => enqueueNotistack('Failed to delete VM.', { variant: 'error' }));
   };
 
   const openChangeNetworkDialog = (item: GetDomainInterfaces) => {
@@ -121,7 +139,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
       <StorageActionsMenu
         anchorEl={storageAnchorEl}
-        onClose={() => setStorage(undefined)}
+        onClose={() => setStorageAnchorEl(null)}
         vmUuid={data.uuid}
         storage={storage}
         nodeName={data.nodeName}
@@ -160,7 +178,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   </Button>
                 </Grid>
                 <Grid item ml="auto">
-                  <Button color="error" size="small">
+                  <Button color="error" size="small" onClick={deleteVM}>
                     <Delete sx={{ mr: 1 }} />
                     Delete
                   </Button>

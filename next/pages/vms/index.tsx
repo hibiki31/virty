@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { AddVMDialog } from '~/components/dialogs/AddVMDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { VMTable } from '~/components/tables/VMTable';
-import { vmsApi } from '~/lib/api';
+import { tasksVmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useNotistack } from '~/lib/utils/notistack';
 
@@ -16,7 +16,7 @@ const VMsPage: NextPage = () => {
   const { enqueueNotistack } = useNotistack();
 
   const reloadVMs = () => {
-    vmsApi
+    tasksVmsApi
       .publishTaskToUpdateVmListApiTasksVmsPut()
       .then(() => enqueueNotistack('VM list is being updated.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to update VM list.', { variant: 'error' }));

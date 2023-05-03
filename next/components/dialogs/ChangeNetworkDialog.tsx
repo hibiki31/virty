@@ -1,8 +1,9 @@
 import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { networkApi } from '~/lib/api';
+import { networkApi, tasksVmsApi } from '~/lib/api';
 import { generateProperty } from '~/lib/jtd';
+import { useNotistack } from '~/lib/utils/notistack';
 import { useChoicesFetchers } from '~/store/formState';
 import { JtdForm } from '../JtdForm';
 import { BaseDialog } from './BaseDialog';
@@ -30,6 +31,7 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
     formState: { isDirty, isValid, isSubmitting },
   } = formMethods;
   const [ovsNetworkUuids, setOvsNetworkUuids] = useState<string[]>([]);
+  const { enqueueNotistack } = useNotistack();
 
   useEffect(() => {
     if (!open) {
@@ -52,13 +54,17 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
         return;
       }
       switch (name) {
-        case 'network':
-          const networkUuid = data.network;
+        case 'networkUuid':
+          const networkUuid = data.networkUuid;
           if (!networkUuid) {
             return;
           }
-          setValue('port.networkIsOvs', String(ovsNetworkUuids.includes(networkUuid)) as 'true' | 'false');
+          const isOvs = ovsNetworkUuids.includes(networkUuid);
+          setValue('port.networkIsOvs', String(isOvs) as 'true' | 'false');
           setValue('port.value', '');
+          if (!isOvs) {
+            break;
+          }
           setFetcher('', () => Promise.resolve([]));
           setFetcher(
             `ports-${networkUuid}`,
@@ -73,8 +79,20 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
     });
   }, [watch, setValue, setFetcher, ovsNetworkUuids]);
 
-  const handleChangeNetwork = async (data: ChangeNetworkForm) => {
-    console.log('submit', data);
+  const handleChangeNetwork = async ({ networkUuid, port }: ChangeNetworkForm) => {
+    if (!macAddress) {
+      enqueueNotistack('MAC address is not specified.', { variant: 'error' });
+      return;
+    }
+    return tasksVmsApi
+      .patchApiVmNetworkApiTasksVmsUuidNetworkPatch(vmUuid, { mac: macAddress, networkUuid, port: (port as any).value })
+      .then(() => {
+        enqueueNotistack('Network changed successfully.', { variant: 'success' });
+        onClose();
+      })
+      .catch(() => {
+        enqueueNotistack('Failed to change the network.', { variant: 'error' });
+      });
   };
 
   return (
@@ -99,7 +117,7 @@ const changeNetworkFormJtd = {
     spread: true,
   },
   properties: {
-    network: {
+    networkUuid: {
       metadata: {
         name: 'Network',
         default: '',
@@ -128,7 +146,7 @@ const changeNetworkFormJtd = {
                 default: '',
                 required: true,
                 choices: (get: any) => {
-                  const network = get(2, 'network');
+                  const network = get(2, 'networkUuid');
                   return network ? `ports-${network}` : '';
                 },
               },

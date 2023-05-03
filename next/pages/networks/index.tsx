@@ -5,7 +5,7 @@ import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { AddNetworkDialog } from '~/components/dialogs/AddNetworkDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { NetworksTable } from '~/components/tables/NetworksTable';
-import { networkApi } from '~/lib/api';
+import { tasksNetworksApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useNotistack } from '~/lib/utils/notistack';
 
@@ -15,7 +15,7 @@ const Page: NextPage = () => {
   const { enqueueNotistack } = useNotistack();
 
   const reloadNetworks = () => {
-    networkApi
+    tasksNetworksApi
       .putApiNetworksApiTasksNetworksPut()
       .then(() => enqueueNotistack('Network list is being updated.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to update network list.', { variant: 'error' }));
