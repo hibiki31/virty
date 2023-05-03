@@ -91,6 +91,9 @@ def get_tasks(
         db: Session = Depends(get_db),
     ):
     task = db.query(TaskModel)\
-            .filter(TaskModel.uuid==uuid).one()
+            .filter(TaskModel.uuid==uuid).one_or_none()
+    
+    if task == None:
+        raise HTTPException(status_code=404, detail="task uuid not found")
     
     return task

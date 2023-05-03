@@ -19,19 +19,19 @@ def main():
     api_auth_validate()
     api_users_me()
     
-    post_nodes_key()
-    delete_nodes()
-    post_nodes()
+    # post_nodes_key()
+    # delete_nodes()
+    # post_nodes()
 
-    put_list()
-    delete_storage()
-    post_storage()
+    # put_list()
+    # delete_storage()
+    # post_storage()
     
     # put_list()
-    # delete_vm()
-    # post_vm()
-    # poweron_vm()
-    # poweroff_vm()
+    delete_vm()
+    post_vm()
+    poweron_vm()
+    poweroff_vm()
 
 
 
@@ -65,7 +65,7 @@ def print_tasks():
     for task in resp:
         print ("{:<20} {:<4} {:<8} {:<7} {:<9} {:<5} {:<9}".format(
             datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S'),
-            f'{int(task["runTime"])}s',
+            f'{int(0 if task["runTime"] == None else task["runTime"])}s',
             task["status"],
             task["method"],
             task["resource"],

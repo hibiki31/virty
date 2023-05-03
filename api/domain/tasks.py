@@ -210,12 +210,13 @@ def post_vm_ticketd(db:Session, task: TaskModel):
 
 
 @worker_task(key="post.vm.root")
-def post_vm_root(self: TaskBase, task: TaskModel):
+def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
+
     db = self.db
-    if loads(task.request)["type"] == "ticket":
+    if request.body["type"] == "ticket":
         req = post_vm_ticketd(db=db, task=task)
     else:
-        req = DomainInsert(**loads(task.request))
+        req = DomainInsert(**request.body)
 
     # データベースから情報とってきて確認も行う
     domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
@@ -340,11 +341,12 @@ def post_vm_root(self: TaskBase, task: TaskModel):
 
 
 @worker_task(key="delete.vm.root")
-def delete_vm_root(self: TaskBase, task: TaskModel):
-    request: DomainInsert = DomainDelete(**loads(task.request))
+def delete_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    uuid = request.path_param["uuid"]
 
     try:
-        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == request.uuid).one()
+        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
     except:
         raise Exception("domain not found")
 
@@ -354,17 +356,16 @@ def delete_vm_root(self: TaskBase, task: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.domain_destroy(uuid=request.uuid)
-    manager.domain_undefine(request.uuid)
+    manager.domain_destroy(uuid=uuid)
+    manager.domain_undefine(uuid)
 
     task.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
 @worker_task(key="patch.vm.power")
-def patch_vm_root(self: TaskBase, task: TaskModel):
-    request:TaskRequest = TaskRequest(**loads(task.request))
-    body:PatchDomainPower = PatchDomainPower(**request.body)
+def patch_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     uuid = request.path_param["uuid"]
+    body: PatchDomainPower = PatchDomainPower(**request.body)
 
     try:
         domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
@@ -384,11 +385,28 @@ def patch_vm_root(self: TaskBase, task: TaskModel):
     elif body.status == "off":
         manager.domain_destroy(uuid=uuid)
     
-    # CDROM 
-    # if request.status == "mount":
-    #     manager.domain_cdrom(request.uuid, request.target, request.path)
-    # elif request.status == "unmount":
-    #     manager.domain_cdrom(request.uuid, request.target)
+
+@worker_task(key="patch.vm.cdrom")
+def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
+    uuid = request.path_param["uuid"]
+    body: PatchDominCdrom = PatchDominCdrom(**request.body)
+
+    try:
+        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
+    except:
+        raise Exception("domain not found")
+
+    try:
+        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except:
+        raise Exception("node not found")
+
+    manager = virtlib.VirtManager(node_model=node)
+
+    if request.status == "mount":
+        manager.domain_cdrom(uuid, body.target, body.path)
+    elif request.status == "unmount":
+        manager.domain_cdrom(uuid, body.target)
 
 
 def patch_vm_network(db:Session, task: TaskModel):

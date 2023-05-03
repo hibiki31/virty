@@ -14,8 +14,7 @@ def delete_vm():
 
     for vm in resp.json():
         if vm["name"] == "testcode-vm":
-            request_data = {"uuid": vm["uuid"]}
-            resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/vms', headers=HEADERS, json=request_data)
+            resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}', headers=HEADERS)
             print_resp(resp=resp)
             wait_tasks(resp)
 

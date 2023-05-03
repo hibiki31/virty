@@ -91,6 +91,11 @@ class PatchDomainPower(CamelModel):
     status: str = None
 
 
+class PatchDominCdrom(CamelModel):
+    path: str = None
+    target: str = None
+
+
 class DomainDetailXmlInterface(CamelModel):
     type: str
     mac: str

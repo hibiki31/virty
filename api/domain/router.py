@@ -76,42 +76,44 @@ def publish_task_to_update_vm_list(
     return [task.model]
 
 
-@app.delete("/api/tasks/vms", response_model=List[TaskSelect])
+@app.delete("/api/tasks/vms/{uuid}", response_model=List[TaskSelect])
 def delete_api_domains(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: DomainDelete = None
+        uuid: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
     ):
     task = TaskManager(db=db)
     task.select(method='delete', resource='vm', object='root')
-    task.commit(user=current_user, request=request)
+    task.commit(user=cu, req=req, param={"uuid": uuid})
 
     vm_list_task = TaskManager(db=db)
     vm_list_task.select('put', 'vm', 'list')
-    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+    vm_list_task.commit(user=cu, dep_uuid=task.model.uuid)
 
     return [task.model]
 
 
 @app.post("/api/tasks/vms", response_model=List[TaskSelect])
 def post_api_vms(
-        current_user: CurrentUser = Depends(get_current_user),
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: DomainInsert = None
+        body: DomainInsert = None
     ):
     task = TaskManager(db=db)
-    task.select('post', 'vm', 'root')
-    task.commit(user=current_user, request=request)
+    task.select(method='post', resource='vm', object='root')
+    task.commit(user=cu, req=req, body=body)
 
-    vm_list_task = TaskManager(db=db)
-    vm_list_task.select('put', 'vm', 'list')
-    vm_list_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+    task_list = TaskManager(db=db)
+    task_list.select('put', 'vm', 'list')
+    task_list.commit(user=cu, dep_uuid=task.model.uuid)
 
-    storage_task = TaskManager(db=db)
-    storage_task.select('put', 'storage', 'list')
-    storage_task.commit(user=current_user, dependence_uuid=task.model.uuid)
+    task_storage = TaskManager(db=db)
+    task_storage.select('put', 'storage', 'list')
+    task_storage.commit(user=cu, dep_uuid=task.model.uuid)
 
-    return [ task.model, storage_task.model ]
+    return [ task.model, task_list.model, task_storage.model ]
 
 
 @app.post("/api/tasks/vms/ticket")
@@ -146,7 +148,27 @@ def patch_api_tasks_vms_uuid_power(
 
     task_vm_list = TaskManager(db=db)
     task_vm_list.select('put', 'vm', 'list')
-    task_vm_list.commit(user=cu, dependence_uuid=task.model.uuid)
+    task_vm_list.commit(user=cu, dep_uuid=task.model.uuid)
+
+    return [task.model]
+
+
+@app.patch("/api/tasks/vms/{uuid}/cdrom", response_model=List[TaskSelect])
+def patch_api_tasks_vms_uuid_cdrom(
+        uuid: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        body: PatchDominCdrom = None,
+    ):
+    
+    task = TaskManager(db=db)
+    task.select(method='patch', resource='vm', object='cdrom')
+    task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
+
+    task_vm_list = TaskManager(db=db)
+    task_vm_list.select('put', 'vm', 'list')
+    task_vm_list.commit(user=cu, dep_uuid=task.model.uuid)
 
     return [task.model]
 
