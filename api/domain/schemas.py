@@ -165,7 +165,6 @@ class DomainInsert(CamelModel):
         orm_mode  =  True
 
 class DomainNetworkChange(CamelModel):
-    uuid: str
     mac: str
     network_name: str
     port: str = None

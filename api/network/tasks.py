@@ -24,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.network.list")
-def put_network_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
+def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
 
     nodes = self.db.query(NodeModel).all()
 
@@ -69,25 +69,28 @@ def put_network_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
         self.db.commit()
     task.message = "Network list updated has been successfull"
 
-def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkInsert = NetworkInsert(**loads(task.request))
+
+@worker_task(key="post.network.root")
+def post_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    body: NetworkInsert = NetworkInsert(**request.body)
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
     except:
         raise Exception("node not found")
 
-    if request.type == "bridge":
+    if body.type == "bridge":
         # XMLを定義、設定
         editor = xmllib.XmlEditor("static","net_bridge")
-        editor.network_bridge_edit(name=request.name, bridge=request.bridge_device)
+        editor.network_bridge_edit(name=body.name, bridge=body.bridge_device)
         xml = editor.dump_str()
-    elif request.type == "ovs":
+    elif body.type == "ovs":
         xml = f'''
         <network>
-            <name>{request.name}</name>
+            <name>{body.name}</name>
             <forward mode="bridge" />
-            <bridge name="{request.bridge_device}" />
+            <bridge name="{body.bridge_device}" />
             <virtualport type="openvswitch" />
             <portgroup name="untag" default="yes">
             </portgroup>
@@ -100,14 +103,16 @@ def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_define(xml_str=xml)
 
-    put_network_list(db=db, bg=bg,task=TaskModel())
+    task.message = "Network add has been successfull"
 
 
-def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkDelete = NetworkDelete(**loads(task.request))
+@worker_task(key="delete.network.root")
+def delete_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    uuid = request.path_param["uuid"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == uuid).one()
     except:
         raise Exception("network not found")
 
@@ -117,9 +122,7 @@ def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_undefine(request.uuid)
-
-    put_network_list(db=db, bg=bg,task=TaskModel())
+    manager.network_undefine(uuid)    
 
 
 def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):

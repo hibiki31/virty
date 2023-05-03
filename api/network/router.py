@@ -18,11 +18,11 @@ from mixin.exception import notfound_exception
 from module import virtlib
 
 
-app = APIRouter()
+app = APIRouter(prefix="/api/networks", tags=["network"])
 logger = setup_logger(__name__)
 
 
-@app.get("/api/networks", tags=["network"], response_model=List[GetNetwork])
+@app.get("", response_model=List[GetNetwork])
 def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -30,52 +30,7 @@ def get_api_networks(
     return db.query(NetworkModel).all()
 
 
-@app.put("/api/tasks/networks", tags=["network"], response_model=List[TaskSelect])
-def put_api_networks(
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    
-    task = TaskManager(db=db)
-    task.select(method='put', resource='network', object='list')
-    task.commit(user=cu, req=req)
-   
-    return [task.model]
-
-@app.post("/api/tasks/networks", tags=["network"], response_model=TaskSelect)
-def post_api_storage(
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        body: NetworkInsert = None
-    ):
-
-    task = TaskManager(db=db)
-    task.select(method='post', resource='network', object='root')
-    task.commit(user=cu, req=req, body=body)
-
-    task_put_list = TaskManager(db=db)
-    task_put_list.select('put', 'network', 'list')
-    task_put_list.commit(user=cu, dependence_uuid=task.model.uuid)
-
-
-    return task.model
-
-@app.delete("/api/tasks/networks", tags=["network"], response_model=TaskSelect)
-def post_api_storage(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: NetworkDelete = None
-    ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('delete', 'network', 'root')
-    task.commit(user=current_user, request=request)
-
-    return task.model
-
-@app.get("/api/networks/pools", tags=["network"], response_model=List[GetNetworkPool])
+@app.get("/pools", response_model=List[GetNetworkPool])
 def get_api_networks_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -84,7 +39,7 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/api/networks/pools", tags=["network"])
+@app.post("/pools")
 def post_api_networks_pools(
         model: PostNetworkPool,
         db: Session = Depends(get_db),
@@ -96,7 +51,7 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/api/networks/pools", tags=["network"])
+@app.patch("/pools")
 def patch_api_networks_pools(
         model: PatchNetworkPool,
         db: Session = Depends(get_db),
@@ -115,47 +70,7 @@ def patch_api_networks_pools(
     return True
 
 
-
-@app.post("/api/tasks/networks/ovs", tags=["network"], response_model=TaskSelect)
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: NetworkOVSAdd = None,
-    ):
-
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('post', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return main_task.model
-
-@app.delete("/api/tasks/networks/ovs", tags=["network"], response_model=TaskSelect)
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
-        request: NetworkOVSDelete,
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
-    ):
-
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('delete', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return main_task.model
-
-
-
-
-@app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
+@app.get("/{uuid}", response_model=GetNetwork)
 def get_api_networks_uuid(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
