@@ -76,7 +76,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
   const startVM = () =>
     vmsApi
-      .patchApiDomainsApiTasksVmsPatch({ uuid: id, status: 'on' })
+      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
 
@@ -91,7 +91,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
       return;
     }
     vmsApi
-      .patchApiDomainsApiTasksVmsPatch({ uuid: id, status: 'off' })
+      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
   };

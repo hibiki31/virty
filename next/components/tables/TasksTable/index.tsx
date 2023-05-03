@@ -12,12 +12,14 @@ import { TaskDetailsDialog } from '~/components/dialogs/TaskDetailsDialog';
 import NextLink from 'next/link';
 import { ResourceIcon } from './ResourceIcon';
 import { TaskStatusIcon } from './TaskStatusIcon';
+import { useIncompleteTasks } from '~/store/tasksState';
 
 export const TasksTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
+  const { updateHash } = useIncompleteTasks();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', user],
+    ['tasksApi.getTasksApiTasksGet', user, updateHash],
     ([, user]) => tasksApi.getTasksApiTasksGet(user?.isAdminMode).then((res) => res.data),
     { revalidateOnFocus: false }
   );
@@ -94,7 +96,7 @@ export const TasksTable: FC = () => {
               field: 'runTime',
               disableColumnMenu: true,
               flex: 1,
-              renderCell: (params) => `${Math.round(params.row.runTime! * 100) / 100} s`,
+              renderCell: (params) => (params.value ? `${Math.round(params.value! * 100) / 100} s` : '-'),
             },
             {
               headerName: '',

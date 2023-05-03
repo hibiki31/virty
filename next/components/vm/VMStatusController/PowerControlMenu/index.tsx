@@ -19,7 +19,7 @@ export const PowerControlMenu: FC<Props> = ({ open, anchorEl, uuid, status, onCl
 
   const startVM = () => {
     vmsApi
-      .patchApiDomainsApiTasksVmsPatch({ uuid, status: 'on' })
+      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
   };
@@ -35,7 +35,7 @@ export const PowerControlMenu: FC<Props> = ({ open, anchorEl, uuid, status, onCl
       return;
     }
     vmsApi
-      .patchApiDomainsApiTasksVmsPatch({ uuid, status: 'off' })
+      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(uuid, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
   };
