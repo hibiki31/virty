@@ -49,7 +49,7 @@ export const SubNavigationDrawer: FC = memo(function NotMemoSubNavigationDrawer(
             }
       }
     >
-      <Toolbar />
+      <Toolbar variant="dense" />
       <Box display="flex" alignItems="center" sx={{ px: 2, py: 1, gap: 2 }}>
         <IconButton disableRipple sx={{ pointerEvents: 'none' }}>
           {groupItem!.icon}

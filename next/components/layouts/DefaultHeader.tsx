@@ -41,8 +41,8 @@ export const DefaultHeader: FC<PropsWithChildren> = ({ children }) => {
   return (
     <>
       <AppBar color="inherit" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: 'primary.main' }}>
-        <Toolbar>
-          <IconButton size="large" edge="start" color="inherit" sx={{ mr: 2 }} onClick={() => setOpen(!open)}>
+        <Toolbar variant="dense">
+          <IconButton edge="start" color="inherit" sx={{ mr: 2 }} onClick={() => setOpen(!open)}>
             <MdiMenu />
           </IconButton>
           <Typography variant="h5" mr={4}>

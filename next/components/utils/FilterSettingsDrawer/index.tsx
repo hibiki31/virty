@@ -81,7 +81,7 @@ export const FilterSettingsDrawer: FilterSettingsDrawerComponent = ({
             }
       }
     >
-      <Toolbar />
+      <Toolbar variant="dense" />
       <Box display="flex" alignItems="center" sx={{ px: 2, py: 2 }}>
         <Typography
           variant="h6"

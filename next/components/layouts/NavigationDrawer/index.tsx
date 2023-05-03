@@ -35,7 +35,7 @@ export const NavigationDrawer: FC<Props> = memo(function NotMemoNavigationDrawer
         ['& .MuiDrawer-paper']: { width: DRAWER_WIDTH, boxSizing: 'border-box' },
       }}
     >
-      <Toolbar />
+      <Toolbar variant="dense" />
       <List>
         {DRAWER_ITEMS.map((item, i) => (
           <DrawerListItem key={i} item={item} />

@@ -32,7 +32,7 @@ export const DefaultLayout: FC<Props> = ({ children, isLoading }) => {
               : rightDrawerOptions.enable && closedMixin(theme, `calc(100% - ${rightDrawerOptions.closedWidth})`))),
         }}
       >
-        <Toolbar />
+        <Toolbar variant="dense" />
         {isLoading ? (
           <Box component="div" sx={{ flexGrow: 1 }}>
             <LoadingBox />
