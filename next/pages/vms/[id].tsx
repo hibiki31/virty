@@ -245,7 +245,10 @@ const VMPage: NextPage<Props> = ({ id }) => {
                   name: 'Actions',
                   align: 'center',
                   getItem: (item: GetDomainInterfaces) => (
-                    <IconButton onClick={() => openChangeNetworkDialog(item)}>
+                    <IconButton
+                      disabled={data.status !== VM_STATUS.POWER_ON}
+                      onClick={() => openChangeNetworkDialog(item)}
+                    >
                       <Pencil />
                     </IconButton>
                   ),
