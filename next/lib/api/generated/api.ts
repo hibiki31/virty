@@ -81,19 +81,6 @@ export interface DeleteProject {
 /**
  * 
  * @export
- * @interface DomainDelete
- */
-export interface DomainDelete {
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainDelete
-     */
-    'uuid': string;
-}
-/**
- * 
- * @export
  * @interface DomainInsert
  */
 export interface DomainInsert {
@@ -1400,6 +1387,25 @@ export interface PatchDomainPower {
 /**
  * 
  * @export
+ * @interface PatchDominCdrom
+ */
+export interface PatchDominCdrom {
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchDominCdrom
+     */
+    'path'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchDominCdrom
+     */
+    'target'?: string;
+}
+/**
+ * 
+ * @export
  * @interface PatchImageFlavor
  */
 export interface PatchImageFlavor {
@@ -1779,25 +1785,6 @@ export interface Setup {
 /**
  * 
  * @export
- * @interface StorageDelete
- */
-export interface StorageDelete {
-    /**
-     * 
-     * @type {string}
-     * @memberof StorageDelete
-     */
-    'uuid': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StorageDelete
-     */
-    'nodeName': string;
-}
-/**
- * 
- * @export
  * @interface StorageInsert
  */
 export interface StorageInsert {
@@ -2041,10 +2028,22 @@ export interface TaskSelect {
     'request'?: object;
     /**
      * 
+     * @type {object}
+     * @memberof TaskSelect
+     */
+    'result'?: object;
+    /**
+     * 
      * @type {string}
      * @memberof TaskSelect
      */
     'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskSelect
+     */
+    'log'?: string;
     /**
      * 
      * @type {string}
@@ -3164,10 +3163,10 @@ export const NetworkApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNetworksUuidOvsApiNetworksOvsDelete: async (networkOVSDelete: NetworkOVSDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        postApiNetworksUuidOvsApiTasksNetworksOvsDelete: async (networkOVSDelete: NetworkOVSDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'networkOVSDelete' is not null or undefined
-            assertParamExists('postApiNetworksUuidOvsApiNetworksOvsDelete', 'networkOVSDelete', networkOVSDelete)
-            const localVarPath = `/api/networks/ovs`;
+            assertParamExists('postApiNetworksUuidOvsApiTasksNetworksOvsDelete', 'networkOVSDelete', networkOVSDelete)
+            const localVarPath = `/api/tasks/networks/ovs`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3204,8 +3203,8 @@ export const NetworkApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNetworksUuidOvsApiNetworksOvsPost: async (networkOVSAdd?: NetworkOVSAdd, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/networks/ovs`;
+        postApiNetworksUuidOvsApiTasksNetworksOvsPost: async (networkOVSAdd?: NetworkOVSAdd, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/tasks/networks/ovs`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3242,8 +3241,8 @@ export const NetworkApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiStorageApiNetworksDelete: async (networkDelete?: NetworkDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/networks`;
+        postApiStorageApiTasksNetworksDelete: async (networkDelete?: NetworkDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/tasks/networks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3280,8 +3279,8 @@ export const NetworkApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiStorageApiNetworksPost: async (networkInsert?: NetworkInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/networks`;
+        postApiStorageApiTasksNetworksPost: async (networkInsert?: NetworkInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/tasks/networks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -3415,8 +3414,8 @@ export const NetworkApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete, options);
+        async postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3426,8 +3425,8 @@ export const NetworkApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd, options);
+        async postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3437,8 +3436,8 @@ export const NetworkApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiStorageApiNetworksDelete(networkDelete?: NetworkDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiStorageApiNetworksDelete(networkDelete, options);
+        async postApiStorageApiTasksNetworksDelete(networkDelete?: NetworkDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiStorageApiTasksNetworksDelete(networkDelete, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3448,8 +3447,8 @@ export const NetworkApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiStorageApiNetworksPost(networkInsert?: NetworkInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiStorageApiNetworksPost(networkInsert, options);
+        async postApiStorageApiTasksNetworksPost(networkInsert?: NetworkInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiStorageApiTasksNetworksPost(networkInsert, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3527,8 +3526,8 @@ export const NetworkApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete, options).then((request) => request(axios, basePath));
+        postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3537,8 +3536,8 @@ export const NetworkApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd, options).then((request) => request(axios, basePath));
+        postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3547,8 +3546,8 @@ export const NetworkApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiStorageApiNetworksDelete(networkDelete?: NetworkDelete, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.postApiStorageApiNetworksDelete(networkDelete, options).then((request) => request(axios, basePath));
+        postApiStorageApiTasksNetworksDelete(networkDelete?: NetworkDelete, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.postApiStorageApiTasksNetworksDelete(networkDelete, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3557,8 +3556,8 @@ export const NetworkApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiStorageApiNetworksPost(networkInsert?: NetworkInsert, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.postApiStorageApiNetworksPost(networkInsert, options).then((request) => request(axios, basePath));
+        postApiStorageApiTasksNetworksPost(networkInsert?: NetworkInsert, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.postApiStorageApiTasksNetworksPost(networkInsert, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3645,8 +3644,8 @@ export class NetworkApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworkApi
      */
-    public postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: AxiosRequestConfig) {
-        return NetworkApiFp(this.configuration).postApiNetworksUuidOvsApiNetworksOvsDelete(networkOVSDelete, options).then((request) => request(this.axios, this.basePath));
+    public postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete: NetworkOVSDelete, options?: AxiosRequestConfig) {
+        return NetworkApiFp(this.configuration).postApiNetworksUuidOvsApiTasksNetworksOvsDelete(networkOVSDelete, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3657,8 +3656,8 @@ export class NetworkApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworkApi
      */
-    public postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: AxiosRequestConfig) {
-        return NetworkApiFp(this.configuration).postApiNetworksUuidOvsApiNetworksOvsPost(networkOVSAdd, options).then((request) => request(this.axios, this.basePath));
+    public postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd?: NetworkOVSAdd, options?: AxiosRequestConfig) {
+        return NetworkApiFp(this.configuration).postApiNetworksUuidOvsApiTasksNetworksOvsPost(networkOVSAdd, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3669,8 +3668,8 @@ export class NetworkApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworkApi
      */
-    public postApiStorageApiNetworksDelete(networkDelete?: NetworkDelete, options?: AxiosRequestConfig) {
-        return NetworkApiFp(this.configuration).postApiStorageApiNetworksDelete(networkDelete, options).then((request) => request(this.axios, this.basePath));
+    public postApiStorageApiTasksNetworksDelete(networkDelete?: NetworkDelete, options?: AxiosRequestConfig) {
+        return NetworkApiFp(this.configuration).postApiStorageApiTasksNetworksDelete(networkDelete, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3681,8 +3680,8 @@ export class NetworkApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworkApi
      */
-    public postApiStorageApiNetworksPost(networkInsert?: NetworkInsert, options?: AxiosRequestConfig) {
-        return NetworkApiFp(this.configuration).postApiStorageApiNetworksPost(networkInsert, options).then((request) => request(this.axios, this.basePath));
+    public postApiStorageApiTasksNetworksPost(networkInsert?: NetworkInsert, options?: AxiosRequestConfig) {
+        return NetworkApiFp(this.configuration).postApiStorageApiTasksNetworksPost(networkInsert, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3704,44 +3703,6 @@ export class NetworkApi extends BaseAPI {
  */
 export const NodesApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
-        /**
-         * 
-         * @summary Delete Api Nodes
-         * @param {string} nodeName 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteApiNodesApiNodesNodeNameDelete: async (nodeName: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'nodeName' is not null or undefined
-            assertParamExists('deleteApiNodesApiNodesNodeNameDelete', 'nodeName', nodeName)
-            const localVarPath = `/api/nodes/{node_name}`
-                .replace(`{${"node_name"}}`, encodeURIComponent(String(nodeName)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
         /**
          * 
          * @summary Get Api Nodes
@@ -3862,17 +3823,6 @@ export const NodesApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Delete Api Nodes
-         * @param {string} nodeName 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async deleteApiNodesApiNodesNodeNameDelete(nodeName: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiNodesApiNodesNodeNameDelete(nodeName, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
          * @summary Get Api Nodes
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3914,16 +3864,6 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
     return {
         /**
          * 
-         * @summary Delete Api Nodes
-         * @param {string} nodeName 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteApiNodesApiNodesNodeNameDelete(nodeName: string, options?: any): AxiosPromise<any> {
-            return localVarFp.deleteApiNodesApiNodesNodeNameDelete(nodeName, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @summary Get Api Nodes
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3960,18 +3900,6 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
  * @extends {BaseAPI}
  */
 export class NodesApi extends BaseAPI {
-    /**
-     * 
-     * @summary Delete Api Nodes
-     * @param {string} nodeName 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof NodesApi
-     */
-    public deleteApiNodesApiNodesNodeNameDelete(nodeName: string, options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).deleteApiNodesApiNodesNodeNameDelete(nodeName, options).then((request) => request(this.axios, this.basePath));
-    }
-
     /**
      * 
      * @summary Get Api Nodes
@@ -5315,6 +5243,44 @@ export const TasksNodesApiAxiosParamCreator = function (configuration?: Configur
     return {
         /**
          * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteTasksNodesNameApiTasksNodesNameDelete: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('deleteTasksNodesNameApiTasksNodesNameDelete', 'name', name)
+            const localVarPath = `/api/tasks/nodes/{name}`
+                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Patch Api Node Role
          * @param {NodeRolePatch} nodeRolePatch 
          * @param {*} [options] Override http request option.
@@ -5355,12 +5321,12 @@ export const TasksNodesApiAxiosParamCreator = function (configuration?: Configur
         },
         /**
          * 
-         * @summary Post Api Nodes
+         * @summary Post Tasks Nodes
          * @param {NodeInsert} [nodeInsert] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNodesApiTasksNodesPost: async (nodeInsert?: NodeInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        postTasksNodesApiTasksNodesPost: async (nodeInsert?: NodeInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/nodes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5403,6 +5369,17 @@ export const TasksNodesApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteTasksNodesNameApiTasksNodesNameDelete(name, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Patch Api Node Role
          * @param {NodeRolePatch} nodeRolePatch 
          * @param {*} [options] Override http request option.
@@ -5414,13 +5391,13 @@ export const TasksNodesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Post Api Nodes
+         * @summary Post Tasks Nodes
          * @param {NodeInsert} [nodeInsert] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postApiNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postApiNodesApiTasksNodesPost(nodeInsert, options);
+        async postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postTasksNodesApiTasksNodesPost(nodeInsert, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -5435,6 +5412,16 @@ export const TasksNodesApiFactory = function (configuration?: Configuration, bas
     return {
         /**
          * 
+         * @summary Delete Tasks Nodes Name
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Patch Api Node Role
          * @param {NodeRolePatch} nodeRolePatch 
          * @param {*} [options] Override http request option.
@@ -5445,13 +5432,13 @@ export const TasksNodesApiFactory = function (configuration?: Configuration, bas
         },
         /**
          * 
-         * @summary Post Api Nodes
+         * @summary Post Tasks Nodes
          * @param {NodeInsert} [nodeInsert] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postApiNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.postApiNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(axios, basePath));
+        postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -5463,6 +5450,18 @@ export const TasksNodesApiFactory = function (configuration?: Configuration, bas
  * @extends {BaseAPI}
  */
 export class TasksNodesApi extends BaseAPI {
+    /**
+     * 
+     * @summary Delete Tasks Nodes Name
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TasksNodesApi
+     */
+    public deleteTasksNodesNameApiTasksNodesNameDelete(name: string, options?: AxiosRequestConfig) {
+        return TasksNodesApiFp(this.configuration).deleteTasksNodesNameApiTasksNodesNameDelete(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary Patch Api Node Role
@@ -5477,14 +5476,14 @@ export class TasksNodesApi extends BaseAPI {
 
     /**
      * 
-     * @summary Post Api Nodes
+     * @summary Post Tasks Nodes
      * @param {NodeInsert} [nodeInsert] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksNodesApi
      */
-    public postApiNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig) {
-        return TasksNodesApiFp(this.configuration).postApiNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(this.axios, this.basePath));
+    public postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig) {
+        return TasksNodesApiFp(this.configuration).postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -5498,12 +5497,15 @@ export const TasksStoragesApiAxiosParamCreator = function (configuration?: Confi
         /**
          * 
          * @summary Delete Api Storages
-         * @param {StorageDelete} [storageDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteApiStoragesApiTasksStoragesDelete: async (storageDelete?: StorageDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/tasks/storages`;
+        deleteApiStoragesApiTasksStoragesUuidDelete: async (uuid: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uuid' is not null or undefined
+            assertParamExists('deleteApiStoragesApiTasksStoragesUuidDelete', 'uuid', uuid)
+            const localVarPath = `/api/tasks/storages/{uuid}`
+                .replace(`{${"uuid"}}`, encodeURIComponent(String(uuid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -5521,12 +5523,9 @@ export const TasksStoragesApiAxiosParamCreator = function (configuration?: Confi
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(storageDelete, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5584,12 +5583,12 @@ export const TasksStoragesApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Delete Api Storages
-         * @param {StorageDelete} [storageDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteApiStoragesApiTasksStoragesDelete(storageDelete?: StorageDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiStoragesApiTasksStoragesDelete(storageDelete, options);
+        async deleteApiStoragesApiTasksStoragesUuidDelete(uuid: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiStoragesApiTasksStoragesUuidDelete(uuid, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -5616,12 +5615,12 @@ export const TasksStoragesApiFactory = function (configuration?: Configuration, 
         /**
          * 
          * @summary Delete Api Storages
-         * @param {StorageDelete} [storageDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteApiStoragesApiTasksStoragesDelete(storageDelete?: StorageDelete, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.deleteApiStoragesApiTasksStoragesDelete(storageDelete, options).then((request) => request(axios, basePath));
+        deleteApiStoragesApiTasksStoragesUuidDelete(uuid: string, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.deleteApiStoragesApiTasksStoragesUuidDelete(uuid, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -5646,13 +5645,13 @@ export class TasksStoragesApi extends BaseAPI {
     /**
      * 
      * @summary Delete Api Storages
-     * @param {StorageDelete} [storageDelete] 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksStoragesApi
      */
-    public deleteApiStoragesApiTasksStoragesDelete(storageDelete?: StorageDelete, options?: AxiosRequestConfig) {
-        return TasksStoragesApiFp(this.configuration).deleteApiStoragesApiTasksStoragesDelete(storageDelete, options).then((request) => request(this.axios, this.basePath));
+    public deleteApiStoragesApiTasksStoragesUuidDelete(uuid: string, options?: AxiosRequestConfig) {
+        return TasksStoragesApiFp(this.configuration).deleteApiStoragesApiTasksStoragesUuidDelete(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5917,12 +5916,15 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
         /**
          * 
          * @summary Delete Api Domains
-         * @param {DomainDelete} [domainDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteApiDomainsApiTasksVmsDelete: async (domainDelete?: DomainDelete, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/tasks/vms`;
+        deleteApiDomainsApiTasksVmsUuidDelete: async (uuid: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uuid' is not null or undefined
+            assertParamExists('deleteApiDomainsApiTasksVmsUuidDelete', 'uuid', uuid)
+            const localVarPath = `/api/tasks/vms/{uuid}`
+                .replace(`{${"uuid"}}`, encodeURIComponent(String(uuid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -5940,12 +5942,9 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainDelete, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6057,6 +6056,48 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Patch Api Tasks Vms Uuid Cdrom
+         * @param {string} uuid 
+         * @param {PatchDominCdrom} [patchDominCdrom] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch: async (uuid: string, patchDominCdrom?: PatchDominCdrom, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uuid' is not null or undefined
+            assertParamExists('patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch', 'uuid', uuid)
+            const localVarPath = `/api/tasks/vms/{uuid}/cdrom`
+                .replace(`{${"uuid"}}`, encodeURIComponent(String(uuid)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchDominCdrom, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6428,12 +6469,12 @@ export const VmsApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Delete Api Domains
-         * @param {DomainDelete} [domainDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiDomainsApiTasksVmsDelete(domainDelete, options);
+        async deleteApiDomainsApiTasksVmsUuidDelete(uuid: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApiDomainsApiTasksVmsUuidDelete(uuid, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -6467,6 +6508,18 @@ export const VmsApiFp = function(configuration?: Configuration) {
          */
         async getApiDomainUuidApiVmsUuidGet(uuid: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetDomainDetail>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getApiDomainUuidApiVmsUuidGet(uuid, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Patch Api Tasks Vms Uuid Cdrom
+         * @param {string} uuid 
+         * @param {PatchDominCdrom} [patchDominCdrom] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid: string, patchDominCdrom?: PatchDominCdrom, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid, patchDominCdrom, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -6581,12 +6634,12 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
         /**
          * 
          * @summary Delete Api Domains
-         * @param {DomainDelete} [domainDelete] 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.deleteApiDomainsApiTasksVmsDelete(domainDelete, options).then((request) => request(axios, basePath));
+        deleteApiDomainsApiTasksVmsUuidDelete(uuid: string, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.deleteApiDomainsApiTasksVmsUuidDelete(uuid, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6617,6 +6670,17 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
          */
         getApiDomainUuidApiVmsUuidGet(uuid: string, options?: any): AxiosPromise<GetDomainDetail> {
             return localVarFp.getApiDomainUuidApiVmsUuidGet(uuid, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Patch Api Tasks Vms Uuid Cdrom
+         * @param {string} uuid 
+         * @param {PatchDominCdrom} [patchDominCdrom] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid: string, patchDominCdrom?: PatchDominCdrom, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid, patchDominCdrom, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6721,13 +6785,13 @@ export class VmsApi extends BaseAPI {
     /**
      * 
      * @summary Delete Api Domains
-     * @param {DomainDelete} [domainDelete] 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsApi
      */
-    public deleteApiDomainsApiTasksVmsDelete(domainDelete?: DomainDelete, options?: AxiosRequestConfig) {
-        return VmsApiFp(this.configuration).deleteApiDomainsApiTasksVmsDelete(domainDelete, options).then((request) => request(this.axios, this.basePath));
+    public deleteApiDomainsApiTasksVmsUuidDelete(uuid: string, options?: AxiosRequestConfig) {
+        return VmsApiFp(this.configuration).deleteApiDomainsApiTasksVmsUuidDelete(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -6764,6 +6828,19 @@ export class VmsApi extends BaseAPI {
      */
     public getApiDomainUuidApiVmsUuidGet(uuid: string, options?: AxiosRequestConfig) {
         return VmsApiFp(this.configuration).getApiDomainUuidApiVmsUuidGet(uuid, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Patch Api Tasks Vms Uuid Cdrom
+     * @param {string} uuid 
+     * @param {PatchDominCdrom} [patchDominCdrom] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof VmsApi
+     */
+    public patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid: string, patchDominCdrom?: PatchDominCdrom, options?: AxiosRequestConfig) {
+        return VmsApiFp(this.configuration).patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(uuid, patchDominCdrom, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

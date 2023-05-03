@@ -151,17 +151,37 @@ const Page: NextPage<Props> = ({ id }) => {
 
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Accordion defaultExpanded disableGutters>
+          <Accordion defaultExpanded={!!data.result} disableGutters disabled={!data.result}>
+            <AccordionSummary expandIcon={<ChevronDown />}>
+              <Typography>Result</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ overflow: 'auto' }}>
+              <pre>{JSON.stringify(data.result, null, 2)}</pre>
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+        <Grid item xs={12}>
+          <Accordion defaultExpanded={!!data.message} disableGutters disabled={!data.message}>
             <AccordionSummary expandIcon={<ChevronDown />}>
               <Typography>Message</Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ overflow: 'auto' }}>
-              <Typography>{data.message}</Typography>
+              <pre>{data.message}</pre>
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+        <Grid item xs={12}>
+          <Accordion defaultExpanded={!!data.log} disableGutters disabled={!data.log}>
+            <AccordionSummary expandIcon={<ChevronDown />}>
+              <Typography>Log</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ overflow: 'auto' }}>
+              <pre>{data.log}</pre>
             </AccordionDetails>
           </Accordion>
         </Grid>
         <Grid item xs={12} sx={{ mb: 2 }}>
-          <Accordion defaultExpanded disableGutters>
+          <Accordion defaultExpanded={!!data.request} disableGutters disabled={!data.request}>
             <AccordionSummary expandIcon={<ChevronDown />}>
               <Typography>Request Details</Typography>
             </AccordionSummary>

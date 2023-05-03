@@ -33,7 +33,7 @@ export const JoinNodeDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleJoinNode = (data: FormData) => {
     return tasksNodesApi
-      .postApiNodesApiTasksNodesPost(data)
+      .postTasksNodesApiTasksNodesPost(data)
       .then(() => {
         enqueueNotistack('Please wait for the task to be completed.', { variant: 'success' });
         onClose();
