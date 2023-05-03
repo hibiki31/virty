@@ -1,15 +1,17 @@
 import { Box, Divider, Typography } from '@mui/material';
-import { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren, ReactNode } from 'react';
 
 type Props = PropsWithChildren<{
-  primary: string;
-  secondary?: string;
+  primary: ReactNode;
+  secondary?: ReactNode;
+  prefix?: ReactNode;
   spacer?: boolean;
 }>;
 
-export const TitleHeader: FC<Props> = ({ primary, secondary, spacer, children }) => {
+export const TitleHeader: FC<Props> = ({ primary, secondary, prefix, spacer, children }) => {
   return (
     <Box display="flex" alignItems="center" sx={{ minHeight: '56px', px: 2, py: 1, gap: 2 }}>
+      {prefix}
       <Typography variant="h5">{primary}</Typography>
       {secondary && (
         <>

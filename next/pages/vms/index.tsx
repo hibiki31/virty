@@ -1,10 +1,11 @@
-import { Button, Grid, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
 import { AddVMDialog } from '~/components/dialogs/AddVMDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { VMTable } from '~/components/tables/VMTable';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { tasksVmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import { useNotistack } from '~/lib/utils/notistack';
@@ -30,21 +31,14 @@ const VMsPage: NextPage = () => {
 
       <AddVMDialog open={addVMDialogOpen} onClose={() => setAddVMDialogOpen(false)} />
 
-      <Grid container alignItems="center" spacing={2} sx={{ mt: 0, mb: 1 }}>
-        <Grid item>
-          <Typography variant="h4">VMs</Typography>
-        </Grid>
-        <Grid item>
-          <Button variant="contained" color="primary" onClick={reloadVMs}>
-            Reload
-          </Button>
-        </Grid>
-        <Grid item>
-          <Button variant="contained" color="primary" onClick={() => setAddVMDialogOpen(true)}>
-            Add
-          </Button>
-        </Grid>
-      </Grid>
+      <TitleHeader primary="VMs">
+        <Button variant="contained" color="primary" onClick={() => setAddVMDialogOpen(true)}>
+          Add
+        </Button>
+        <Button variant="contained" color="primary" onClick={reloadVMs}>
+          Reload
+        </Button>
+      </TitleHeader>
 
       <VMTable />
     </DefaultLayout>

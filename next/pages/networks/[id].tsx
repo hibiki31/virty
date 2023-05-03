@@ -7,6 +7,7 @@ import { AddPortDialog } from '~/components/dialogs/AddPortDialog';
 import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { PortsTable } from '~/components/tables/PortsTable';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { networkApi, tasksNetworksApi } from '~/lib/api';
 import { formatDate } from '~/lib/utils/date';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
@@ -90,19 +91,11 @@ const Page: NextPage<Props> = ({ id }) => {
         <title>Virty - {data.name}</title>
       </Head>
 
-      <Grid container alignItems="baseline" spacing={2} sx={{ mt: 0, mb: 2 }}>
-        <Grid item>
-          <Typography variant="h6">{data.name}</Typography>
-        </Grid>
-        <Grid item>
-          <Typography variant="subtitle1">{data.uuid}</Typography>
-        </Grid>
-        <Grid item>
-          <Button variant="contained" color="error" disableElevation size="small" onClick={deleteNetwork}>
-            Delete
-          </Button>
-        </Grid>
-      </Grid>
+      <TitleHeader primary={data.name} secondary={data.uuid}>
+        <Button variant="contained" color="error" disableElevation size="small" onClick={deleteNetwork}>
+          Delete
+        </Button>
+      </TitleHeader>
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={6}>

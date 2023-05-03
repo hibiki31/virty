@@ -42,8 +42,27 @@ export const SecondaryWithChildren: ComponentStoryObj<typeof TitleHeader> = {
   },
 };
 
+export const Prefix: ComponentStoryObj<typeof TitleHeader> = {
+  args: {
+    prefix: 'Prefix',
+    primary: 'Primary',
+    secondary: 'Secondary',
+    children: <Buttons />,
+  },
+};
+
 export const Spacer: ComponentStoryObj<typeof TitleHeader> = {
   args: {
+    primary: 'Primary',
+    secondary: 'Secondary',
+    spacer: true,
+    children: <Buttons />,
+  },
+};
+
+export const All: ComponentStoryObj<typeof TitleHeader> = {
+  args: {
+    prefix: 'Prefix',
     primary: 'Primary',
     secondary: 'Secondary',
     spacer: true,

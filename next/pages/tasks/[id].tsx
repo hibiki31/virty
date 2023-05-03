@@ -8,6 +8,7 @@ import { DefaultLayout } from '~/components/layouts/DefaultLayout';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { ResourceIcon } from '~/components/tables/TasksTable/ResourceIcon';
 import { TaskStatusIcon } from '~/components/tables/TasksTable/TaskStatusIcon';
+import { TitleHeader } from '~/components/utils/TitleHeader';
 import { tasksApi } from '~/lib/api';
 import { formatDate } from '~/lib/utils/date';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
@@ -70,11 +71,8 @@ const Page: NextPage<Props> = ({ id }) => {
         <title>Virty - {id}</title>
       </Head>
 
-      <Grid container alignItems="baseline" spacing={2} sx={{ mt: 0, mb: 2 }}>
-        <Grid item>
-          <Typography variant="h6">{id}</Typography>
-        </Grid>
-      </Grid>
+      <TitleHeader primary={id} />
+
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item sx={{ ml: -2 }}>
           <BaseTable
