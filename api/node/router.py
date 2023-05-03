@@ -19,11 +19,11 @@ from mixin.exception import *
 from node.models import NodeModel
 
 
-app = APIRouter(prefix="/api")
+app = APIRouter(prefix="/api/nodes", tags=["node"])
 logger = setup_logger(__name__)
 
 
-@app.get("/nodes", response_model=List[GetNode], tags=["nodes"])
+@app.get("", response_model=List[GetNode])
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -32,7 +32,7 @@ def get_api_nodes(
     return db.query(NodeModel).all()
 
 
-@app.post("/nodes/key", tags=["nodes"])
+@app.post("/key")
 def post_ssh_key_pair(
         model: SSHKeyPair,
         current_user: CurrentUser = Depends(get_current_user)
@@ -51,7 +51,7 @@ def post_ssh_key_pair(
     return {}
 
 
-@app.get("/nodes/key", response_model=SSHKeyPair, tags=["nodes"])
+@app.get("/key", response_model=SSHKeyPair)
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     public_key = ""
@@ -66,56 +66,18 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     return SSHKeyPair(private_key=private_key, public_key=public_key)
 
 
-@app.post("/tasks/nodes", tags=["tasks-nodes"], response_model=List[TaskSelect])
-def post_tasks_nodes(
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        body: NodeInsert = None
-    ):
-    
-    task = TaskManager(db=db)
-    task.select(method='post', resource='node', object='root')
-    task.commit(user=cu, req=req, body=body)
-
-    if body.libvirt_role:
-        body_libvirt = NodeRolePatch(node_name=body.name, role_name="libvirt")
-        task_libvirt = TaskManager(db=db)
-        task_libvirt.select(method="patch", resource="node", object="role")
-        task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
-        dependence_uuid = task_libvirt.model.uuid
-
-        return [task.model, task_libvirt.model]
-
-    return [task.model]
-
-
-@app.delete("/tasks/nodes/{name}", tags=["tasks-nodes"], response_model=List[TaskSelect])
-def delete_tasks_nodes_name(
+@app.get("/{name}", response_model=GetNode)
+def get_api_nodes(
         name: str,
-        req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
 
-    task = TaskManager(db=db)
-    task.select(method='delete', resource='node', object='root')
-    task.commit(user=cu, req=req, param={"name": name})
+    node = db.query(NodeModel).filter(NodeModel.name==name).one_or_none()
+    if node == None:
+        raise HTTPException(status_code=404, detail="node is not found")
 
-    return [task.model]
-
-
-@app.patch("/tasks/nodes/roles", tags=["tasks-nodes"], response_model=TaskSelect)
-def patch_api_node_role(
-        request: NodeRolePatch,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    task = TaskManager(db=db)
-    task.select('patch', 'node', 'role')
-    task.commit(user=current_user, request=request)
-    
-    return task.model
+    return node
 
 
 # @app.get("/nodes/pools", tags=["nodes"])
@@ -148,16 +110,16 @@ def patch_api_node_role(
 #     return True
 
 
-# @app.get("/nodes/{node_name}/facts", tags=["nodes"])
-# def get_node_name_facts(
-#         node_name: str,
-#         current_user: CurrentUser = Depends(get_current_user),
-#         db: Session = Depends(get_db),
-#     ):
+@app.get("/{name}/facts")
+def get_node_name_facts(
+        name: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
 
-#     node = db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
+    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
     
-#     if node == None:
-#         raise HTTPException(status_code=404, detail="Node not found")
+    if node == None:
+        raise HTTPException(status_code=404, detail="Node not found")
 
-#     return node.ansible_facts["result"]
+    return node.ansible_facts

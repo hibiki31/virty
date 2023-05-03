@@ -26,15 +26,33 @@ app = APIRouter(
 def get_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        admin: bool = False
+        admin: bool = False,
+        limit: int = 25,
+        page: int = 0,
+        resource: str = None,
+        object: str = None,
+        method: str = None,
+        status: str = None,
     ):
+
+    query = db.query(TaskModel)
+
     if admin:
         current_user.verify_scope(["admin.tasks"])
-        task = db.query(TaskModel).order_by(desc(TaskModel.post_time)).all()
     else:
-        task = db.query(TaskModel)\
-            .filter(TaskModel.user_id==current_user.id)\
-            .order_by(desc(TaskModel.post_time)).all()
+        query.filter(TaskModel.user_id==current_user.id)
+
+    if resource:
+        query = query.filter(TaskModel.resource==resource)
+    if object:
+        query = query.filter(TaskModel.object==object)
+    if method:
+        query = query.filter(TaskModel.method==method)
+    if status:
+        query = query.filter(TaskModel.status==status)
+
+    query = query.order_by(desc(TaskModel.post_time))
+    task = query.limit(limit).offset(int(limit*page)).all()
 
     return task
 
