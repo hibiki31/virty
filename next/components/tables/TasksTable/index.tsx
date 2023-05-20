@@ -37,7 +37,7 @@ export const TasksTable: FC = () => {
           rowHeight={40}
           pageSize={25}
           getRowId={(row) => row.uuid!}
-          rows={data || []}
+          rows={data?.data || []}
           loading={!data || isValidating}
           error={!!error || undefined}
           columns={[

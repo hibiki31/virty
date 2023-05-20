@@ -28,7 +28,7 @@ export const VMTable: FC = () => {
         disableSelectionOnClick
         rowHeight={40}
         getRowId={(row) => row.uuid}
-        rows={data || []}
+        rows={data?.data || []}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
