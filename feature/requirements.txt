@@ -1,0 +1,4 @@
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.3
+pyinstaller
+gunicorn==20.1.0
