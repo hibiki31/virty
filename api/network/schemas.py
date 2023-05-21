@@ -58,6 +58,22 @@ class NetworkOVSAdd(CamelModel):
     class Config:
         orm_mode  =  True
 
+
+class NetworkProvider(CamelModel):
+    name: str = None
+    dns_domain: str = None
+    network_address: str = None
+    network_prefix: str = None
+    gateway_address: str = None
+    dhcp_start: str = None
+    dhcp_end: str = None
+    network_node: str = None
+    
+
+    class Config:
+        orm_mode  =  True
+
+
 class NetworkOVSDelete(CamelModel):
     uuid: str
     name: str

@@ -74,6 +74,21 @@ def post_uuid_ovs(
     return [task.model, task_put_list.model ]
 
 
+@app.post("/providers", response_model=List[TaskSelect])
+def post_uuid_ovs(
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        body: NetworkProvider = None
+    ):
+
+    task = TaskManager(db=db)
+    task.select(method='post', resource='network', object='provider')
+    task.commit(user=cu, req=req, body=body)
+
+    return [ task.model ]
+
+
 @app.delete("/{uuid}/ovs/{name}", response_model=List[TaskSelect])
 def post_api_networks_uuid_ovs(
         uuid: str,

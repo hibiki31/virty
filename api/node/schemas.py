@@ -58,3 +58,23 @@ class NodeRolePatch(CamelModel):
     node_name: str
     role_name: str
     extra_json: dict = None
+
+
+class NodeInterfaceIpv4Info(CamelModel):
+    address: str
+    prefixlen: int
+    label: str
+
+class NodeInterfaceIpv6Info(CamelModel):
+    address: str
+    prefixlen: int
+
+class NodeInterface(CamelModel):
+    ifname: str
+    operstate: str
+    mtu: int
+    master: str = None
+    link_type: str
+    mac_address: str = None
+    ipv4_info: List[NodeInterfaceIpv4Info]
+    ipv6_info: List[NodeInterfaceIpv6Info]

@@ -33,12 +33,11 @@ class AnsibleManager():
                 summary["ok"] += 1
             elif i["status"] == "failed":
                 logger.error(i)
-                summary["failed"] += 1
+                raise Exception("ansible run failed ",str(i))
             elif i["status"] == "unreachable":
                 summary["unreachable"] += 1
-        logger.info(summary)
-        if summary["failed"] != 0:
-            raise Exception("ansible run failed " + str(summary))
+        
+        logger.info(summary) 
         
         return {"summary": summary, "result": result}
     

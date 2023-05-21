@@ -62,14 +62,15 @@ def delete_tasks_nodes_name(
     return [task.model]
 
 
-@app.patch("/roles", response_model=TaskSelect)
+@app.patch("/roles", response_model=List[TaskSelect])
 def patch_api_node_role(
-        request: NodeRolePatch,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        req: Request,
+        body: NodeRolePatch,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
     ):
     task = TaskManager(db=db)
     task.select('patch', 'node', 'role')
-    task.commit(user=current_user, request=request)
+    task.commit(user=cu, req=req, body=body)
     
-    return task.model
+    return [ task.model ]

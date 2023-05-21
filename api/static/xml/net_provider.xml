@@ -1,0 +1,11 @@
+<network>
+    <name></name>
+    <bridge name=""/>
+    <forward mode="route"/>
+    <domain name="" localOnly='no'/>
+    <ip address="" netmask="">
+        <dhcp>
+        <range start="" end=""/>
+        </dhcp>
+    </ip>
+</network>

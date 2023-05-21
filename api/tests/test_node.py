@@ -32,3 +32,21 @@ def post_nodes():
         resp = httpx.post(url=f'{BASE_URL}/api/tasks/nodes', headers=HEADERS, json=req_data)
         print_resp(resp=resp)
         wait_tasks(resp)
+
+
+def patch_nodes_vxlan():
+    for server in env["servers"]:
+        if not "local" in server:
+            continue
+        req_data = {
+            "nodeName": server["name"],
+            "roleName": "vxlan_overlay",
+            "extraJson": {
+                "region": "test",
+                "local_ip": server["local"],
+                "network_node_ip": server["remote"]
+            }
+        }
+        resp = httpx.patch(url=f'{BASE_URL}/api/tasks/nodes/roles', headers=HEADERS, json=req_data)
+        print_resp(resp=resp)
+        wait_tasks(resp)

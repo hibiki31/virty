@@ -74,7 +74,7 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
 
     if debug:
         print("-------------------------------------")
-        pprint(resp.json()) 
+        pprint(resp.json())
         print("-------------------------------------")
         print()
 

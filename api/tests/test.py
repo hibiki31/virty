@@ -7,10 +7,10 @@ import datetime
 import sys
 
 from common import BASE_URL, HEADERS, print_resp, wait_tasks
-from test_node import post_nodes, post_nodes_key, delete_nodes
+from test_node import post_nodes, post_nodes_key, delete_nodes, patch_nodes_vxlan
 from test_storage import post_storage, delete_storage
 from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network
-from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs
+from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs, create_network_provider
 
 args = sys.argv
 
@@ -24,7 +24,8 @@ def main():
     # post_nodes_key()
     # delete_nodes()
     # post_nodes()
-
+    # patch_nodes_vxlan()
+    create_network_provider()
     # Storage
     # put_list()
     # delete_storage()
@@ -36,8 +37,8 @@ def main():
     # put_list()
     # delete_network()
     # post_network()
-    delete_network_ovs()
-    post_network_ovs()
+    # delete_network_ovs()
+    # post_network_ovs()
     
     # VM
     # put_list()    
@@ -78,7 +79,7 @@ def api_users_me():
 def print_tasks():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks', headers=HEADERS).json()
     count = 0
-    for task in resp:
+    for task in resp["data"]:
         print ("{:<20} {:<4} {:<8} {:<7} {:<9} {:<5} {:<9}".format(
             datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S'),
             f'{int(0 if task["runTime"] == None else task["runTime"])}s',
@@ -108,7 +109,7 @@ def print_storages():
 
 def print_vms():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/vms', headers=HEADERS, params={"admin":True}).json()
-    for task in resp:
+    for task in resp["data"]:
         print ("{:<38} {:<15} {:<8} {:<5}".format(
             task["uuid"],
             task["name"],
@@ -137,9 +138,9 @@ if __name__ == "__main__":
             print_tasks()
         if args[1] == "show-storage":
             print_storages()
-        if args[1] == "show-nodes":
+        if args[1] == "show-node":
             print_nodes()
-        if args[1] == "show-vms":
+        if args[1] == "show-vm":
             print_vms()
     else:
         main()
