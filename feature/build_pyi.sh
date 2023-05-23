@@ -3,8 +3,6 @@ pyinstaller -y \
     --hidden-import gunicorn.glogging \
     --hidden-import gunicorn.workers.sync \
     --onefile \
-    server.py
+    main.py
 
 du -hs ./dist
-
-./dist/server
