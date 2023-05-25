@@ -1,6 +1,6 @@
 import { Box, IconButton, Link, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { vmsApi } from '~/lib/api';
 import { DotsVertical } from 'mdi-material-ui';
@@ -8,15 +8,25 @@ import NextLink from 'next/link';
 import useSWR from 'swr';
 import { VMStatusController } from '../vm/VMStatusController';
 import { useAuth } from '~/store/userState';
+import { FilterSettingsDrawer } from '../utils/FilterSettingsDrawer';
+import { JTDDataType } from 'ajv/dist/core';
+import { generateProperty } from '~/lib/jtd';
+import { usePagination } from '~/lib/utils/hooks';
+
+type Filters = JTDDataType<typeof filtersJtd>;
 
 export const VMTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
+  const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    ['vmsApi.getApiDomainApiVmsGet', user],
-    ([, user]) => vmsApi.getApiDomainApiVmsGet(user?.isAdminMode).then((res) => res.data),
+    ['vmsApi.getApiDomainApiVmsGet', user, page, limit, filters],
+    ([, u, p, l, f]) => vmsApi.getApiDomainApiVmsGet(u?.isAdminMode, l, p, f.name, f.nodeName).then((res) => res.data),
     { revalidateOnFocus: false }
   );
+
+  const handleFiltersChange = (newFilters: Filters) => setFilters(newFilters);
 
   if (error) {
     enqueueNotistack('Failed to fetch VMs.', { variant: 'error' });
@@ -27,8 +37,14 @@ export const VMTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.uuid}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
@@ -106,6 +122,29 @@ export const VMTable: FC = () => {
           },
         ]}
       />
+
+      <FilterSettingsDrawer filtersJtd={filtersJtd} onSubmit={handleFiltersChange} />
     </Box>
   );
 };
+
+const filtersJtd = {
+  properties: {
+    name: {
+      metadata: {
+        name: 'Name',
+        default: '',
+        required: false,
+      },
+      type: 'string',
+    },
+    nodeName: {
+      metadata: {
+        name: 'Node Name',
+        default: '',
+        required: false,
+      },
+      type: 'string',
+    },
+  },
+} as const;

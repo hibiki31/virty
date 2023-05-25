@@ -29,7 +29,7 @@ export const PortsTable: FC<Props> = ({ networkUuid, ports }) => {
     }
 
     return tasksNetworksApi
-      .postApiNetworksUuidOvsApiTasksNetworksOvsDelete({ uuid: networkUuid, name })
+      .postApiNetworksUuidOvsApiTasksNetworksUuidOvsNameDelete(networkUuid, name)
       .then(() => enqueueNotistack('Port deleted successfully.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to delete the port.', { variant: 'error' }));
   };

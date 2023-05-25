@@ -13,17 +13,38 @@ import NextLink from 'next/link';
 import { ResourceIcon } from './ResourceIcon';
 import { TaskStatusIcon } from './TaskStatusIcon';
 import { useIncompleteTasks } from '~/store/tasksState';
+import { FilterSettingsDrawer } from '~/components/utils/FilterSettingsDrawer';
+import { JTDDataType } from 'ajv/dist/core';
+import { generateProperty } from '~/lib/jtd';
+import { usePagination } from '~/lib/utils/hooks';
+
+type Filters = JTDDataType<typeof filtersJtd>;
 
 export const TasksTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { hash } = useIncompleteTasks();
+  const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', user, hash],
-    ([, user]) => tasksApi.getTasksApiTasksGet(user?.isAdminMode).then((res) => res.data),
+    ['tasksApi.getTasksApiTasksGet', user, hash, page, limit, filters],
+    ([, u, _h, p, l, f]) =>
+      tasksApi
+        .getTasksApiTasksGet(
+          u?.isAdminMode,
+          l,
+          p,
+          f.resource || undefined,
+          f.object || undefined,
+          f.method || undefined,
+          f.status || undefined
+        )
+        .then((res) => res.data),
     { revalidateOnFocus: false }
   );
   const [selectedTask, setSelectedTask] = useState<TaskSelect | undefined>(undefined);
+
+  const handleFiltersChange = (newFilters: Filters) => setFilters(newFilters);
 
   if (error) {
     enqueueNotistack('Failed to fetch tasks.', { variant: 'error' });
@@ -35,9 +56,14 @@ export const TasksTable: FC = () => {
         <DataGrid
           disableSelectionOnClick
           rowHeight={40}
-          pageSize={25}
+          page={page}
+          pageSize={limit}
+          paginationMode="server"
+          onPageChange={onPageChange}
+          onPageSizeChange={onLimitChange}
           getRowId={(row) => row.uuid!}
-          rows={data || []}
+          rows={data?.data || []}
+          rowCount={data?.count || 0}
           loading={!data || isValidating}
           error={!!error || undefined}
           columns={[
@@ -113,9 +139,67 @@ export const TasksTable: FC = () => {
             },
           ]}
         />
+
+        <FilterSettingsDrawer filtersJtd={filtersJtd} onSubmit={handleFiltersChange} />
       </Box>
 
       <TaskDetailsDialog open={!!selectedTask} task={selectedTask} onClose={() => setSelectedTask(undefined)} />
     </>
   );
 };
+
+const filtersJtd = {
+  properties: {
+    status: {
+      metadata: {
+        name: 'Status',
+        default: '',
+        required: false,
+        choices: [
+          { label: 'Init', value: 'init' },
+          { label: 'Start', value: 'start' },
+          { label: 'Finish', value: 'finish' },
+          { label: 'Wait', value: 'wait' },
+          { label: 'Error', value: 'error' },
+          { label: 'Lost', value: 'lost' },
+        ],
+      },
+      type: 'string',
+    },
+    resource: {
+      metadata: {
+        name: 'Resource',
+        default: '',
+        required: false,
+        choices: [
+          { label: 'VM', value: 'vm' },
+          { label: 'Node', value: 'node' },
+          { label: 'Storage', value: 'storage' },
+          { label: 'Network', value: 'network' },
+        ],
+      },
+      type: 'string',
+    },
+    object: {
+      metadata: {
+        name: 'Object',
+        default: '',
+        required: false,
+      },
+      type: 'string',
+    },
+    method: {
+      metadata: {
+        name: 'Method',
+        default: '',
+        required: false,
+        choices: [
+          { label: 'POST', value: 'post' },
+          { label: 'PUT', value: 'put' },
+          { label: 'DELETE', value: 'delete' },
+        ],
+      },
+      type: 'string',
+    },
+  },
+} as const;
