@@ -99,7 +99,7 @@ def post_api_storages_pools(
     db.add(storage_pool_model)
     for storage_uuid in request_model.storage_uuids:
         storage_pool_model.storages.append(
-            AssociationStoragePool(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
+            AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
     db.commit()
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
@@ -114,7 +114,7 @@ def post_api_storages_pools(
     storage_pool_model = db.query(StoragePoolModel).filter(StoragePoolModel.id==request_model.id).one()
     for storage_uuid in request_model.storage_uuids:
         storage_pool_model.storages.append(
-            AssociationStoragePool(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
+            AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
     db.commit()
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()

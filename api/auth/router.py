@@ -13,7 +13,7 @@ from mixin.database import get_db
 from settings import SECRET_KEY, API_VERSION
 
 from .schemas import *
-from user.models import UserModel, UserScope
+from user.models import UserModel, UserScopeModel
 from task.functions import TaskManager
 from project.schemas import PostProject
 
@@ -172,8 +172,8 @@ def api_auth_setup(
 
     db.add(user_model)
 
-    db.add(UserScope(user_id=user_model.username,name="admin"))
-    db.add(UserScope(user_id=user_model.username,name="user"))
+    db.add(UserScopeModel(user_id=user_model.username,name="admin"))
+    db.add(UserScopeModel(user_id=user_model.username,name="user"))
 
     db.commit()
 

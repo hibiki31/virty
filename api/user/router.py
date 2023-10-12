@@ -50,7 +50,7 @@ def post_api_users(
     )
 
     db.add(user_model)
-    db.add(UserScope(user_id=user_model.id,name="user"))
+    db.add(UserScopeModel(user_id=user_model.id,name="user"))
 
     db.commit()
 

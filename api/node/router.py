@@ -85,7 +85,7 @@ def get_api_nodes(
 #         db: Session = Depends(get_db)
 #     ):
 
-#     return db.query(PoolCpu).all()
+#     return db.query(PoolCpuModel).all()
 
 
 # @app.post("/nodes/pools", tags=["nodes"])
@@ -93,7 +93,7 @@ def get_api_nodes(
 #         model: NodeBase,
 #         db: Session = Depends(get_db),
 #     ):
-#     pool_model = PoolCpu(name=model.name)
+#     pool_model = PoolCpuModel(name=model.name)
 #     db.add(pool_model)
 #     db.commit()
 #     return True
@@ -104,7 +104,7 @@ def get_api_nodes(
 #         model: PatchNodePool,
 #         db: Session = Depends(get_db),
 #     ):
-#     ass = AssociationPoolsCpu(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
+#     ass = AssociationPoolsCpuModel(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
 #     db.add(ass)
 #     db.commit()
 #     return True

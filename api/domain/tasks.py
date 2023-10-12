@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from task.functions import TaskManager
 from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
 from node.models import NodeModel
-from storage.models import AssociationStoragePool, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
+from storage.models import AssociationStoragePoolModel, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
 
 from module import virtlib
 from module import xmllib
@@ -114,7 +114,7 @@ def post_vm_ticketd(db:Session, task: TaskModel):
             StoragePoolModel.id==req.storage_pool_id,
             StorageModel.node_name==node.node_name
         ).outerjoin(
-            AssociationStoragePool
+            AssociationStoragePoolModel
         ).outerjoin(
             StoragePoolModel
         ).first()
