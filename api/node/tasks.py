@@ -20,7 +20,7 @@ logger = setup_logger(__name__)
 @worker_task(key="post.node.root")
 def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body = NodeInsert(**request.body)
+    body = NodeForCreate(**request.body)
     
 
     user = body.user_name
@@ -103,7 +103,7 @@ def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="patch.node.role")
 def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body = NodeRolePatch(**request.body)
+    body = NodeRoleForUpdate(**request.body)
 
     node_name = body.node_name
     add_role_name = body.role_name
@@ -148,7 +148,7 @@ def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     db.commit()
 
 
-def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
+def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:NodeRoleForUpdate):
     
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 

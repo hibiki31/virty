@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from fastapi_camelcase import CamelModel
 from flavor.models import FlavorModel
 
-from node.schemas import GetNode
+from node.schemas import Node
 from flavor.schemas import GetFlavor
 
 
@@ -50,7 +50,7 @@ class StorageSelect(CamelModel):
     available: int = None
     capacity: int = None
     node_name: str
-    node: GetNode
+    node: Node
     auto_start: bool
     path: str = None
     meta_data: StorageMetadataSelect = None

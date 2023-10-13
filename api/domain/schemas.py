@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from fastapi_camelcase import CamelModel
 from pyparsing import str_type
 
-from node.schemas import GetNode
+from node.schemas import Node
 
 
 class GetDomainDrives(CamelModel):
@@ -59,7 +59,7 @@ class GetDomainPagenation(CamelModel):
 
 
 class GetDomainDetail(GetDomain):
-    node: GetNode
+    node: Node
 
 
 class DomainBase(CamelModel):
@@ -129,7 +129,7 @@ class DomainDetailXml(CamelModel):
 
 class DomainDetailSelect(CamelModel):
     db: GetDomain
-    node: GetNode
+    node: Node
     xml: DomainDetailXml
     token: str
     class Config:

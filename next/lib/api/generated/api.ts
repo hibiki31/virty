@@ -423,10 +423,10 @@ export interface GetDomainDetail {
     'interfaces'?: Array<GetDomainInterfaces>;
     /**
      * 
-     * @type {GetNode}
+     * @type {Node}
      * @memberof GetDomainDetail
      */
-    'node': GetNode;
+    'node': Node;
 }
 /**
  * 
@@ -789,122 +789,6 @@ export interface GetNetworkPoolPort {
 /**
  * 
  * @export
- * @interface GetNode
- */
-export interface GetNode {
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'description': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'domain': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'userName': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof GetNode
-     */
-    'port': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof GetNode
-     */
-    'core': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof GetNode
-     */
-    'memory': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'cpuGen': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'osLike': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'osName': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'osVersion': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof GetNode
-     */
-    'status': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'qemuVersion'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNode
-     */
-    'libvirtVersion'?: string;
-    /**
-     * 
-     * @type {Array<GetNodeRole>}
-     * @memberof GetNode
-     */
-    'roles': Array<GetNodeRole>;
-}
-/**
- * 
- * @export
- * @interface GetNodeRole
- */
-export interface GetNodeRole {
-    /**
-     * 
-     * @type {string}
-     * @memberof GetNodeRole
-     */
-    'roleName': string;
-    /**
-     * 
-     * @type {object}
-     * @memberof GetNodeRole
-     */
-    'extraJson'?: object;
-}
-/**
- * 
- * @export
  * @interface GetStoragePool
  */
 export interface GetStoragePool {
@@ -1213,68 +1097,184 @@ export interface NetworkPortgroup {
 /**
  * 
  * @export
- * @interface NodeInsert
+ * @interface Node
  */
-export interface NodeInsert {
+export interface Node {
     /**
      * 
      * @type {string}
-     * @memberof NodeInsert
+     * @memberof Node
      */
     'name': string;
     /**
      * 
      * @type {string}
-     * @memberof NodeInsert
+     * @memberof Node
      */
     'description': string;
     /**
      * 
      * @type {string}
-     * @memberof NodeInsert
+     * @memberof Node
      */
     'domain': string;
     /**
      * 
      * @type {string}
-     * @memberof NodeInsert
+     * @memberof Node
      */
     'userName': string;
     /**
      * 
      * @type {number}
-     * @memberof NodeInsert
+     * @memberof Node
+     */
+    'port': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Node
+     */
+    'core': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Node
+     */
+    'memory': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'cpuGen': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'osLike': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'osName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'osVersion': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Node
+     */
+    'status': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'qemuVersion'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Node
+     */
+    'libvirtVersion'?: string;
+    /**
+     * 
+     * @type {Array<NodeRole>}
+     * @memberof Node
+     */
+    'roles': Array<NodeRole>;
+}
+/**
+ * 
+ * @export
+ * @interface NodeForCreate
+ */
+export interface NodeForCreate {
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeForCreate
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeForCreate
+     */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeForCreate
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeForCreate
+     */
+    'userName': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof NodeForCreate
      */
     'port': number;
     /**
      * 
      * @type {boolean}
-     * @memberof NodeInsert
+     * @memberof NodeForCreate
      */
     'libvirtRole': boolean;
 }
 /**
  * 
  * @export
- * @interface NodeRolePatch
+ * @interface NodeRole
  */
-export interface NodeRolePatch {
+export interface NodeRole {
     /**
      * 
      * @type {string}
-     * @memberof NodeRolePatch
-     */
-    'nodeName': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof NodeRolePatch
+     * @memberof NodeRole
      */
     'roleName': string;
     /**
      * 
      * @type {object}
-     * @memberof NodeRolePatch
+     * @memberof NodeRole
+     */
+    'extraJson'?: object;
+}
+/**
+ * 
+ * @export
+ * @interface NodeRoleForUpdate
+ */
+export interface NodeRoleForUpdate {
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeRoleForUpdate
+     */
+    'nodeName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NodeRoleForUpdate
+     */
+    'roleName': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof NodeRoleForUpdate
      */
     'extraJson'?: object;
 }
@@ -1734,10 +1734,10 @@ export interface StorageSelect {
     'nodeName': string;
     /**
      * 
-     * @type {GetNode}
+     * @type {Node}
      * @memberof StorageSelect
      */
-    'node': GetNode;
+    'node': Node;
     /**
      * 
      * @type {boolean}
@@ -3937,48 +3937,14 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
     return {
         /**
          * 
-         * @summary Get Api Nodes
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getApiNodesApiNodesGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/nodes`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get Api Nodes
+         * @summary Get Api Node
          * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApiNodesApiNodesNameGet: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNode: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
-            assertParamExists('getApiNodesApiNodesNameGet', 'name', name)
+            assertParamExists('getNode', 'name', name)
             const localVarPath = `/api/nodes/{name}`
                 .replace(`{${"name"}}`, encodeURIComponent(String(name)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -4014,11 +3980,45 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameFactsApiNodesNameFactsGet: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNodeFacts: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
-            assertParamExists('getNodeNameFactsApiNodesNameFactsGet', 'name', name)
+            assertParamExists('getNodeFacts', 'name', name)
             const localVarPath = `/api/nodes/{name}/facts`
                 .replace(`{${"name"}}`, encodeURIComponent(String(name)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getNodes: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/nodes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -4051,7 +4051,7 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getSshKeyPairApiNodesKeyGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getSshKeyPair: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/nodes/key`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4086,9 +4086,9 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postSshKeyPairApiNodesKeyPost: async (sSHKeyPair: SSHKeyPair, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateSshKeyPair: async (sSHKeyPair: SSHKeyPair, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'sSHKeyPair' is not null or undefined
-            assertParamExists('postSshKeyPairApiNodesKeyPost', 'sSHKeyPair', sSHKeyPair)
+            assertParamExists('updateSshKeyPair', 'sSHKeyPair', sSHKeyPair)
             const localVarPath = `/api/nodes/key`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4131,23 +4131,13 @@ export const NodesApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Get Api Nodes
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getApiNodesApiNodesGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GetNode>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getApiNodesApiNodesGet(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @summary Get Api Nodes
+         * @summary Get Api Node
          * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getApiNodesApiNodesNameGet(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetNode>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getApiNodesApiNodesNameGet(name, options);
+        async getNode(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Node>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getNode(name, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4157,8 +4147,18 @@ export const NodesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNodeNameFactsApiNodesNameFactsGet(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getNodeNameFactsApiNodesNameFactsGet(name, options);
+        async getNodeFacts(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getNodeFacts(name, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getNodes(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Node>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getNodes(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4167,8 +4167,8 @@ export const NodesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getSshKeyPairApiNodesKeyGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKeyPair>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getSshKeyPairApiNodesKeyGet(options);
+        async getSshKeyPair(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKeyPair>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getSshKeyPair(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4178,8 +4178,8 @@ export const NodesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postSshKeyPairApiNodesKeyPost(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postSshKeyPairApiNodesKeyPost(sSHKeyPair, options);
+        async updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateSshKeyPair(sSHKeyPair, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -4194,22 +4194,13 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
     return {
         /**
          * 
-         * @summary Get Api Nodes
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getApiNodesApiNodesGet(options?: any): AxiosPromise<Array<GetNode>> {
-            return localVarFp.getApiNodesApiNodesGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get Api Nodes
+         * @summary Get Api Node
          * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApiNodesApiNodesNameGet(name: string, options?: any): AxiosPromise<GetNode> {
-            return localVarFp.getApiNodesApiNodesNameGet(name, options).then((request) => request(axios, basePath));
+        getNode(name: string, options?: any): AxiosPromise<Node> {
+            return localVarFp.getNode(name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4218,8 +4209,17 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameFactsApiNodesNameFactsGet(name: string, options?: any): AxiosPromise<any> {
-            return localVarFp.getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(axios, basePath));
+        getNodeFacts(name: string, options?: any): AxiosPromise<any> {
+            return localVarFp.getNodeFacts(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get Api Nodes
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getNodes(options?: any): AxiosPromise<Array<Node>> {
+            return localVarFp.getNodes(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4227,8 +4227,8 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getSshKeyPairApiNodesKeyGet(options?: any): AxiosPromise<SSHKeyPair> {
-            return localVarFp.getSshKeyPairApiNodesKeyGet(options).then((request) => request(axios, basePath));
+        getSshKeyPair(options?: any): AxiosPromise<SSHKeyPair> {
+            return localVarFp.getSshKeyPair(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4237,8 +4237,8 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postSshKeyPairApiNodesKeyPost(sSHKeyPair: SSHKeyPair, options?: any): AxiosPromise<any> {
-            return localVarFp.postSshKeyPairApiNodesKeyPost(sSHKeyPair, options).then((request) => request(axios, basePath));
+        updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: any): AxiosPromise<any> {
+            return localVarFp.updateSshKeyPair(sSHKeyPair, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4252,25 +4252,14 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
 export class NodesApi extends BaseAPI {
     /**
      * 
-     * @summary Get Api Nodes
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof NodesApi
-     */
-    public getApiNodesApiNodesGet(options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getApiNodesApiNodesGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get Api Nodes
+     * @summary Get Api Node
      * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getApiNodesApiNodesNameGet(name: string, options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getApiNodesApiNodesNameGet(name, options).then((request) => request(this.axios, this.basePath));
+    public getNode(name: string, options?: AxiosRequestConfig) {
+        return NodesApiFp(this.configuration).getNode(name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4281,8 +4270,19 @@ export class NodesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getNodeNameFactsApiNodesNameFactsGet(name: string, options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(this.axios, this.basePath));
+    public getNodeFacts(name: string, options?: AxiosRequestConfig) {
+        return NodesApiFp(this.configuration).getNodeFacts(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get Api Nodes
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodesApi
+     */
+    public getNodes(options?: AxiosRequestConfig) {
+        return NodesApiFp(this.configuration).getNodes(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4292,8 +4292,8 @@ export class NodesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getSshKeyPairApiNodesKeyGet(options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).getSshKeyPairApiNodesKeyGet(options).then((request) => request(this.axios, this.basePath));
+    public getSshKeyPair(options?: AxiosRequestConfig) {
+        return NodesApiFp(this.configuration).getSshKeyPair(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4304,8 +4304,8 @@ export class NodesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public postSshKeyPairApiNodesKeyPost(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig) {
-        return NodesApiFp(this.configuration).postSshKeyPairApiNodesKeyPost(sSHKeyPair, options).then((request) => request(this.axios, this.basePath));
+    public updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig) {
+        return NodesApiFp(this.configuration).updateSshKeyPair(sSHKeyPair, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4357,13 +4357,13 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
         /**
          * 
          * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {NodeRoleForUpdate} nodeRoleForUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        patchApiNodeRoleApiTasksNodesRolesPatch: async (nodeRolePatch: NodeRolePatch, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'nodeRolePatch' is not null or undefined
-            assertParamExists('patchApiNodeRoleApiTasksNodesRolesPatch', 'nodeRolePatch', nodeRolePatch)
+        patchApiNodeRoleApiTasksNodesRolesPatch: async (nodeRoleForUpdate: NodeRoleForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'nodeRoleForUpdate' is not null or undefined
+            assertParamExists('patchApiNodeRoleApiTasksNodesRolesPatch', 'nodeRoleForUpdate', nodeRoleForUpdate)
             const localVarPath = `/api/tasks/nodes/roles`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4387,7 +4387,7 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(nodeRolePatch, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeRoleForUpdate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4397,11 +4397,11 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postTasksNodesApiTasksNodesPost: async (nodeInsert?: NodeInsert, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        postTasksNodesApiTasksNodesPost: async (nodeForCreate?: NodeForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/nodes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4425,7 +4425,7 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(nodeInsert, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4456,23 +4456,23 @@ export const NodesTaskApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {NodeRoleForUpdate} nodeRoleForUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options);
+        async patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate: NodeRoleForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskSelect>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postTasksNodesApiTasksNodesPost(nodeInsert, options);
+        async postTasksNodesApiTasksNodesPost(nodeForCreate?: NodeForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskSelect>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postTasksNodesApiTasksNodesPost(nodeForCreate, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -4498,22 +4498,22 @@ export const NodesTaskApiFactory = function (configuration?: Configuration, base
         /**
          * 
          * @summary Patch Api Node Role
-         * @param {NodeRolePatch} nodeRolePatch 
+         * @param {NodeRoleForUpdate} nodeRoleForUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: any): AxiosPromise<TaskSelect> {
-            return localVarFp.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(axios, basePath));
+        patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate: NodeRoleForUpdate, options?: any): AxiosPromise<TaskSelect> {
+            return localVarFp.patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {NodeInsert} [nodeInsert] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: any): AxiosPromise<Array<TaskSelect>> {
-            return localVarFp.postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(axios, basePath));
+        postTasksNodesApiTasksNodesPost(nodeForCreate?: NodeForCreate, options?: any): AxiosPromise<Array<TaskSelect>> {
+            return localVarFp.postTasksNodesApiTasksNodesPost(nodeForCreate, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4540,25 +4540,25 @@ export class NodesTaskApi extends BaseAPI {
     /**
      * 
      * @summary Patch Api Node Role
-     * @param {NodeRolePatch} nodeRolePatch 
+     * @param {NodeRoleForUpdate} nodeRoleForUpdate 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesTaskApi
      */
-    public patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch: NodeRolePatch, options?: AxiosRequestConfig) {
-        return NodesTaskApiFp(this.configuration).patchApiNodeRoleApiTasksNodesRolesPatch(nodeRolePatch, options).then((request) => request(this.axios, this.basePath));
+    public patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate: NodeRoleForUpdate, options?: AxiosRequestConfig) {
+        return NodesTaskApiFp(this.configuration).patchApiNodeRoleApiTasksNodesRolesPatch(nodeRoleForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Tasks Nodes
-     * @param {NodeInsert} [nodeInsert] 
+     * @param {NodeForCreate} [nodeForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesTaskApi
      */
-    public postTasksNodesApiTasksNodesPost(nodeInsert?: NodeInsert, options?: AxiosRequestConfig) {
-        return NodesTaskApiFp(this.configuration).postTasksNodesApiTasksNodesPost(nodeInsert, options).then((request) => request(this.axios, this.basePath));
+    public postTasksNodesApiTasksNodesPost(nodeForCreate?: NodeForCreate, options?: AxiosRequestConfig) {
+        return NodesTaskApiFp(this.configuration).postTasksNodesApiTasksNodesPost(nodeForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

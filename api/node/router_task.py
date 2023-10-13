@@ -28,7 +28,7 @@ def post_tasks_nodes(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NodeInsert = None
+        body: NodeForCreate = None
     ):
     
     task = TaskManager(db=db)
@@ -36,7 +36,7 @@ def post_tasks_nodes(
     task.commit(user=cu, req=req, body=body)
 
     if body.libvirt_role:
-        body_libvirt = NodeRolePatch(node_name=body.name, role_name="libvirt")
+        body_libvirt = NodeRoleForUpdate(node_name=body.name, role_name="libvirt")
         task_libvirt = TaskManager(db=db)
         task_libvirt.select(method="patch", resource="node", object="role")
         task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
@@ -64,7 +64,7 @@ def delete_tasks_nodes_name(
 
 @app.patch("/roles", response_model=TaskSelect)
 def patch_api_node_role(
-        request: NodeRolePatch,
+        request: NodeRoleForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):

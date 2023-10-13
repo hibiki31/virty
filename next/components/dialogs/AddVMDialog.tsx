@@ -45,7 +45,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     }
     setValue('form.spec.nodeName', '');
     setFetcher('nodes', () =>
-      nodesApi.getApiNodesApiNodesGet().then((res) => res.data.map((node) => ({ value: node.name, label: node.name })))
+      nodesApi.getNodes().then((res) => res.data.map((node) => ({ value: node.name, label: node.name })))
     );
   }, [open, setValue, setFetcher]);
 

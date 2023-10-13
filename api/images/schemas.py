@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from fastapi_camelcase import CamelModel
 from flavor.models import FlavorModel
 
-from node.schemas import GetNode
+from node.schemas import Node
 from flavor.schemas import GetFlavor
 
 

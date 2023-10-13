@@ -36,7 +36,7 @@ export const AddStorageDialog: FC<Props> = ({ open, onClose }) => {
 
     setFetcher('nodes', () =>
       nodesApi
-        .getApiNodesApiNodesGet()
+        .getNodes()
         .then((res) => res.data.map((node) => ({ label: `${node.name} - ${node.domain}`, value: node.name })))
     );
   }, [open, reset, resetFetchers, setFetcher]);

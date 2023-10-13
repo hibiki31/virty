@@ -29,10 +29,10 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ name }) => {
   const { data, error, isValidating } = useSWR(
-    ['nodesApi.getApiNodesApiNodesNameGet', name],
+    ['nodesApi.getNode', name],
     ([, name]) =>
       nodesApi
-        .getApiNodesApiNodesNameGet(name)
+        .getNode(name)
         .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {

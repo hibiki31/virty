@@ -31,10 +31,7 @@ export const ImagesTable: FC = () => {
 
   const choicesFetchers = useMemo(
     () => ({
-      nodes: () =>
-        nodesApi
-          .getApiNodesApiNodesGet()
-          .then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
+      nodes: () => nodesApi.getNodes().then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
       pools: async () => {
         const results = await Promise.all([
           storagesApi.getApiStoragesApiStoragesGet().then((res) =>

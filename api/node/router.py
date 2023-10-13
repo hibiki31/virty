@@ -23,7 +23,7 @@ app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=List[GetNode])
+@app.get("", response_model=List[Node], operation_id="get_nodes")
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -32,7 +32,7 @@ def get_api_nodes(
     return db.query(NodeModel).all()
 
 
-@app.post("/key")
+@app.post("/key", operation_id="update_ssh_key_pair")
 def post_ssh_key_pair(
         model: SSHKeyPair,
         current_user: CurrentUser = Depends(get_current_user)
@@ -51,7 +51,7 @@ def post_ssh_key_pair(
     return {}
 
 
-@app.get("/key", response_model=SSHKeyPair)
+@app.get("/key", response_model=SSHKeyPair, operation_id="get_ssh_key_pair")
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     private_key = ""
     public_key = ""
@@ -66,8 +66,8 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     return SSHKeyPair(private_key=private_key, public_key=public_key)
 
 
-@app.get("/{name}", response_model=GetNode)
-def get_api_nodes(
+@app.get("/{name}", response_model=Node, operation_id="get_node")
+def get_api_node(
         name: str,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -101,7 +101,7 @@ def get_api_nodes(
 
 # @app.patch("/nodes/pools", tags=["nodes"])
 # def patch_api_nodes_pools(
-#         model: PatchNodePool,
+#         model: NodePoolForUpdate,
 #         db: Session = Depends(get_db),
 #     ):
 #     ass = AssociationPoolsCpuModel(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
@@ -110,7 +110,7 @@ def get_api_nodes(
 #     return True
 
 
-@app.get("/{name}/facts")
+@app.get("/{name}/facts", operation_id="get_node_facts")
 def get_node_name_facts(
         name: str,
         current_user: CurrentUser = Depends(get_current_user),
