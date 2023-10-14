@@ -7,8 +7,8 @@ from pyparsing import str_type
 
 from node.schemas import Node
 
-
-class GetDomainDrives(CamelModel):
+# Model schemas
+class DomainDrive(CamelModel):
     device: str = None
     type: str = None
     source: str = None
@@ -16,7 +16,7 @@ class GetDomainDrives(CamelModel):
     class Config:
         orm_mode  =  True
 
-class GetDomainInterfaces(CamelModel):
+class DomainInterface(CamelModel):
     type: str =None
     mac: str = None
     target: str = None
@@ -27,14 +27,14 @@ class GetDomainInterfaces(CamelModel):
         orm_mode  =  True
 
 
-class GetDomainProject(CamelModel):
+class DomainProject(CamelModel):
     id: str
     name: str
     class Config:
         orm_mode  =  True
 
 
-class GetDomain(CamelModel):
+class Domain(CamelModel):
     uuid: str
     name: str
     core: int
@@ -44,21 +44,22 @@ class GetDomain(CamelModel):
     node_name: str
     owner_user_id: str = None
     owner_project_id: str = None
-    owner_project: GetDomainProject = None
+    owner_project: DomainProject = None
     vnc_port: int = None
     vnc_password: str = None
-    drives: list[GetDomainDrives] | None = None
-    interfaces: list[GetDomainInterfaces] | None = None
+    drives: list[DomainDrive] | None = None
+    interfaces: list[DomainInterface] | None = None
     class Config:
         orm_mode  =  True
 
 
-class GetDomainPagenation(CamelModel):
+# API schemas
+class DomainPagenation(CamelModel):
     count: int
-    data: List[GetDomain]
+    data: List[Domain]
 
 
-class GetDomainDetail(GetDomain):
+class DomainDetail(Domain):
     node: Node
 
 
@@ -128,7 +129,7 @@ class DomainDetailXml(CamelModel):
     selinux: bool
 
 class DomainDetailSelect(CamelModel):
-    db: GetDomain
+    db: Domain
     node: Node
     xml: DomainDetailXml
     token: str
