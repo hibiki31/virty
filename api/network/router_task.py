@@ -39,7 +39,7 @@ def post_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkInsert = None
+        body: NetworkForCreate = None
     ):
 
     task = TaskManager(db=db)
@@ -60,7 +60,7 @@ def post_uuid_ovs(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkOVSAdd = None
+        body: NetworkOVSForCreate = None
     ):
 
     task = TaskManager(db=db)

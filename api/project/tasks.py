@@ -11,7 +11,7 @@ from task.models import TaskModel
 from node.models import NodeModel
 from user.models import UserModel
 
-from network.schemas import NetworkInsert, NetworkDelete
+from network.schemas import NetworkForCreate, NetworkForDelete
 
 from module.ovslib import OVSManager
 from module.virtlib import VirtManager
@@ -58,7 +58,7 @@ def post_project_root(db:Session, bg: BackgroundTasks, task: TaskModel):
             ovs_mg.ovs_add_vxlan(bridge=bridge_name, remote=remote["local"], key=int(project.id,16))
 
     for node in nodes:
-        request_network = NetworkInsert(name=bridge_name, node_name=node.name,type="ovs", bridge_device=bridge_name)
+        request_network = NetworkForCreate(name=bridge_name, node_name=node.name,type="ovs", bridge_device=bridge_name)
         net_add = TaskManager(db=db, bg=bg)
         net_add.select('post', 'network', 'root')
         net_add.folk(task=task, dependence_uuid=None, request=request_network)
@@ -74,7 +74,7 @@ def delete_project_root(db:Session, bg: BackgroundTasks, task: TaskModel):
         ovs_mg.ovs_del_br(bridge=bridge_name)
     
     for net in db.query(NetworkModel).filter(NetworkModel.name==bridge_name):
-        net_delete_req = NetworkDelete(uuid=net.uuid)
+        net_delete_req = NetworkForDelete(uuid=net.uuid)
         net_delete = TaskManager(db=db, bg=bg)
         net_delete.select('delete', 'network', 'root')
         net_delete.folk(task=task, dependence_uuid=None, request=net_delete_req)
