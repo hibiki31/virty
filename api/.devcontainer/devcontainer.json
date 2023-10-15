@@ -2,16 +2,18 @@
 	"name": "virty-api",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
-	"workspaceFolder": "/workspace/api/",
-	"extensions": [
-		"ms-python.python",
-		"donjayamanne.githistory",
-		"mhutchie.git-graph",
-		"azemoh.one-monokai",
-		"mtxr.sqltools",
-		"mtxr.sqltools-driver-pg"
-	],
+	"workspaceFolder": "/workspaces/api/",
+	"postCreateCommand": "git config --global --add safe.directory /workspaces",
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"mhutchie.git-graph"
+			]
+		}
+	},
 	"forwardPorts": [
-		28000
+		8765
 	]
 }
