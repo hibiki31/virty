@@ -1,5 +1,6 @@
+from enum import Enum
 from datetime import datetime
-from typing import List, Optional, Any, Literal
+from typing import List, Optional, Any, Literal, Dict
 from pydantic import BaseModel, Field
 
 from fastapi_camelcase import CamelModel
@@ -33,12 +34,24 @@ class DomainProject(CamelModel):
         orm_mode  =  True
 
 
+class DomainStatus(int, Enum):
+    POWER_ON = 1
+    POWER_OFF = 5
+    MAINTENANCE_MODE = 7
+    DELETED_DOMAIN = 10
+    LOST_NODE = 20
+
+    @classmethod
+    def __modify_schema__(cls, schema: Dict[str, Any]):
+        schema["x-enum-varnames"] = [choice.name for choice in cls]
+
+
 class Domain(CamelModel):
     uuid: str
     name: str
     core: int
     memory: int
-    status: int
+    status: int # TODO: DomainStatusに置き換える
     description: str = None
     node_name: str
     owner_user_id: str = None
@@ -90,9 +103,12 @@ class DomainPatch(DomainBase):
     path: str = None
     target: str = None
 
+class DomainPowerStatus(str, Enum):
+    ON = "on"
+    OFF = "off"
 
 class PowerStatusForUpdateDomain(CamelModel):
-    status: str = None
+    status: str = None # TODO: DomainPowerStatusに置き換える
 
 
 class CdromForUpdateDomain(CamelModel):

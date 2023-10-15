@@ -28,7 +28,7 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.get("/api/vms",response_model=DomainPagenation)
+@app.get("/api/vms",response_model=DomainPagenation, operation_id="get_vms")
 def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -61,7 +61,7 @@ def get_api_domain(
     return {"count": count, "data": vms}
 
 
-@app.get("/api/vms/{uuid}",response_model=DomainDetail)
+@app.get("/api/vms/{uuid}",response_model=DomainDetail, operation_id="get_vm")
 def get_api_domain_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -75,7 +75,7 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.get("/api/vms/vnc/{token}")
+@app.get("/api/vms/vnc/{token}", operation_id="get_vnc_address")
 def get_api_domain(
         token: str,
         db: Session = Depends(get_db),

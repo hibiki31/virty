@@ -146,7 +146,7 @@ def get_current_user(
     return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-@app.post("/setup", tags=["auth"])
+@app.post("/setup", tags=["auth"], operation_id="setup")
 def api_auth_setup(
         model: SetupRequest, 
         db: Session = Depends(get_db)
@@ -180,7 +180,7 @@ def api_auth_setup(
     return model
 
 
-@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
+@app.post("", response_model=TokenRFC6749Response, tags=["auth"], operation_id="login")
 def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
@@ -207,7 +207,7 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse)
+@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse, operation_id="validate_token")
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):

@@ -21,7 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/images", tags=["images"], response_model=List[Image])
+@app.get("/api/images", tags=["images"], response_model=List[Image], operation_id="get_images")
 def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -79,7 +79,7 @@ def get_api_images(
     return res
 
 
-@app.put("/api/tasks/images", tags=["images-task"])
+@app.put("/api/tasks/images", tags=["images-task"], operation_id="refresh_images")
 def put_api_images(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -92,7 +92,7 @@ def put_api_images(
     return [task.model]
 
 
-@app.patch("/api/images", tags=["images"])
+@app.patch("/api/images", tags=["images"], operation_id="update_image_flavor")
 def patch_api_images(
         req: ImageForUpdateImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
@@ -113,7 +113,7 @@ def patch_api_images(
     return res
 
 
-@app.put("/api/images/scp", tags=["images"])
+@app.put("/api/images/scp", tags=["images"], operation_id="scp_image")
 def put_api_images_scp(
         bg: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),

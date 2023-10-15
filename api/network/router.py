@@ -22,7 +22,7 @@ app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=List[Network])
+@app.get("", response_model=List[Network], operation_id="get_networks")
 def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -30,7 +30,7 @@ def get_api_networks(
     return db.query(NetworkModel).all()
 
 
-@app.get("/pools", response_model=List[NetworkPool])
+@app.get("/pools", response_model=List[NetworkPool], operation_id="get_network_pools")
 def get_api_networks_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -39,7 +39,7 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/pools")
+@app.post("/pools", operation_id="create_network_pool")
 def post_api_networks_pools(
         model: NetworkPoolForCreate,
         db: Session = Depends(get_db),
@@ -51,7 +51,7 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/pools")
+@app.patch("/pools", operation_id="update_network_pool")
 def patch_api_networks_pools(
         model: NetworkPoolForUpdate,
         db: Session = Depends(get_db),
@@ -70,7 +70,7 @@ def patch_api_networks_pools(
     return True
 
 
-@app.delete("/pools/{id}")
+@app.delete("/pools/{id}", operation_id="delete_network_pool")
 def delete_pools_uuid(
         id: int,
         cu: CurrentUser = Depends(get_current_user),
@@ -89,7 +89,7 @@ def delete_pools_uuid(
     return {"detail": "success"}
 
 
-@app.get("/{uuid}", response_model=Network)
+@app.get("/{uuid}", response_model=Network, operation_id="get_network")
 def get_api_networks_uuid(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),

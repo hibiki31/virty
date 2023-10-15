@@ -20,12 +20,12 @@ app = APIRouter(
 )
 
 
-@app.get("/users/me", response_model=TokenData)
+@app.get("/users/me", response_model=TokenData, operation_id="get_current_user")
 def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     return current_user
 
 
-@app.post("/users")
+@app.post("/users", operation_id="create_user")
 def post_api_users(
         request: UserForCreate,
         db: Session = Depends(get_db),
@@ -62,7 +62,7 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users", response_model=List[User])
+@app.get("/users", response_model=List[User], operation_id="get_users")
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),

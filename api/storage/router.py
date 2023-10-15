@@ -27,7 +27,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storages"], response_model=List[Storage])
+@app.get("/api/storages", tags=["storages"], response_model=List[Storage], operation_id="get_storages")
 def get_api_storages(
         param: StorageQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
@@ -69,7 +69,7 @@ def get_api_storages(
     return res
 
 
-@app.patch("/api/storages", tags=["storages"])
+@app.patch("/api/storages", tags=["storages"], operation_id="update_storage_metadata")
 def post_api_storage(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -80,7 +80,7 @@ def post_api_storage(
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
-@app.get("/api/storages/pools", tags=["storages"], response_model=List[StoragePool])
+@app.get("/api/storages/pools", tags=["storages"], response_model=List[StoragePool], operation_id="get_storage_pools")
 def get_api_storages_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -89,7 +89,7 @@ def get_api_storages_pools(
     return db.query(StoragePoolModel).all()
 
 
-@app.post("/api/storages/pools", tags=["storages"])
+@app.post("/api/storages/pools", tags=["storages"], operation_id="create_storage_pool")
 def post_api_storages_pools(
         request_model: StoragePoolForCreate,
         current_user: CurrentUser = Depends(get_current_user),
@@ -105,7 +105,7 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.patch("/api/storages/pools", tags=["storages"])
+@app.patch("/api/storages/pools", tags=["storages"], operation_id="update_storage_pool")
 def post_api_storages_pools(
         request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
@@ -120,7 +120,7 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.get("/api/storages/{uuid}", tags=["storages"], response_model=Storage)
+@app.get("/api/storages/{uuid}", tags=["storages"], response_model=Storage, operation_id="get_storage")
 def get_api_storages_uuid(
         uuid: str,
         cu: CurrentUser = Depends(get_current_user),
@@ -154,7 +154,7 @@ def get_api_storages_uuid(
     return res
 
 
-@app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[Task])
+@app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[Task], operation_id="create_storage")
 def post_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -173,7 +173,7 @@ def post_api_storage(
     return [task.model, task_put_list.model]
 
 
-@app.delete("/api/tasks/storages/{uuid}", tags=["storages-task"], response_model=List[Task])
+@app.delete("/api/tasks/storages/{uuid}", tags=["storages-task"], response_model=List[Task], operation_id="delete_storage")
 def delete_api_storages(
         uuid: str,
         req: Request,
