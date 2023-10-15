@@ -8,7 +8,7 @@ from settings import APP_ROOT
 from mixin.log import setup_logger
 from mixin.database import SessionLocal
 
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskBase
 from node.tasks import *
 from storage.tasks import *

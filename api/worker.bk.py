@@ -8,7 +8,7 @@ from mixin.log import setup_logger
 from mixin.database import SessionLocal
 
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from domain.tasks import *
 from node.tasks import *
 from storage.tasks import *
@@ -35,7 +35,7 @@ def lost_task_cheack():
     db.commit()
 
 
-def task_swicher(model:TaskSelect, db:SessionLocal):
+def task_swicher(model:Task, db:SessionLocal):
     if model.resource == "vm":
         if model.object == "list":
             if model.method == "update":
@@ -172,7 +172,7 @@ def exec_task(db, task):
 
 
     # Model to Schemas
-    task:TaskSelect = TaskSelect().from_orm(task)
+    task:Task = Task().from_orm(task)
 
     
     start_time = time()

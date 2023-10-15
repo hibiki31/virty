@@ -59,7 +59,7 @@ def get_tasks(
     return { "count": count, "data": task }
 
 
-@app.delete("/tasks/", response_model=List[TaskSelect])
+@app.delete("/tasks/", response_model=List[Task])
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -106,7 +106,7 @@ def get_tasks_incomplete(
     return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
 
 
-@app.get("/tasks/{uuid}", response_model=TaskSelect)
+@app.get("/tasks/{uuid}", response_model=Task)
 def get_tasks(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),

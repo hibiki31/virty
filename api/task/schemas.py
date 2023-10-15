@@ -29,11 +29,11 @@ class TaskBase(CamelModel):
         orm_mode  =  True
     
 
-class TaskInsert(TaskBase):
+class TaskForCreate(TaskBase):
     pass
 
 
-class TaskSelect(TaskBase):
+class Task(TaskBase):
     uuid: str = None
 
     @validator('request', pre=True)
@@ -44,7 +44,7 @@ class TaskSelect(TaskBase):
 
 class TaskPagesnation(CamelModel):
     count: int
-    data: List[TaskSelect]
+    data: List[Task]
 
 
 class TaskRequest(CamelModel):

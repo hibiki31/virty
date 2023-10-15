@@ -12,7 +12,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskManager
 from node.models import NodeModel
 from mixin.database import get_db
@@ -154,7 +154,7 @@ def get_api_storages_uuid(
     return res
 
 
-@app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[TaskSelect])
+@app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[Task])
 def post_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -173,7 +173,7 @@ def post_api_storage(
     return [task.model, task_put_list.model]
 
 
-@app.delete("/api/tasks/storages/{uuid}", tags=["storages-task"], response_model=List[TaskSelect])
+@app.delete("/api/tasks/storages/{uuid}", tags=["storages-task"], response_model=List[Task])
 def delete_api_storages(
         uuid: str,
         req: Request,

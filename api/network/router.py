@@ -8,7 +8,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskManager
 from node.models import NodeModel
 from mixin.database import get_db

@@ -10,7 +10,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskManager
 from mixin.database import get_db
 from mixin.log import setup_logger
@@ -23,7 +23,7 @@ app = APIRouter(prefix="/api/tasks/nodes", tags=["nodes-task"])
 logger = setup_logger(__name__)
 
 
-@app.post("", response_model=List[TaskSelect])
+@app.post("", response_model=List[Task])
 def post_tasks_nodes(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def post_tasks_nodes(
     return [task.model]
 
 
-@app.delete("/{name}", response_model=List[TaskSelect])
+@app.delete("/{name}", response_model=List[Task])
 def delete_tasks_nodes_name(
         name: str,
         req: Request,
@@ -62,7 +62,7 @@ def delete_tasks_nodes_name(
     return [task.model]
 
 
-@app.patch("/roles", response_model=TaskSelect)
+@app.patch("/roles", response_model=Task)
 def patch_api_node_role(
         request: NodeRoleForUpdate,
         current_user: CurrentUser = Depends(get_current_user),

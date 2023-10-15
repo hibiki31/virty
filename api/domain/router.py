@@ -8,7 +8,7 @@ from .models import *
 from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-from task.schemas import TaskSelect, TaskRequest
+from task.schemas import Task, TaskRequest
 from task.functions import TaskManager
 from user.models import UserModel
 from project.models import ProjectModel
