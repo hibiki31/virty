@@ -9,7 +9,8 @@
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"mhutchie.git-graph"
+				"mhutchie.git-graph",
+				"KevinRose.vsc-python-indent"
 			]
 		}
 	},
