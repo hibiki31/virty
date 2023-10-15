@@ -8,8 +8,8 @@ import useSWR from 'swr';
 export const FlavorsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'flavorsApi.getApiFlavorsApiFlavorsGet',
-    () => flavorsApi.getApiFlavorsApiFlavorsGet().then((res) => res.data),
+    'flavorsApi.getFlavors',
+    () => flavorsApi.getFlavors().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

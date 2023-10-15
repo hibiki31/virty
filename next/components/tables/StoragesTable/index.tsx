@@ -10,8 +10,8 @@ import { NextLink } from '~/components/utils/NextLink';
 export const StoragesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'storagesApi.getApiStoragesApiStoragesGet',
-    () => storagesApi.getApiStoragesApiStoragesGet().then((res) => res.data),
+    'storagesApi.getStorages',
+    () => storagesApi.getStorages().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

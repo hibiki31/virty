@@ -22,12 +22,10 @@ export const useGetIncompleteTasks = () => {
 
   // long polling
   useSWR(
-    ['tasksApi.getTasksIncompleteApiTasksIncompleteGet', incompleteTasks.hash, user?.isAdminMode],
+    ['tasksApi.getIncompleteTasks', incompleteTasks.hash, user?.isAdminMode],
     ([, hash, isAdminMode]) =>
       isAdminMode !== undefined
-        ? tasksApi
-            .getTasksIncompleteApiTasksIncompleteGet(hash, isAdminMode)
-            .then((res) => setIncompleteTasks(res.data))
+        ? tasksApi.getIncompleteTasks(hash, isAdminMode).then((res) => setIncompleteTasks(res.data))
         : undefined,
     {
       revalidateOnFocus: false,

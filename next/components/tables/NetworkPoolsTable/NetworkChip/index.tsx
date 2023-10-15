@@ -1,9 +1,9 @@
 import { Chip } from '@mui/material';
 import { FC } from 'react';
-import { GetNEtworkPoolNetworksNetwork } from '~/lib/api/generated';
+import { NetworkForNetworkPool } from '~/lib/api/generated';
 
 type Props = {
-  network: GetNEtworkPoolNetworksNetwork;
+  network: NetworkForNetworkPool;
 };
 
 export const NetworkChip: FC<Props> = ({ network }) => {

@@ -63,7 +63,7 @@ export const useAuth = () => {
     }
 
     return authApi
-      .loginForAccessTokenApiAuthPost(username, password)
+      .login(username, password)
       .then((res) => {
         const _user = getUserFromToken(res.data.access_token);
         setUser(_user);

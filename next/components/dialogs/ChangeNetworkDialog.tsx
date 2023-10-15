@@ -40,7 +40,7 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
     reset();
     resetFetchers();
     setFetcher('networks', () =>
-      networkApi.getApiNetworksApiNetworksGet().then((res) => {
+      networkApi.getNetworks().then((res) => {
         const networks = res.data.filter((network) => network.nodeName === nodeName);
         setOvsNetworkUuids(networks.filter((network) => network.type === 'openvswitch').map((network) => network.uuid));
         return networks.map((network) => ({ value: network.uuid, label: network.name }));
@@ -70,7 +70,7 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
             `ports-${networkUuid}`,
             () =>
               networkApi
-                .getApiNetworksUuidApiNetworksUuidGet(networkUuid)
+                .getNetwork(networkUuid)
                 .then((res) => res.data.portgroups.map((port) => ({ value: port.name, label: port.name }))),
             { useCache: true }
           );
@@ -85,7 +85,7 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
       return;
     }
     return tasksVmsApi
-      .patchApiVmNetworkApiTasksVmsUuidNetworkPatch(vmUuid, { mac: macAddress, networkUuid, port: (port as any).value })
+      .updateVmNetwork(vmUuid, { mac: macAddress, networkUuid, port: (port as any).value })
       .then(() => {
         enqueueNotistack('Network changed successfully.', { variant: 'success' });
         onClose();

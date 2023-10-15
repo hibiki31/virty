@@ -3,14 +3,14 @@ import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { networkApi } from '~/lib/api';
-import { GetNetwork } from '~/lib/api/generated';
+import { Network } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  network: GetNetwork;
+  network: Network;
   onClose: () => void;
 };
 
@@ -39,7 +39,7 @@ export const JoinNetworkPoolDialog: FC<Props> = ({ open, network, onClose }) => 
     );
     setFetcher('pools', () =>
       networkApi
-        .getApiNetworksPoolsApiNetworksPoolsGet()
+        .getNetworkPools()
         .then((res) => res.data.map((pool) => ({ label: pool.name!, value: String(pool.id) })))
     );
   }, [open, reset, resetFetchers, setFetcher, network]);

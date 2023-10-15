@@ -17,7 +17,7 @@ const Page: NextPage = () => {
 
   const reloadNetworks = () => {
     tasksNetworksApi
-      .putApiNetworksApiTasksNetworksPut()
+      .refreshNetworks()
       .then(() => enqueueNotistack('Network list is being updated.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to update network list.', { variant: 'error' }));
   };

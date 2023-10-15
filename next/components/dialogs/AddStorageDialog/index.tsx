@@ -43,7 +43,7 @@ export const AddStorageDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddStorage = ({ node, ...rest }: FormData) => {
     return tasksStoragesApi
-      .postApiStorageApiTasksStoragesPost({ nodeName: node, ...rest })
+      .createStorage({ nodeName: node, ...rest })
       .then(() => {
         enqueueNotistack('Storage added successfully.', { variant: 'success' });
         onClose();

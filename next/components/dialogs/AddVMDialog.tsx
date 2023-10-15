@@ -66,7 +66,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.storage.savePoolUuid', '');
           setFetcher('storages', () =>
             storagesApi
-              .getApiStoragesApiStoragesGet()
+              .getStorages()
               .then((res) =>
                 res.data
                   .filter((storage) => storage.nodeName === nodeName)
@@ -82,7 +82,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           ]);
           setFetcher('networks', () =>
             networkApi
-              .getApiNetworksApiNetworksGet()
+              .getNetworks()
               .then((res) =>
                 res.data
                   .filter((network) => network.nodeName === nodeName)
@@ -101,7 +101,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.storage.originalName', '');
           setFetcher('images', () =>
             imagesApi
-              .getApiImagesApiImagesGet()
+              .getImages()
               .then((res) =>
                 res.data
                   .filter((image) => image.storageUuid === originalPoolUuid)
@@ -120,7 +120,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           `ports-${networkUuid}`,
           () =>
             networkApi
-              .getApiNetworksUuidApiNetworksUuidGet(networkUuid)
+              .getNetwork(networkUuid)
               .then((res) => res.data.portgroups.map((port) => ({ value: port.name, label: port.name }))),
           { useCache: true }
         );
@@ -138,7 +138,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     }
 
     return tasksVmsApi
-      .postApiVmsApiTasksVmsPost({
+      .createVm({
         type: 'manual',
         ...data.form.spec,
         disks: [data.form.storage],

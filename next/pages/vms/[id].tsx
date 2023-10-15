@@ -6,7 +6,7 @@ import { vmsApi, tasksVmsApi } from '~/lib/api';
 import { makeRequireLoginProps } from '~/lib/utils/makeGetServerSideProps';
 import useSWR from 'swr';
 import { BaseTable } from '~/components/tables/BaseTable';
-import { GetDomainDrives, GetDomainInterfaces } from '~/lib/api/generated';
+import { DomainDrive, DomainInterface } from '~/lib/api/generated';
 import { Delete, Pencil, Play, Stop } from 'mdi-material-ui';
 import Error404Page from '../404';
 import ErrorPage from '../error';
@@ -41,10 +41,10 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const VMPage: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    ['vmsApi.getApiDomainUuidApiVmsUuidGet', id],
+    ['vmsApi.getVm', id],
     ([, id]) =>
       vmsApi
-        .getApiDomainUuidApiVmsUuidGet(id)
+        .getVm(id)
         .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {
@@ -59,7 +59,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
   );
   const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
   const [storageAnchorEl, setStorageAnchorEl] = useState<null | HTMLElement>(null);
-  const [storage, setStorage] = useState<GetDomainDrives | undefined>(undefined);
+  const [storage, setStorage] = useState<DomainDrive | undefined>(undefined);
   const { enqueueNotistack } = useNotistack();
   const { openConfirmDialog } = useConfirmDialog();
 
@@ -77,7 +77,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
 
   const startVM = () =>
     tasksVmsApi
-      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'on' })
+      .updateVmPowerStatus(id, { status: 'on' })
       .then(() => enqueueNotistack('VM is starting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to start VM.', { variant: 'error' }));
 
@@ -93,7 +93,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
     }
 
     return tasksVmsApi
-      .patchApiTasksVmsUuidPowerApiTasksVmsUuidPowerPatch(id, { status: 'off' })
+      .updateVmPowerStatus(id, { status: 'off' })
       .then(() => enqueueNotistack('VM is stopping.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to stop VM.', { variant: 'error' }));
   };
@@ -110,16 +110,16 @@ const VMPage: NextPage<Props> = ({ id }) => {
     }
 
     return tasksVmsApi
-      .deleteApiDomainsApiTasksVmsUuidDelete(id)
+      .deleteVm(id)
       .then(() => enqueueNotistack('VM is deleting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to delete VM.', { variant: 'error' }));
   };
 
-  const openChangeNetworkDialog = (item: GetDomainInterfaces) => {
+  const openChangeNetworkDialog = (item: DomainInterface) => {
     setMacAddress(item.mac);
   };
 
-  const openStorageActionsMenu = (e: MouseEvent<HTMLElement>, item: GetDomainDrives) => {
+  const openStorageActionsMenu = (e: MouseEvent<HTMLElement>, item: DomainDrive) => {
     setStorageAnchorEl(e.currentTarget);
     setStorage(item);
   };
@@ -226,16 +226,16 @@ const VMPage: NextPage<Props> = ({ id }) => {
             <CardHeader title={<Typography variant="h6">Network</Typography>} />
             <BaseTable
               cols={[
-                { name: 'Type', getItem: (item: GetDomainInterfaces) => item.type },
-                { name: 'MAC Address', getItem: (item: GetDomainInterfaces) => item.mac },
-                { name: 'Network Name', getItem: (item: GetDomainInterfaces) => item.network },
-                { name: 'Bridge Device', getItem: (item: GetDomainInterfaces) => item.bridge },
-                { name: 'OVS Port', getItem: (item: GetDomainInterfaces) => item.port },
-                { name: 'Target', getItem: (item: GetDomainInterfaces) => item.target },
+                { name: 'Type', getItem: (item: DomainInterface) => item.type },
+                { name: 'MAC Address', getItem: (item: DomainInterface) => item.mac },
+                { name: 'Network Name', getItem: (item: DomainInterface) => item.network },
+                { name: 'Bridge Device', getItem: (item: DomainInterface) => item.bridge },
+                { name: 'OVS Port', getItem: (item: DomainInterface) => item.port },
+                { name: 'Target', getItem: (item: DomainInterface) => item.target },
                 {
                   name: 'Actions',
                   align: 'center',
-                  getItem: (item: GetDomainInterfaces) => (
+                  getItem: (item: DomainInterface) => (
                     <IconButton
                       disabled={data.status !== VM_STATUS.POWER_OFF}
                       onClick={() => openChangeNetworkDialog(item)}
@@ -257,14 +257,14 @@ const VMPage: NextPage<Props> = ({ id }) => {
             <CardHeader title={<Typography variant="h6">Storage</Typography>} />
             <BaseTable
               cols={[
-                { name: 'Device', getItem: (item: GetDomainDrives) => item.device },
-                { name: 'Type', getItem: (item: GetDomainDrives) => item.type },
-                { name: 'Source', getItem: (item: GetDomainDrives) => item.source },
-                { name: 'Target', getItem: (item: GetDomainDrives) => item.target },
+                { name: 'Device', getItem: (item: DomainDrive) => item.device },
+                { name: 'Type', getItem: (item: DomainDrive) => item.type },
+                { name: 'Source', getItem: (item: DomainDrive) => item.source },
+                { name: 'Target', getItem: (item: DomainDrive) => item.target },
                 {
                   name: 'Actions',
                   align: 'center',
-                  getItem: (item: GetDomainDrives) =>
+                  getItem: (item: DomainDrive) =>
                     item.device === 'cdrom' ? (
                       <IconButton onClick={(e) => openStorageActionsMenu(e, item)}>
                         <Pencil />

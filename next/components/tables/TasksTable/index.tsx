@@ -7,7 +7,7 @@ import useSWR from 'swr';
 import { formatDate } from '~/lib/utils/date';
 import { DotsVertical } from 'mdi-material-ui';
 import { useAuth } from '~/store/userState';
-import { TaskSelect } from '~/lib/api/generated';
+import { Task } from '~/lib/api/generated';
 import { TaskDetailsDialog } from '~/components/dialogs/TaskDetailsDialog';
 import NextLink from 'next/link';
 import { ResourceIcon } from './ResourceIcon';
@@ -27,10 +27,10 @@ export const TasksTable: FC = () => {
   const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
   const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksGet', user, hash, page, limit, filters],
+    ['tasksApi.getTasks', user, hash, page, limit, filters],
     ([, u, _h, p, l, f]) =>
       tasksApi
-        .getTasksApiTasksGet(
+        .getTasks(
           u?.isAdminMode,
           l,
           p,
@@ -42,7 +42,7 @@ export const TasksTable: FC = () => {
         .then((res) => res.data),
     { revalidateOnFocus: false }
   );
-  const [selectedTask, setSelectedTask] = useState<TaskSelect | undefined>(undefined);
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
 
   const handleFiltersChange = (newFilters: Filters) => setFilters(newFilters);
 

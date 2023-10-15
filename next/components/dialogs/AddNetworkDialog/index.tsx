@@ -46,7 +46,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
   const handleAddNetwork = useCallback(
     ({ node, ...rest }: FormData) => {
       return tasksNetworksApi
-        .postApiStorageApiTasksNetworksPost({ nodeName: node, ...rest })
+        .createNetwork({ nodeName: node, ...rest })
         .then(() => {
           enqueueNotistack('Network added successfully.', { variant: 'success' });
           onClose();
