@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from network.schemas import GetNetworkPool
-from storage.schemas import GetStoragePool
+from storage.schemas import StoragePool
 from flavor.schemas import GetFlavor
 
 
@@ -25,7 +25,7 @@ class PostTicket(CamelModel):
 class GetTicket(PostTicket):
     id: int
     network_pools: List[GetNetworkPool]
-    storage_pools: List[GetStoragePool]
+    storage_pools: List[StoragePool]
     flavors: List[GetFlavor]
     class Config:
         orm_mode  =  True

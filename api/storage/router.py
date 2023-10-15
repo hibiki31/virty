@@ -27,7 +27,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storages"], response_model=List[StorageSelect])
+@app.get("/api/storages", tags=["storages"], response_model=List[Storage])
 def get_api_storages(
         param: StorageQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
@@ -35,7 +35,7 @@ def get_api_storages(
     ):
 
     image_sum = db.query(
-        ImageModel.storage_uuid, 
+        ImageModel.storage_uuid,
         func.sum(ImageModel.capacity).label('sum_capacity'),
         func.sum(ImageModel.allocation).label('sum_allocation')
     ).group_by(ImageModel.storage_uuid).subquery('image_sum')
@@ -48,14 +48,14 @@ def get_api_storages(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.node_name,StorageModel.name)
-    
+
     if param.node_name != None:
         query = query.filter(NodeModel.name==param.node_name)
-    
+
     if param.name != None:
         query = query.filter(StorageModel.name.like(f'%{param.name}%'))
 
-    
+
     models = query.all()
 
     res = []
@@ -73,14 +73,14 @@ def get_api_storages(
 def post_api_storage(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageMetadataPatch = None
+        request_model: StorageMetadataForUpdate = None
     ):
     db.merge(StorageMetadataModel(**request_model.dict()))
     db.commit()
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
-@app.get("/api/storages/pools", tags=["storages"], response_model=List[GetStoragePool])
+@app.get("/api/storages/pools", tags=["storages"], response_model=List[StoragePool])
 def get_api_storages_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -91,7 +91,7 @@ def get_api_storages_pools(
 
 @app.post("/api/storages/pools", tags=["storages"])
 def post_api_storages_pools(
-        request_model: PostStoragePool,
+        request_model: StoragePoolForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -107,7 +107,7 @@ def post_api_storages_pools(
 
 @app.patch("/api/storages/pools", tags=["storages"])
 def post_api_storages_pools(
-        request_model: PatchStoragePool,
+        request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -120,7 +120,7 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.get("/api/storages/{uuid}", tags=["storages"], response_model=StorageSelect)
+@app.get("/api/storages/{uuid}", tags=["storages"], response_model=Storage)
 def get_api_storages_uuid(
         uuid: str,
         cu: CurrentUser = Depends(get_current_user),
@@ -128,7 +128,7 @@ def get_api_storages_uuid(
     ):
 
     image_sum = db.query(
-        ImageModel.storage_uuid, 
+        ImageModel.storage_uuid,
         func.sum(ImageModel.capacity).label('sum_capacity'),
         func.sum(ImageModel.allocation).label('sum_allocation')
     ).group_by(ImageModel.storage_uuid).subquery('image_sum')
@@ -141,7 +141,7 @@ def get_api_storages_uuid(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.node_name,StorageModel.name)
-    
+
     model = query.filter(StorageModel.uuid==uuid).one_or_none()
 
     if model == None:
@@ -150,7 +150,7 @@ def get_api_storages_uuid(
     res = model[0]
     res.capacity_commit = model[1]
     res.allocation_commit = model[2]
-    
+
     return res
 
 
@@ -159,7 +159,7 @@ def post_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: StorageInsert = None
+        body: StorageForCreate = None
     ):
 
     task = TaskManager(db=db)

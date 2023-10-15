@@ -21,7 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/images", tags=["images"], response_model=List[ImageSelect])
+@app.get("/api/images", tags=["images"], response_model=List[Image])
 def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -48,23 +48,23 @@ def get_api_images(
 
     if node_name != None:
         query = query.filter(NodeModel.name==node_name)
-    
+
     if name != None:
         query = query.filter(ImageModel.name.like(f'%{name}%'))
-    
+
     if rool != None:
         query = query.filter(StorageMetadataModel.rool==rool)
-    
+
     res = []
 
     for i in query.all():
         if i[1]:
-            domain = GetImageDomain(**i[1].__dict__)
+            domain = ImageDomain(**i[1].__dict__)
         else:
             domain = None
 
         res.append(
-            ImageSelect(
+            Image(
                 name=i[0].name,
                 storage=i[0].storage,
                 capacity=i[0].capacity,
@@ -88,13 +88,13 @@ def put_api_images(
     task = TaskManager(db=db)
     task.select(method='put', resource='storage', object='list')
     task.commit(user=cu, req=req)
-   
+
     return [task.model]
 
 
 @app.patch("/api/images", tags=["images"])
 def patch_api_images(
-        req: PatchImageFlavor,
+        req: ImageForUpdateImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
@@ -132,6 +132,6 @@ def put_api_images_scp(
         to_path=request_model.to_file_path,
         from_path=request_model.from_file_path
     )
-    
+
 
     return True

@@ -19,14 +19,14 @@ class StorageQuery(CamelModel):
     node_name: str = None
 
 
-class StorageMetadataSelect(CamelModel):
+class StorageMetadata(CamelModel):
     rool: str = None
     protocol: str = None
     device_type: str = None
     class Config:
         orm_mode  =  True
 
-class StorageMetadataPatch(CamelModel):
+class StorageMetadataForUpdate(CamelModel):
     uuid: str
     rool: str
     protocol: str
@@ -34,7 +34,7 @@ class StorageMetadataPatch(CamelModel):
     class Config:
         orm_mode  =  True
 
-class PatchImageFlavor(CamelModel):
+class ImageForUpdateImageFlavor(CamelModel):
     storage_uuid: str
     path: str
     node_name: str
@@ -42,7 +42,7 @@ class PatchImageFlavor(CamelModel):
     class Config:
         orm_mode  =  True
 
-class StorageSelect(CamelModel):
+class Storage(CamelModel):
     name: str
     uuid: str
     status: int
@@ -53,7 +53,7 @@ class StorageSelect(CamelModel):
     node: Node
     auto_start: bool
     path: str = None
-    meta_data: StorageMetadataSelect = None
+    meta_data: StorageMetadata = None
     update_token:str = None
     allocation_commit: int = None
     capacity_commit: int = None
@@ -87,33 +87,33 @@ class PaseStorage(CamelModel):
     class Config:
         orm_mode  =  True
 
-class GetImageDomain(CamelModel):
+class ImageDomain(CamelModel):
     owner_user_id: str = None
     issuance_id: int = None
     name: str
     uuid: str
 
-class ImageSelect(ImageBase):
+class Image(ImageBase):
     name:str
     storage_uuid:str = None
     capacity:int
-    storage: StorageSelect
+    storage: Storage
     flavor: GetFlavor = None
     allocation:int
     path:str
     update_token:str = None
-    domain: GetImageDomain = None
+    domain: ImageDomain = None
     class Config:
         orm_mode  =  True
 
-class StorageInsert(CamelModel):
+class StorageForCreate(CamelModel):
     name: str
     node_name: str
     path: str
     class Config:
         orm_mode  =  True
 
-class StorageDelete(CamelModel):
+class StorageForDelete(CamelModel):
     uuid: str
     node_name: str
 
@@ -123,31 +123,31 @@ class ImageSCP(CamelModel):
     from_file_path: str
     to_file_path: str
 
-class PostStoragePool(CamelModel):
+class StoragePoolForCreate(CamelModel):
     name:str
     storage_uuids: List[str]
 
 
-class PatchStoragePool(CamelModel):
+class StoragePoolForUpdate(CamelModel):
     id:str
     storage_uuids: List[str]
 
 
-class GetStoragePoolStoragesStorage(CamelModel):
+class StorageForStorageContainer(CamelModel):
     name: str
     uuid: str
     node_name: str
     class Config:
         orm_mode  =  True
 
-class GetStoragePoolStorages(CamelModel):
-    storage: GetStoragePoolStoragesStorage
+class StorageContainerForStoragePool(CamelModel):
+    storage: StorageForStorageContainer
     class Config:
         orm_mode  =  True
 
-class GetStoragePool(CamelModel):
+class StoragePool(CamelModel):
     id: int
     name: str
-    storages: List[GetStoragePoolStorages]
+    storages: List[StorageContainerForStoragePool]
     class Config:
         orm_mode  =  True
