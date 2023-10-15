@@ -5,7 +5,13 @@ from common import BASE_URL, HEADERS, env, print_resp, wait_tasks
 
 def delete_nodes():
     print(f'Start test {len(env["servers"])} servers')
+    nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
+    print_resp(nodes_resp)
+
+    nodes = [ i["name"] for i in nodes_resp.json() ]
     for server in env["servers"]:
+        if not server["name"] in nodes:
+            continue
         resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/nodes/{server["name"]}', headers=HEADERS)
         print_resp(resp=resp, allow_not_found=True)
         wait_tasks(resp)

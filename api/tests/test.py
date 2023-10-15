@@ -21,22 +21,23 @@ def main():
     api_users_me()
     
     # Node
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
     # patch_nodes_vxlan()
-    create_network_provider()
+    # create_network_provider()
+    
     # Storage
-    # put_list()
-    # delete_storage()
-    # post_storage()
+    put_list()
+    delete_storage()
+    post_storage()
 
     ## testnode only
 
     # Network
-    # put_list()
-    # delete_network()
-    # post_network()
+    put_list()
+    delete_network()
+    post_network()
     # delete_network_ovs()
     # post_network_ovs()
     

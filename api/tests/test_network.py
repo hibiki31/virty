@@ -4,15 +4,20 @@ from common import BASE_URL, HEADERS, print_resp, wait_tasks
 
 
 def post_network():
-    request_data = {
-        "name": "test-br",
-        "nodeName": "test-node",
-        "type": "bridge",
-        "bridgeDevice": "br-test"
-    }
-    resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/networks', headers=HEADERS, json=request_data)
-    print_resp(resp=resp)
-    wait_tasks(resp)
+    nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
+    print_resp(nodes_resp)
+
+    for node in nodes_resp.json():
+
+        request_data = {
+            "name": "test-br",
+            "nodeName": f"{node['name']}",
+            "type": "bridge",
+            "bridgeDevice": "br-test"
+        }
+        resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/networks', headers=HEADERS, json=request_data)
+        print_resp(resp=resp)
+        wait_tasks(resp)
 
 
 def delete_network():
@@ -44,3 +49,19 @@ def delete_network_ovs():
     print_resp(resp=resp,allow_not_found=True)
     if resp.status_code == 200:
         wait_tasks(resp)
+
+
+def create_network_provider():
+    request_data={
+        "name": "test",
+        "dnsDomain": "test.v.aicta.net",
+        "networkAddress": "10.248.10.0",
+        "networkPrefix": "24",
+        "gatewayAddress": "10.248.10.254",
+        "dhcpStart": "10.248.10.1",
+        "dhcpEnd": "10.248.10.253",
+        "networkNode": "test-r640-01"
+    }
+    resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/networks/providers', headers=HEADERS, json=request_data)
+    print_resp(resp=resp)
+    wait_tasks(resp)
