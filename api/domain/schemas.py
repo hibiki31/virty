@@ -7,7 +7,6 @@ from pyparsing import str_type
 
 from node.schemas import Node
 
-# Model schemas
 class DomainDrive(CamelModel):
     device: str = None
     type: str = None
@@ -53,7 +52,6 @@ class Domain(CamelModel):
         orm_mode  =  True
 
 
-# API schemas
 class DomainPagenation(CamelModel):
     count: int
     data: List[Domain]
@@ -80,11 +78,11 @@ class DomainPatchCore(CamelModel):
     uuid: str
     core: int
 
-class DomainProjectPatch(CamelModel):
+class DomainProjectForUpdate(CamelModel):
     uuid: str
     project_id: str
 
-class DomainDelete(DomainBase):
+class DomainForDelete(DomainBase):
     pass
 
 class DomainPatch(DomainBase):
@@ -93,11 +91,11 @@ class DomainPatch(DomainBase):
     target: str = None
 
 
-class PatchDomainPower(CamelModel):
+class PowerStatusForUpdateDomain(CamelModel):
     status: str = None
 
 
-class PatchDominCdrom(CamelModel):
+class CdromForUpdateDomain(CamelModel):
     path: str = None
     target: str = None
 
@@ -136,7 +134,7 @@ class DomainDetailSelect(CamelModel):
     class Config:
         orm_mode  =  True
 
-class DomainInsertDisk(CamelModel):
+class DomainForCreateDisk(CamelModel):
     type: str
     save_pool_uuid: str
     original_pool_uuid: str = None
@@ -146,7 +144,7 @@ class DomainInsertDisk(CamelModel):
     class Config:
         orm_mode  =  True
 
-class DomainInsertInterface(CamelModel):
+class DomainForCreateInterface(CamelModel):
     type: str
     mac: str = None
     network_uuid: str
@@ -158,30 +156,30 @@ class CloudInitInsert(CamelModel):
     hostname: str
     userData: str
 
-class DomainInsert(CamelModel):
+class DomainForCreate(CamelModel):
     type: Literal['manual', 'project']
     name: str
     node_name: str
     memory_mega_byte: int
     cpu: int
-    disks: List[DomainInsertDisk]
-    interface: List[DomainInsertInterface]
+    disks: List[DomainForCreateDisk]
+    interface: List[DomainForCreateInterface]
     cloud_init: CloudInitInsert = None
     class Config:
         orm_mode  =  True
 
-class DomainNetworkChange(CamelModel):
+class NetworkForUpdateDomain(CamelModel):
     mac: str
     network_uuid: str
     port: str = None
 
 
-class PostDomainTicketInterface(CamelModel):
+class InterfaceForDomainTicket(CamelModel):
     id: int
     mac: str = None
 
 
-class PostDomainTicket(CamelModel):
+class DomainTicketForCreate(CamelModel):
     type: str
     issuance_id: int
     name: str
@@ -190,7 +188,7 @@ class PostDomainTicket(CamelModel):
     flavor_id: int
     flavor_size_g: int
     storage_pool_id: int
-    interfaces: list[PostDomainTicketInterface]
+    interfaces: list[InterfaceForDomainTicket]
     cloud_init: CloudInitInsert = None
     class Config:
         orm_mode  =  True

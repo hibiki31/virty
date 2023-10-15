@@ -2,7 +2,6 @@ from fastapi_camelcase import CamelModel
 from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 
-# Model schemas
 class NodeRole(CamelModel):
     role_name: str
     extra_json: dict = None
@@ -30,7 +29,6 @@ class Node(CamelModel):
         orm_mode  =  True
 
 
-# API schemas
 class NodeRoleForUpdate(CamelModel):
     node_name: str
     role_name: str

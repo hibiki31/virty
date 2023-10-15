@@ -49,7 +49,7 @@ def post_api_vms(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainInsert = None
+        body: DomainForCreate = None
     ):
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -90,7 +90,7 @@ def patch_api_tasks_vms_uuid_power(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PatchDomainPower = None,
+        body: PowerStatusForUpdateDomain = None,
     ):
     
     task = TaskManager(db=db)
@@ -110,7 +110,7 @@ def patch_api_tasks_vms_uuid_cdrom(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PatchDominCdrom = None,
+        body: CdromForUpdateDomain = None,
     ):
     """
     umount
@@ -215,7 +215,7 @@ def patch_api_vm_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainNetworkChange = None
+        body: NetworkForUpdateDomain = None
     ):
     """
     **Power off required**
