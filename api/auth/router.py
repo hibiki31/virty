@@ -15,7 +15,7 @@ from settings import SECRET_KEY, API_VERSION
 from .schemas import *
 from user.models import UserModel, UserScopeModel
 from task.functions import TaskManager
-from project.schemas import PostProject
+from project.schemas import ProjectForCreate
 
 
 logger = setup_logger(__name__)

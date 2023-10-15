@@ -193,7 +193,7 @@ def patch_api_tasks_vms_uuid_cdrom(
 
 # @app.patch("/project")
 # def path_vms_project(
-#         request: DomainProjectPatch,
+#         request: DomainProjectForUpdate,
 #         current_user: CurrentUser = Depends(get_current_user),
 #         db: Session = Depends(get_db),
 #     ):

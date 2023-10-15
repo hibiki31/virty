@@ -9,7 +9,7 @@ from task.functions import TaskManager
 
 from .models import *
 from .schemas import *
-from project.schemas import PostProject
+from project.schemas import ProjectForCreate
 from auth.router import CurrentUser, get_current_user, pwd_context
 
 
@@ -54,7 +54,7 @@ def post_api_users(
 
     db.commit()
 
-    # project_reqeust = PostProject(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
+    # project_reqeust = ProjectForCreate(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
     # task = TaskManager(db=db, bg=bg)
     # task.select('post', 'project', 'root')
     # task.commit(user=current_user, request=project_reqeust)

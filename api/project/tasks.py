@@ -24,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 def post_project_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request = PostProject(**loads(task.request))
+    request = ProjectForCreate(**loads(task.request))
 
     project = ProjectModel(
         name=request.project_name
@@ -65,7 +65,7 @@ def post_project_root(db:Session, bg: BackgroundTasks, task: TaskModel):
 
 
 def delete_project_root(db:Session, bg: BackgroundTasks, task: TaskModel):    
-    request:DeleteProject = DeleteProject(**loads(task.request))
+    request:ProjectForDelete = ProjectForDelete(**loads(task.request))
     project = db.query(ProjectModel).filter(ProjectModel.id==request.id).one()
     bridge_name = f"vy-{project.id}"
 
