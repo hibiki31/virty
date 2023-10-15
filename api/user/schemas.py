@@ -18,25 +18,25 @@ class UserBase(CamelModel):
         orm_mode = True
 
 
-class GetUserScope(CamelModel):
+class UserScope(CamelModel):
     name: str
     class Config:
         orm_mode = True
 
-class GetUserProject(CamelModel):
+class UserProject(CamelModel):
     name: str
     class Config:
         orm_mode = True
 
-class GetUsers(CamelModel):
+class User(CamelModel):
     username: str
-    scopes: List[GetUserScope]
-    projects: List[GetUserProject]
+    scopes: List[UserScope]
+    projects: List[UserProject]
     class Config:
         orm_mode = True
     
 
-class UserInsert(CamelModel):
+class UserForCreate(CamelModel):
     user_id: str
     password: str
 
@@ -52,15 +52,15 @@ class GroupBase(CamelModel):
     class Config:
         orm_mode = True
 
-class GroupInsert(GroupBase):
+class GroupForCreate(GroupBase):
     pass
 
-class GroupPatch(CamelModel):
+class GroupForUpdate(CamelModel):
     group_id: str
     user_id: str
 
-class UserSelect(UserBase):
+class UserWithGroup(UserBase):
     groups: List[GroupBase]
 
-class GroupSelect(GroupBase):
+class Group(GroupBase):
     users: List[UserBase]

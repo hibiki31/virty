@@ -27,7 +27,7 @@ def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
 
 @app.post("/users")
 def post_api_users(
-        request: UserInsert,
+        request: UserForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -62,7 +62,7 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users", response_model=List[GetUsers])
+@app.get("/users", response_model=List[User])
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),

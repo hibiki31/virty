@@ -148,7 +148,7 @@ def get_current_user(
 
 @app.post("/setup", tags=["auth"])
 def api_auth_setup(
-        model: Setup, 
+        model: SetupRequest, 
         db: Session = Depends(get_db)
     ):
     if model.username == "":
@@ -207,7 +207,7 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.get("/validate", tags=["auth"], response_model=AuthValidate)
+@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse)
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):
