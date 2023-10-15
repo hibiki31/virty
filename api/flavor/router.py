@@ -19,7 +19,7 @@ app = APIRouter(
 
 @app.post("")
 def post_api_flavors(
-        request_model: PostFlavor,
+        request_model: FlavorForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
@@ -29,7 +29,7 @@ def post_api_flavors(
     return db.query(FlavorModel).filter(FlavorModel.id==flavor_model.id).all()
 
 
-@app.get("", response_model=List[GetFlavor])
+@app.get("", response_model=List[Flavor])
 def get_api_flavors(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)

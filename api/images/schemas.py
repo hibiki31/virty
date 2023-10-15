@@ -7,7 +7,7 @@ from fastapi_camelcase import CamelModel
 from flavor.models import FlavorModel
 
 from node.schemas import Node
-from flavor.schemas import GetFlavor
+from flavor.schemas import Flavor
 
 
 from storage.schemas import Storage
@@ -37,7 +37,7 @@ class Image(ImageBase):
     storage_uuid:str = None
     capacity:int
     storage: Storage
-    flavor: GetFlavor = None
+    flavor: Flavor = None
     allocation:int
     path:str
     update_token:str = None

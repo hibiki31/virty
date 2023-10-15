@@ -2,7 +2,7 @@ from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
 
-class PostFlavor(CamelModel):
+class FlavorForCreate(CamelModel):
     name: str
     os: str
     manual_url: str
@@ -13,7 +13,7 @@ class PostFlavor(CamelModel):
         orm_mode  =  True
 
         
-class GetFlavor(PostFlavor):
+class Flavor(FlavorForCreate):
     id: int
     class Config:
         orm_mode  =  True
