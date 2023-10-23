@@ -2,40 +2,49 @@ version: "3"
 services:
   api:
     build: ./api
-    hostname: virty-api
     volumes:
-      - ./data/app:/opt/data
-      - ./data/key:/root/.ssh/
+      - api-data:/opt/data
+      - api-key:/root/.ssh/
     environment:
       APP_ROOT: "/opt/app"
       DATA_ROOT: "/opt/data"
-      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@virty-db:5432/mydatabase"
+      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
+  worker:
+    build: ./api
+    volumes:
+      - api-data:/opt/data
+      - api-key:/root/.ssh/
+    environment:
+      APP_ROOT: "/opt/app"
+      DATA_ROOT: "/opt/data"
+      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
+    restart: always
+    command: python3 /opt/app/worker.py
   nginx:
-    hostname: virty-nginx
     build: ./nginx
-    ports:
-      - 0.0.0.0:8765:80
+    ports: 0.0.0.0:8765:80
     restart: always
   next:
-    hostname: virty-next
     build: ./next
     restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: ""
   db:
-    hostname: virty-db
     image: postgres:latest
     volumes:
-      - virty-postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
     restart: unless-stopped
   proxy:
-    hostname: virty-proxy
     build: ./proxy
     restart: always
-    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://virty-api:8000/api/vms/vnc/%s" 5999
+    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
 
 volumes:
-  virty-postgres-data:
+  postgres-data:
+  api-data:
+  api-key:
