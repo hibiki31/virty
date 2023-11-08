@@ -21,8 +21,8 @@ export const VMTable: FC = () => {
   const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
   const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    ['vmsApi.getApiDomainApiVmsGet', user, page, limit, filters],
-    ([, u, p, l, f]) => vmsApi.getApiDomainApiVmsGet(u?.isAdminMode, l, p, f.name, f.nodeName).then((res) => res.data),
+    ['vmsApi.getVms', user, page, limit, filters],
+    ([, u, p, l, f]) => vmsApi.getVms(u?.isAdminMode, l, p, f.name, f.nodeName).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

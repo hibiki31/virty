@@ -38,7 +38,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
 
     setFetcher('nodes', () =>
       nodesApi
-        .getApiNodesApiNodesGet()
+        .getNodes()
         .then((res) => res.data.map((node) => ({ label: `${node.name} - ${node.domain}`, value: node.name })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
@@ -46,7 +46,7 @@ export const AddNetworkDialog: FC<Props> = ({ open, onClose }) => {
   const handleAddNetwork = useCallback(
     ({ node, ...rest }: FormData) => {
       return tasksNetworksApi
-        .postApiStorageApiTasksNetworksPost({ nodeName: node, ...rest })
+        .createNetwork({ nodeName: node, ...rest })
         .then(() => {
           enqueueNotistack('Network added successfully.', { variant: 'success' });
           onClose();

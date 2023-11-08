@@ -17,7 +17,7 @@ type FormData = JTDDataType<typeof formJtd>;
 
 export const getServerSideProps = makeRequireLogoutProps(async () => {
   const initialized = await mixinApi
-    .getVersionApiVersionGet()
+    .getVersion()
     .then((res) => res.data.initialized)
     .catch(() => false);
 
@@ -49,7 +49,7 @@ const Page: NextPage = () => {
 
   const handleSetup = async (data: FormData) => {
     await authApi
-      .apiAuthSetupApiAuthSetupPost(data)
+      .setup(data)
       .then(() => {
         router.push('/login');
       })

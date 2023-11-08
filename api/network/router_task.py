@@ -8,7 +8,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskManager
 from node.models import NodeModel
 from mixin.database import get_db
@@ -20,7 +20,7 @@ app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
 
 
-@app.put("", response_model=List[TaskSelect])
+@app.put("", response_model=List[Task], operation_id="refresh_networks")
 def put_api_networks(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -34,12 +34,12 @@ def put_api_networks(
     return [task.model]
 
 
-@app.post("", response_model=List[TaskSelect])
+@app.post("", response_model=List[Task], operation_id="create_network")
 def post_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkInsert = None
+        body: NetworkForCreate = None
     ):
 
     task = TaskManager(db=db)
@@ -54,13 +54,13 @@ def post_api_storage(
     return [ task.model, task_put_list.model ]
 
 
-@app.post("/{uuid}/ovs", response_model=List[TaskSelect])
+@app.post("/{uuid}/ovs", response_model=List[Task], operation_id="create_network_ovs")
 def post_uuid_ovs(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkOVSAdd = None
+        body: NetworkOVSForCreate = None
     ):
 
     task = TaskManager(db=db)
@@ -74,7 +74,7 @@ def post_uuid_ovs(
     return [task.model, task_put_list.model ]
 
 
-@app.delete("/{uuid}/ovs/{name}", response_model=List[TaskSelect])
+@app.delete("/{uuid}/ovs/{name}", response_model=List[Task], operation_id="delete_network_ovs")
 def post_api_networks_uuid_ovs(
         uuid: str,
         name: str,
@@ -103,7 +103,7 @@ def post_api_networks_uuid_ovs(
     return [ task.model, task_put_list.model ]
 
 
-@app.delete("/{uuid}", response_model=List[TaskSelect])
+@app.delete("/{uuid}", response_model=List[Task], operation_id="delete_network")
 def delete_api_storage(
         uuid: str,
         req: Request,

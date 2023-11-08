@@ -15,8 +15,8 @@ export const ProjectsTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    ['projectApi.getApiProjectsApiProjectsGet', user],
-    ([, user]) => projectApi.getApiProjectsApiProjectsGet(user?.isAdminMode).then((res) => res.data),
+    ['projectApi.getProjects', user],
+    ([, user]) => projectApi.getProjects(user?.isAdminMode).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

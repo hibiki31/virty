@@ -31,7 +31,7 @@ export const NodeKeyDialog: FC<Props> = ({ open, onClose }) => {
     }
     reset();
     nodesApi
-      .getSshKeyPairApiNodesKeyGet()
+      .getSshKeyPair()
       .then((res) => {
         reset(res.data);
       })
@@ -42,7 +42,7 @@ export const NodeKeyDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleUpdateKeys = (data: FormData) => {
     return nodesApi
-      .postSshKeyPairApiNodesKeyPost(data)
+      .updateSshKeyPair(data)
       .then(() => {
         enqueueNotistack('SSH key pair updated', { variant: 'success' });
         onClose();

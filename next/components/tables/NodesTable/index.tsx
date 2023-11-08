@@ -6,18 +6,16 @@ import useSWR from 'swr';
 import { NodeDetailsDialog } from '~/components/dialogs/NodeDetailsDialog';
 import { NextLink } from '~/components/utils/NextLink';
 import { nodesApi } from '~/lib/api';
-import { GetNode, GetNodeRole } from '~/lib/api/generated';
+import { Node, NodeRole } from '~/lib/api/generated';
 import { useNotistack } from '~/lib/utils/notistack';
 import { RoleChip } from './RoleChip';
 
 export const NodesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
-  const { data, error, isValidating } = useSWR(
-    'nodesApi.getApiNodesApiNodesGet',
-    () => nodesApi.getApiNodesApiNodesGet().then((res) => res.data),
-    { revalidateOnFocus: false }
-  );
-  const [selectedNode, setSelectedNode] = useState<GetNode | undefined>(undefined);
+  const { data, error, isValidating } = useSWR('nodesApi.getNodes', () => nodesApi.getNodes().then((res) => res.data), {
+    revalidateOnFocus: false,
+  });
+  const [selectedNode, setSelectedNode] = useState<Node | undefined>(undefined);
 
   if (error) {
     enqueueNotistack('Failed to fetch nodes.', { variant: 'error' });
@@ -82,7 +80,7 @@ export const NodesTable: FC = () => {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {(params.value as GetNodeRole[]).map((role, i) => (
+                  {(params.value as NodeRole[]).map((role, i) => (
                     <RoleChip key={i} role={role} />
                   ))}
                 </Box>

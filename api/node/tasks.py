@@ -20,7 +20,7 @@ logger = setup_logger(__name__)
 @worker_task(key="post.node.root")
 def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body = NodeInsert(**request.body)
+    body = NodeForCreate(**request.body)
     
 
     user = body.user_name
@@ -73,7 +73,7 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
         qemu_version = None,
         libvirt_version = None,
     )
-    a = AssociationNodeToRole(extra_json={})
+    a = AssociationNodeToRoleModel(extra_json={})
     a.role = ssh_role
     row.roles.append(a)
     db.add(row)
@@ -92,8 +92,8 @@ def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     except NoResultFound:
         raise Exception("Node not found")
     
-    db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node_name).delete()
-    db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node_name).delete()
+    db.query(AssociationNodeToRoleModel).filter(AssociationNodeToRoleModel.node_name==node_name).delete()
+    db.query(AssociationPoolsCpuModel).filter(AssociationPoolsCpuModel.node_name==node_name).delete()
     db.commit()
     db.query(NodeModel).filter(NodeModel.name==node_name).delete()
     db.commit()
@@ -103,7 +103,7 @@ def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="patch.node.role")
 def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body = NodeRolePatch(**request.body)
+    body = NodeRoleForUpdate(**request.body)
 
     node_name = body.node_name
     add_role_name = body.role_name
@@ -137,18 +137,18 @@ def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     node.qemu_version = ssh_manager.get_node_qemu_version()
     node.libvirt_version = ssh_manager.get_node_libvirt_version()
 
-    if not db.query(AssociationNodeToRole).filter(
-            AssociationNodeToRole.node_name==node.name, 
-            AssociationNodeToRole.role_name=="libvirt"
+    if not db.query(AssociationNodeToRoleModel).filter(
+            AssociationNodeToRoleModel.node_name==node.name, 
+            AssociationNodeToRoleModel.role_name=="libvirt"
         ).one_or_none():
-        a = AssociationNodeToRole(extra_json={})
+        a = AssociationNodeToRoleModel(extra_json={})
         a.role = role_model
         node.roles.append(a)
 
     db.commit()
 
 
-def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
+def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:NodeRoleForUpdate):
     
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
@@ -161,11 +161,11 @@ def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:Nod
         role_model = NodeRoleModel(name="ovs")
         db.add(role_model)
 
-    if not db.query(AssociationNodeToRole).filter(
-            AssociationNodeToRole.node_name==node.name, 
-            AssociationNodeToRole.role_name=="ovs"
+    if not db.query(AssociationNodeToRoleModel).filter(
+            AssociationNodeToRoleModel.node_name==node.name, 
+            AssociationNodeToRoleModel.role_name=="ovs"
         ).one_or_none():
-        a = AssociationNodeToRole(extra_json=request.extra_json)
+        a = AssociationNodeToRoleModel(extra_json=request.extra_json)
         a.role = role_model
         node.roles.append(a)
 

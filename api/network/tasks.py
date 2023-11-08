@@ -73,7 +73,7 @@ def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
 @worker_task(key="post.network.root")
 def post_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body: NetworkInsert = NetworkInsert(**request.body)
+    body: NetworkForCreate = NetworkForCreate(**request.body)
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
@@ -128,7 +128,7 @@ def delete_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="post.network.ovs")
 def post_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body: NetworkOVSAdd = NetworkOVSAdd(**request.body)
+    body: NetworkOVSForCreate = NetworkOVSForCreate(**request.body)
     network_uuid = request.path_param["uuid"]
 
     try:

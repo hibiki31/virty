@@ -13,9 +13,9 @@ from mixin.database import get_db
 from settings import SECRET_KEY, API_VERSION
 
 from .schemas import *
-from user.models import UserModel, UserScope
+from user.models import UserModel, UserScopeModel
 from task.functions import TaskManager
-from project.schemas import PostProject
+from project.schemas import ProjectForCreate
 
 
 logger = setup_logger(__name__)
@@ -146,9 +146,9 @@ def get_current_user(
     return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-@app.post("/setup", tags=["auth"])
+@app.post("/setup", tags=["auth"], operation_id="setup")
 def api_auth_setup(
-        model: Setup, 
+        model: SetupRequest, 
         db: Session = Depends(get_db)
     ):
     if model.username == "":
@@ -172,15 +172,15 @@ def api_auth_setup(
 
     db.add(user_model)
 
-    db.add(UserScope(user_id=user_model.username,name="admin"))
-    db.add(UserScope(user_id=user_model.username,name="user"))
+    db.add(UserScopeModel(user_id=user_model.username,name="admin"))
+    db.add(UserScopeModel(user_id=user_model.username,name="user"))
 
     db.commit()
 
     return model
 
 
-@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
+@app.post("", response_model=TokenRFC6749Response, tags=["auth"], operation_id="login")
 def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
@@ -207,7 +207,7 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.get("/validate", tags=["auth"], response_model=AuthValidate)
+@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse, operation_id="validate_token")
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):

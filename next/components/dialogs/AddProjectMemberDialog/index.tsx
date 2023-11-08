@@ -4,14 +4,14 @@ import { FC, useCallback, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { JtdForm } from '~/components/JtdForm';
 import { usersApi } from '~/lib/api';
-import { ProjectSelect } from '~/lib/api/generated';
+import { Project } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useChoicesFetchers } from '~/store/formState';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  project: ProjectSelect;
+  project: Project;
   onClose: () => void;
 };
 
@@ -36,9 +36,7 @@ export const AddProjectMemberDialog: FC<Props> = ({ open, project, onClose }) =>
     resetFetchers();
 
     setFetcher('users', () =>
-      usersApi
-        .getApiUsersApiUsersGet()
-        .then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
+      usersApi.getUsers().then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 

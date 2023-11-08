@@ -34,7 +34,7 @@ export const AddPortDialog: FC<Props> = ({ open, networkUuid, onClose }) => {
 
   const handleAddPort = (data: FormData) => {
     return tasksNetworksApi
-      .postUuidOvsApiTasksNetworksUuidOvsPost(networkUuid, data)
+      .createNetworkOvs(networkUuid, data)
       .then(() => {
         enqueueNotistack('Port added successfully.', { variant: 'success' });
         onClose();

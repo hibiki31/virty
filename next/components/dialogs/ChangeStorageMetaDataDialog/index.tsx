@@ -4,7 +4,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useSWRConfig } from 'swr';
 import { JtdForm } from '~/components/JtdForm';
 import { storagesApi } from '~/lib/api';
-import { StorageMetadataSelect } from '~/lib/api/generated';
+import { StorageMetadata } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useNotistack } from '~/lib/utils/notistack';
 import { BaseDialog } from '../BaseDialog';
@@ -12,7 +12,7 @@ import { BaseDialog } from '../BaseDialog';
 type Props = {
   open: boolean;
   uuid: string;
-  metadata?: StorageMetadataSelect;
+  metadata?: StorageMetadata;
   onClose: () => void;
 };
 
@@ -39,7 +39,7 @@ export const ChangeStorageMetaDataDialog: FC<Props> = ({ open, uuid, metadata, o
 
   const handleChangeMetaData = (data: FormData) => {
     return storagesApi
-      .postApiStorageApiStoragesPatch({ uuid, ...data })
+      .updateStorageMetadata({ uuid, ...data })
       .then(() => {
         enqueueNotistack('Storage metadata changed.', { variant: 'success' });
         mutate(['storagesApi.getApiStoragesApiStoragesGet', uuid]);

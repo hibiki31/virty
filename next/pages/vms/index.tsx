@@ -18,7 +18,7 @@ const VMsPage: NextPage = () => {
 
   const reloadVMs = () => {
     tasksVmsApi
-      .publishTaskToUpdateVmListApiTasksVmsPut()
+      .refreshVms()
       .then(() => enqueueNotistack('VM list is being updated.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to update VM list.', { variant: 'error' }));
   };

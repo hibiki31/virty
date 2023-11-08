@@ -4,9 +4,9 @@ from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
 
-from network.schemas import GetNetworkPool
-from storage.schemas import GetStoragePool
-from flavor.schemas import GetFlavor
+from network.schemas import NetworkPool
+from storage.schemas import StoragePool
+from flavor.schemas import Flavor
 
 
 class PostTicket(CamelModel):
@@ -24,9 +24,9 @@ class PostTicket(CamelModel):
 
 class GetTicket(PostTicket):
     id: int
-    network_pools: List[GetNetworkPool]
-    storage_pools: List[GetStoragePool]
-    flavors: List[GetFlavor]
+    network_pools: List[NetworkPool]
+    storage_pools: List[StoragePool]
+    flavors: List[Flavor]
     class Config:
         orm_mode  =  True
 

@@ -9,11 +9,9 @@ import { GroupChip } from './GroupChip';
 
 export const UsersTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
-  const { data, error, isValidating } = useSWR(
-    'usersApi.getApiUsersApiUsersGet',
-    () => usersApi.getApiUsersApiUsersGet().then((res) => res.data),
-    { revalidateOnFocus: false }
-  );
+  const { data, error, isValidating } = useSWR('usersApi.getUsers', () => usersApi.getUsers().then((res) => res.data), {
+    revalidateOnFocus: false,
+  });
 
   if (error) {
     enqueueNotistack('Failed to fetch users.', { variant: 'error' });

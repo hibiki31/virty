@@ -36,10 +36,10 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    ['tasksApi.getTasksApiTasksUuidGet', id],
+    ['tasksApi.getTask', id],
     ([, id]) =>
       tasksApi
-        .getTasksApiTasksUuidGet(id)
+        .getTask(id)
         .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {

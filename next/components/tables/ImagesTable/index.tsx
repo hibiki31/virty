@@ -14,15 +14,10 @@ export const ImagesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
   const { data, error, isValidating } = useSWR(
-    ['imagesApi.getApiImagesApiImagesGet', filters],
+    ['imagesApi.getImages', filters],
     ([_, f]) =>
       imagesApi
-        .getApiImagesApiImagesGet(
-          f.node || undefined,
-          f.poolUuid || undefined,
-          f.name || undefined,
-          f.rool || undefined
-        )
+        .getImages(f.node || undefined, f.poolUuid || undefined, f.name || undefined, f.rool || undefined)
         .then((res) => res.data),
     { revalidateOnFocus: false }
   );
@@ -31,19 +26,16 @@ export const ImagesTable: FC = () => {
 
   const choicesFetchers = useMemo(
     () => ({
-      nodes: () =>
-        nodesApi
-          .getApiNodesApiNodesGet()
-          .then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
+      nodes: () => nodesApi.getNodes().then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
       pools: async () => {
         const results = await Promise.all([
-          storagesApi.getApiStoragesApiStoragesGet().then((res) =>
+          storagesApi.getStorages().then((res) =>
             res.data.map((storage) => ({
               label: storage.name,
               value: storage.uuid,
             }))
           ),
-          storagesApi.getApiStoragesPoolsApiStoragesPoolsGet().then((res) =>
+          storagesApi.getStoragePools().then((res) =>
             res.data.map((storage) => ({
               label: storage.name,
               value: storage.id,

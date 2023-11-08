@@ -21,7 +21,7 @@ class Version(CamelModel):
     version: str
 
 
-@app.get("/version", response_model=Version)
+@app.get("/version", response_model=Version, operation_id="get_version")
 def get_version(
         db: Session = Depends(get_db)
     ):

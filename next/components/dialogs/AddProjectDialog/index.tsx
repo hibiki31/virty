@@ -36,15 +36,13 @@ export const AddProjectDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('users', () =>
-      usersApi
-        .getApiUsersApiUsersGet()
-        .then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
+      usersApi.getUsers().then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 
   const handleAddProject = (data: FormData) => {
     return projectApi
-      .postApiProjectsApiProjectsPost(data)
+      .createProject(data)
       .then(() => {
         enqueueNotistack('Project added successfully.', { variant: 'success' });
         onClose();

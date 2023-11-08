@@ -2,7 +2,7 @@ import { JTDDataType } from 'ajv/dist/core';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { imagesApi, tasksVmsApi } from '~/lib/api';
-import { GetDomainDrives } from '~/lib/api/generated';
+import { DomainDrive } from '~/lib/api/generated';
 import { generateProperty } from '~/lib/jtd';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { useChoicesFetchers } from '~/store/formState';
@@ -15,7 +15,7 @@ type Props = {
   anchorEl: HTMLElement | null;
   onClose: () => void;
   vmUuid: string;
-  storage?: GetDomainDrives;
+  storage?: DomainDrive;
   nodeName: string;
 };
 
@@ -44,7 +44,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
     resetFetchers();
     setFetcher('images', () =>
       imagesApi
-        .getApiImagesApiImagesGet(nodeName, undefined, undefined, 'iso')
+        .getImages(nodeName, undefined, undefined, 'iso')
         .then((res) => res.data.map((image) => ({ value: image.path, label: image.name })))
     );
   }, [changeImageOpen, reset, resetFetchers, setValue, setFetcher, nodeName]);
@@ -59,7 +59,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
     }
 
     return tasksVmsApi
-      .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target })
+      .controlVmCdrom(vmUuid, { target: storage?.target })
       .then(() => {
         enqueueNotistack('CD-ROM unmounted successfully.', { variant: 'success' });
         onClose();
@@ -71,7 +71,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
 
   const handleChangeImage = async (data: ChangeImageForm) => {
     return tasksVmsApi
-      .patchApiTasksVmsUuidCdromApiTasksVmsUuidCdromPatch(vmUuid, { target: storage?.target, ...data })
+      .controlVmCdrom(vmUuid, { target: storage?.target, ...data })
       .then(() => {
         enqueueNotistack('CD-ROM changed successfully.', { variant: 'success' });
         setChangeImageOpen(false);

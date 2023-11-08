@@ -17,7 +17,7 @@ app = APIRouter(
 )
 
 
-@app.get("", response_class=PlainTextResponse)
+@app.get("", response_class=PlainTextResponse, operation_id="get_metrics")
 def exporter_get(
         db: Session = Depends(get_db)
     ):

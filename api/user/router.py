@@ -9,7 +9,7 @@ from task.functions import TaskManager
 
 from .models import *
 from .schemas import *
-from project.schemas import PostProject
+from project.schemas import ProjectForCreate
 from auth.router import CurrentUser, get_current_user, pwd_context
 
 
@@ -20,14 +20,14 @@ app = APIRouter(
 )
 
 
-@app.get("/users/me", response_model=TokenData)
+@app.get("/users/me", response_model=TokenData, operation_id="get_current_user")
 def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     return current_user
 
 
-@app.post("/users")
+@app.post("/users", operation_id="create_user")
 def post_api_users(
-        request: UserInsert,
+        request: UserForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -50,11 +50,11 @@ def post_api_users(
     )
 
     db.add(user_model)
-    db.add(UserScope(user_id=user_model.id,name="user"))
+    db.add(UserScopeModel(user_id=user_model.id,name="user"))
 
     db.commit()
 
-    # project_reqeust = PostProject(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
+    # project_reqeust = ProjectForCreate(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
     # task = TaskManager(db=db, bg=bg)
     # task.select('post', 'project', 'root')
     # task.commit(user=current_user, request=project_reqeust)
@@ -62,7 +62,7 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users", response_model=List[GetUsers])
+@app.get("/users", response_model=List[User], operation_id="get_users")
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),

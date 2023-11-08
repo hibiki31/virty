@@ -1,10 +1,10 @@
 import { Chip, SvgIconProps } from '@mui/material';
 import { Connection, Lan, Penguin } from 'mdi-material-ui';
 import { FC } from 'react';
-import { GetNodeRole } from '~/lib/api/generated';
+import { NodeRole } from '~/lib/api/generated';
 
 type Props = {
-  role: GetNodeRole;
+  role: NodeRole;
 };
 
 export const RoleChip: FC<Props> = ({ role }) => {
