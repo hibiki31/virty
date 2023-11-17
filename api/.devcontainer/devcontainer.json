@@ -1,6 +1,6 @@
 {
 	"name": "virty-api",
-	"dockerComposeFile": "docker-compose.yml",
+	"dockerComposeFile": "compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces/api/",
 	"postCreateCommand": "git config --global --add safe.directory /workspaces",
