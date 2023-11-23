@@ -41,7 +41,7 @@ def get_api_projects(
         current_user.verify_scope(['admin'])
         rows = query.all()
     else:
-        rows = query.filter(ProjectModel.users.any(id=current_user.id)).all()
+        rows = query.filter(ProjectModel.users.any(username=current_user.id)).all()
     
     for row in rows:
         res.append({

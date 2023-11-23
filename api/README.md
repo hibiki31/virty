@@ -1,5 +1,11 @@
+# API DOC
 
-## Test
+## テスト用コマンドの登録
+
+```
+source dev_completion.sh 
+
+```
 
 
 

@@ -25,30 +25,6 @@ class Color:
     REVERCE   = '\033[07m'
 
 
-if not httpx.get(f'{BASE_URL}/api/version').json()["initialized"]:
-    req_data = {
-        "username": str(env["username"]),
-        "password": str(env["password"])
-    }
-    print(req_data)
-    print(httpx.post(f'{BASE_URL}/api/auth/setup', json=req_data))
-
-req_data = {
-    "username": env["username"],
-    "password": env["password"]
-}
-
-
-resp = httpx.post(f'{BASE_URL}/api/auth', data=req_data)
-
-
-ACCESS_TOKEN = resp.json()["access_token"]
-HEADERS = {
-    'Authorization': f'Bearer {ACCESS_TOKEN}',
-    'Content-Type': 'application/json'    
-}
-
-
 def wait_tasks(resp):
     for task in resp.json():
         uuid = task["uuid"]
@@ -83,3 +59,36 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
     elif resp.status_code != 200:
         print(resp.json())
         raise Exception
+
+
+def print_test_start(no, msg):
+    print(f"++++++ {no} {msg} ++++++")
+    
+    
+def print_test_end():
+    print(f"+++++++++++++++++++++++++++++++++++++++++++++++++")
+    print("")
+    
+    
+if not httpx.get(f'{BASE_URL}/api/version').json()["initialized"]:
+    req_data = {
+        "username": str(env["username"]),
+        "password": str(env["password"])
+    }
+    resp = httpx.post(f'{BASE_URL}/api/auth/setup', json=req_data)
+    print_resp(resp=resp)
+
+req_data = {
+    "username": env["username"],
+    "password": env["password"]
+}
+
+
+resp = httpx.post(f'{BASE_URL}/api/auth', data=req_data)
+
+
+ACCESS_TOKEN = resp.json()["access_token"]
+HEADERS = {
+    'Authorization': f'Bearer {ACCESS_TOKEN}',
+    'Content-Type': 'application/json'    
+}

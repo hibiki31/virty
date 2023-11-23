@@ -1,5 +1,5 @@
 function vc() {
-  python3 tests/test.py
+  python3 tests/test_command.py $@
 }
 
 ### 補完関数。
