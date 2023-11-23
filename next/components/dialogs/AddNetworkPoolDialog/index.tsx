@@ -35,7 +35,7 @@ export const AddNetworkPoolDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddNetworkPool = (data: FormData) => {
     return networkApi
-      .postApiNetworksPoolsApiNetworksPoolsPost(data)
+      .createNetworkPool(data)
       .then(() => {
         enqueueNotistack('Network pool added.', { variant: 'success' });
         mutate('networkApi.getApiNetworksPoolsApiNetworksPoolsGet');

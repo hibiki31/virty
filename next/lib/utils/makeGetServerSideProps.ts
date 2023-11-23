@@ -10,7 +10,7 @@ export const makeRequireLoginProps =
   async (ctx) => {
     const { token } = nookies.get(ctx);
     const isValid = await authApi
-      .readAuthValidateApiAuthValidateGet({
+      .validateToken({
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -44,7 +44,7 @@ export const makeRequireLogoutProps =
   async (ctx) => {
     const { token } = nookies.get(ctx);
     const isValid = await authApi
-      .readAuthValidateApiAuthValidateGet({
+      .validateToken({
         headers: {
           Authorization: `Bearer ${token}`,
         },

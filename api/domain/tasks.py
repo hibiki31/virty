@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from task.functions import TaskManager
 from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
 from node.models import NodeModel
-from storage.models import AssociationStoragePool, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
+from storage.models import AssociationStoragePoolModel, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
 
 from module import virtlib
 from module import xmllib
@@ -83,7 +83,7 @@ def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
 
 
 def post_vm_ticketd(db:Session, task: TaskModel):
-    req = PostDomainTicket(**loads(task.request))
+    req = DomainTicketForCreate(**loads(task.request))
     issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
 
     # メモリのアサインが少ない順で行く
@@ -114,7 +114,7 @@ def post_vm_ticketd(db:Session, task: TaskModel):
             StoragePoolModel.id==req.storage_pool_id,
             StorageModel.node_name==node.node_name
         ).outerjoin(
-            AssociationStoragePool
+            AssociationStoragePoolModel
         ).outerjoin(
             StoragePoolModel
         ).first()
@@ -166,7 +166,7 @@ def post_vm_ticketd(db:Session, task: TaskModel):
 
         ## 情報がそろった
 
-        disk = DomainInsertDisk(
+        disk = DomainForCreateDisk(
             type="copy",
             save_pool_uuid=storage_pool.uuid,
             original_pool_uuid=flavor_image_model.storage_uuid,
@@ -178,14 +178,14 @@ def post_vm_ticketd(db:Session, task: TaskModel):
 
         for i in req.interfaces:
             if  isinstance(network_models[i.id], NetworkModel):
-                interfaces.append(DomainInsertInterface(
+                interfaces.append(DomainForCreateInterface(
                 type="network",
                 mac=i.mac,
                 network_name=network_models[i.id].name,
                 port=None
                 ))
             elif isinstance(network_models[i.id], NetworkPortgroupModel):
-                interfaces.append(DomainInsertInterface(
+                interfaces.append(DomainForCreateInterface(
                 type="network",
                 mac=i.mac,
                 network_name=network_models[i.id].network.name,
@@ -194,7 +194,7 @@ def post_vm_ticketd(db:Session, task: TaskModel):
             else:
                 raise Exception("Network class not found")
 
-        res = DomainInsert(
+        res = DomainForCreate(
             type="ticket",
             name=req.name,
             node_name=node.node_name,
@@ -216,7 +216,7 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     if request.body["type"] == "ticket":
         req = post_vm_ticketd(db=db, task=task)
     else:
-        req = DomainInsert(**request.body)
+        req = DomainForCreate(**request.body)
 
     # データベースから情報とってきて確認も行う
     domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
@@ -248,7 +248,7 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     for interface in req.interface:
         net: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==interface.network_uuid).one()
 
-        interface: DomainInsertInterface
+        interface: DomainForCreateInterface
         editor.domain_interface_add(
             network_name=net.name, 
             mac_address=None, 
@@ -260,7 +260,7 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     # ブロックデバイス
     for device, device_name in zip(req.disks, img_device_names):
         # 型定義
-        device: DomainInsertDisk
+        device: DomainForCreateDisk
         # 作成先のプールを参照
         try:
             new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.save_pool_uuid).one()
@@ -369,7 +369,7 @@ def delete_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="patch.vm.power")
 def patch_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     uuid = request.path_param["uuid"]
-    body: PatchDomainPower = PatchDomainPower(**request.body)
+    body: PowerStatusForUpdateDomain = PowerStatusForUpdateDomain(**request.body)
 
     try:
         domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
@@ -393,7 +393,7 @@ def patch_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="patch.vm.cdrom")
 def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
     uuid = request.path_param["uuid"]
-    body: PatchDominCdrom = PatchDominCdrom(**request.body)
+    body: CdromForUpdateDomain = CdromForUpdateDomain(**request.body)
 
     try:
         domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
@@ -416,7 +416,7 @@ def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="patch.vm.network")
 def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body: DomainNetworkChange = DomainNetworkChange(**request.body)
+    body: NetworkForUpdateDomain = NetworkForUpdateDomain(**request.body)
     uuid = request.path_param["uuid"]
 
 

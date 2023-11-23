@@ -5,7 +5,7 @@ import { useNotistack } from '~/lib/utils/notistack';
 import { networkApi } from '~/lib/api';
 import useSWR from 'swr';
 import { PortChip } from './PortChip';
-import { GetNEtworkPoolNetworksNetwork, GetNetworkPoolPort } from '~/lib/api/generated';
+import { NetworkForNetworkPool, NetworkPoolPort } from '~/lib/api/generated';
 import { NetworkChip } from './NetworkChip';
 import { Delete } from 'mdi-material-ui';
 import { useConfirmDialog } from '~/store/confirmDialogState';
@@ -14,8 +14,8 @@ export const NetworkPoolsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { openConfirmDialog } = useConfirmDialog();
   const { data, error, isValidating } = useSWR(
-    'networkApi.getApiNetworksPoolsApiNetworksPoolsGet',
-    () => networkApi.getApiNetworksPoolsApiNetworksPoolsGet().then((res) => res.data),
+    'networkApi.getNetworkPools',
+    () => networkApi.getNetworkPools().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -64,7 +64,7 @@ export const NetworkPoolsTable: FC = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {(params.value as GetNEtworkPoolNetworksNetwork[]).map((network) => (
+                {(params.value as NetworkForNetworkPool[]).map((network) => (
                   <NetworkChip key={network.uuid} network={network} />
                 ))}
               </Box>
@@ -84,7 +84,7 @@ export const NetworkPoolsTable: FC = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {(params.value as GetNetworkPoolPort[]).map((port, i) => (
+                {(params.value as NetworkPoolPort[]).map((port, i) => (
                   <PortChip key={i} port={port} />
                 ))}
               </Box>

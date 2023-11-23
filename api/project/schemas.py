@@ -12,20 +12,20 @@ class ProjectBase(CamelModel):
     class Config:
         orm_mode = True
 
-class PostProject(CamelModel):
+class ProjectForCreate(CamelModel):
     project_name: str
     user_ids: List[str]
 
 
-class DeleteProject(CamelModel):
+class ProjectForDelete(CamelModel):
     id: str
 
 
-class ProjectPatch(CamelModel):
+class ProjectForUpdate(CamelModel):
     project_id: str
     user_id: str
 
-class ProjectSelect(ProjectBase):
+class Project(ProjectBase):
     core: int
     memory_g: int
     storage_capacity_g: int

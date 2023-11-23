@@ -3,19 +3,19 @@ import {
   AuthApi,
   FlavorsApi,
   ImagesApi,
+  ImagesTaskApi,
   MixinApi,
-  NetworkApi,
-  NetworkTaskApi,
-  NodeApi,
-  NodeTaskApi,
-  ProjectApi,
+  NetworksApi,
+  NetworksTaskApi,
+  NodesApi,
+  NodesTaskApi,
+  ProjectsApi,
   StoragesApi,
+  StoragesTaskApi,
   TasksApi,
-  TasksImagesApi,
-  TasksStoragesApi,
   UsersApi,
-  VmApi,
-  VmTaskApi,
+  VmsApi,
+  VmsTaskApi,
 } from './generated/api';
 import { parseCookies } from 'nookies';
 
@@ -32,16 +32,16 @@ const config = new Configuration({
 export const mixinApi = new MixinApi(config);
 export const authApi = new AuthApi(config);
 export const usersApi = new UsersApi(config);
-export const nodesApi = new NodeApi(config);
-export const tasksNodesApi = new NodeTaskApi(config);
+export const nodesApi = new NodesApi(config);
+export const tasksNodesApi = new NodesTaskApi(config);
 export const tasksApi = new TasksApi(config);
-export const vmsApi = new VmApi(config);
-export const tasksVmsApi = new VmTaskApi(config);
+export const vmsApi = new VmsApi(config);
+export const tasksVmsApi = new VmsTaskApi(config);
 export const storagesApi = new StoragesApi(config);
 export const imagesApi = new ImagesApi(config);
-export const tasksImagesApi = new TasksImagesApi(config);
-export const tasksStoragesApi = new TasksStoragesApi(config);
-export const networkApi = new NetworkApi(config);
-export const tasksNetworksApi = new NetworkTaskApi(config);
-export const projectApi = new ProjectApi(config);
+export const tasksImagesApi = new ImagesTaskApi(config);
+export const tasksStoragesApi = new StoragesTaskApi(config);
+export const networkApi = new NetworksApi(config);
+export const tasksNetworksApi = new NetworksTaskApi(config);
+export const projectApi = new ProjectsApi(config);
 export const flavorsApi = new FlavorsApi(config);

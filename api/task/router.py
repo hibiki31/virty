@@ -22,7 +22,7 @@ app = APIRouter(
 )
 
 
-@app.get("/tasks", response_model=TaskPagesnation)
+@app.get("/tasks", response_model=TaskPagesnation, operation_id="get_tasks")
 def get_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -59,7 +59,7 @@ def get_tasks(
     return { "count": count, "data": task }
 
 
-@app.delete("/tasks/", response_model=List[TaskSelect])
+@app.delete("/tasks/", response_model=List[Task], operation_id="delete_tasks")
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -72,7 +72,7 @@ def delete_tasks(
     return model
 
 
-@app.get("/tasks/incomplete", response_model=TaskIncomplete)
+@app.get("/tasks/incomplete", response_model=TaskIncomplete, operation_id="get_incomplete_tasks")
 def get_tasks_incomplete(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -106,7 +106,7 @@ def get_tasks_incomplete(
     return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
 
 
-@app.get("/tasks/{uuid}", response_model=TaskSelect)
+@app.get("/tasks/{uuid}", response_model=Task, operation_id="get_task")
 def get_tasks(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),

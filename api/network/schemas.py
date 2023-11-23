@@ -32,7 +32,7 @@ class PaseNetwork(CamelModel):
         orm_mode  =  True
 
 
-class GetNetwork(PaseNetwork):
+class Network(PaseNetwork):
     node_name: str
     description: str = None
     update_token: str = None
@@ -40,7 +40,7 @@ class GetNetwork(PaseNetwork):
         orm_mode  =  True
 
 
-class NetworkInsert(CamelModel):
+class NetworkForCreate(CamelModel):
     name: str
     node_name: str
     type: Literal['bridge', 'ovs'] = Field( description='brdige or ovs')
@@ -48,10 +48,10 @@ class NetworkInsert(CamelModel):
     class Config:
         orm_mode  =  True
 
-class NetworkDelete(CamelModel):
+class NetworkForDelete(CamelModel):
     uuid: str
 
-class NetworkOVSAdd(CamelModel):
+class NetworkOVSForCreate(CamelModel):
     default: bool
     name: str
     vlan_id: int = None
@@ -59,7 +59,7 @@ class NetworkOVSAdd(CamelModel):
         orm_mode  =  True
 
 
-class NetworkProvider(CamelModel):
+class NetworkProviderForCreate(CamelModel):
     name: str = None
     dns_domain: str = None
     network_address: str = None
@@ -74,24 +74,24 @@ class NetworkProvider(CamelModel):
         orm_mode  =  True
 
 
-class NetworkOVSDelete(CamelModel):
+class NetworkOVSForDelete(CamelModel):
     uuid: str
     name: str
     class Config:
         orm_mode  =  True
 
 
-class PostNetworkPool(CamelModel):
+class NetworkPoolForCreate(CamelModel):
     name: str
 
 
-class PatchNetworkPool(CamelModel):
+class NetworkPoolForUpdate(CamelModel):
     pool_id: int
     network_uuid: str
     port_name:str = None
 
 
-class GetNEtworkPoolNetworksNetwork(CamelModel):
+class NetworkForNetworkPool(CamelModel):
     name: str
     uuid: str
     node_name: str
@@ -101,19 +101,19 @@ class GetNEtworkPoolNetworksNetwork(CamelModel):
         orm_mode  =  True
 
 
-class GetNetworkPoolPort(CamelModel):
+class NetworkPoolPort(CamelModel):
     name: str= None
     vlan_id: int = None
-    network: GetNEtworkPoolNetworksNetwork
+    network: NetworkForNetworkPool
     class Config:
         orm_mode  =  True
 
 
-class GetNetworkPool(CamelModel):
+class NetworkPool(CamelModel):
     id: int = None
     name: str = None
-    networks: List[GetNEtworkPoolNetworksNetwork] = None
-    ports: List[GetNetworkPoolPort] = None
+    networks: List[NetworkForNetworkPool] = None
+    ports: List[NetworkPoolPort] = None
     class Config:
         orm_mode  =  True
 

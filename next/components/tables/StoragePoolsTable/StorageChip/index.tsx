@@ -1,9 +1,9 @@
 import { Chip } from '@mui/material';
 import { FC } from 'react';
-import { GetStoragePoolStorages } from '~/lib/api/generated';
+import { StorageContainerForStoragePool } from '~/lib/api/generated';
 
 type Props = {
-  storage: GetStoragePoolStorages;
+  storage: StorageContainerForStoragePool;
 };
 
 export const StorageChip: FC<Props> = ({ storage }) => {

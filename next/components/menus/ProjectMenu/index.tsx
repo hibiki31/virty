@@ -1,13 +1,13 @@
 import { FC } from 'react';
 import { AddProjectMemberDialog } from '~/components/dialogs/AddProjectMemberDialog';
-import { ProjectSelect } from '~/lib/api/generated';
+import { Project } from '~/lib/api/generated';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { BaseMenu } from '../BaseMenu';
 
 type Props = {
   open?: boolean;
   anchorEl: HTMLElement | null;
-  project: ProjectSelect;
+  project: Project;
   onClose: () => void;
 };
 

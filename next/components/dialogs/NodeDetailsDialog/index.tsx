@@ -4,14 +4,14 @@ import { FC, useCallback } from 'react';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { BaseTable } from '~/components/tables/BaseTable';
 import { RoleChip } from '~/components/tables/NodesTable/RoleChip';
-import { GetNode } from '~/lib/api/generated';
+import { Node } from '~/lib/api/generated';
 import { useConfirmDialog } from '~/store/confirmDialogState';
 import { AssignRoleDialog } from '../AssignRoleDialog';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  node?: GetNode;
+  node?: Node;
   onClose: () => void;
 };
 

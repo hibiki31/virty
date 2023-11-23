@@ -4,14 +4,14 @@ import { FC } from 'react';
 import { useNotistack } from '~/lib/utils/notistack';
 import { storagesApi } from '~/lib/api';
 import useSWR from 'swr';
-import { GetStoragePoolStorages } from '~/lib/api/generated';
+import { StorageContainerForStoragePool } from '~/lib/api/generated';
 import { StorageChip } from './StorageChip';
 
 export const StoragePoolsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'storagesApi.getApiStoragesPoolsApiStoragesPoolsGet',
-    () => storagesApi.getApiStoragesPoolsApiStoragesPoolsGet().then((res) => res.data),
+    'storagesApi.getStoragePools',
+    () => storagesApi.getStoragePools().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -46,7 +46,7 @@ export const StoragePoolsTable: FC = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {(params.value as GetStoragePoolStorages[]).map((storage, i) => (
+                {(params.value as StorageContainerForStoragePool[]).map((storage, i) => (
                   <StorageChip key={i} storage={storage} />
                 ))}
               </Box>

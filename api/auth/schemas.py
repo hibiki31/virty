@@ -8,7 +8,7 @@ class TokenRFC6749Response(BaseModel):
     token_type: str
 
 
-class AuthValidate(TokenRFC6749Response):
+class AuthValidateResponse(TokenRFC6749Response):
     username: str
 
 
@@ -18,7 +18,7 @@ class TokenData(CamelModel):
     role: List[str] = []
     projects: List[str] = []
 
-class Setup(CamelModel):
+class SetupRequest(CamelModel):
     username: str
     password: str
     class Config:

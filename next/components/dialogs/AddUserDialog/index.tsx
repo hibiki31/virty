@@ -33,7 +33,7 @@ export const AddUserDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddUser = (data: FormData) => {
     return usersApi
-      .postApiUsersApiUsersPost(data)
+      .createUser(data)
       .then(() => {
         enqueueNotistack('User added successfully.', { variant: 'success' });
         onClose();

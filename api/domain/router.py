@@ -8,7 +8,7 @@ from .models import *
 from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-from task.schemas import TaskSelect, TaskRequest
+from task.schemas import Task, TaskRequest
 from task.functions import TaskManager
 from user.models import UserModel
 from project.models import ProjectModel
@@ -28,7 +28,7 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.get("/api/vms",response_model=GetDomainPagenation)
+@app.get("/api/vms",response_model=DomainPagenation, operation_id="get_vms")
 def get_api_domain(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -38,7 +38,7 @@ def get_api_domain(
         name_like: str = None,
         node_name_like: str = None
     ):
-    
+
     query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)
 
     if admin:
@@ -52,7 +52,7 @@ def get_api_domain(
         query = query.filter(DomainModel.name.like(f'%{name_like}%'))
     if node_name_like:
         query = query.filter(DomainModel.node_name.like(f'%{node_name_like}%'))
-    
+
     count = query.count()
 
     query = query.order_by(desc(DomainModel.name))
@@ -61,7 +61,7 @@ def get_api_domain(
     return {"count": count, "data": vms}
 
 
-@app.get("/api/vms/{uuid}",response_model=GetDomainDetail)
+@app.get("/api/vms/{uuid}",response_model=DomainDetail, operation_id="get_vm")
 def get_api_domain_uuid(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -75,7 +75,7 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.get("/api/vms/vnc/{token}")
+@app.get("/api/vms/vnc/{token}", operation_id="get_vnc_address")
 def get_api_domain(
         token: str,
         db: Session = Depends(get_db),

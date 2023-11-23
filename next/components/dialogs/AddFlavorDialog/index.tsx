@@ -35,7 +35,7 @@ export const AddFlavorDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddFlavor = (data: FormData) => {
     return flavorsApi
-      .postApiFlavorsApiFlavorsPost(data)
+      .createFlavor(data)
       .then(() => {
         enqueueNotistack('Flavor added.', { variant: 'success' });
         mutate('flavorsApi.getApiFlavorsApiFlavorsGet');

@@ -37,10 +37,10 @@ export const getServerSideProps = makeRequireLoginProps(async ({ params }) => {
 
 const Page: NextPage<Props> = ({ id }) => {
   const { data, error, isValidating } = useSWR(
-    ['networkApi.getApiNetworksUuidApiNetworksUuidGet', id],
+    ['networkApi.getNetwork', id],
     ([, id]) =>
       networkApi
-        .getApiNetworksUuidApiNetworksUuidGet(id)
+        .getNetwork(id)
         .then((res) => res.data)
         .catch((err) => {
           if (err.response.status === 404) {
@@ -80,7 +80,7 @@ const Page: NextPage<Props> = ({ id }) => {
     }
 
     return tasksNetworksApi
-      .deleteApiStorageApiTasksNetworksUuidDelete(id)
+      .deleteNetwork(id)
       .then(() => enqueueNotistack('Network is deleting.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to delete network.', { variant: 'error' }));
   };

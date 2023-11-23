@@ -10,7 +10,7 @@ from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
 from task.models import TaskModel
-from task.schemas import TaskSelect
+from task.schemas import Task
 from task.functions import TaskManager
 from mixin.database import get_db
 from mixin.log import setup_logger
@@ -23,12 +23,12 @@ app = APIRouter(prefix="/api/tasks/nodes", tags=["nodes-task"])
 logger = setup_logger(__name__)
 
 
-@app.post("", response_model=List[TaskSelect])
+@app.post("", response_model=List[Task], operation_id="create_node")
 def post_tasks_nodes(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NodeInsert = None
+        body: NodeForCreate = None
     ):
     
     task = TaskManager(db=db)
@@ -36,7 +36,7 @@ def post_tasks_nodes(
     task.commit(user=cu, req=req, body=body)
 
     if body.libvirt_role:
-        body_libvirt = NodeRolePatch(node_name=body.name, role_name="libvirt")
+        body_libvirt = NodeRoleForUpdate(node_name=body.name, role_name="libvirt")
         task_libvirt = TaskManager(db=db)
         task_libvirt.select(method="patch", resource="node", object="role")
         task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
@@ -47,7 +47,7 @@ def post_tasks_nodes(
     return [task.model]
 
 
-@app.delete("/{name}", response_model=List[TaskSelect])
+@app.delete("/{name}", response_model=List[Task], operation_id="delete_node")
 def delete_tasks_nodes_name(
         name: str,
         req: Request,
@@ -62,15 +62,15 @@ def delete_tasks_nodes_name(
     return [task.model]
 
 
-@app.patch("/roles", response_model=List[TaskSelect])
+@app.patch("/roles", response_model=Task, operation_id="update_node_role")
 def patch_api_node_role(
+        body: NodeRoleForUpdate,
         req: Request,
-        body: NodeRolePatch,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
     ):
     task = TaskManager(db=db)
     task.select('patch', 'node', 'role')
-    task.commit(user=cu, req=req, body=body)
+    task.commit(user=current_user, req=req, body=body)
     
     return [ task.model ]

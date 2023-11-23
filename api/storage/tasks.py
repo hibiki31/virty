@@ -71,7 +71,7 @@ def put_storage_list(self: TaskBase, task: TaskModel, request: TaskRequest):
 @worker_task(key="post.storage.root")
 def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
-    body = StorageInsert(**request.body)
+    body = StorageForCreate(**request.body)
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()

@@ -20,7 +20,7 @@ app = APIRouter(
 
 
 
-@app.get("", response_model=List[ProjectSelect])
+@app.get("", response_model=List[Project], operation_id="get_projects")
 def get_api_projects(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
@@ -55,9 +55,9 @@ def get_api_projects(
 
     return res
 
-@app.post("")
+@app.post("", operation_id="create_project")
 def post_api_projects(
-        request: PostProject, 
+        request: ProjectForCreate, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -68,9 +68,9 @@ def post_api_projects(
     return task.model
 
 
-@app.delete("")
+@app.delete("", operation_id="delete_project")
 def delete_api_projects(
-        request: DeleteProject, 
+        request: ProjectForDelete, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -81,9 +81,9 @@ def delete_api_projects(
     return task.model
     
 
-@app.put("")
+@app.put("", operation_id="update_project")
 def put_api_projects(
-        request: ProjectPatch, 
+        request: ProjectForUpdate, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):

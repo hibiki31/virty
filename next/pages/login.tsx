@@ -18,7 +18,7 @@ type LoginForm = JTDDataType<typeof loginFormJtd>;
 
 export const getServerSideProps = makeRequireLogoutProps(async () => {
   const initialized = await mixinApi
-    .getVersionApiVersionGet()
+    .getVersion()
     .then((res) => res.data.initialized)
     .catch(() => false);
 

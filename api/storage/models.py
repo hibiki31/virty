@@ -31,7 +31,7 @@ class StorageMetadataModel(Base):
     rool = Column(String) # iso, img, cloud-init, template
 
 
-class AssociationStoragePool(Base):
+class AssociationStoragePoolModel(Base):
     __tablename__ = 'associations_storages_pools'
     pool_id = Column(Integer, ForeignKey('storages_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -43,7 +43,7 @@ class StoragePoolModel(Base):
     __tablename__ = "storages_pools"
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String)
-    storages = relationship("AssociationStoragePool", lazy=False)
+    storages = relationship("AssociationStoragePoolModel", lazy=False)
 
 
 class ImageModel(Base):

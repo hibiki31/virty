@@ -37,7 +37,7 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('storages', () =>
-      storagesApi.getApiStoragesApiStoragesGet().then((res) =>
+      storagesApi.getStorages().then((res) =>
         res.data.map((storage) => ({
           label: storage.name,
           value: storage.name,
@@ -48,7 +48,7 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
 
   const handleAddStoragePool = (data: FormData) => {
     return storagesApi
-      .postApiStoragesPoolsApiStoragesPoolsPost(data)
+      .createStoragePool(data)
       .then(() => {
         enqueueNotistack('Storage pool added.', { variant: 'success' });
         mutate('storagesApi.getApiStoragesPoolsApiStoragesPoolsGet');

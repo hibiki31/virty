@@ -17,7 +17,7 @@ const Page: NextPage = () => {
 
   const reloadStorages = () => {
     tasksImagesApi
-      .putApiImagesApiTasksImagesPut()
+      .refreshImages()
       .then(() => enqueueNotistack('Storage list is being updated.', { variant: 'success' }))
       .catch(() => enqueueNotistack('Failed to update storage list.', { variant: 'error' }));
   };

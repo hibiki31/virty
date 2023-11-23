@@ -12,8 +12,8 @@ import { JoinNetworkPoolDialog } from '~/components/dialogs/JoinNetworkPoolDialo
 export const NetworksTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
-    'networkApi.getApiNetworksApiNetworksGet',
-    () => networkApi.getApiNetworksApiNetworksGet().then((res) => res.data),
+    'networkApi.getNetworks',
+    () => networkApi.getNetworks().then((res) => res.data),
     { revalidateOnFocus: false }
   );
 

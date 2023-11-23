@@ -8,7 +8,7 @@ from .models import *
 from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-from task.schemas import TaskSelect, TaskRequest
+from task.schemas import Task, TaskRequest
 from task.functions import TaskManager
 from user.models import UserModel
 from network.models import NetworkModel
@@ -30,7 +30,7 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.put('', response_model=List[TaskSelect])
+@app.put('', response_model=List[Task], operation_id="refresh_vms")
 def publish_task_to_update_vm_list(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -44,12 +44,12 @@ def publish_task_to_update_vm_list(
     return [task.model]
 
 
-@app.post("", response_model=List[TaskSelect])
+@app.post("", response_model=List[Task], operation_id="create_vm")
 def post_api_vms(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainInsert = None
+        body: DomainForCreate = None
     ):
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -66,7 +66,7 @@ def post_api_vms(
     return [ task.model, task_list.model, task_storage.model ]
 
 
-@app.delete("/{uuid}", response_model=List[TaskSelect])
+@app.delete("/{uuid}", response_model=List[Task], operation_id="delete_vm")
 def delete_api_domains(
         uuid: str,
         req: Request,
@@ -84,13 +84,13 @@ def delete_api_domains(
     return [task.model]
 
 
-@app.patch("/{uuid}/power", response_model=List[TaskSelect])
+@app.patch("/{uuid}/power", response_model=List[Task], operation_id="update_vm_power_status")
 def patch_api_tasks_vms_uuid_power(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PatchDomainPower = None,
+        body: PowerStatusForUpdateDomain = None,
     ):
     
     task = TaskManager(db=db)
@@ -103,14 +103,13 @@ def patch_api_tasks_vms_uuid_power(
 
     return [task.model]
 
-
-@app.patch("/{uuid}/cdrom", response_model=List[TaskSelect])
+@app.patch("/{uuid}/cdrom", response_model=List[Task], operation_id="control_vm_cdrom")
 def patch_api_tasks_vms_uuid_cdrom(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PatchDominCdrom = None,
+        body: CdromForUpdateDomain = None,
     ):
     """
     umount
@@ -193,7 +192,7 @@ def patch_api_tasks_vms_uuid_cdrom(
 
 # @app.patch("/project")
 # def path_vms_project(
-#         request: DomainProjectPatch,
+#         request: DomainProjectForUpdate,
 #         current_user: CurrentUser = Depends(get_current_user),
 #         db: Session = Depends(get_db),
 #     ):
@@ -209,13 +208,13 @@ def patch_api_tasks_vms_uuid_cdrom(
 #     return vm
 
 
-@app.patch("/{uuid}/network", response_model=List[TaskSelect])
+@app.patch("/{uuid}/network", response_model=List[Task], operation_id="update_vm_network")
 def patch_api_vm_network(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainNetworkChange = None
+        body: NetworkForUpdateDomain = None
     ):
     """
     **Power off required**

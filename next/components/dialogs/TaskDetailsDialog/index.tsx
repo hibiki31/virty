@@ -1,11 +1,11 @@
 import { FC } from 'react';
 import { BaseTable } from '~/components/tables/BaseTable';
-import { TaskSelect } from '~/lib/api/generated';
+import { Task } from '~/lib/api/generated';
 import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  task?: TaskSelect;
+  task?: Task;
   onClose: () => void;
 };
 
