@@ -21,7 +21,7 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/images", tags=["images"], response_model=List[Image], operation_id="get_images")
+@app.get("/api/images", tags=["images"], response_model=Image, operation_id="get_images")
 def get_api_images(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -29,6 +29,8 @@ def get_api_images(
         pool_uuid: str = None,
         name:str = None,
         rool:str = None,
+        limit: int = 25,
+        page: int = 0,
     ):
     query = db.query(
         ImageModel,
@@ -56,6 +58,9 @@ def get_api_images(
         query = query.filter(StorageMetadataModel.rool==rool)
 
     res = []
+    
+    count = query.count()
+    query = query.limit(limit).offset(int(limit*page))
 
     for i in query.all():
         if i[1]:
@@ -64,7 +69,7 @@ def get_api_images(
             domain = None
 
         res.append(
-            Image(
+            ImagePage(
                 name=i[0].name,
                 storage=i[0].storage,
                 capacity=i[0].capacity,
@@ -75,8 +80,7 @@ def get_api_images(
                 domain=domain
             )
         )
-
-    return res
+    return {"count": count, "data": res}
 
 
 @app.put("/api/tasks/images", tags=["images-task"], operation_id="refresh_images")

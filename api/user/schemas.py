@@ -28,13 +28,20 @@ class UserProject(CamelModel):
     class Config:
         orm_mode = True
 
-class User(CamelModel):
+
+class UserPage(CamelModel):
     username: str
     scopes: List[UserScope]
     projects: List[UserProject]
     class Config:
         orm_mode = True
-    
+
+
+class User(CamelModel):
+    count: int
+    data:List[UserPage]
+    class Config:
+        orm_mode = True 
 
 class UserForCreate(CamelModel):
     user_id: str

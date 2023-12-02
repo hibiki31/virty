@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from fastapi_camelcase import CamelModel
 from flavor.models import FlavorModel
 
-from node.schemas import Node
+from node.schemas import NodePage
 from flavor.schemas import Flavor
 
 
@@ -42,7 +42,7 @@ class ImageForUpdateImageFlavor(CamelModel):
     class Config:
         orm_mode  =  True
 
-class Storage(CamelModel):
+class StoragePage(CamelModel):
     name: str
     uuid: str
     status: int
@@ -50,13 +50,20 @@ class Storage(CamelModel):
     available: int = None
     capacity: int = None
     node_name: str
-    node: Node
+    node: NodePage
     auto_start: bool
     path: str = None
     meta_data: StorageMetadata = None
     update_token:str = None
     allocation_commit: int = None
     capacity_commit: int = None
+    class Config:
+        orm_mode  =  True
+    
+
+class Storage(CamelModel):
+    count: int
+    data: List[StoragePage]
     class Config:
         orm_mode  =  True
 

@@ -18,7 +18,7 @@ app = APIRouter(
 )
 
 
-@app.get("/api/projects", response_model=List[Project], operation_id="get_projects")
+@app.get("/api/projects", response_model=Project, operation_id="get_projects")
 def get_api_projects(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
@@ -47,6 +47,7 @@ def get_api_projects(
     if name:
         query = query.filter(ProjectModel.name.like(f'%{name}%'))
     
+    count = query.count()
     query = query.limit(limit).offset(int(limit*page))
     
     for row in query.all():
@@ -59,7 +60,7 @@ def get_api_projects(
             'used_core': 0 if row[2] == None else row[2]
         })
 
-    return res
+    return {"count": count, "data": res}
 
 
 @app.post("/api/tasks/projects", operation_id="create_project")

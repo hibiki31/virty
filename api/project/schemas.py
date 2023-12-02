@@ -29,8 +29,8 @@ class ProjectUser(CamelModel):
     class Config:
         orm_mode = True
 
-class Project(ProjectBase):
-    core: int
+
+class ProjectPage(ProjectBase):
     memory_g: int
     storage_capacity_g: int
     users: List[ProjectUser]
@@ -40,3 +40,7 @@ class Project(ProjectBase):
     storage_pools: Any
     class Config:
         orm_mode = True
+
+class Project(CamelModel):
+    count: int
+    data: List[ProjectPage]

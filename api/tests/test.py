@@ -28,29 +28,27 @@ def main():
     delete_project()
     create_project()
     
-    
-    
     # Node
-    # post_nodes_key()
-    # delete_nodes()
-    # post_nodes()
+    post_nodes_key()
+    delete_nodes()
+    post_nodes()
     # patch_nodes_vxlan()
     # create_network_provider()
     
     # Storage
-    # put_list()
-    # delete_storage()
-    # post_storage()
+    put_list()
+    delete_storage()
+    post_storage()
     
     # Image
-    # download_image()
+    download_image()
 
     # Network
-    # put_list()
-    # delete_network()
-    # post_network()
-    # delete_network_ovs()
-    # post_network_ovs()
+    put_list()
+    delete_network()
+    post_network()
+    delete_network_ovs()
+    post_network_ovs()
     
     # VM
     put_list()
@@ -62,8 +60,8 @@ def main():
     
     delete_vm()
     post_vm_copy()
-    # patch_vm_cdrom()
-    # patch_vm_network()
+    patch_vm_cdrom()
+    patch_vm_network()
 
 
 if __name__ == "__main__":

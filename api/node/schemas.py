@@ -9,7 +9,7 @@ class NodeRole(CamelModel):
         orm_mode  =  True
 
 
-class Node(CamelModel):
+class NodePage(CamelModel):
     name: str
     description: str
     domain: str
@@ -27,6 +27,11 @@ class Node(CamelModel):
     roles: List[NodeRole]
     class Config:
         orm_mode  =  True
+
+
+class Node(CamelModel):
+    count: int
+    data: List[NodePage]
 
 
 class NodeRoleForUpdate(CamelModel):

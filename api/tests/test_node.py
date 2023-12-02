@@ -9,7 +9,8 @@ def delete_nodes():
     nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
     print_resp(nodes_resp)
 
-    nodes = [ i["name"] for i in nodes_resp.json() ]
+    nodes = [ i["name"] for i in nodes_resp.json()["data"] ]
+    print(nodes)
     for server in env["servers"]:
         if not server["name"] in nodes:
             continue

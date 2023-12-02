@@ -19,7 +19,7 @@ def delete_project():
     get_resp = httpx.get(url=f'{BASE_URL}/api/projects', params={"name": "test"},headers=HEADERS)
     print_resp(resp=get_resp)
         
-    for resp_row in get_resp.json():
+    for resp_row in get_resp.json()["data"]:
         resp = httpx.request(method="delete", url=f'{BASE_URL}/api/tasks/projects/{resp_row["id"]}', headers=HEADERS)
         print_resp(resp=resp)
         wait_tasks(resp=resp)

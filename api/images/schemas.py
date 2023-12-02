@@ -10,7 +10,7 @@ from node.schemas import Node
 from flavor.schemas import Flavor
 
 
-from storage.schemas import Storage
+from storage.schemas import StoragePage
 
 
 class ImageBase(CamelModel):
@@ -33,16 +33,23 @@ class ImageDomain(CamelModel):
     uuid: str
 
 
-class Image(ImageBase):
+class ImagePage(ImageBase):
     name:str
     storage_uuid:str = None
     capacity:int
-    storage: Storage
+    storage: StoragePage
     flavor: Flavor = None
     allocation:int
     path:str
     update_token:str = None
     domain: ImageDomain = None
+    class Config:
+        orm_mode  =  True
+
+
+class Image(CamelModel):
+    count: int
+    data: List[ImagePage]
     class Config:
         orm_mode  =  True
 

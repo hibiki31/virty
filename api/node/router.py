@@ -25,13 +25,24 @@ app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=List[Node], operation_id="get_nodes")
+@app.get("", response_model=Node, operation_id="get_nodes")
 def get_api_nodes(
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        limit: int = 25,
+        page: int = 0,
+        name: str = None
     ):
+    
+    query = db.query(NodeModel)
+    if name:
+        query = query.filter(NodeModel.name.like(f'%{name}%'))
+    
+    count = query.count()
+    query = query.limit(limit).offset(int(limit*page))
 
-    return db.query(NodeModel).all()
+
+    return {"count": count, "data": query.all()}
 
 
 @app.post("/key", operation_id="update_ssh_key_pair")

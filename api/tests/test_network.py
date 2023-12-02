@@ -8,7 +8,7 @@ def post_network():
     nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
     print_resp(nodes_resp)
 
-    for node in nodes_resp.json():
+    for node in nodes_resp.json()["data"]:
 
         request_data = {
             "name": "test-br",
@@ -26,7 +26,7 @@ def delete_network():
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', params={"admin":True},headers=HEADERS)
     print_resp(resp=resp)
 
-    for net in resp.json():
+    for net in resp.json()["data"]:
         if net["name"] == "test-br":
             resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/networks/{net["uuid"]}', headers=HEADERS)
             print_resp(resp=resp)
@@ -38,7 +38,7 @@ def post_network_ovs():
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', params={"admin":True},headers=HEADERS)
     print_resp(resp=resp)
 
-    for net in resp.json():
+    for net in resp.json()["data"]:
         if net["type"] == "openvswitch":
             request_data = {
                 "default": True,
@@ -55,7 +55,7 @@ def delete_network_ovs():
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', params={"admin":True},headers=HEADERS)
     print_resp(resp=resp)
 
-    for net in resp.json():
+    for net in resp.json()["data"]:
         if net["type"] == "openvswitch":
             resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/networks/{net["uuid"]}/ovs/test-vlan-1919', headers=HEADERS)
             print_resp(resp=resp,allow_not_found=True)

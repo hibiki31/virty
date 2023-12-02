@@ -14,10 +14,10 @@ def api_delete_storage(pool_name, node_name):
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": pool_name, "nodeName": node_name})
     print_resp(resp=resp)
 
-    if resp.json() == []:
+    if resp.json()["data"] == []:
         return
 
-    pool_uuid = resp.json()[0]["uuid"]
+    pool_uuid = resp.json()["data"][0]["uuid"]
 
     resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/storages/{pool_uuid}', headers=HEADERS)
     print_resp(resp=resp)

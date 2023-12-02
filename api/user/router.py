@@ -62,14 +62,23 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users", response_model=List[User], operation_id="get_users")
+@app.get("/users", response_model=User, operation_id="get_users")
 def get_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
+        limit: int = 25,
+        page: int = 0,
+        name_like: str = None,
     ):
-    users = db.query(UserModel).all()
+    query = db.query(UserModel)
     
-    return users
+    if name_like:
+        query = query.filter(UserModel.usernamee.like(f'%{name_like}%'))
+    
+    count = query.count()
+    data = query.limit(limit).offset(int(limit*page)).all()
+    
+    return {"count": count, "data": data}
 
 
 @app.delete("/users/{username}", operation_id="delete_user")

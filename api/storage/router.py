@@ -27,11 +27,13 @@ app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storages"], response_model=List[Storage], operation_id="get_storages")
+@app.get("/api/storages", tags=["storages"], response_model=Storage, operation_id="get_storages")
 def get_api_storages(
         param: StorageQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
+        limit: int = 25,
+        page: int = 0,
     ):
 
     image_sum = db.query(
@@ -55,7 +57,8 @@ def get_api_storages(
     if param.name != None:
         query = query.filter(StorageModel.name.like(f'%{param.name}%'))
 
-
+    count = query.count()
+    query = query.limit(limit).offset(int(limit*page))
     models = query.all()
 
     res = []
@@ -66,7 +69,8 @@ def get_api_storages(
         tmp.allocation_commit = model[2]
         res.append(tmp)
 
-    return res
+
+    return {"count": count, "data": res}
 
 
 @app.patch("/api/storages", tags=["storages"], operation_id="update_storage_metadata")

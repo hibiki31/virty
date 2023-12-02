@@ -48,11 +48,11 @@ def poweroff_vm():
 
 @tester
 def post_vm():
-    for node in httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS).json():
+    for node in httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS).json()["data"]:
         resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-img", "nodeName": node["name"]})
         print_resp(resp=resp)
 
-        savePoolUuid = resp.json()[0]["uuid"]
+        savePoolUuid = resp.json()["data"][0]["uuid"]
 
         request_data = {
             "type":"manual",
@@ -85,11 +85,11 @@ def post_vm():
 def post_vm_copy():
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-img", "nodeName": "test-node"})
     print_resp(resp=resp)
-    savePoolUuid = resp.json()[0]["uuid"]
+    savePoolUuid = resp.json()["data"][0]["uuid"]
 
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-cloud", "nodeName": "test-node"})
     print_resp(resp=resp)
-    sourcePoolUuid = resp.json()[0]["uuid"]
+    sourcePoolUuid = resp.json()["data"][0]["uuid"]
     
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', headers=HEADERS, params={"name_like": "default", "node_name_like": "test-node"})
     print_resp(resp=resp)
@@ -176,8 +176,12 @@ def patch_vm_network():
     print_resp(resp=resp)
 
     for vm in resp.json()["data"]:
-        if vm["name"] == "testcode-vm":
-            request_data = { "mac": vm["interfaces"][0]["mac"], "networkUuid": env["network_uuid"], "port": env["port_2"]}
-            resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/network', headers=HEADERS, json=request_data)
-            print_resp(resp=resp)
-            wait_tasks(resp)
+        if not vm["name"] == "testcode-vm":
+            continue
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', headers=HEADERS, params={"name_like": "test", "node_name_like": "test-node"})
+        print_resp(resp=resp, debug=True)
+        network_uuid = resp.json()["data"][0]["uuid"]
+        request_data = { "mac": vm["interfaces"][0]["mac"], "networkUuid": network_uuid}
+        resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/network', headers=HEADERS, json=request_data)
+        print_resp(resp=resp)
+        wait_tasks(resp)

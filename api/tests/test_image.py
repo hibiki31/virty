@@ -10,7 +10,7 @@ def download_image():
         print_resp(resp=resp)
         
         req_data={
-            "storage_uuid": resp.json()[0]["uuid"],
+            "storage_uuid": resp.json()["data"][0]["uuid"],
             "image_url": env["image_url"]
         }
         resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/images/download', headers=HEADERS, json=req_data)
