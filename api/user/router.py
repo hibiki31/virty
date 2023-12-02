@@ -37,7 +37,7 @@ def post_api_users(
             detail="Blanks are not allowed in id"
         )
     
-    if db.query(UserModel).filter(UserModel.id==request.user_id).one_or_none():
+    if db.query(UserModel).filter(UserModel.username==request.user_id).one_or_none():
         raise HTTPException(
             status_code=400,
             detail="User already exists"
@@ -45,12 +45,12 @@ def post_api_users(
 
     # ユーザ追加
     user_model = UserModel(
-        id=request.user_id, 
+        username=request.user_id, 
         hashed_password=pwd_context.hash(request.password)
     )
 
     db.add(user_model)
-    db.add(UserScopeModel(user_id=user_model.id,name="user"))
+    db.add(UserScopeModel(user_id=user_model.username,name="user"))
 
     db.commit()
 
@@ -70,3 +70,22 @@ def get_api_users(
     users = db.query(UserModel).all()
     
     return users
+
+
+@app.delete("/users/{username}", operation_id="delete_user")
+def delete_user(
+        username: str,
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    
+    if not db.query(UserModel).filter(UserModel.username==username).one_or_none():
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user_model = db.query(UserModel).filter(UserModel.username==username).delete()
+    db.commit()
+
+    return user_model

@@ -5,7 +5,7 @@ function vtc() {
 ### 補完関数。
 _vtc(){
   COMPREPLY=( $( \
-      compgen -W "show-node show-task show-vmshow-node show-task show-vm" \
+      compgen -W "show-node show-task show-vmshow-node show-task show-vm show-user" \
               ${COMP_WORDS[COMP_CWORD]} \
   ))
 }

@@ -7,6 +7,7 @@ from test_storage import post_storage, delete_storage
 from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network
 from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs, create_network_provider
 from test_setup import api_auth_validate, api_users_me
+from test_user import create_user, delete_user
 
 
 args = sys.argv
@@ -16,6 +17,12 @@ def main():
     # Setup
     api_auth_validate()
     api_users_me()
+    
+    # User
+    delete_user()
+    create_user()
+    
+    
     
     # Node
     # post_nodes_key()
@@ -30,15 +37,15 @@ def main():
     # post_storage()
 
     # Network
-    put_list()
-    delete_network()
-    post_network()
-    delete_network_ovs()
-    post_network_ovs()
+    # put_list()
+    # delete_network()
+    # post_network()
+    # delete_network_ovs()
+    # post_network_ovs()
     
     # VM
-    put_list()
-    delete_vm()
+    # put_list()
+    # delete_vm()
     # post_vm()
     # poweron_vm()
     # poweroff_vm()

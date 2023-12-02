@@ -85,6 +85,16 @@ def print_vms():
         ))
 
 
+def print_users():
+    resp = httpx.request(method="get",url=f'{BASE_URL}/api/users', headers=HEADERS, params={"admin":True}).json()
+    for task in resp:
+        print ("{:<16} {:<64} {:<32}".format(
+            task["username"],
+            str(task["scopes"]),
+            str(task["projects"])
+        ))
+
+
 def print_nodes():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/nodes', headers=HEADERS).json()
     for task in resp:
@@ -108,3 +118,5 @@ if __name__ == "__main__":
             print_nodes()
         if args[1] == "show-vm":
             print_vms()
+        if args[1] == "show-user":
+            print_users()
