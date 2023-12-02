@@ -190,22 +190,22 @@ def patch_api_tasks_vms_uuid_cdrom(
 #     return vm
 
 
-# @app.patch("/project")
-# def path_vms_project(
-#         request: DomainProjectForUpdate,
-#         current_user: CurrentUser = Depends(get_current_user),
-#         db: Session = Depends(get_db),
-#     ):
-#     try:
-#         vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
-#         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
-#     except:
-#         raise notfound_exception(msg="not found vm or group")
+@app.patch("/project")
+def path_vms_project(
+        request: DomainProjectForUpdate,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
+        db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or group")
     
-#     vm.owner_project_id = request.project_id
-#     db.commit()
+    vm.owner_project_id = request.project_id
+    db.commit()
 
-#     return vm
+    return vm
 
 
 @app.patch("/{uuid}/network", response_model=List[Task], operation_id="update_vm_network")

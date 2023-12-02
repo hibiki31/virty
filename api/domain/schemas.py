@@ -195,9 +195,8 @@ class InterfaceForDomainTicket(CamelModel):
     mac: str = None
 
 
-class DomainTicketForCreate(CamelModel):
-    type: str
-    issuance_id: int
+class DomainInProjectForCreate(CamelModel):
+    project_id: str
     name: str
     memory: int
     core: int

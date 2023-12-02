@@ -32,6 +32,7 @@ class ImageDomain(CamelModel):
     name: str
     uuid: str
 
+
 class Image(ImageBase):
     name:str
     storage_uuid:str = None
@@ -45,6 +46,7 @@ class Image(ImageBase):
     class Config:
         orm_mode  =  True
 
+
 class StorageForCreate(CamelModel):
     name: str
     node_name: str
@@ -52,15 +54,23 @@ class StorageForCreate(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class StorageForDelete(CamelModel):
     uuid: str
     node_name: str
+
 
 class ImageSCP(CamelModel):
     from_node_name: str
     to_node_name: str
     from_file_path: str
     to_file_path: str
+
+
+class ImageDownloadForCreate(CamelModel):
+    storage_uuid: str
+    image_url: str
+
 
 class StoragePoolForCreate(CamelModel):
     name:str
@@ -79,10 +89,12 @@ class StorageForStorageContainer(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class StorageContainerForStoragePool(CamelModel):
     storage: StorageForStorageContainer
     class Config:
         orm_mode  =  True
+
 
 class StoragePool(CamelModel):
     id: int

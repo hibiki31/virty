@@ -135,3 +135,18 @@ def put_api_images_scp(
 
 
     return True
+
+
+@app.post("/api/tasks/images/download", tags=["images"], operation_id="download_image")
+def post_image_download(
+        req: Request,
+        body: ImageDownloadForCreate,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    task = TaskManager(db=db)
+    task.select(method='post', resource='image', object='download')
+    task.commit(user=cu, req=req, body=body)
+
+    return [task.model]

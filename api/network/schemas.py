@@ -40,6 +40,13 @@ class Network(PaseNetwork):
         orm_mode  =  True
 
 
+class NetworkPage(CamelModel):
+    count: int
+    data: List[Network]
+    
+    class Config:
+        orm_mode  =  True
+
 class NetworkForCreate(CamelModel):
     name: str
     node_name: str

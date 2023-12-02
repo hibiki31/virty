@@ -25,6 +25,7 @@ from node.tasks import worker_task as node_tasks
 from storage.tasks import worker_task as storage_tasks
 from network.tasks import worker_task as network_tasks
 from project.tasks import worker_task as project_tasks
+from images.tasks import worker_task as image_tasks
 
 logger = setup_logger(__name__)
 
@@ -41,6 +42,7 @@ def main():
     tasks.include_task(storage_tasks)
     tasks.include_task(network_tasks)
     tasks.include_task(project_tasks)
+    tasks.include_task(image_tasks)
 
     init_scheduler()
 

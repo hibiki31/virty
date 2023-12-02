@@ -82,7 +82,8 @@ def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
     task.message = "VM list updated has been successfull"
 
 
-def post_vm_ticketd(db:Session, task: TaskModel):
+@worker_task(key="post.vm.project")
+def post_vm_project(self: TaskBase, task: TaskModel, request: TaskRequest):
     req = DomainTicketForCreate(**loads(task.request))
     issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
 

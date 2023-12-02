@@ -22,12 +22,32 @@ app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=List[Network], operation_id="get_networks")
+@app.get("", response_model=NetworkPage, operation_id="get_networks")
 def get_api_networks(
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        limit: int = 25,
+        page: int = 0,
+        name_like: str = None,
+        node_name_like: str = None,
+        type: str = None
     ):
-    return db.query(NetworkModel).all()
+    
+    query = db.query(NetworkModel)
+    
+    if name_like:
+        query = query.filter(NetworkModel.name.like(f'%{name_like}%'))
+    
+    if node_name_like:
+        query = query.filter(NetworkModel.node_name.like(f'%{node_name_like}%'))
+    
+    if type:
+        query = query.filter(NetworkModel.type==type)
+    
+    count = query.count()
+    query = query.limit(limit).offset(int(limit*page))
+    
+    return { "count": count, "data": query.all() }
 
 
 @app.get("/pools", response_model=List[NetworkPool], operation_id="get_network_pools")
