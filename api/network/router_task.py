@@ -79,7 +79,7 @@ def post_uuid_ovs(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkProvider = None
+        body: NetworkProviderForCreate = None
     ):
 
     task = TaskManager(db=db)

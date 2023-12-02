@@ -122,26 +122,26 @@ def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
     task.message = "Node patch has been successfull"
 
 
-def patch_node_role_vxlan_overlay(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
-    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+# def patch_node_role_vxlan_overlay(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
+#     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
     
-    role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="vxlan_overlay").one_or_none()
+#     role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="vxlan_overlay").one_or_none()
     
-    if role_model == None:
-        role_model = NodeRoleModel(name="vxlan_overlay")
-        db.add(role_model)
+#     if role_model == None:
+#         role_model = NodeRoleModel(name="vxlan_overlay")
+#         db.add(role_model)
 
-    if not db.query(AssociationNodeToRole).filter(
-            AssociationNodeToRole.node_name==node.name, 
-            AssociationNodeToRole.role_name=="vxlan_overlay"
-        ).one_or_none():
-        a = AssociationNodeToRole(extra_json=request.extra_json)
-        a.role = role_model
-        node.roles.append(a)
+#     if not db.query(AssociationNodeToRole).filter(
+#             AssociationNodeToRole.node_name==node.name, 
+#             AssociationNodeToRole.role_name=="vxlan_overlay"
+#         ).one_or_none():
+#         a = AssociationNodeToRole(extra_json=request.extra_json)
+#         a.role = role_model
+#         node.roles.append(a)
 
-    db.commit()
+#     db.commit()
 
-    return node
+#     return node
 
 def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     

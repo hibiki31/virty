@@ -1,8 +1,9 @@
 import httpx
 
-from common import BASE_URL, HEADERS, env, print_resp, wait_tasks
+from common import BASE_URL, HEADERS, env, print_resp, wait_tasks, tester
 
 
+@tester
 def delete_nodes():
     print(f'Start test {len(env["servers"])} servers')
     nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
@@ -16,6 +17,8 @@ def delete_nodes():
         print_resp(resp=resp, allow_not_found=True)
         wait_tasks(resp)
 
+
+@tester
 def post_nodes_key():
     req_data = {
         "privateKey": env["key"],
@@ -25,6 +28,7 @@ def post_nodes_key():
     print_resp(resp=resp)
 
 
+@tester
 def post_nodes():
     for server in env["servers"]:
         req_data = {
@@ -40,6 +44,7 @@ def post_nodes():
         wait_tasks(resp)
 
 
+@tester
 def patch_nodes_vxlan():
     for server in env["servers"]:
         if not "local" in server:

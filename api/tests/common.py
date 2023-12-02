@@ -2,12 +2,12 @@ import httpx
 import json
 from pprint import pprint
 import time
-import datetime
-import sys
+import functools
 
 
 env = json.load(open('./tests/env.json', 'r'))
 BASE_URL = env["base_url"]
+
 
 class Color:
     BLACK     = '\033[30m'
@@ -23,6 +23,39 @@ class Color:
     UNDERLINE = '\033[4m'
     INVISIBLE = '\033[08m'
     REVERCE   = '\033[07m'
+
+
+def tester(f):
+    @functools.wraps(f)
+    def _wrapper(*args, **keywords):
+        # 前処理
+        print(f'-------- {f.__name__} --------')
+
+        # デコレート対象の関数の実行
+        v = f(*args, **keywords)
+
+        # 後処理
+        print(f'Return: {v}')
+        print("")
+        print("")
+
+        return v
+    return _wrapper
+
+
+@tester
+def put_list():
+    resp = httpx.put(f'{BASE_URL}/api/tasks/images',headers=HEADERS)
+    print_resp(resp=resp)
+    wait_tasks(resp)
+    
+    resp = httpx.put(f'{BASE_URL}/api/tasks/vms',headers=HEADERS)
+    print_resp(resp=resp)
+    wait_tasks(resp)
+
+    resp = httpx.put(f'{BASE_URL}/api/tasks/networks',headers=HEADERS)
+    print_resp(resp=resp)
+    wait_tasks(resp)
 
 
 def wait_tasks(resp):
@@ -42,7 +75,7 @@ def wait_tasks(resp):
             counter += 0.5
 
 
-def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
+def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):    
     if resp.status_code == 200:
         print(f"{Color.BLUE}{resp} {resp.request.method} {resp.url}{Color.END}")
     else:
@@ -60,15 +93,6 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
         print(resp.json())
         raise Exception
 
-
-def print_test_start(no, msg):
-    print(f"++++++ {no} {msg} ++++++")
-    
-    
-def print_test_end():
-    print(f"+++++++++++++++++++++++++++++++++++++++++++++++++")
-    print("")
-    
     
 if not httpx.get(f'{BASE_URL}/api/version').json()["initialized"]:
     req_data = {

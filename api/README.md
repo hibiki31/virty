@@ -1,12 +1,12 @@
 # API DOC
 
-## テスト用コマンドの登録
+## 開発時のメモ
+
+テスト用コマンドの登録
 
 ```
 source dev_completion.sh 
-
 ```
-
 
 
 ## Celery

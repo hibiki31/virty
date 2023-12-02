@@ -1,18 +1,14 @@
 import httpx
-import json
-from pprint import pprint
-import time
-import datetime
-import sys
 
-from common import BASE_URL, env, HEADERS, print_resp, wait_tasks
+from common import BASE_URL, env, HEADERS, print_resp, wait_tasks, tester
 
 
-
+@tester
 def delete_storage():
     for server in env["servers"]:
         for storage in env["storages"]:
             api_delete_storage(pool_name=storage["name"], node_name=server["name"])
+
 
 def api_delete_storage(pool_name, node_name):
     resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": pool_name, "nodeName": node_name})
@@ -28,6 +24,7 @@ def api_delete_storage(pool_name, node_name):
     wait_tasks(resp)
 
 
+@tester
 def post_storage():
     for server in env["servers"]:
         for storage in env["storages"]:
