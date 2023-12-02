@@ -39,7 +39,7 @@ def post_tasks_nodes(
         body_libvirt = NodeRoleForUpdate(node_name=body.name, role_name="libvirt")
         task_libvirt = TaskManager(db=db)
         task_libvirt.select(method="patch", resource="node", object="role")
-        task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
+        task_libvirt.commit(user=cu, req=req, body=body_libvirt, dep_uuid=task.model.uuid)
         dependence_uuid = task_libvirt.model.uuid
 
         return [task.model, task_libvirt.model]

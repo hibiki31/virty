@@ -32,13 +32,20 @@ class ProjectModel(Base):
     __tablename__ = "projects"
     id = Column(String(6), primary_key=True, index=True, default=generate_project_id)
     name = Column(String)
-    users = relationship("UserModel", secondary=association_users_to_projects, back_populates="projects", lazy=False)
+    users = relationship(
+        "UserModel", 
+        secondary=association_users_to_projects, 
+        back_populates="projects", 
+        lazy=False, 
+        cascade="all, delete",
+        passive_deletes=True
+    )
     domains = relationship("DomainModel", backref="project")
     # limit
     is_admin = Column(Boolean, nullable=False, default=False)
-    core = Column(Integer, nullable=False, default=4)
-    memory_g = Column(Integer, nullable=False, default=1)
-    storage_capacity_g = Column(Integer, default=64)
+    core = Column(Integer, nullable=False, default=8)
+    memory_g = Column(Integer, nullable=False, default=16)
+    storage_capacity_g = Column(Integer, default=128)
     network_pools = relationship("NetworkPoolModel", secondary=association_projects_to_networks_pools, lazy=False)
     storage_pools = relationship("StoragePoolModel", secondary=association_projects_to_storages_pools, lazy=False)
     flavors = relationship("FlavorModel", secondary=association_projects_to_flavors_pools, lazy=False)

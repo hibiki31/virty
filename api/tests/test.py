@@ -8,6 +8,7 @@ from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, 
 from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs, create_network_provider
 from test_setup import api_auth_validate, api_users_me
 from test_user import create_user, delete_user
+from test_project import create_project, delete_project
 
 
 args = sys.argv
@@ -21,6 +22,10 @@ def main():
     # User
     delete_user()
     create_user()
+    
+    # Projects
+    delete_project()
+    create_project()
     
     
     
