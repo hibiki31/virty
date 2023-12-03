@@ -141,7 +141,7 @@ def put_api_images_scp(
     return True
 
 
-@app.post("/api/tasks/images/download", tags=["images"], operation_id="download_image")
+@app.post("/api/tasks/images/download", tags=["images-task"], operation_id="download_image")
 def post_image_download(
         req: Request,
         body: ImageDownloadForCreate,

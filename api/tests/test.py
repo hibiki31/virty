@@ -4,12 +4,12 @@ import sys
 from common import put_list
 from test_node import post_nodes, post_nodes_key, delete_nodes, patch_nodes_vxlan
 from test_storage import post_storage, delete_storage
-from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network
+from test_vms import post_vm, delete_vm, poweron_vm, poweroff_vm, post_vm_copy, patch_vm_cdrom, patch_vm_network, vms_project
 from test_network import post_network, delete_network, post_network_ovs, delete_network_ovs, create_network_provider
 from test_setup import api_auth_validate, api_users_me
 from test_user import create_user, delete_user
 from test_project import create_project, delete_project
-from test_image import download_image
+from test_image import test_image_download
 
 
 args = sys.argv
@@ -41,7 +41,7 @@ def main():
     post_storage()
     
     # Image
-    download_image()
+    test_image_download()
 
     # Network
     put_list()
@@ -62,7 +62,9 @@ def main():
     post_vm_copy()
     patch_vm_cdrom()
     patch_vm_network()
-
+    vms_project()
+    poweron_vm()
+    
 
 if __name__ == "__main__":
     main()

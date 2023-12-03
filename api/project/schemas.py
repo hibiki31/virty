@@ -32,6 +32,7 @@ class ProjectUser(CamelModel):
 
 class ProjectPage(ProjectBase):
     memory_g: int
+    core: int
     storage_capacity_g: int
     users: List[ProjectUser]
     used_memory_g: int

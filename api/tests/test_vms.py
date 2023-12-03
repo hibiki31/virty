@@ -185,3 +185,19 @@ def patch_vm_network():
         resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/network', headers=HEADERS, json=request_data)
         print_resp(resp=resp)
         wait_tasks(resp)
+
+
+@tester
+def vms_project():
+    resp = httpx.request(method="get", url=f'{BASE_URL}/api/vms', params={"admin":True},headers=HEADERS)
+    print_resp(resp=resp)
+
+    for vm in resp.json()["data"]:
+        if vm["name"] == "testcode-vm":
+            get_resp = httpx.get(url=f'{BASE_URL}/api/projects', params={"name": "test"},headers=HEADERS)
+            print_resp(resp=get_resp)
+            
+            request_data = {"uuid": vm["uuid"], "projectId": get_resp.json()["data"][0]["id"]}
+            resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/project', headers=HEADERS, json=request_data)
+            print_resp(resp=resp)
+            wait_tasks(resp)
