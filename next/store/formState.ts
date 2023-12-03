@@ -166,3 +166,30 @@ export const useJtdForm = (jtd: Schema) => {
 
   return { reset };
 };
+
+const formExtraDataState = atom<Record<string, any>>({
+  key: 'formExtraData',
+  default: {},
+});
+
+export const useFormExtraData = () => {
+  const [formExtraData, setFormExtraData] = useRecoilState(formExtraDataState);
+
+  const setExtraData = useCallback(
+    (extraData: any) => {
+      if (!extraData) return;
+
+      setFormExtraData((oldValue) => ({
+        ...oldValue,
+        ...extraData,
+      }));
+    },
+    [setFormExtraData]
+  );
+
+  const resetExtraData = useCallback(() => {
+    setFormExtraData({});
+  }, [setFormExtraData]);
+
+  return { setExtraData, extraData: formExtraData, resetExtraData };
+};

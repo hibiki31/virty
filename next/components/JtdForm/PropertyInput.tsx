@@ -26,7 +26,7 @@ import { FC, PropsWithChildren, useEffect } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { generateProperties, generateProperty, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
-import { useChoices } from '~/store/formState';
+import { useChoices, useFormExtraData } from '~/store/formState';
 import { Close, Plus } from 'mdi-material-ui';
 import { StepperForm } from './StepperForm';
 
@@ -57,6 +57,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   const { control, getValues, setValue } = useFormContext();
   const propertyName = prefixPropertyName + propertyKey;
   const { choices, isLoading } = useChoices(propertyJtd.metadata, getValues, propertyName);
+  const { setExtraData, extraData } = useFormExtraData();
 
   useEffect(() => {
     if (typeof propertyJtd.metadata?.default === 'function' && !getValues(propertyName)) {
@@ -65,7 +66,10 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   }, [getValues, propertyName, propertyJtd.metadata, setValue]);
 
   if (propertyJtd.metadata?.hidden) {
-    if (propertyJtd.metadata.hidden === true || propertyJtd.metadata.hidden(getRelatedValue(getValues, propertyName))) {
+    if (
+      propertyJtd.metadata.hidden === true ||
+      propertyJtd.metadata.hidden(getRelatedValue(getValues, propertyName), extraData)
+    ) {
       return null;
     }
   }
@@ -206,7 +210,11 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
                   labelId={propertyName}
                   inputProps={{ readOnly: !isEditing }}
                   value={value || ''}
-                  onChange={onChange}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setExtraData(choices.find((c) => c.value === v)?.extraData);
+                    onChange(v);
+                  }}
                 >
                   {!propertyRequired && (
                     <MenuItem value="">
