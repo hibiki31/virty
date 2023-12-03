@@ -23,7 +23,7 @@ export interface MetaData {
    * If true, the property is not displayed in the dialog.
    * @default false
    */
-  hidden?: boolean | ((get: any) => boolean);
+  hidden?: boolean | ((get: any, extraData: Record<string, any>) => boolean);
   /**
    * If true, the property is required.
    * (Do not use optionalProperties because it is not possible to define the order of the forms.)
@@ -67,4 +67,5 @@ export interface MetaData {
 export interface Choice {
   label: string;
   value: string | number;
+  extraData?: any;
 }
