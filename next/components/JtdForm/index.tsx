@@ -1,7 +1,7 @@
 import { Grid } from '@mui/material';
 import { Schema } from 'jtd';
 import { FC, useEffect } from 'react';
-import { useJtdForm } from '~/store/formState';
+import { useFormExtraData, useJtdForm } from '~/store/formState';
 import { MetaData } from '~/lib/jtd/types';
 import { PropertyInput } from './PropertyInput';
 
@@ -15,12 +15,14 @@ type Props = {
 
 export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, isEditing, isError = false }) => {
   const { reset } = useJtdForm(rootJtd);
+  const { resetExtraData } = useFormExtraData();
 
   useEffect(
     () => () => {
       reset();
+      resetExtraData();
     },
-    [reset]
+    [reset, resetExtraData]
   );
 
   return (

@@ -81,13 +81,17 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
             },
           ]);
           setFetcher('networks', () =>
-            networkApi
-              .getNetworks()
-              .then((res) =>
-                res.data
-                  .filter((network) => network.nodeName === nodeName)
-                  .map((network) => ({ value: network.uuid, label: network.name }))
-              )
+            networkApi.getNetworks().then((res) =>
+              res.data
+                .filter((network) => network.nodeName === nodeName)
+                .map((network) => ({
+                  value: network.uuid,
+                  label: network.name,
+                  extraData: {
+                    networkType: network.type,
+                  },
+                }))
+            )
           );
           break;
         case 'form.storage.type':
@@ -142,7 +146,11 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
         type: 'manual',
         ...data.form.spec,
         disks: [data.form.storage],
-        interface: data.form.networks,
+        interface: data.form.networks.map((network) => ({
+          type: network.type,
+          networkUuid: network.networkUuid,
+          port: network.port === '' ? undefined : network.port,
+        })),
         cloudInit:
           data.form.cloudInit.useCloudInit === 'true'
             ? {
@@ -360,11 +368,10 @@ const addVMFormJtd = {
                 metadata: {
                   name: 'Port',
                   default: '',
-                  required: true,
-                  hidden: (get: any) => !get(1, 'networkUuid'),
+                  hidden: (_: any, extraData: any) => extraData.networkType !== 'openvswitch',
                   choices: (get: any) => {
-                    const network = get(1, 'networkUuid');
-                    return network ? `ports-${network}` : '';
+                    const networkUuid = get(1, 'networkUuid');
+                    return networkUuid ? `ports-${networkUuid}` : '';
                   },
                 },
                 type: 'string',
