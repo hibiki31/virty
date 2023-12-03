@@ -23,4 +23,4 @@ def create_user():
 def delete_user():
     for env_user in env["users"]:
         resp = httpx.request(method="delete", url=f'{BASE_URL}/api/users/{env_user["username"]}', headers=HEADERS)
-        print_resp(resp=resp)
+        print_resp(resp=resp, allow_not_found=True)

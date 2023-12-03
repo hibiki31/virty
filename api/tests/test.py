@@ -16,9 +16,7 @@ args = sys.argv
 
 
 def main():
-    delete_flavors()
-    create_flavors()
-    # scenario_test()
+    scenario_test()
 
 def scenario_test():
     # Setup
@@ -48,6 +46,7 @@ def scenario_test():
     # Image
     test_image_download()
 
+    delete_flavors()
     create_flavors()
 
     # Network
