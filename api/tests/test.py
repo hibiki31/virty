@@ -10,12 +10,17 @@ from test_setup import api_auth_validate, api_users_me
 from test_user import create_user, delete_user
 from test_project import create_project, delete_project
 from test_image import test_image_download
-
+from test_flavor import create_flavors, delete_flavors
 
 args = sys.argv
 
 
 def main():
+    delete_flavors()
+    create_flavors()
+    # scenario_test()
+
+def scenario_test():
     # Setup
     api_auth_validate()
     api_users_me()
@@ -43,6 +48,8 @@ def main():
     # Image
     test_image_download()
 
+    create_flavors()
+
     # Network
     put_list()
     delete_network()
@@ -61,9 +68,9 @@ def main():
     delete_vm()
     post_vm_copy()
     patch_vm_cdrom()
-    patch_vm_network()
+    patch_vm_network() # brが存在しなくなるのでpoweronは効かない
     vms_project()
-    poweron_vm()
+    # poweron_vm()
     
 
 if __name__ == "__main__":

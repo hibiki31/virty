@@ -144,7 +144,11 @@ def patch_vm_cdrom():
 
     for vm in resp.json()["data"]:
         if vm["name"] == "testcode-vm":
-            request_data = { "path": "/mnt/kyouka/iso/Win10_20H2_v2_Japanese_x64.iso", "target": "hda"}
+            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": "test-node"})
+            print_resp(resp=resp)
+            image_path = resp.json()["data"][0]["path"]
+            
+            request_data = { "path": image_path, "target": "hda"}
             resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/cdrom', headers=HEADERS, json=request_data)
             print_resp(resp=resp)
             wait_tasks(resp)
@@ -164,7 +168,11 @@ def patch_vm_cdrom():
 
     for vm in resp.json()["data"]:
         if vm["name"] == "testcode-vm":
-            request_data = { "path": "/mnt/kyouka/iso/Win10_20H2_v2_Japanese_x64.iso", "target": "hda"}
+            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": "test-node"})
+            print_resp(resp=resp)
+            image_path = resp.json()["data"][0]["path"]
+            
+            request_data = { "path": image_path, "target": "hda"}
             resp = httpx.request(method="patch",url=f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/cdrom', headers=HEADERS, json=request_data)
             print_resp(resp=resp)
             wait_tasks(resp)

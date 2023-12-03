@@ -13,7 +13,12 @@ class FlavorForCreate(CamelModel):
         orm_mode  =  True
 
         
-class Flavor(FlavorForCreate):
+class FlavorPage(FlavorForCreate):
     id: int
     class Config:
         orm_mode  =  True
+        
+
+class Flavor(CamelModel):
+    count: int
+    data: List[FlavorPage]
