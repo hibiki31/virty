@@ -1,7 +1,9 @@
 package model
 
-type PostVxlanReq struct {
-	VNI   int    `gorm:"primaryKey;autoIncrement:false" json:"vni"`
-	NetworkID string `json:"networkId"`
-	RemoteIP string `json:"remoteIP"`
+type VxlanConnectionModel struct {
+	VNI int `gorm:"primaryKey;autoIncrement:false" json:"vni"`
+	// NetworkIDはVNIを16進数に変換したもの
+	NetworkID string `json:"networkID"`
+	NodeID    string `json:"nodeID"`
+	RemoteIP  string `json:"remoteIP"`
 }
