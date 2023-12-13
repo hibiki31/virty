@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo systemctl stop virty-agent.service
+
 while true;
 do 
     go build main.go

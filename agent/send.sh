@@ -11,9 +11,9 @@ do
     ssh $line 'sudo mkdir -pv /opt/virty'
     ssh $line 'sudo mv ./main /opt/virty/agent'
 
-    # tar cf - ./virty-agent.service   | ssh $line 'tar xfv -'
-    # ssh $line 'sudo mv ./virty-agent.service /lib/systemd/system/'
-    # ssh $line 'sudo systemctl daemon-reload'
-    # ssh $line 'sudo systemctl enable --now virty-agent.service'
-    # ssh $line 'sudo systemctl restart virty-agent.service'
+    scp ./virty-agent.service $line:
+    ssh $line 'sudo mv ./virty-agent.service /lib/systemd/system/'
+    ssh $line 'sudo systemctl daemon-reload'
+    ssh $line 'sudo systemctl enable --now virty-agent.service'
+    ssh $line 'sudo systemctl restart virty-agent.service'
 done 
