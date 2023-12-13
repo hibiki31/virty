@@ -1,0 +1,1 @@
+['tests/test_compreply.py', '2', 'vtc', 'dele']

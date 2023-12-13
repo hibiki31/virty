@@ -5,8 +5,7 @@ function vtc() {
 ### 補完関数。
 _vtc(){
   COMPREPLY=( $( \
-      compgen -W "show-node show-task show-vmshow-node show-task show-vm show-user" \
-              ${COMP_WORDS[COMP_CWORD]} \
+      tests/test_compreply.py $COMP_CWORD ${COMP_WORDS[@]} \
   ))
 }
 ### 補完関数と関数の関連付け

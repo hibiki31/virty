@@ -2,6 +2,7 @@
 import httpx
 import datetime
 import sys
+from tabulate import tabulate
 
 from common import BASE_URL, HEADERS, print_resp, wait_tasks, Color
 
@@ -44,45 +45,36 @@ def method_color(method):
 
 def print_tasks():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/tasks', headers=HEADERS).json()
-    count = 0
+    
+    data = []
     for task in resp["data"]:
-        print ("{:<20} {:<4} {:<8} {:<17} {:<9} {:<5} {:<9}".format(
-            datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S'),
-            f'{int(0 if task["runTime"] == None else task["runTime"])}s',
-            task["status"],
-            method_color(task["method"]),
-            task["resource"],
-            task["object"],
-            task["message"]
-        ))
-        count += 1
-        if count >= 10:
-            break
+        task["method"] = method_color(task["method"])
+        task["postTime"] = datetime.datetime.fromisoformat(task["postTime"]).strftime('%Y-%m-%d %H:%M:%S')
+        task["runTime"] = f'{int(0 if task["runTime"] == None else task["runTime"])}s'
+        del task["result"], task["log"], task["startTime"], task["updateTime"], task["request"], task["dependenceUuid"], task["uuid"]
+        data.append(task)
+    
+    print(tabulate(data, tablefmt='simple'))
 
 
 def print_storages():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/storages', headers=HEADERS).json()
-    for task in resp:
-        print ("{:<38} {:<15} {:<8} {:<5} {:<5} {:<5} {:<9}".format(
-            task["uuid"],
-            task["name"],
-            task["status"],
-            task["capacity"],
-            task["available"],
-            task["nodeName"],
-            task["active"]
-        ))
-
+    data = []
+    
+    for task in resp["data"]:
+        # task["node"] = task["node"]["name"]
+        del task["node"]
+        data.append(task)
+    print(tabulate(data, tablefmt='simple'))
 
 def print_vms():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/vms', headers=HEADERS, params={"admin":True}).json()
+    
+    data = []
     for task in resp["data"]:
-        print ("{:<38} {:<15} {:<8} {:<5}".format(
-            task["uuid"],
-            task["name"],
-            task["status"],
-            task["nodeName"],
-        ))
+        data.append(task)
+    
+    print(tabulate(data, tablefmt='simple'))
 
 
 def print_users():
@@ -97,15 +89,13 @@ def print_users():
 
 def print_nodes():
     resp = httpx.request(method="get",url=f'{BASE_URL}/api/nodes', headers=HEADERS).json()
-    for task in resp:
-        print ("{:<15} {:<8} {:<5} {:<5} {:<5} {:<9}".format(
-            task["name"],
-            task["domain"],
-            task["userName"],
-            task["core"],
-            task["memory"],
-            str(task["roles"])
-        ))
+    
+    data = []
+    for task in resp["data"]:
+        del task["cpuGen"], task["description"], task["roles"]
+        data.append(task)
+    
+    print(tabulate(data, headers='keys',tablefmt='simple'))
 
 
 if __name__ == "__main__":

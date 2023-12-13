@@ -4,8 +4,8 @@ from pprint import pprint
 import time
 import functools
 
-
-env = json.load(open('./tests/env.json', 'r'))
+ENV_FILE = "env_honoka.json"
+env = json.load(open(f'./tests/{ENV_FILE}', 'r'))
 BASE_URL = env["base_url"]
 
 
