@@ -72,9 +72,10 @@ def print_vms():
     
     data = []
     for task in resp["data"]:
+        del task["drives"], task["ownerProject"], task["description"], task["interfaces"]
         data.append(task)
     
-    print(tabulate(data, tablefmt='simple'))
+    print(tabulate(data, headers='keys', tablefmt='simple'))
 
 
 def print_users():
@@ -99,14 +100,14 @@ def print_nodes():
 
 
 if __name__ == "__main__":
-    if len(args) == 2:
-        if args[1] == "show-task":
+    if args[1] == "get":
+        if args[2] == "task":
             print_tasks()
-        if args[1] == "show-storage":
+        if args[2] == "storage":
             print_storages()
-        if args[1] == "show-node":
+        if args[2] == "node":
             print_nodes()
-        if args[1] == "show-vm":
+        if args[2] == "vm":
             print_vms()
-        if args[1] == "show-user":
+        if args[2] == "user":
             print_users()
