@@ -5,3 +5,4 @@ services:
     command: sleep infinity
     volumes:
       - ./:/opt/app
+      - ../pylib:/opt/lib
