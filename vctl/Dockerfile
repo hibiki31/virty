@@ -1,5 +1,5 @@
 # 古ければ互換性が高くなる
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://ftp.riken.go.jp/Linux/ubuntu/%g" /etc/apt/sources.list
 RUN mkdir -p /opt/app && mkdir -p /opt/data

@@ -1,2 +1,4 @@
 nuitka
 httpx
+typer
+tabulate
