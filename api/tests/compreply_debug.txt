@@ -1,1 +1,0 @@
-['tests/test_compreply.py', '3', 'virty', 'get', 'vm']
