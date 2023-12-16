@@ -6,3 +6,4 @@ services:
     volumes:
       - ./:/opt/app
       - ../pylib:/opt/lib
+      - ../openapi/python:/opt/api

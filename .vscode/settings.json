@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./pylib"
+        "./pylib",
+        "./virty-api-client/virty_api_client"
     ]
 }

@@ -1,1 +1,1 @@
-from virty.storage import VirtyClinet
+from virty.client import VirtyClinet
