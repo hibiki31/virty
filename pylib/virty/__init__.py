@@ -3,8 +3,4 @@ from .client import AuthenticatedClient, Client
 
 from .main import VirtyClinet
 
-__all__ = (
-    "AuthenticatedClient",
-    "Client",
-    "VirtyClient"
-)
+import virty.storage

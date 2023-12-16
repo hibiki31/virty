@@ -4,6 +4,7 @@ import time
 import datetime
 
 from module.settings import *
+from virty import VirtyClinet
 
 
 class Color:
@@ -74,3 +75,7 @@ def print_resp(resp: httpx.Response, allow_not_found=False, debug=False):
     elif resp.status_code != 200:
         print(resp.json())
         raise Exception
+    
+
+def get_client():
+    return VirtyClinet(url=BASE_URL, token=str(HEADERS["Authorization"]).replace("Bearer ",""))

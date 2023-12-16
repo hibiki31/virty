@@ -2,20 +2,14 @@
 import typer
 import httpx
 import json
-import os.path
 from typer import Option as tyo
 import re
-from tabulate import tabulate
-from pprint import pprint
-import time
-import datetime
 
 from module.common import *
 from module.settings import *
 from command.get import app as app_get
 from command.delete import app as app_delete
 from command.update import app as app_update
-from module import complete
 
 
 app = typer.Typer(help="Virty CLI")
@@ -56,6 +50,13 @@ def auth(
         print("Success!!")
     else:
         raise Exception("Loggin fail")
+
+
+@app.command()
+def version():
+    client = get_client()
+    version = client.mixin_version()
+    print(version)
 
 
 if __name__ == "__main__":

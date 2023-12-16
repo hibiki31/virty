@@ -2,7 +2,7 @@ import httpx
 import time
 
 
-from virty import AuthenticatedClient
+from virty import AuthenticatedClient, storage
 from virty.api.mixin import get_version
 
 
@@ -16,8 +16,7 @@ class VirtyClinet:
     
     
     def mixin_version(self):
-        res = get_version()
-        return 
+        return get_version.sync(client=self.client)
     
         
     def wait_task(self):
@@ -36,4 +35,4 @@ class VirtyClinet:
                 time.sleep(0.5)
                 counter += 0.5
 
-    storage_delete = virty.storage.delete
+    storage_delete = storage.delete
