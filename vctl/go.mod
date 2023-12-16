@@ -1,6 +1,6 @@
-module github.com/hibiki31/virty/vctl
+module vctl
 
-go 1.13
+go 1.18
 
 require (
 	github.com/go-yaml/yaml v2.1.0+incompatible

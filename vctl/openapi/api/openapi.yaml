@@ -1,0 +1,4669 @@
+openapi: 3.0.2
+info:
+  title: VirtyAPI
+  version: 4.1.0
+servers:
+- description: Default
+  url: https://virty-pr.hinagiku.me/api/
+tags:
+- description: ""
+  name: mixin
+- description: トークン関係のリクエストはRFCの関係でスネークケース
+  name: auth
+- description: ""
+  name: users
+- description: ""
+  name: projects
+- description: ""
+  name: tasks
+- description: ""
+  name: nodes
+- description: ""
+  name: nodes-task
+- description: ""
+  name: vms
+- description: ""
+  name: vms-task
+- description: ""
+  name: storages
+- description: ""
+  name: storages-task
+- description: ""
+  name: images
+- description: ""
+  name: images-task
+- description: ""
+  name: networks
+- description: ""
+  name: networks-task
+paths:
+  /api/tasks:
+    get:
+      operationId: get_tasks
+      parameters:
+      - explode: true
+        in: query
+        name: admin
+        required: false
+        schema:
+          default: false
+          title: Admin
+          type: boolean
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: resource
+        required: false
+        schema:
+          title: Resource
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: object
+        required: false
+        schema:
+          title: Object
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: method
+        required: false
+        schema:
+          title: Method
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          title: Status
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPagesnation'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Tasks
+      tags:
+      - tasks
+  /api/tasks/:
+    delete:
+      operationId: delete_tasks
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Tasks
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Tasks
+      tags:
+      - tasks
+  /api/tasks/incomplete:
+    get:
+      operationId: get_incomplete_tasks
+      parameters:
+      - explode: true
+        in: query
+        name: hash
+        required: false
+        schema:
+          title: Hash
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: admin
+        required: false
+        schema:
+          default: false
+          title: Admin
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskIncomplete'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Tasks Incomplete
+      tags:
+      - tasks
+  /api/tasks/{uuid}:
+    get:
+      operationId: get_task
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Tasks
+      tags:
+      - tasks
+  /api/auth/setup:
+    post:
+      operationId: setup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Api Auth Setup
+      tags:
+      - auth
+  /api/auth:
+    post:
+      operationId: login
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_login'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRFC6749Response'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Login For Access Token
+      tags:
+      - auth
+  /api/auth/validate:
+    get:
+      operationId: validate_token
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthValidateResponse'
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer:
+        - user
+      summary: Read Auth Validate
+      tags:
+      - auth
+  /api/nodes:
+    get:
+      operationId: get_nodes
+      parameters:
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          title: Name
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Nodes
+      tags:
+      - nodes
+  /api/nodes/key:
+    get:
+      operationId: get_ssh_key_pair
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSHKeyPair'
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Ssh Key Pair
+      tags:
+      - nodes
+    post:
+      operationId: update_ssh_key_pair
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSHKeyPair'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Ssh Key Pair
+      tags:
+      - nodes
+  /api/nodes/{name}:
+    get:
+      operationId: get_node
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Node
+      tags:
+      - nodes
+  /api/nodes/{name}/facts:
+    get:
+      operationId: get_node_facts
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Node Name Facts
+      tags:
+      - nodes
+  /api/nodes/{name}/network:
+    get:
+      operationId: get_node_name_facts_api_nodes__name__network_get
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NodeInterface'
+                title: Response Get Node Name Facts Api Nodes  Name  Network Get
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Node Name Facts
+      tags:
+      - nodes
+  /api/tasks/nodes:
+    post:
+      operationId: create_node
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Create Node
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Tasks Nodes
+      tags:
+      - nodes-task
+  /api/tasks/nodes/{name}:
+    delete:
+      operationId: delete_node
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Node
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Tasks Nodes Name
+      tags:
+      - nodes-task
+  /api/tasks/nodes/roles:
+    patch:
+      operationId: update_node_role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeRoleForUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Node Role
+      tags:
+      - nodes-task
+  /api/vms:
+    get:
+      operationId: get_vms
+      parameters:
+      - explode: true
+        in: query
+        name: admin
+        required: false
+        schema:
+          default: false
+          title: Admin
+          type: boolean
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name_like
+        required: false
+        schema:
+          title: Name Like
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: node_name_like
+        required: false
+        schema:
+          title: Node Name Like
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainPagenation'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Domain
+      tags:
+      - vms
+  /api/vms/{uuid}:
+    get:
+      operationId: get_vm
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainDetail'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Domain Uuid
+      tags:
+      - vms
+  /api/vms/vnc/{token}:
+    get:
+      operationId: get_vnc_address
+      parameters:
+      - explode: false
+        in: path
+        name: token
+        required: true
+        schema:
+          title: Token
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Api Domain
+      tags:
+      - vms
+  /api/tasks/vms:
+    post:
+      operationId: create_vm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Create Vm
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Vms
+      tags:
+      - vms-task
+    put:
+      operationId: refresh_vms
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Refresh Vms
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Publish Task To Update Vm List
+      tags:
+      - vms-task
+  /api/tasks/vms/{uuid}:
+    delete:
+      operationId: delete_vm
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Vm
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Api Domains
+      tags:
+      - vms-task
+  /api/tasks/vms/{uuid}/power:
+    patch:
+      operationId: update_vm_power_status
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerStatusForUpdateDomain'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Update Vm Power Status
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Tasks Vms Uuid Power
+      tags:
+      - vms-task
+  /api/tasks/vms/{uuid}/cdrom:
+    patch:
+      description: |-
+        umount
+        - path = null
+
+        mount
+        - path = iso file path
+      operationId: control_vm_cdrom
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CdromForUpdateDomain'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Control Vm Cdrom
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Tasks Vms Uuid Cdrom
+      tags:
+      - vms-task
+  /api/tasks/vms/project:
+    patch:
+      operationId: path_vms_project_api_tasks_vms_project_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainProjectForUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Path Vms Project
+      tags:
+      - vms-task
+  /api/tasks/vms/{uuid}/network:
+    patch:
+      description: |-
+        **Power off required**
+
+        Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on 'network' network type
+      operationId: update_vm_network
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkForUpdateDomain'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Update Vm Network
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Vm Network
+      tags:
+      - vms-task
+  /api/storages:
+    get:
+      operationId: get_storages
+      parameters:
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          title: Name
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: nodeName
+        required: false
+        schema:
+          title: Nodename
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Storage'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Storages
+      tags:
+      - storages
+    patch:
+      operationId: update_storage_metadata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageMetadataForUpdate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Storage
+      tags:
+      - storages
+  /api/storages/pools:
+    get:
+      operationId: get_storage_pools
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/StoragePool'
+                title: Response Get Storage Pools
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Storages Pools
+      tags:
+      - storages
+    patch:
+      operationId: update_storage_pool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoragePoolForUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Storages Pools
+      tags:
+      - storages
+    post:
+      operationId: create_storage_pool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoragePoolForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Storages Pools
+      tags:
+      - storages
+  /api/storages/{uuid}:
+    get:
+      operationId: get_storage
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Storage'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Storages Uuid
+      tags:
+      - storages
+  /api/tasks/storages:
+    post:
+      operationId: create_storage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Create Storage
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Storage
+      tags:
+      - storages-task
+  /api/tasks/storages/{uuid}:
+    delete:
+      operationId: delete_storage
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Storage
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Api Storages
+      tags:
+      - storages-task
+  /api/images:
+    get:
+      operationId: get_images
+      parameters:
+      - explode: true
+        in: query
+        name: node_name
+        required: false
+        schema:
+          title: Node Name
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: pool_uuid
+        required: false
+        schema:
+          title: Pool Uuid
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          title: Name
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: rool
+        required: false
+        schema:
+          title: Rool
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Images
+      tags:
+      - images
+    patch:
+      operationId: update_image_flavor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageForUpdateImageFlavor'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Images
+      tags:
+      - images
+  /api/tasks/images:
+    put:
+      operationId: refresh_images
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Put Api Images
+      tags:
+      - images-task
+  /api/images/scp:
+    put:
+      operationId: scp_image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageSCP'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Put Api Images Scp
+      tags:
+      - images
+  /api/tasks/images/download:
+    post:
+      operationId: download_image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageDownloadForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Image Download
+      tags:
+      - images-task
+  /api/networks:
+    get:
+      operationId: get_networks
+      parameters:
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name_like
+        required: false
+        schema:
+          title: Name Like
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: node_name_like
+        required: false
+        schema:
+          title: Node Name Like
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: type
+        required: false
+        schema:
+          title: Type
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkPage'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Networks
+      tags:
+      - networks
+  /api/networks/pools:
+    get:
+      operationId: get_network_pools
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NetworkPool'
+                title: Response Get Network Pools
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Networks Pools
+      tags:
+      - networks
+    patch:
+      operationId: update_network_pool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkPoolForUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Patch Api Networks Pools
+      tags:
+      - networks
+    post:
+      operationId: create_network_pool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkPoolForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Networks Pools
+      tags:
+      - networks
+  /api/networks/pools/{id}:
+    delete:
+      operationId: delete_network_pool
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          title: Id
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Pools Uuid
+      tags:
+      - networks
+  /api/networks/{uuid}:
+    get:
+      operationId: get_network
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Networks Uuid
+      tags:
+      - networks
+  /api/tasks/networks:
+    post:
+      operationId: create_network
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Create Network
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Storage
+      tags:
+      - networks-task
+    put:
+      operationId: refresh_networks
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Refresh Networks
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Put Api Networks
+      tags:
+      - networks-task
+  /api/tasks/networks/{uuid}/ovs:
+    post:
+      operationId: create_network_ovs
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkOVSForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Create Network Ovs
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Uuid Ovs
+      tags:
+      - networks-task
+  /api/tasks/networks/providers:
+    post:
+      operationId: post_uuid_ovs_api_tasks_networks_providers_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkProviderForCreate'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Post Uuid Ovs Api Tasks Networks Providers Post
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Uuid Ovs
+      tags:
+      - networks-task
+  /api/tasks/networks/{uuid}/ovs/{name}:
+    delete:
+      operationId: delete_network_ovs
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Network Ovs
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Networks Uuid Ovs
+      tags:
+      - networks-task
+  /api/tasks/networks/{uuid}:
+    delete:
+      operationId: delete_network
+      parameters:
+      - explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          title: Uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Task'
+                title: Response Delete Network
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Api Storage
+      tags:
+      - networks-task
+  /api/users/me:
+    get:
+      operationId: get_current_user
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenData'
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Read Users Me
+      tags:
+      - users
+  /api/users:
+    get:
+      operationId: get_users
+      parameters:
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name_like
+        required: false
+        schema:
+          title: Name Like
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Users
+      tags:
+      - users
+    post:
+      operationId: create_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Users
+      tags:
+      - users
+  /api/users/{username}:
+    delete:
+      operationId: delete_user
+      parameters:
+      - explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          title: Username
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete User
+      tags:
+      - users
+  /api/projects:
+    get:
+      operationId: get_projects
+      parameters:
+      - explode: true
+        in: query
+        name: admin
+        required: false
+        schema:
+          default: false
+          title: Admin
+          type: boolean
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          title: Name
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Projects
+      tags:
+      - projects
+    put:
+      operationId: update_project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectForUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Put Api Projects
+      tags:
+      - projects
+  /api/tasks/projects:
+    post:
+      operationId: create_project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Projects
+      tags:
+      - projects
+  /api/tasks/projects/{project_id}:
+    delete:
+      operationId: delete_project
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          title: Project Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Api Projects
+      tags:
+      - projects
+  /api/flavors:
+    get:
+      operationId: get_flavors
+      parameters:
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 25
+          title: Limit
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          title: Page
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          title: Name
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flavor'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Api Flavors
+      tags:
+      - flavors
+    post:
+      operationId: create_flavor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlavorForCreate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Post Api Flavors
+      tags:
+      - flavors
+  /api/flavors/{flavor_id}:
+    delete:
+      operationId: delete_flavor
+      parameters:
+      - explode: false
+        in: path
+        name: flavor_id
+        required: true
+        schema:
+          title: Flavor Id
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlavorPage'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Flavors
+      tags:
+      - flavors
+  /api/metrics:
+    get:
+      operationId: get_metrics
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Successful Response
+      summary: Exporter Get
+      tags:
+      - metrics
+  /api/version:
+    get:
+      description: 初期化済みか判定用
+      operationId: get_version
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+          description: Successful Response
+      summary: Get Version
+      tags:
+      - mixin
+components:
+  schemas:
+    AuthValidateResponse:
+      example:
+        access_token: access_token
+        token_type: token_type
+        username: username
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        token_type:
+          title: Token Type
+          type: string
+        username:
+          title: Username
+          type: string
+      required:
+      - access_token
+      - token_type
+      - username
+      title: AuthValidateResponse
+      type: object
+    Body_login:
+      properties:
+        grant_type:
+          pattern: password
+          title: Grant Type
+          type: string
+        username:
+          title: Username
+          type: string
+        password:
+          title: Password
+          type: string
+        scope:
+          default: ""
+          title: Scope
+          type: string
+        client_id:
+          title: Client Id
+          type: string
+        client_secret:
+          title: Client Secret
+          type: string
+      required:
+      - password
+      - username
+      title: Body_login
+      type: object
+    CdromForUpdateDomain:
+      example:
+        path: path
+        target: target
+      properties:
+        path:
+          title: Path
+          type: string
+        target:
+          title: Target
+          type: string
+      title: CdromForUpdateDomain
+      type: object
+    CloudInitInsert:
+      example:
+        hostname: hostname
+        userData: userData
+      properties:
+        hostname:
+          title: Hostname
+          type: string
+        userData:
+          title: Userdata
+          type: string
+      required:
+      - hostname
+      - userData
+      title: CloudInitInsert
+      type: object
+    Domain:
+      example:
+        nodeName: nodeName
+        vncPort: 5
+        interfaces:
+        - port: port
+          bridge: bridge
+          type: type
+          mac: mac
+          target: target
+          network: network
+        - port: port
+          bridge: bridge
+          type: type
+          mac: mac
+          target: target
+          network: network
+        memory: 1
+        description: description
+        uuid: uuid
+        core: 6
+        vncPassword: vncPassword
+        ownerProjectId: ownerProjectId
+        ownerProject:
+          name: name
+          id: id
+        drives:
+        - source: source
+          type: type
+          device: device
+          target: target
+        - source: source
+          type: type
+          device: device
+          target: target
+        name: name
+        ownerUserId: ownerUserId
+        status: 5
+      properties:
+        uuid:
+          title: Uuid
+          type: string
+        name:
+          title: Name
+          type: string
+        core:
+          title: Core
+          type: integer
+        memory:
+          title: Memory
+          type: integer
+        status:
+          title: Status
+          type: integer
+        description:
+          title: Description
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        ownerUserId:
+          title: Owneruserid
+          type: string
+        ownerProjectId:
+          title: Ownerprojectid
+          type: string
+        ownerProject:
+          $ref: '#/components/schemas/DomainProject'
+        vncPort:
+          title: Vncport
+          type: integer
+        vncPassword:
+          title: Vncpassword
+          type: string
+        drives:
+          items:
+            $ref: '#/components/schemas/DomainDrive'
+          title: Drives
+          type: array
+        interfaces:
+          items:
+            $ref: '#/components/schemas/DomainInterface'
+          title: Interfaces
+          type: array
+      required:
+      - core
+      - memory
+      - name
+      - nodeName
+      - status
+      - uuid
+      title: Domain
+      type: object
+    DomainDetail:
+      example:
+        nodeName: nodeName
+        vncPort: 5
+        interfaces:
+        - port: port
+          bridge: bridge
+          type: type
+          mac: mac
+          target: target
+          network: network
+        - port: port
+          bridge: bridge
+          type: type
+          mac: mac
+          target: target
+          network: network
+        memory: 6
+        description: description
+        uuid: uuid
+        core: 0
+        node:
+          data:
+          - memory: 5
+            roles:
+            - roleName: roleName
+              extraJson: "{}"
+            - roleName: roleName
+              extraJson: "{}"
+            description: description
+            userName: userName
+            osName: osName
+            core: 1
+            osVersion: osVersion
+            port: 6
+            domain: domain
+            libvirtVersion: libvirtVersion
+            name: name
+            cpuGen: cpuGen
+            osLike: osLike
+            qemuVersion: qemuVersion
+            status: 5
+          - memory: 5
+            roles:
+            - roleName: roleName
+              extraJson: "{}"
+            - roleName: roleName
+              extraJson: "{}"
+            description: description
+            userName: userName
+            osName: osName
+            core: 1
+            osVersion: osVersion
+            port: 6
+            domain: domain
+            libvirtVersion: libvirtVersion
+            name: name
+            cpuGen: cpuGen
+            osLike: osLike
+            qemuVersion: qemuVersion
+            status: 5
+          count: 0
+        vncPassword: vncPassword
+        ownerProjectId: ownerProjectId
+        ownerProject:
+          name: name
+          id: id
+        drives:
+        - source: source
+          type: type
+          device: device
+          target: target
+        - source: source
+          type: type
+          device: device
+          target: target
+        name: name
+        ownerUserId: ownerUserId
+        status: 1
+      properties:
+        uuid:
+          title: Uuid
+          type: string
+        name:
+          title: Name
+          type: string
+        core:
+          title: Core
+          type: integer
+        memory:
+          title: Memory
+          type: integer
+        status:
+          title: Status
+          type: integer
+        description:
+          title: Description
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        ownerUserId:
+          title: Owneruserid
+          type: string
+        ownerProjectId:
+          title: Ownerprojectid
+          type: string
+        ownerProject:
+          $ref: '#/components/schemas/DomainProject'
+        vncPort:
+          title: Vncport
+          type: integer
+        vncPassword:
+          title: Vncpassword
+          type: string
+        drives:
+          items:
+            $ref: '#/components/schemas/DomainDrive'
+          title: Drives
+          type: array
+        interfaces:
+          items:
+            $ref: '#/components/schemas/DomainInterface'
+          title: Interfaces
+          type: array
+        node:
+          $ref: '#/components/schemas/Node'
+      required:
+      - core
+      - memory
+      - name
+      - node
+      - nodeName
+      - status
+      - uuid
+      title: DomainDetail
+      type: object
+    DomainDrive:
+      example:
+        source: source
+        type: type
+        device: device
+        target: target
+      properties:
+        device:
+          title: Device
+          type: string
+        type:
+          title: Type
+          type: string
+        source:
+          title: Source
+          type: string
+        target:
+          title: Target
+          type: string
+      title: DomainDrive
+      type: object
+    DomainForCreate:
+      example:
+        nodeName: nodeName
+        cloudInit:
+          hostname: hostname
+          userData: userData
+        disks:
+        - savePoolUuid: savePoolUuid
+          originalName: originalName
+          sizeGigaByte: 1
+          templateName: templateName
+          originalPoolUuid: originalPoolUuid
+          type: type
+        - savePoolUuid: savePoolUuid
+          originalName: originalName
+          sizeGigaByte: 1
+          templateName: templateName
+          originalPoolUuid: originalPoolUuid
+          type: type
+        name: name
+        memoryMegaByte: 0
+        cpu: 6
+        type: manual
+        interface:
+        - port: port
+          type: type
+          networkUuid: networkUuid
+          mac: mac
+        - port: port
+          type: type
+          networkUuid: networkUuid
+          mac: mac
+      properties:
+        type:
+          enum:
+          - manual
+          - project
+          title: Type
+          type: string
+        name:
+          title: Name
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        memoryMegaByte:
+          title: Memorymegabyte
+          type: integer
+        cpu:
+          title: Cpu
+          type: integer
+        disks:
+          items:
+            $ref: '#/components/schemas/DomainForCreateDisk'
+          title: Disks
+          type: array
+        interface:
+          items:
+            $ref: '#/components/schemas/DomainForCreateInterface'
+          title: Interface
+          type: array
+        cloudInit:
+          $ref: '#/components/schemas/CloudInitInsert'
+      required:
+      - cpu
+      - disks
+      - interface
+      - memoryMegaByte
+      - name
+      - nodeName
+      - type
+      title: DomainForCreate
+      type: object
+    DomainForCreateDisk:
+      example:
+        savePoolUuid: savePoolUuid
+        originalName: originalName
+        sizeGigaByte: 1
+        templateName: templateName
+        originalPoolUuid: originalPoolUuid
+        type: type
+      properties:
+        type:
+          title: Type
+          type: string
+        savePoolUuid:
+          title: Savepooluuid
+          type: string
+        originalPoolUuid:
+          title: Originalpooluuid
+          type: string
+        originalName:
+          title: Originalname
+          type: string
+        sizeGigaByte:
+          title: Sizegigabyte
+          type: integer
+        templateName:
+          title: Templatename
+          type: string
+      required:
+      - savePoolUuid
+      - type
+      title: DomainForCreateDisk
+      type: object
+    DomainForCreateInterface:
+      example:
+        port: port
+        type: type
+        networkUuid: networkUuid
+        mac: mac
+      properties:
+        type:
+          title: Type
+          type: string
+        mac:
+          title: Mac
+          type: string
+        networkUuid:
+          title: Networkuuid
+          type: string
+        port:
+          title: Port
+          type: string
+      required:
+      - networkUuid
+      - type
+      title: DomainForCreateInterface
+      type: object
+    DomainInterface:
+      example:
+        port: port
+        bridge: bridge
+        type: type
+        mac: mac
+        target: target
+        network: network
+      properties:
+        type:
+          title: Type
+          type: string
+        mac:
+          title: Mac
+          type: string
+        target:
+          title: Target
+          type: string
+        bridge:
+          title: Bridge
+          type: string
+        network:
+          title: Network
+          type: string
+        port:
+          title: Port
+          type: string
+      title: DomainInterface
+      type: object
+    DomainPagenation:
+      example:
+        data:
+        - nodeName: nodeName
+          vncPort: 5
+          interfaces:
+          - port: port
+            bridge: bridge
+            type: type
+            mac: mac
+            target: target
+            network: network
+          - port: port
+            bridge: bridge
+            type: type
+            mac: mac
+            target: target
+            network: network
+          memory: 1
+          description: description
+          uuid: uuid
+          core: 6
+          vncPassword: vncPassword
+          ownerProjectId: ownerProjectId
+          ownerProject:
+            name: name
+            id: id
+          drives:
+          - source: source
+            type: type
+            device: device
+            target: target
+          - source: source
+            type: type
+            device: device
+            target: target
+          name: name
+          ownerUserId: ownerUserId
+          status: 5
+        - nodeName: nodeName
+          vncPort: 5
+          interfaces:
+          - port: port
+            bridge: bridge
+            type: type
+            mac: mac
+            target: target
+            network: network
+          - port: port
+            bridge: bridge
+            type: type
+            mac: mac
+            target: target
+            network: network
+          memory: 1
+          description: description
+          uuid: uuid
+          core: 6
+          vncPassword: vncPassword
+          ownerProjectId: ownerProjectId
+          ownerProject:
+            name: name
+            id: id
+          drives:
+          - source: source
+            type: type
+            device: device
+            target: target
+          - source: source
+            type: type
+            device: device
+            target: target
+          name: name
+          ownerUserId: ownerUserId
+          status: 5
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/Domain'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: DomainPagenation
+      type: object
+    DomainProject:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - id
+      - name
+      title: DomainProject
+      type: object
+    DomainProjectForUpdate:
+      example:
+        uuid: uuid
+        projectId: projectId
+      properties:
+        uuid:
+          title: Uuid
+          type: string
+        projectId:
+          title: Projectid
+          type: string
+      required:
+      - projectId
+      - uuid
+      title: DomainProjectForUpdate
+      type: object
+    Flavor:
+      example:
+        data:
+        - os: os
+          name: name
+          icon: icon
+          description: description
+          manualUrl: manualUrl
+          id: 5
+          cloudInitReady: true
+        - os: os
+          name: name
+          icon: icon
+          description: description
+          manualUrl: manualUrl
+          id: 5
+          cloudInitReady: true
+        count: 1
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/FlavorPage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: Flavor
+      type: object
+    FlavorForCreate:
+      example:
+        os: os
+        name: name
+        icon: icon
+        description: description
+        manualUrl: manualUrl
+        cloudInitReady: true
+      properties:
+        name:
+          title: Name
+          type: string
+        os:
+          title: Os
+          type: string
+        manualUrl:
+          title: Manualurl
+          type: string
+        icon:
+          title: Icon
+          type: string
+        cloudInitReady:
+          title: Cloudinitready
+          type: boolean
+        description:
+          title: Description
+          type: string
+      required:
+      - cloudInitReady
+      - description
+      - icon
+      - manualUrl
+      - name
+      - os
+      title: FlavorForCreate
+      type: object
+    FlavorPage:
+      example:
+        os: os
+        name: name
+        icon: icon
+        description: description
+        manualUrl: manualUrl
+        id: 5
+        cloudInitReady: true
+      properties:
+        name:
+          title: Name
+          type: string
+        os:
+          title: Os
+          type: string
+        manualUrl:
+          title: Manualurl
+          type: string
+        icon:
+          title: Icon
+          type: string
+        cloudInitReady:
+          title: Cloudinitready
+          type: boolean
+        description:
+          title: Description
+          type: string
+        id:
+          title: Id
+          type: integer
+      required:
+      - cloudInitReady
+      - description
+      - icon
+      - id
+      - manualUrl
+      - name
+      - os
+      title: FlavorPage
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    Image:
+      example:
+        data:
+        - flavor:
+            data:
+            - os: os
+              name: name
+              icon: icon
+              description: description
+              manualUrl: manualUrl
+              id: 5
+              cloudInitReady: true
+            - os: os
+              name: name
+              icon: icon
+              description: description
+              manualUrl: manualUrl
+              id: 5
+              cloudInitReady: true
+            count: 1
+          path: path
+          allocation: 5
+          updateToken: updateToken
+          domain:
+            issuanceId: 2
+            ownerUserId: ownerUserId
+            name: name
+            uuid: uuid
+          name: name
+          storageUuid: storageUuid
+          storage:
+            nodeName: nodeName
+            updateToken: updateToken
+            available: 1
+            active: true
+            allocationCommit: 5
+            uuid: uuid
+            capacity: 5
+            autoStart: true
+            capacityCommit: 2
+            node:
+              memory: 5
+              roles:
+              - roleName: roleName
+                extraJson: "{}"
+              - roleName: roleName
+                extraJson: "{}"
+              description: description
+              userName: userName
+              osName: osName
+              core: 1
+              osVersion: osVersion
+              port: 6
+              domain: domain
+              libvirtVersion: libvirtVersion
+              name: name
+              cpuGen: cpuGen
+              osLike: osLike
+              qemuVersion: qemuVersion
+              status: 5
+            path: path
+            metaData:
+              deviceType: deviceType
+              protocol: protocol
+              rool: rool
+            name: name
+            status: 6
+          capacity: 6
+        - flavor:
+            data:
+            - os: os
+              name: name
+              icon: icon
+              description: description
+              manualUrl: manualUrl
+              id: 5
+              cloudInitReady: true
+            - os: os
+              name: name
+              icon: icon
+              description: description
+              manualUrl: manualUrl
+              id: 5
+              cloudInitReady: true
+            count: 1
+          path: path
+          allocation: 5
+          updateToken: updateToken
+          domain:
+            issuanceId: 2
+            ownerUserId: ownerUserId
+            name: name
+            uuid: uuid
+          name: name
+          storageUuid: storageUuid
+          storage:
+            nodeName: nodeName
+            updateToken: updateToken
+            available: 1
+            active: true
+            allocationCommit: 5
+            uuid: uuid
+            capacity: 5
+            autoStart: true
+            capacityCommit: 2
+            node:
+              memory: 5
+              roles:
+              - roleName: roleName
+                extraJson: "{}"
+              - roleName: roleName
+                extraJson: "{}"
+              description: description
+              userName: userName
+              osName: osName
+              core: 1
+              osVersion: osVersion
+              port: 6
+              domain: domain
+              libvirtVersion: libvirtVersion
+              name: name
+              cpuGen: cpuGen
+              osLike: osLike
+              qemuVersion: qemuVersion
+              status: 5
+            path: path
+            metaData:
+              deviceType: deviceType
+              protocol: protocol
+              rool: rool
+            name: name
+            status: 6
+          capacity: 6
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/ImagePage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: Image
+      type: object
+    ImageDomain:
+      example:
+        issuanceId: 2
+        ownerUserId: ownerUserId
+        name: name
+        uuid: uuid
+      properties:
+        ownerUserId:
+          title: Owneruserid
+          type: string
+        issuanceId:
+          title: Issuanceid
+          type: integer
+        name:
+          title: Name
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+      required:
+      - name
+      - uuid
+      title: ImageDomain
+      type: object
+    ImageDownloadForCreate:
+      example:
+        imageUrl: imageUrl
+        storageUuid: storageUuid
+      properties:
+        storageUuid:
+          title: Storageuuid
+          type: string
+        imageUrl:
+          title: Imageurl
+          type: string
+      required:
+      - imageUrl
+      - storageUuid
+      title: ImageDownloadForCreate
+      type: object
+    ImageForUpdateImageFlavor:
+      example:
+        nodeName: nodeName
+        path: path
+        flavorId: 0
+        storageUuid: storageUuid
+      properties:
+        storageUuid:
+          title: Storageuuid
+          type: string
+        path:
+          title: Path
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        flavorId:
+          title: Flavorid
+          type: integer
+      required:
+      - flavorId
+      - nodeName
+      - path
+      - storageUuid
+      title: ImageForUpdateImageFlavor
+      type: object
+    ImagePage:
+      example:
+        flavor:
+          data:
+          - os: os
+            name: name
+            icon: icon
+            description: description
+            manualUrl: manualUrl
+            id: 5
+            cloudInitReady: true
+          - os: os
+            name: name
+            icon: icon
+            description: description
+            manualUrl: manualUrl
+            id: 5
+            cloudInitReady: true
+          count: 1
+        path: path
+        allocation: 5
+        updateToken: updateToken
+        domain:
+          issuanceId: 2
+          ownerUserId: ownerUserId
+          name: name
+          uuid: uuid
+        name: name
+        storageUuid: storageUuid
+        storage:
+          nodeName: nodeName
+          updateToken: updateToken
+          available: 1
+          active: true
+          allocationCommit: 5
+          uuid: uuid
+          capacity: 5
+          autoStart: true
+          capacityCommit: 2
+          node:
+            memory: 5
+            roles:
+            - roleName: roleName
+              extraJson: "{}"
+            - roleName: roleName
+              extraJson: "{}"
+            description: description
+            userName: userName
+            osName: osName
+            core: 1
+            osVersion: osVersion
+            port: 6
+            domain: domain
+            libvirtVersion: libvirtVersion
+            name: name
+            cpuGen: cpuGen
+            osLike: osLike
+            qemuVersion: qemuVersion
+            status: 5
+          path: path
+          metaData:
+            deviceType: deviceType
+            protocol: protocol
+            rool: rool
+          name: name
+          status: 6
+        capacity: 6
+      properties:
+        name:
+          title: Name
+          type: string
+        storageUuid:
+          title: Storageuuid
+          type: string
+        capacity:
+          title: Capacity
+          type: integer
+        storage:
+          $ref: '#/components/schemas/StoragePage'
+        flavor:
+          $ref: '#/components/schemas/Flavor'
+        allocation:
+          title: Allocation
+          type: integer
+        path:
+          title: Path
+          type: string
+        updateToken:
+          title: Updatetoken
+          type: string
+        domain:
+          $ref: '#/components/schemas/ImageDomain'
+      required:
+      - allocation
+      - capacity
+      - name
+      - path
+      - storage
+      title: ImagePage
+      type: object
+    ImageSCP:
+      example:
+        fromFilePath: fromFilePath
+        toNodeName: toNodeName
+        fromNodeName: fromNodeName
+        toFilePath: toFilePath
+      properties:
+        fromNodeName:
+          title: Fromnodename
+          type: string
+        toNodeName:
+          title: Tonodename
+          type: string
+        fromFilePath:
+          title: Fromfilepath
+          type: string
+        toFilePath:
+          title: Tofilepath
+          type: string
+      required:
+      - fromFilePath
+      - fromNodeName
+      - toFilePath
+      - toNodeName
+      title: ImageSCP
+      type: object
+    Network:
+      example:
+        nodeName: nodeName
+        portgroups:
+        - isDefault: true
+          vlanId: vlanId
+          name: name
+        - isDefault: true
+          vlanId: vlanId
+          name: name
+        updateToken: updateToken
+        name: name
+        description: description
+        active: true
+        bridge: bridge
+        type: type
+        uuid: uuid
+        dhcp: true
+        autoStart: true
+      properties:
+        name:
+          title: Name
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+        type:
+          title: Type
+          type: string
+        dhcp:
+          title: Dhcp
+          type: boolean
+        description:
+          title: Description
+          type: string
+        active:
+          title: Active
+          type: boolean
+        bridge:
+          title: Bridge
+          type: string
+        autoStart:
+          title: Autostart
+          type: boolean
+        portgroups:
+          items:
+            $ref: '#/components/schemas/NetworkPortgroup'
+          title: Portgroups
+          type: array
+        nodeName:
+          title: Nodename
+          type: string
+        updateToken:
+          title: Updatetoken
+          type: string
+      required:
+      - name
+      - nodeName
+      - portgroups
+      - type
+      - uuid
+      title: Network
+      type: object
+    NetworkForCreate:
+      example:
+        nodeName: nodeName
+        name: name
+        type: bridge
+        bridgeDevice: bridgeDevice
+      properties:
+        name:
+          title: Name
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        type:
+          description: brdige or ovs
+          enum:
+          - bridge
+          - ovs
+          title: Type
+          type: string
+        bridgeDevice:
+          title: Bridgedevice
+          type: string
+      required:
+      - name
+      - nodeName
+      - type
+      title: NetworkForCreate
+      type: object
+    NetworkForNetworkPool:
+      example:
+        nodeName: nodeName
+        name: name
+        bridge: bridge
+        type: type
+        uuid: uuid
+      properties:
+        name:
+          title: Name
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        bridge:
+          title: Bridge
+          type: string
+        type:
+          title: Type
+          type: string
+      required:
+      - bridge
+      - name
+      - nodeName
+      - type
+      - uuid
+      title: NetworkForNetworkPool
+      type: object
+    NetworkForUpdateDomain:
+      example:
+        port: port
+        networkUuid: networkUuid
+        mac: mac
+      properties:
+        mac:
+          title: Mac
+          type: string
+        networkUuid:
+          title: Networkuuid
+          type: string
+        port:
+          title: Port
+          type: string
+      required:
+      - mac
+      - networkUuid
+      title: NetworkForUpdateDomain
+      type: object
+    NetworkOVSForCreate:
+      example:
+        default: true
+        vlanId: 0
+        name: name
+      properties:
+        default:
+          title: Default
+          type: boolean
+        name:
+          title: Name
+          type: string
+        vlanId:
+          title: Vlanid
+          type: integer
+      required:
+      - default
+      - name
+      title: NetworkOVSForCreate
+      type: object
+    NetworkPage:
+      example:
+        data:
+        - nodeName: nodeName
+          portgroups:
+          - isDefault: true
+            vlanId: vlanId
+            name: name
+          - isDefault: true
+            vlanId: vlanId
+            name: name
+          updateToken: updateToken
+          name: name
+          description: description
+          active: true
+          bridge: bridge
+          type: type
+          uuid: uuid
+          dhcp: true
+          autoStart: true
+        - nodeName: nodeName
+          portgroups:
+          - isDefault: true
+            vlanId: vlanId
+            name: name
+          - isDefault: true
+            vlanId: vlanId
+            name: name
+          updateToken: updateToken
+          name: name
+          description: description
+          active: true
+          bridge: bridge
+          type: type
+          uuid: uuid
+          dhcp: true
+          autoStart: true
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/Network'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: NetworkPage
+      type: object
+    NetworkPool:
+      example:
+        name: name
+        id: 0
+        networks:
+        - nodeName: nodeName
+          name: name
+          bridge: bridge
+          type: type
+          uuid: uuid
+        - nodeName: nodeName
+          name: name
+          bridge: bridge
+          type: type
+          uuid: uuid
+        ports:
+        - vlanId: 6
+          name: name
+          network:
+            nodeName: nodeName
+            name: name
+            bridge: bridge
+            type: type
+            uuid: uuid
+        - vlanId: 6
+          name: name
+          network:
+            nodeName: nodeName
+            name: name
+            bridge: bridge
+            type: type
+            uuid: uuid
+      properties:
+        id:
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+        networks:
+          items:
+            $ref: '#/components/schemas/NetworkForNetworkPool'
+          title: Networks
+          type: array
+        ports:
+          items:
+            $ref: '#/components/schemas/NetworkPoolPort'
+          title: Ports
+          type: array
+      title: NetworkPool
+      type: object
+    NetworkPoolForCreate:
+      example:
+        name: name
+      properties:
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      title: NetworkPoolForCreate
+      type: object
+    NetworkPoolForUpdate:
+      example:
+        poolId: 0
+        portName: portName
+        networkUuid: networkUuid
+      properties:
+        poolId:
+          title: Poolid
+          type: integer
+        networkUuid:
+          title: Networkuuid
+          type: string
+        portName:
+          title: Portname
+          type: string
+      required:
+      - networkUuid
+      - poolId
+      title: NetworkPoolForUpdate
+      type: object
+    NetworkPoolPort:
+      example:
+        vlanId: 6
+        name: name
+        network:
+          nodeName: nodeName
+          name: name
+          bridge: bridge
+          type: type
+          uuid: uuid
+      properties:
+        name:
+          title: Name
+          type: string
+        vlanId:
+          title: Vlanid
+          type: integer
+        network:
+          $ref: '#/components/schemas/NetworkForNetworkPool'
+      required:
+      - network
+      title: NetworkPoolPort
+      type: object
+    NetworkPortgroup:
+      example:
+        isDefault: true
+        vlanId: vlanId
+        name: name
+      properties:
+        name:
+          title: Name
+          type: string
+        vlanId:
+          title: Vlanid
+          type: string
+        isDefault:
+          title: Isdefault
+          type: boolean
+      required:
+      - isDefault
+      - name
+      title: NetworkPortgroup
+      type: object
+    NetworkProviderForCreate:
+      example:
+        networkNode: networkNode
+        dhcpStart: dhcpStart
+        dhcpEnd: dhcpEnd
+        name: name
+        gatewayAddress: gatewayAddress
+        networkAddress: networkAddress
+        networkPrefix: networkPrefix
+        dnsDomain: dnsDomain
+      properties:
+        name:
+          title: Name
+          type: string
+        dnsDomain:
+          title: Dnsdomain
+          type: string
+        networkAddress:
+          title: Networkaddress
+          type: string
+        networkPrefix:
+          title: Networkprefix
+          type: string
+        gatewayAddress:
+          title: Gatewayaddress
+          type: string
+        dhcpStart:
+          title: Dhcpstart
+          type: string
+        dhcpEnd:
+          title: Dhcpend
+          type: string
+        networkNode:
+          title: Networknode
+          type: string
+      title: NetworkProviderForCreate
+      type: object
+    Node:
+      example:
+        data:
+        - memory: 5
+          roles:
+          - roleName: roleName
+            extraJson: "{}"
+          - roleName: roleName
+            extraJson: "{}"
+          description: description
+          userName: userName
+          osName: osName
+          core: 1
+          osVersion: osVersion
+          port: 6
+          domain: domain
+          libvirtVersion: libvirtVersion
+          name: name
+          cpuGen: cpuGen
+          osLike: osLike
+          qemuVersion: qemuVersion
+          status: 5
+        - memory: 5
+          roles:
+          - roleName: roleName
+            extraJson: "{}"
+          - roleName: roleName
+            extraJson: "{}"
+          description: description
+          userName: userName
+          osName: osName
+          core: 1
+          osVersion: osVersion
+          port: 6
+          domain: domain
+          libvirtVersion: libvirtVersion
+          name: name
+          cpuGen: cpuGen
+          osLike: osLike
+          qemuVersion: qemuVersion
+          status: 5
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/NodePage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: Node
+      type: object
+    NodeForCreate:
+      example:
+        port: 0
+        domain: domain
+        name: name
+        libvirtRole: true
+        description: description
+        userName: userName
+      properties:
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        domain:
+          title: Domain
+          type: string
+        userName:
+          title: Username
+          type: string
+        port:
+          title: Port
+          type: integer
+        libvirtRole:
+          title: Libvirtrole
+          type: boolean
+      required:
+      - description
+      - domain
+      - libvirtRole
+      - name
+      - port
+      - userName
+      title: NodeForCreate
+      type: object
+    NodeInterface:
+      example:
+        macAddress: macAddress
+        ipv4Info:
+        - address: address
+          prefixlen: 6
+          label: label
+        - address: address
+          prefixlen: 6
+          label: label
+        ifname: ifname
+        ipv6Info:
+        - address: address
+          prefixlen: 1
+        - address: address
+          prefixlen: 1
+        linkType: linkType
+        operstate: operstate
+        mtu: 0
+        master: master
+      properties:
+        ifname:
+          title: Ifname
+          type: string
+        operstate:
+          title: Operstate
+          type: string
+        mtu:
+          title: Mtu
+          type: integer
+        master:
+          title: Master
+          type: string
+        linkType:
+          title: Linktype
+          type: string
+        macAddress:
+          title: Macaddress
+          type: string
+        ipv4Info:
+          items:
+            $ref: '#/components/schemas/NodeInterfaceIpv4Info'
+          title: Ipv4Info
+          type: array
+        ipv6Info:
+          items:
+            $ref: '#/components/schemas/NodeInterfaceIpv6Info'
+          title: Ipv6Info
+          type: array
+      required:
+      - ifname
+      - ipv4Info
+      - ipv6Info
+      - linkType
+      - mtu
+      - operstate
+      title: NodeInterface
+      type: object
+    NodeInterfaceIpv4Info:
+      example:
+        address: address
+        prefixlen: 6
+        label: label
+      properties:
+        address:
+          title: Address
+          type: string
+        prefixlen:
+          title: Prefixlen
+          type: integer
+        label:
+          title: Label
+          type: string
+      required:
+      - address
+      - label
+      - prefixlen
+      title: NodeInterfaceIpv4Info
+      type: object
+    NodeInterfaceIpv6Info:
+      example:
+        address: address
+        prefixlen: 1
+      properties:
+        address:
+          title: Address
+          type: string
+        prefixlen:
+          title: Prefixlen
+          type: integer
+      required:
+      - address
+      - prefixlen
+      title: NodeInterfaceIpv6Info
+      type: object
+    NodePage:
+      example:
+        memory: 5
+        roles:
+        - roleName: roleName
+          extraJson: "{}"
+        - roleName: roleName
+          extraJson: "{}"
+        description: description
+        userName: userName
+        osName: osName
+        core: 1
+        osVersion: osVersion
+        port: 6
+        domain: domain
+        libvirtVersion: libvirtVersion
+        name: name
+        cpuGen: cpuGen
+        osLike: osLike
+        qemuVersion: qemuVersion
+        status: 5
+      properties:
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        domain:
+          title: Domain
+          type: string
+        userName:
+          title: Username
+          type: string
+        port:
+          title: Port
+          type: integer
+        core:
+          title: Core
+          type: integer
+        memory:
+          title: Memory
+          type: integer
+        cpuGen:
+          title: Cpugen
+          type: string
+        osLike:
+          title: Oslike
+          type: string
+        osName:
+          title: Osname
+          type: string
+        osVersion:
+          title: Osversion
+          type: string
+        status:
+          title: Status
+          type: integer
+        qemuVersion:
+          title: Qemuversion
+          type: string
+        libvirtVersion:
+          title: Libvirtversion
+          type: string
+        roles:
+          items:
+            $ref: '#/components/schemas/NodeRole'
+          title: Roles
+          type: array
+      required:
+      - core
+      - cpuGen
+      - description
+      - domain
+      - memory
+      - name
+      - osLike
+      - osName
+      - osVersion
+      - port
+      - roles
+      - status
+      - userName
+      title: NodePage
+      type: object
+    NodeRole:
+      example:
+        roleName: roleName
+        extraJson: "{}"
+      properties:
+        roleName:
+          title: Rolename
+          type: string
+        extraJson:
+          title: Extrajson
+          type: object
+      required:
+      - roleName
+      title: NodeRole
+      type: object
+    NodeRoleForUpdate:
+      example:
+        nodeName: nodeName
+        roleName: roleName
+        extraJson: "{}"
+      properties:
+        nodeName:
+          title: Nodename
+          type: string
+        roleName:
+          title: Rolename
+          type: string
+        extraJson:
+          title: Extrajson
+          type: object
+      required:
+      - nodeName
+      - roleName
+      title: NodeRoleForUpdate
+      type: object
+    PowerStatusForUpdateDomain:
+      example:
+        status: status
+      properties:
+        status:
+          title: Status
+          type: string
+      title: PowerStatusForUpdateDomain
+      type: object
+    Project:
+      example:
+        data:
+        - storageCapacityG: 5
+          core: 1
+          memoryG: 6
+          storagePools: ""
+          name: name
+          networkPools: ""
+          id: id
+          usedCore: 2
+          users:
+          - username: username
+          - username: username
+          usedMemoryG: 5
+        - storageCapacityG: 5
+          core: 1
+          memoryG: 6
+          storagePools: ""
+          name: name
+          networkPools: ""
+          id: id
+          usedCore: 2
+          users:
+          - username: username
+          - username: username
+          usedMemoryG: 5
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/ProjectPage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: Project
+      type: object
+    ProjectForCreate:
+      example:
+        userIds:
+        - userIds
+        - userIds
+        projectName: projectName
+      properties:
+        projectName:
+          title: Projectname
+          type: string
+        userIds:
+          items:
+            type: string
+          title: Userids
+          type: array
+      required:
+      - projectName
+      - userIds
+      title: ProjectForCreate
+      type: object
+    ProjectForUpdate:
+      example:
+        projectId: projectId
+        userId: userId
+      properties:
+        projectId:
+          title: Projectid
+          type: string
+        userId:
+          title: Userid
+          type: string
+      required:
+      - projectId
+      - userId
+      title: ProjectForUpdate
+      type: object
+    ProjectPage:
+      example:
+        storageCapacityG: 5
+        core: 1
+        memoryG: 6
+        storagePools: ""
+        name: name
+        networkPools: ""
+        id: id
+        usedCore: 2
+        users:
+        - username: username
+        - username: username
+        usedMemoryG: 5
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        memoryG:
+          title: Memoryg
+          type: integer
+        core:
+          title: Core
+          type: integer
+        storageCapacityG:
+          title: Storagecapacityg
+          type: integer
+        users:
+          items:
+            $ref: '#/components/schemas/ProjectUser'
+          title: Users
+          type: array
+        usedMemoryG:
+          title: Usedmemoryg
+          type: integer
+        usedCore:
+          title: Usedcore
+          type: integer
+        networkPools:
+          title: Networkpools
+        storagePools:
+          title: Storagepools
+      required:
+      - core
+      - id
+      - memoryG
+      - name
+      - storageCapacityG
+      - usedCore
+      - usedMemoryG
+      - users
+      title: ProjectPage
+      type: object
+    ProjectUser:
+      example:
+        username: username
+      properties:
+        username:
+          title: Username
+          type: string
+      required:
+      - username
+      title: ProjectUser
+      type: object
+    SSHKeyPair:
+      example:
+        privateKey: privateKey
+        publicKey: publicKey
+      properties:
+        privateKey:
+          title: Privatekey
+          type: string
+        publicKey:
+          title: Publickey
+          type: string
+      required:
+      - privateKey
+      - publicKey
+      title: SSHKeyPair
+      type: object
+    SetupRequest:
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          title: Username
+          type: string
+        password:
+          title: Password
+          type: string
+      required:
+      - password
+      - username
+      title: SetupRequest
+      type: object
+    Storage:
+      example:
+        data:
+        - nodeName: nodeName
+          updateToken: updateToken
+          available: 1
+          active: true
+          allocationCommit: 5
+          uuid: uuid
+          capacity: 5
+          autoStart: true
+          capacityCommit: 2
+          node:
+            memory: 5
+            roles:
+            - roleName: roleName
+              extraJson: "{}"
+            - roleName: roleName
+              extraJson: "{}"
+            description: description
+            userName: userName
+            osName: osName
+            core: 1
+            osVersion: osVersion
+            port: 6
+            domain: domain
+            libvirtVersion: libvirtVersion
+            name: name
+            cpuGen: cpuGen
+            osLike: osLike
+            qemuVersion: qemuVersion
+            status: 5
+          path: path
+          metaData:
+            deviceType: deviceType
+            protocol: protocol
+            rool: rool
+          name: name
+          status: 6
+        - nodeName: nodeName
+          updateToken: updateToken
+          available: 1
+          active: true
+          allocationCommit: 5
+          uuid: uuid
+          capacity: 5
+          autoStart: true
+          capacityCommit: 2
+          node:
+            memory: 5
+            roles:
+            - roleName: roleName
+              extraJson: "{}"
+            - roleName: roleName
+              extraJson: "{}"
+            description: description
+            userName: userName
+            osName: osName
+            core: 1
+            osVersion: osVersion
+            port: 6
+            domain: domain
+            libvirtVersion: libvirtVersion
+            name: name
+            cpuGen: cpuGen
+            osLike: osLike
+            qemuVersion: qemuVersion
+            status: 5
+          path: path
+          metaData:
+            deviceType: deviceType
+            protocol: protocol
+            rool: rool
+          name: name
+          status: 6
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/StoragePage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: Storage
+      type: object
+    StorageContainerForStoragePool:
+      example:
+        storage:
+          nodeName: nodeName
+          name: name
+          uuid: uuid
+      properties:
+        storage:
+          $ref: '#/components/schemas/StorageForStorageContainer'
+      required:
+      - storage
+      title: StorageContainerForStoragePool
+      type: object
+    StorageForCreate:
+      example:
+        nodeName: nodeName
+        path: path
+        name: name
+      properties:
+        name:
+          title: Name
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+        path:
+          title: Path
+          type: string
+      required:
+      - name
+      - nodeName
+      - path
+      title: StorageForCreate
+      type: object
+    StorageForStorageContainer:
+      example:
+        nodeName: nodeName
+        name: name
+        uuid: uuid
+      properties:
+        name:
+          title: Name
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+        nodeName:
+          title: Nodename
+          type: string
+      required:
+      - name
+      - nodeName
+      - uuid
+      title: StorageForStorageContainer
+      type: object
+    StorageMetadata:
+      example:
+        deviceType: deviceType
+        protocol: protocol
+        rool: rool
+      properties:
+        rool:
+          title: Rool
+          type: string
+        protocol:
+          title: Protocol
+          type: string
+        deviceType:
+          title: Devicetype
+          type: string
+      title: StorageMetadata
+      type: object
+    StorageMetadataForUpdate:
+      example:
+        deviceType: deviceType
+        protocol: protocol
+        uuid: uuid
+        rool: rool
+      properties:
+        uuid:
+          title: Uuid
+          type: string
+        rool:
+          title: Rool
+          type: string
+        protocol:
+          title: Protocol
+          type: string
+        deviceType:
+          title: Devicetype
+          type: string
+      required:
+      - deviceType
+      - protocol
+      - rool
+      - uuid
+      title: StorageMetadataForUpdate
+      type: object
+    StoragePage:
+      example:
+        nodeName: nodeName
+        updateToken: updateToken
+        available: 1
+        active: true
+        allocationCommit: 5
+        uuid: uuid
+        capacity: 5
+        autoStart: true
+        capacityCommit: 2
+        node:
+          memory: 5
+          roles:
+          - roleName: roleName
+            extraJson: "{}"
+          - roleName: roleName
+            extraJson: "{}"
+          description: description
+          userName: userName
+          osName: osName
+          core: 1
+          osVersion: osVersion
+          port: 6
+          domain: domain
+          libvirtVersion: libvirtVersion
+          name: name
+          cpuGen: cpuGen
+          osLike: osLike
+          qemuVersion: qemuVersion
+          status: 5
+        path: path
+        metaData:
+          deviceType: deviceType
+          protocol: protocol
+          rool: rool
+        name: name
+        status: 6
+      properties:
+        name:
+          title: Name
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+        status:
+          title: Status
+          type: integer
+        active:
+          title: Active
+          type: boolean
+        available:
+          title: Available
+          type: integer
+        capacity:
+          title: Capacity
+          type: integer
+        nodeName:
+          title: Nodename
+          type: string
+        node:
+          $ref: '#/components/schemas/NodePage'
+        autoStart:
+          title: Autostart
+          type: boolean
+        path:
+          title: Path
+          type: string
+        metaData:
+          $ref: '#/components/schemas/StorageMetadata'
+        updateToken:
+          title: Updatetoken
+          type: string
+        allocationCommit:
+          title: Allocationcommit
+          type: integer
+        capacityCommit:
+          title: Capacitycommit
+          type: integer
+      required:
+      - active
+      - autoStart
+      - name
+      - node
+      - nodeName
+      - status
+      - uuid
+      title: StoragePage
+      type: object
+    StoragePool:
+      example:
+        storages:
+        - storage:
+            nodeName: nodeName
+            name: name
+            uuid: uuid
+        - storage:
+            nodeName: nodeName
+            name: name
+            uuid: uuid
+        name: name
+        id: 0
+      properties:
+        id:
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+        storages:
+          items:
+            $ref: '#/components/schemas/StorageContainerForStoragePool'
+          title: Storages
+          type: array
+      required:
+      - id
+      - name
+      - storages
+      title: StoragePool
+      type: object
+    StoragePoolForCreate:
+      example:
+        name: name
+        storageUuids:
+        - storageUuids
+        - storageUuids
+      properties:
+        name:
+          title: Name
+          type: string
+        storageUuids:
+          items:
+            type: string
+          title: Storageuuids
+          type: array
+      required:
+      - name
+      - storageUuids
+      title: StoragePoolForCreate
+      type: object
+    StoragePoolForUpdate:
+      example:
+        id: id
+        storageUuids:
+        - storageUuids
+        - storageUuids
+      properties:
+        id:
+          title: Id
+          type: string
+        storageUuids:
+          items:
+            type: string
+          title: Storageuuids
+          type: array
+      required:
+      - id
+      - storageUuids
+      title: StoragePoolForUpdate
+      type: object
+    Task:
+      example:
+        request: "{}"
+        method: method
+        resource: resource
+        log: log
+        updateTime: 2000-01-23T04:56:07.000+00:00
+        message: message
+        userId: userId
+        uuid: uuid
+        dependenceUuid: dependenceUuid
+        result: "{}"
+        postTime: 2000-01-23T04:56:07.000+00:00
+        startTime: 2000-01-23T04:56:07.000+00:00
+        runTime: 6.027456183070403
+        status: status
+        object: object
+      properties:
+        postTime:
+          format: date-time
+          title: Posttime
+          type: string
+        runTime:
+          title: Runtime
+          type: number
+        startTime:
+          format: date-time
+          title: Starttime
+          type: string
+        updateTime:
+          format: date-time
+          title: Updatetime
+          type: string
+        userId:
+          title: Userid
+          type: string
+        status:
+          title: Status
+          type: string
+        resource:
+          title: Resource
+          type: string
+        object:
+          title: Object
+          type: string
+        method:
+          title: Method
+          type: string
+        dependenceUuid:
+          title: Dependenceuuid
+          type: string
+        request:
+          title: Request
+          type: object
+        result:
+          title: Result
+          type: object
+        message:
+          title: Message
+          type: string
+        log:
+          title: Log
+          type: string
+        uuid:
+          title: Uuid
+          type: string
+      title: Task
+      type: object
+    TaskIncomplete:
+      example:
+        count: 0
+        hash: hash
+        uuids:
+        - uuids
+        - uuids
+      properties:
+        hash:
+          title: Hash
+          type: string
+        count:
+          title: Count
+          type: integer
+        uuids:
+          items:
+            type: string
+          title: Uuids
+          type: array
+      required:
+      - count
+      - hash
+      - uuids
+      title: TaskIncomplete
+      type: object
+    TaskPagesnation:
+      example:
+        data:
+        - request: "{}"
+          method: method
+          resource: resource
+          log: log
+          updateTime: 2000-01-23T04:56:07.000+00:00
+          message: message
+          userId: userId
+          uuid: uuid
+          dependenceUuid: dependenceUuid
+          result: "{}"
+          postTime: 2000-01-23T04:56:07.000+00:00
+          startTime: 2000-01-23T04:56:07.000+00:00
+          runTime: 6.027456183070403
+          status: status
+          object: object
+        - request: "{}"
+          method: method
+          resource: resource
+          log: log
+          updateTime: 2000-01-23T04:56:07.000+00:00
+          message: message
+          userId: userId
+          uuid: uuid
+          dependenceUuid: dependenceUuid
+          result: "{}"
+          postTime: 2000-01-23T04:56:07.000+00:00
+          startTime: 2000-01-23T04:56:07.000+00:00
+          runTime: 6.027456183070403
+          status: status
+          object: object
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/Task'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: TaskPagesnation
+      type: object
+    TokenData:
+      example:
+        role:
+        - role
+        - role
+        id: id
+        scopes:
+        - scopes
+        - scopes
+      properties:
+        id:
+          title: Id
+          type: string
+        scopes:
+          default: []
+          items:
+            type: string
+          title: Scopes
+          type: array
+        role:
+          default: []
+          items:
+            type: string
+          title: Role
+          type: array
+      title: TokenData
+      type: object
+    TokenRFC6749Response:
+      example:
+        access_token: access_token
+        token_type: token_type
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        token_type:
+          title: Token Type
+          type: string
+      required:
+      - access_token
+      - token_type
+      title: TokenRFC6749Response
+      type: object
+    User:
+      example:
+        data:
+        - projects:
+          - name: name
+          - name: name
+          scopes:
+          - name: name
+          - name: name
+          username: username
+        - projects:
+          - name: name
+          - name: name
+          scopes:
+          - name: name
+          - name: name
+          username: username
+        count: 0
+      properties:
+        count:
+          title: Count
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/UserPage'
+          title: Data
+          type: array
+      required:
+      - count
+      - data
+      title: User
+      type: object
+    UserForCreate:
+      example:
+        password: password
+        userId: userId
+      properties:
+        userId:
+          title: Userid
+          type: string
+        password:
+          title: Password
+          type: string
+      required:
+      - password
+      - userId
+      title: UserForCreate
+      type: object
+    UserPage:
+      example:
+        projects:
+        - name: name
+        - name: name
+        scopes:
+        - name: name
+        - name: name
+        username: username
+      properties:
+        username:
+          title: Username
+          type: string
+        scopes:
+          items:
+            $ref: '#/components/schemas/UserScope'
+          title: Scopes
+          type: array
+        projects:
+          items:
+            $ref: '#/components/schemas/UserProject'
+          title: Projects
+          type: array
+      required:
+      - projects
+      - scopes
+      - username
+      title: UserPage
+      type: object
+    UserProject:
+      example:
+        name: name
+      properties:
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      title: UserProject
+      type: object
+    UserScope:
+      example:
+        name: name
+      properties:
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      title: UserScope
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            type: string
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+    Version:
+      example:
+        initialized: true
+        version: version
+      properties:
+        initialized:
+          title: Initialized
+          type: boolean
+        version:
+          title: Version
+          type: string
+      required:
+      - initialized
+      - version
+      title: Version
+      type: object
+  securitySchemes:
+    OAuth2PasswordBearer:
+      flows:
+        password:
+          scopes:
+            admin: Have all authority
+            user: User authority
+          tokenUrl: /api/auth
+      type: oauth2
