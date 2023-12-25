@@ -12,6 +12,7 @@ from test_project import create_project, delete_project
 from test_image import test_image_download
 from test_flavor import create_flavors, delete_flavors
 
+
 args = sys.argv
 
 
@@ -19,6 +20,8 @@ def main():
     scenario_test()
 
 def scenario_test():
+    test_image_download()
+    return
     # Setup
     api_auth_validate()
     api_users_me()

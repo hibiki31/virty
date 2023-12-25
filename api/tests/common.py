@@ -3,8 +3,9 @@ import json
 from pprint import pprint
 import time
 import functools
+from settings import ENV_FILE
 
-ENV_FILE = "env_honoka.json"
+
 env = json.load(open(f'./tests/{ENV_FILE}', 'r'))
 BASE_URL = env["base_url"]
 
@@ -70,6 +71,7 @@ def wait_tasks(resp):
                 break
             elif resp["status"] == "error":
                 print(f"{Color.RED}Task Error {Color.END}{uuid} {resp['resource']} {resp['object']} {counter}s")
+                print(resp["message"])
                 break
             time.sleep(0.5)
             counter += 0.5

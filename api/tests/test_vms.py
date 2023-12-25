@@ -83,19 +83,20 @@ def post_vm():
 
 @tester
 def post_vm_copy():
-    resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-img", "nodeName": "test-node"})
-    print_resp(resp=resp)
-    savePoolUuid = resp.json()["data"][0]["uuid"]
+    for server in env["servers"]:
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-img", "nodeName": server["name"]})
+        print_resp(resp=resp)
+        savePoolUuid = resp.json()["data"][0]["uuid"]
 
-    resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-cloud", "nodeName": "test-node"})
-    print_resp(resp=resp)
-    sourcePoolUuid = resp.json()["data"][0]["uuid"]
-    
-    resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', headers=HEADERS, params={"name_like": "default", "node_name_like": "test-node"})
-    print_resp(resp=resp)
-    network_uuid = resp.json()["data"][0]["uuid"]
-    
-    userdata = f"""
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-cloud", "nodeName": server["name"]})
+        print_resp(resp=resp)
+        sourcePoolUuid = resp.json()["data"][0]["uuid"]
+        
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', headers=HEADERS, params={"node_name_like": server["name"]})
+        print_resp(resp=resp)
+        network_uuid = resp.json()["data"][0]["uuid"]
+        
+        userdata = f"""
 #cloud-config
 password: password
 chpasswd: 
@@ -103,38 +104,38 @@ chpasswd:
 ssh_pwauth: True
 ssh_authorized_keys:
   - { env["pub"] }
-    """
+        """
 
-    request_data = {
-        "type":"manual",
-        "name":"testcode-vm",
-        "nodeName":"test-node",
-        "memoryMegaByte":"8192",
-        "cpu":"4",
-        "disks":[
-            {
-                "id":1,
-                "type":"copy",
-                "savePoolUuid":savePoolUuid,
-                "originalPoolUuid": sourcePoolUuid,
-                "originalName": env["image_name"],
-                "sizeGigaByte":64
+        request_data = {
+            "type":"manual",
+            "name":"testcode-vm",
+            "nodeName":server["name"],
+            "memoryMegaByte":"8192",
+            "cpu":"4",
+            "disks":[
+                {
+                    "id":1,
+                    "type":"copy",
+                    "savePoolUuid":savePoolUuid,
+                    "originalPoolUuid": sourcePoolUuid,
+                    "originalName": env["image_name"],
+                    "sizeGigaByte":64
+                }
+            ],
+            "interface":[
+                {
+                    "type":"network",
+                    "networkUuid":network_uuid
+                }
+            ],
+            "cloudInit": {
+                "hostname": "testcode-vm",
+                "userData": userdata
             }
-        ],
-        "interface":[
-            {
-                "type":"network",
-                "networkUuid":network_uuid
-            }
-        ],
-        "cloudInit": {
-            "hostname": "testcode-vm",
-            "userData": userdata
         }
-    }
-    resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/vms', headers=HEADERS, json=request_data)
-    print_resp(resp=resp)
-    wait_tasks(resp)
+        resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/vms', headers=HEADERS, json=request_data)
+        print_resp(resp=resp)
+        wait_tasks(resp)
 
 
 @tester
