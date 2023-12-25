@@ -1,26 +1,17 @@
-from urllib import request
-from fastapi import APIRouter, Depends, Request
-from fastapi import HTTPException
-from sqlalchemy import or_
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+
+from auth.router import CurrentUser, get_current_user
+from mixin.database import get_db
+from mixin.exception import notfound_exception
+from mixin.log import setup_logger
+from network.models import NetworkModel
+from project.models import ProjectModel
+from task.functions import TaskManager
+from task.schemas import Task
 
 from .models import *
 from .schemas import *
-
-from auth.router import CurrentUser, get_current_user
-from task.schemas import Task, TaskRequest
-from task.functions import TaskManager
-from user.models import UserModel
-from network.models import NetworkModel
-from project.models import ProjectModel
-from mixin.database import get_db
-from mixin.log import setup_logger
-from mixin.exception import notfound_exception
-
-from celery import chain, group
-
-from module.virtlib import VirtManager
-
 
 app = APIRouter(
     tags=["vms-task"],

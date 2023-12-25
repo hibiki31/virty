@@ -1,21 +1,14 @@
-from json import loads
-from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-from node.models import NodeModel
-
-from module import virtlib
-from module import xmllib
-from module.ansiblelib import AnsibleManager
-
 from time import time
 
+from mixin.log import setup_logger
+from module import virtlib, xmllib
+from module.ansiblelib import AnsibleManager
+from node.models import NodeModel
 from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
 
+from .models import ImageModel, StorageModel
+from .schemas import StorageForCreate
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
@@ -74,8 +67,10 @@ def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     body = StorageForCreate(**request.body)
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
-    except:
+        node: NodeModel = db.query(NodeModel).filter(
+            NodeModel.name == body.node_name
+        ).one()
+    except Exception:
         raise Exception("node not found")
 
     # XMLを定義、設定
@@ -100,8 +95,12 @@ def delete_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db = self.db
     uuid = request.path_param["uuid"]
 
-    storage:StorageModel = db.query(StorageModel).filter(StorageModel.uuid == uuid).one()
-    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == storage.node_name).one()
+    storage:StorageModel = db.query(StorageModel).filter(
+        StorageModel.uuid == uuid
+    ).one()
+    node: NodeModel = db.query(NodeModel).filter(
+        NodeModel.name == storage.node_name
+    ).one()
 
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_undefine(uuid)

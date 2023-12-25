@@ -1,20 +1,16 @@
-import uuid
 import json
-
-from time import time
+import uuid
 from datetime import datetime
+from time import time
 
+from fastapi import BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-
-from task.models import TaskModel
-from task.schemas import TaskRequest
-from mixin.log import setup_logger
-
 
 from mixin.database import SessionLocal
-
+from mixin.log import setup_logger
+from task.models import TaskModel
+from task.schemas import TaskRequest
 
 logger = setup_logger(__name__)
 
@@ -55,7 +51,10 @@ class TaskManager():
         self.resource = resource
         self.object = object
     
-    def commit(self, user, req=None, body: BaseModel=BaseModel(), param={}, dep_uuid=None):
+    def commit(
+            self, user, req=None, 
+            body: BaseModel=BaseModel(), param={}, dep_uuid=None
+        ):
         status = "wait" if dep_uuid else "init"
         task_uuid = str(uuid.uuid4())
 
@@ -109,17 +108,17 @@ def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
     for task in tasks:
         # 依存先のuuidが実在するかチェック
         try:
-            if task.dependence_uuid == None:
+            if task.dependence_uuid is None:
                 raise Exception()
             depends_task:TaskModel = db.query(TaskModel)\
                 .filter(TaskModel.uuid==task.dependence_uuid)\
                 .with_lockmode('update').one()
-        except:
+        except FileNotFoundError:
             task.status = "error"
             task.message = "not found depended task"
             db.merge(task)
             db.commit()
-            logger.error(f"not found depended task {task.uuid} => {task.dependence_uuid}")
+            logger.error(f"depended task notfund {task.uuid} => {task.dependence_uuid}")
             continue
   
         # 親タスクが死んだ場合エラーで停止
