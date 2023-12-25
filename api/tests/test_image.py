@@ -11,7 +11,7 @@ def test_image_download():
         
 
 def image_download(node_name, storage_name, image_url):
-    resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": storage_name, "nodeName": node_name})
+    resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"nameLike": storage_name, "nodeName": node_name})
     print_resp(resp=resp)
     
     req_data={

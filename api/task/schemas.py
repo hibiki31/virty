@@ -1,12 +1,9 @@
-from fastapi_camelcase import CamelModel
-from pydantic import BaseModel, ValidationError, validator
-from typing import List, Optional, Any
 from datetime import datetime
+from typing import Any, List
 
-from task.models import TaskModel
+from fastapi_camelcase import CamelModel
 
-
-import json
+from mixin.schemas import GetPagination
 
 
 class TaskBase(CamelModel):
@@ -20,7 +17,7 @@ class TaskBase(CamelModel):
     object: str = None
     method: str = None
     dependence_uuid: str = None
-    request: dict = None
+    request: Any = None
     result: dict = None
     message: str = None
     log: str = None
@@ -33,16 +30,18 @@ class TaskForCreate(TaskBase):
     pass
 
 
+class TaskForQuery(GetPagination):
+    resource: str = None
+    object: str = None
+    method: str = None
+    status: str = None
+
+
 class Task(TaskBase):
     uuid: str = None
 
-    @validator('request', pre=True)
-    def json_to_dic(cls, v, values, **kwargs):
-        if type(v) == str:
-            return dict(json.loads(v))
-        return v
 
-class TaskPagesnation(CamelModel):
+class TaskPage(CamelModel):
     count: int
     data: List[Task]
 

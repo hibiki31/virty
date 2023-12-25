@@ -1,12 +1,11 @@
 from enum import Enum
-from datetime import datetime
-from typing import List, Optional, Any, Literal, Dict
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Literal
 
 from fastapi_camelcase import CamelModel
-from pyparsing import str_type
 
+from mixin.schemas import GetPagination
 from node.schemas import Node
+
 
 class DomainDrive(CamelModel):
     device: str = None
@@ -65,7 +64,12 @@ class Domain(CamelModel):
         orm_mode  =  True
 
 
-class DomainPagenation(CamelModel):
+class DomainForQuery(GetPagination):
+    name_like: str = None
+    node_name_like: str = None
+
+
+class DomainPage(CamelModel):
     count: int
     data: List[Domain]
 

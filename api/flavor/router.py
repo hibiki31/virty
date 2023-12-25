@@ -1,14 +1,12 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
-from settings import IS_DEV
 
-from .models import *
-from .schemas import *
-from auth.router import CurrentUser, get_current_user, pwd_context
+from .models import FlavorModel
+from .schemas import Flavor, FlavorForCreate, FlavorForQuery, FlavorPage
 
 logger = setup_logger(__name__)
 app = APIRouter(
@@ -36,27 +34,25 @@ def post_api_flavors(
     return db.query(FlavorModel).filter(FlavorModel.id==flavor_model.id).all()
 
 
-@app.get("", response_model=Flavor, operation_id="get_flavors")
+@app.get("", response_model=FlavorPage, operation_id="get_flavors")
 def get_api_flavors(
+        param: FlavorForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        limit: int = 25,
-        page: int = 0,
-        name: str = None
     ):
     
     query = db.query(FlavorModel)
     
-    if name:
-        query = query.filter(FlavorModel.name.like(f'%{name}%'))
+    if param.name_like:
+        query = query.filter(FlavorModel.name.like(f'%{param.name_like}%'))
     
     count = query.count()
-    query = query.limit(limit).offset(int(limit*page))
+    query = query.limit(param.limit).offset(int(param.limit*param.page))
     
     return {"count": count, "data": query.all()}
 
 
-@app.delete("/{flavor_id}", response_model=FlavorPage, operation_id="delete_flavor")
+@app.delete("/{flavor_id}", response_model=Flavor, operation_id="delete_flavor")
 def delete_flavors(
         flavor_id: int,
         eq: Request,

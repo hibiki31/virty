@@ -1,6 +1,9 @@
+from typing import List
+
 from fastapi_camelcase import CamelModel
-from typing import List, Optional
-from pydantic import BaseModel
+
+from mixin.schemas import GetPagination
+
 
 class FlavorForCreate(CamelModel):
     name: str
@@ -13,12 +16,16 @@ class FlavorForCreate(CamelModel):
         orm_mode  =  True
 
         
-class FlavorPage(FlavorForCreate):
+class Flavor(FlavorForCreate):
     id: int
     class Config:
         orm_mode  =  True
         
 
-class Flavor(CamelModel):
+class FlavorPage(CamelModel):
     count: int
-    data: List[FlavorPage]
+    data: List[Flavor]
+    
+
+class FlavorForQuery(GetPagination):
+    name_like: str = None

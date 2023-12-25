@@ -1,16 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func
-from domain.models import DomainModel
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
-from task.functions import TaskManager
+from auth.router import CurrentUser, get_current_user
+from domain.models import DomainModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-
-from user.models import *
-from project.models import *
-from project.schemas import *
-from auth.router import CurrentUser, get_current_user
+from project.models import ProjectModel
+from project.schemas import (
+    ProjectForCreate,
+    ProjectForQuery,
+    ProjectForUpdate,
+    ProjectPage,
+)
+from task.functions import TaskManager
+from user.models import UserModel
 
 logger = setup_logger(__name__)
 app = APIRouter(
@@ -18,14 +23,12 @@ app = APIRouter(
 )
 
 
-@app.get("/api/projects", response_model=Project, operation_id="get_projects")
+@app.get("/api/projects", response_model=ProjectPage, operation_id="get_projects")
 def get_api_projects(
+        param: ProjectForQuery = Depends(),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
         admin: bool = False,
-        limit: int = 25,
-        page: int = 0,
-        name: str = None
     ):
 
     res = []
@@ -44,11 +47,11 @@ def get_api_projects(
     else:
         query = query.filter(ProjectModel.users.any(username=current_user.id))
     
-    if name:
-        query = query.filter(ProjectModel.name.like(f'%{name}%'))
+    if param.name_like:
+        query = query.filter(ProjectModel.name.like(f'%{param.name_like}%'))
     
     count = query.count()
-    query = query.limit(limit).offset(int(limit*page))
+    query = query.limit(param.limit).offset(int(param.limit*param.page))
     
     for row in query.all():
         res.append({
@@ -56,8 +59,8 @@ def get_api_projects(
             'users':row[0].users,
             'storage_pools': row[0].storage_pools,
             'network_pools': row[0].network_pools,
-            'used_memory_g': 0 if row[1] == None else int(row[1])/1024,
-            'used_core': 0 if row[2] == None else row[2]
+            'used_memory_g': 0 if row[1] is None else int(row[1])/1024,
+            'used_core': 0 if row[2] is None else row[2]
         })
 
     return {"count": count, "data": res}
@@ -98,9 +101,17 @@ def put_api_projects(
         current_user: CurrentUser = Depends(get_current_user)
     ):
     try:
-        project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
-        user: UserModel = db.query(UserModel).filter(UserModel.id==request.user_id).one()
-    except:
+        project: ProjectModel = db.query(
+                ProjectModel
+            ).filter(
+                ProjectModel.id==request.project_id
+            ).one()
+        user: UserModel = db.query(
+                UserModel
+            ).filter(
+                UserModel.id==request.user_id
+            ).one()
+    except NoResultFound:
         raise  HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The specified value is invalid"
@@ -111,6 +122,10 @@ def put_api_projects(
     db.merge(project)
     db.commit()
 
-    project: ProjectModel = db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
+    project: ProjectModel = db.query(
+            ProjectModel
+        ).filter(
+            ProjectModel.id==request.project_id
+        ).one()
 
     return project

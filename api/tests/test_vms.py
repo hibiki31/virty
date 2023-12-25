@@ -1,11 +1,5 @@
 import httpx
-import json
-from pprint import pprint
-import time
-import datetime
-import sys
-
-from common import BASE_URL, env, HEADERS, print_resp, wait_tasks, tester
+from common import BASE_URL, HEADERS, env, print_resp, tester, wait_tasks
 
 
 @tester
@@ -84,11 +78,11 @@ def post_vm():
 @tester
 def post_vm_copy():
     for server in env["servers"]:
-        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-img", "nodeName": server["name"]})
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"nameLike": "test-img", "nodeName": server["name"]})
         print_resp(resp=resp)
         savePoolUuid = resp.json()["data"][0]["uuid"]
 
-        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"name": "test-cloud", "nodeName": server["name"]})
+        resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"nameLike": "test-cloud", "nodeName": server["name"]})
         print_resp(resp=resp)
         sourcePoolUuid = resp.json()["data"][0]["uuid"]
         
@@ -145,7 +139,7 @@ def patch_vm_cdrom():
 
     for vm in resp.json()["data"]:
         if vm["name"] == "testcode-vm":
-            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": "test-node"})
+            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": vm["nodeName"]})
             print_resp(resp=resp)
             image_path = resp.json()["data"][0]["path"]
             

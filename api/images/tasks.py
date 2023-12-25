@@ -1,23 +1,14 @@
-from json import loads
-from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-from mixin.log import setup_logger
 import os
 from urllib.parse import urlparse
 
-from .schemas import *
-from task.models import TaskModel
+from mixin.log import setup_logger
+from module.ansiblelib import AnsibleManager
 from node.models import NodeModel
 from storage.models import StorageModel
-
-from module import virtlib
-from module import xmllib
-from module.ansiblelib import AnsibleManager
-
-from time import time
-
 from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
 
+from .schemas import ImageDownloadForCreate
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)

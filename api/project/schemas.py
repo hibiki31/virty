@@ -1,7 +1,9 @@
+from typing import List
+
 from anyio import Any
 from fastapi_camelcase import CamelModel
-from typing import List, Optional
-from pydantic import BaseModel
+
+from mixin.schemas import GetPagination
 
 
 class ProjectBase(CamelModel):
@@ -30,7 +32,11 @@ class ProjectUser(CamelModel):
         orm_mode = True
 
 
-class ProjectPage(ProjectBase):
+class ProjectForQuery(GetPagination):
+    name_like: str = None
+
+
+class Project(ProjectBase):
     memory_g: int
     core: int
     storage_capacity_g: int
@@ -42,6 +48,7 @@ class ProjectPage(ProjectBase):
     class Config:
         orm_mode = True
 
-class Project(CamelModel):
+
+class ProjectPage(CamelModel):
     count: int
-    data: List[ProjectPage]
+    data: List[Project]

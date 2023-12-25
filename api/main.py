@@ -1,34 +1,34 @@
 import uvicorn
-
-from fastapi import FastAPI, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth.router import app as auth_router
-from node.router import app as node_router
-from node.router_task import app as node_task_router
-from task.router import app as task_router
 from domain.router import app as domain_router
 from domain.router_task import app as domain_task_router
-from storage.router import app as storage_router
+from exporter.router import app as exporter_router
+from flavor.router import app as flavor_router
 from images.router import app as image_router
+from mixin.log import setup_logger
+from mixin.router import app as mixin_router
 from network.router import app as network_router
 from network.router_task import app as network_task_router
-from user.router import app as user_router
+from node.router import app as node_router
+from node.router_task import app as node_task_router
 from project.router import app as project_router
-from flavor.router import app as flavor_router
-from exporter.router import app as exporter_router
-from mixin.router import app as mixin_router
-
-from mixin.log import setup_logger
 from settings import API_VERSION
-
+from storage.router import app as storage_router
+from task.router import app as task_router
+from user.router import app as user_router
 
 logger = setup_logger(__name__)
 
 
 tags_metadata = [
     {"name": "mixin", "description": ""},
-    {"name": "auth", "description": "トークン関係のリクエストはRFCの関係でスネークケース"},
+    {
+        "name": "auth", 
+        "description": "トークン関係のリクエストはRFCの関係でスネークケース"
+    },
     {"name": "users", "description": ""},
     {"name": "projects", "description": ""},
     {"name": "tasks", "description": ""},

@@ -1,36 +1,35 @@
-from fastapi import APIRouter, Depends, BackgroundTasks, Request, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from sqlalchemy.orm import Session
-from domain.models import DomainDriveModel, DomainModel
-
-from flavor.models import FlavorModel
-
-from storage.models import StorageModel, ImageModel, StorageMetadataModel
-from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-
-from task.functions import TaskManager
-from node.models import NodeModel
+from domain.models import DomainDriveModel, DomainModel
+from flavor.models import FlavorModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-
 from module.sshlib import SSHManager
+from node.models import NodeModel
+from storage.models import ImageModel, StorageMetadataModel, StorageModel
+from task.functions import TaskManager
 
+from .schemas import (
+    Image,
+    ImageDomain,
+    ImageDownloadForCreate,
+    ImageForQuery,
+    ImageForUpdateImageFlavor,
+    ImagePage,
+    ImageSCP,
+)
 
 app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/images", tags=["images"], response_model=Image, operation_id="get_images")
+@app.get("/api/images", tags=["images"], response_model=ImagePage, operation_id="get_images")
 def get_api_images(
+        param: ImageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        node_name: str = None,
-        pool_uuid: str = None,
-        name:str = None,
-        rool:str = None,
-        limit: int = 25,
-        page: int = 0,
     ):
     query = db.query(
         ImageModel,
@@ -45,22 +44,25 @@ def get_api_images(
         FlavorModel
     )
 
-    if pool_uuid != None:
-        query = query.filter(StorageModel.uuid==pool_uuid)
+    if param.pool_uuid:
+        query = query.filter(StorageModel.uuid==param.pool_uuid)
 
-    if node_name != None:
-        query = query.filter(NodeModel.name==node_name)
+    if param.node_name:
+        query = query.filter(NodeModel.name==param.node_name)
 
-    if name != None:
-        query = query.filter(ImageModel.name.like(f'%{name}%'))
+    if param.name_like:
+        query = query.filter(ImageModel.name.like(f'%{param.name_like}%'))
+        
+    if param.name:
+        query = query.filter(ImageModel.name==param.name)
 
-    if rool != None:
-        query = query.filter(StorageMetadataModel.rool==rool)
+    if param.rool:
+        query = query.filter(StorageMetadataModel.rool==param.rool)
 
     res = []
     
     count = query.count()
-    query = query.limit(limit).offset(int(limit*page))
+    query = query.limit(param.limit).offset(int(param.limit*param.page))
 
     for i in query.all():
         if i[1]:
@@ -69,7 +71,7 @@ def get_api_images(
             domain = None
 
         res.append(
-            ImagePage(
+            Image(
                 name=i[0].name,
                 storage=i[0].storage,
                 capacity=i[0].capacity,

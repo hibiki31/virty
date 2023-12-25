@@ -10,7 +10,9 @@
 			"extensions": [
 				"ms-python.python",
 				"mhutchie.git-graph",
-				"KevinRose.vsc-python-indent"
+				"KevinRose.vsc-python-indent",
+				"charliermarsh.ruff",
+				"tamasfe.even-better-toml"
 			]
 		}
 	},

@@ -1,9 +1,9 @@
-from datetime import datetime
-from typing import Any, List, Literal
-import uuid
-from pydantic import BaseModel, Field
+from typing import List, Literal
 
 from fastapi_camelcase import CamelModel
+from pydantic import Field
+
+from mixin.schemas import GetPagination
 
 
 class PaseNetworkPortgroup(CamelModel):
@@ -38,6 +38,12 @@ class Network(PaseNetwork):
     update_token: str = None
     class Config:
         orm_mode  =  True
+
+
+class NetworkForQuery(GetPagination):
+    name_like: str = None
+    node_name_like: str = None
+    type: str = None
 
 
 class NetworkPage(CamelModel):

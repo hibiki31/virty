@@ -1,17 +1,11 @@
-
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from auth.router import CurrentUser, get_current_user, pwd_context
 from mixin.database import get_db
 from mixin.log import setup_logger
-
-from task.functions import TaskManager
-
-from .models import *
-from .schemas import *
-from project.schemas import ProjectForCreate
-from auth.router import CurrentUser, get_current_user, pwd_context
-
+from user.models import UserModel, UserScopeModel
+from user.schemas import TokenData, UserForCreate, UserForQuery, UserPage
 
 logger = setup_logger(__name__)
 app = APIRouter(
@@ -29,24 +23,24 @@ def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
 def post_api_users(
         request: UserForCreate,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ):
     if request.user_id == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Blanks are not allowed in id"
+            detail="Blanks are not allowed in id",
         )
-    
+
     if db.query(UserModel).filter(UserModel.username==request.user_id).one_or_none():
         raise HTTPException(
             status_code=400,
-            detail="User already exists"
+            detail="User already exists",
         )
 
     # ユーザ追加
     user_model = UserModel(
-        username=request.user_id, 
-        hashed_password=pwd_context.hash(request.password)
+        username=request.user_id,
+        hashed_password=pwd_context.hash(request.password),
     )
 
     db.add(user_model)
@@ -54,30 +48,23 @@ def post_api_users(
 
     db.commit()
 
-    # project_reqeust = ProjectForCreate(project_name=f'default_{user_model.id}', user_ids=[request.user_id])
-    # task = TaskManager(db=db, bg=bg)
-    # task.select('post', 'project', 'root')
-    # task.commit(user=current_user, request=project_reqeust)
-
     return user_model
 
 
-@app.get("/users", response_model=User, operation_id="get_users")
+@app.get("/users", response_model=UserPage, operation_id="get_users")
 def get_api_users(
+        param: UserForQuery = Depends(),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
-        limit: int = 25,
-        page: int = 0,
-        name_like: str = None,
     ):
     query = db.query(UserModel)
-    
-    if name_like:
-        query = query.filter(UserModel.usernamee.like(f'%{name_like}%'))
-    
+
+    if param.name_like:
+        query = query.filter(UserModel.usernamee.like(f"%{param.name_like}%"))
+
     count = query.count()
-    data = query.limit(limit).offset(int(limit*page)).all()
-    
+    data = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+
     return {"count": count, "data": data}
 
 
@@ -85,13 +72,13 @@ def get_api_users(
 def delete_user(
         username: str,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user),
     ):
-    
+
     if not db.query(UserModel).filter(UserModel.username==username).one_or_none():
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="User not found",
         )
 
     user_model = db.query(UserModel).filter(UserModel.username==username).delete()

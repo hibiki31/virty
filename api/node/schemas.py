@@ -1,6 +1,9 @@
+from typing import List
+
 from fastapi_camelcase import CamelModel
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+
+from mixin.schemas import GetPagination
+
 
 class NodeRole(CamelModel):
     role_name: str
@@ -9,7 +12,7 @@ class NodeRole(CamelModel):
         orm_mode  =  True
 
 
-class NodePage(CamelModel):
+class Node(CamelModel):
     name: str
     description: str
     domain: str
@@ -29,9 +32,13 @@ class NodePage(CamelModel):
         orm_mode  =  True
 
 
-class Node(CamelModel):
+class NodePage(CamelModel):
     count: int
-    data: List[NodePage]
+    data: List[Node]
+
+
+class NodeForQuery(GetPagination):
+    name_like: str = None
 
 
 class NodeRoleForUpdate(CamelModel):
@@ -45,9 +52,11 @@ class NodeInterfaceIpv4Info(CamelModel):
     prefixlen: int
     label: str
 
+
 class NodeInterfaceIpv6Info(CamelModel):
     address: str
     prefixlen: int
+
 
 class NodeInterface(CamelModel):
     ifname: str
@@ -58,6 +67,8 @@ class NodeInterface(CamelModel):
     mac_address: str = None
     ipv4_info: List[NodeInterfaceIpv4Info]
     ipv6_info: List[NodeInterfaceIpv6Info]
+
+
 class SSHKeyPair(CamelModel):
     private_key: str
     public_key: str

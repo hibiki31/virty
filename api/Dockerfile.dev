@@ -19,9 +19,11 @@ RUN apt-get install -y \
     python3-pip
 
 COPY ../requirements.txt /tmp/
+COPY ../requirements.dev.txt /tmp/
 
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install --user -r /tmp/requirements.txt
+RUN pip3 install --user -r /tmp/requirements.dev.txt
 
 
 EXPOSE 8000

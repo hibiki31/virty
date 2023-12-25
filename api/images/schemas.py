@@ -1,16 +1,10 @@
-from datetime import datetime
-from importlib.resources import path
-from time import strftime
-from typing import Any, List, Optional
+from typing import List
 
 from fastapi_camelcase import CamelModel
-from flavor.models import FlavorModel
 
-from node.schemas import Node
 from flavor.schemas import Flavor
-
-
-from storage.schemas import StoragePage
+from mixin.schemas import GetPagination
+from storage.schemas import Storage
 
 
 class ImageBase(CamelModel):
@@ -33,11 +27,11 @@ class ImageDomain(CamelModel):
     uuid: str
 
 
-class ImagePage(ImageBase):
+class Image(ImageBase):
     name:str
     storage_uuid:str = None
     capacity:int
-    storage: StoragePage
+    storage: Storage
     flavor: Flavor = None
     allocation:int
     path:str
@@ -47,11 +41,19 @@ class ImagePage(ImageBase):
         orm_mode  =  True
 
 
-class Image(CamelModel):
+class ImagePage(CamelModel):
     count: int
-    data: List[ImagePage]
+    data: List[Image]
     class Config:
         orm_mode  =  True
+
+
+class ImageForQuery(GetPagination):
+    node_name: str = None
+    pool_uuid: str = None
+    name:str = None
+    name_like:str = None
+    rool:str = None
 
 
 class StorageForCreate(CamelModel):

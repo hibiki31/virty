@@ -1,21 +1,18 @@
-from datetime import datetime
-from importlib.resources import path
-from time import strftime
-from typing import Any, List, Optional
+from typing import List
 
 from fastapi_camelcase import CamelModel
-from flavor.models import FlavorModel
 
-from node.schemas import NodePage
 from flavor.schemas import Flavor
+from mixin.schemas import GetPagination
+from node.schemas import Node
 
 
 class ImageBase(CamelModel):
     pass
 
 
-class StorageQuery(CamelModel):
-    name: str = None
+class StorageForQuery(GetPagination):
+    name_like: str = None
     node_name: str = None
 
 
@@ -26,6 +23,7 @@ class StorageMetadata(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class StorageMetadataForUpdate(CamelModel):
     uuid: str
     rool: str
@@ -33,6 +31,7 @@ class StorageMetadataForUpdate(CamelModel):
     device_type: str
     class Config:
         orm_mode  =  True
+
 
 class ImageForUpdateImageFlavor(CamelModel):
     storage_uuid: str
@@ -42,7 +41,8 @@ class ImageForUpdateImageFlavor(CamelModel):
     class Config:
         orm_mode  =  True
 
-class StoragePage(CamelModel):
+
+class Storage(CamelModel):
     name: str
     uuid: str
     status: int
@@ -50,7 +50,7 @@ class StoragePage(CamelModel):
     available: int = None
     capacity: int = None
     node_name: str
-    node: NodePage
+    node: Node
     auto_start: bool
     path: str = None
     meta_data: StorageMetadata = None
@@ -61,9 +61,9 @@ class StoragePage(CamelModel):
         orm_mode  =  True
     
 
-class Storage(CamelModel):
+class StoragePage(CamelModel):
     count: int
-    data: List[StoragePage]
+    data: List[Storage]
     class Config:
         orm_mode  =  True
 
@@ -94,11 +94,13 @@ class PaseStorage(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class ImageDomain(CamelModel):
     owner_user_id: str = None
     issuance_id: int = None
     name: str
     uuid: str
+
 
 class Image(ImageBase):
     name:str
@@ -113,6 +115,7 @@ class Image(ImageBase):
     class Config:
         orm_mode  =  True
 
+
 class StorageForCreate(CamelModel):
     name: str
     node_name: str
@@ -120,15 +123,18 @@ class StorageForCreate(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class StorageForDelete(CamelModel):
     uuid: str
     node_name: str
+
 
 class ImageSCP(CamelModel):
     from_node_name: str
     to_node_name: str
     from_file_path: str
     to_file_path: str
+
 
 class StoragePoolForCreate(CamelModel):
     name:str
@@ -147,10 +153,12 @@ class StorageForStorageContainer(CamelModel):
     class Config:
         orm_mode  =  True
 
+
 class StorageContainerForStoragePool(CamelModel):
     storage: StorageForStorageContainer
     class Config:
         orm_mode  =  True
+
 
 class StoragePool(CamelModel):
     id: int

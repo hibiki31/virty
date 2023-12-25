@@ -1,5 +1,3 @@
-# Develop
-pytest<=7.0.1
 # Ansible
 ansible==7.3.0
 aiosqlite==0.17.0

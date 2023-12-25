@@ -1,38 +1,26 @@
-import subprocess
-import uuid
 import traceback
-from time import time, sleep
-from sqlalchemy import desc, or_
+from datetime import datetime
+from time import sleep, time
 
-from settings import APP_ROOT
-from mixin.log import setup_logger
-from mixin.database import SessionLocal
-
-from task.schemas import Task
-from task.functions import TaskBase
-from node.tasks import *
-from storage.tasks import *
-from network.tasks import *
-
-from task.models import TaskModel
-from user.models import UserModel
-from project.models import ProjectModel
-
-from functools import update_wrapper
+from sqlalchemy import or_
 
 from domain.tasks import worker_task as domain_tasks
-from node.tasks import worker_task as node_tasks
-from storage.tasks import worker_task as storage_tasks
-from network.tasks import worker_task as network_tasks
-from project.tasks import worker_task as project_tasks
+from flavor.models import FlavorModel  # noqa: F401
 from images.tasks import worker_task as image_tasks
+from mixin.database import SessionLocal
+from mixin.log import setup_logger
+from network.tasks import *
+from network.tasks import worker_task as network_tasks
+from node.tasks import *
+from node.tasks import worker_task as node_tasks
+from project.tasks import worker_task as project_tasks
+from storage.models import ImageModel, StorageModel  # noqa: F401
+from storage.tasks import *
+from storage.tasks import worker_task as storage_tasks
+from task.functions import TaskBase
+from task.models import TaskModel
 
 logger = setup_logger(__name__)
-
-
-
-
-
 
 
 def main():
@@ -48,8 +36,6 @@ def main():
 
     while True:
         run_scheduler(tasks)
-
-
 
 
 def init_scheduler():

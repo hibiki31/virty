@@ -1,39 +1,42 @@
-from email.mime import image
-from pprint import pprint
-from fastapi import APIRouter, Depends, BackgroundTasks, Request, HTTPException
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from sqlalchemy import false, func, true
-from domain.models import DomainDriveModel, DomainModel
-
-from flavor.models import FlavorModel
-
-from .models import *
-from .schemas import *
 
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import Task
-from task.functions import TaskManager
-from node.models import NodeModel
 from mixin.database import get_db
 from mixin.log import setup_logger
+from task.functions import TaskManager
+from task.schemas import Task
 
-from module import virtlib
-from module import xmllib
-from module.sshlib import SSHManager
-
+from .models import (
+    AssociationStoragePoolModel,
+    ImageModel,
+    StorageMetadataModel,
+    StorageModel,
+    StoragePoolModel,
+)
+from .schemas import (
+    Storage,
+    StorageForCreate,
+    StorageForQuery,
+    StorageMetadataForUpdate,
+    StoragePage,
+    StoragePool,
+    StoragePoolForCreate,
+    StoragePoolForUpdate,
+)
 
 app = APIRouter()
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storages"], response_model=Storage, operation_id="get_storages")
+@app.get("/api/storages", tags=["storages"], response_model=StoragePage, operation_id="get_storages")
 def get_api_storages(
-        param: StorageQuery = Depends(),
+        param: StorageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        limit: int = 25,
-        page: int = 0,
     ):
 
     image_sum = db.query(
@@ -51,14 +54,14 @@ def get_api_storages(
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.node_name,StorageModel.name)
 
-    if param.node_name != None:
-        query = query.filter(NodeModel.name==param.node_name)
+    if param.node_name:
+        query = query.filter(StorageModel.node_name==param.node_name)
 
-    if param.name != None:
-        query = query.filter(StorageModel.name.like(f'%{param.name}%'))
+    if param.name_like:
+        query = query.filter(StorageModel.name.like(f'%{param.name_like}%'))
 
     count = query.count()
-    query = query.limit(limit).offset(int(limit*page))
+    query = query.limit(param.limit).offset(int(param.limit*param.page))
     models = query.all()
 
     res = []
@@ -110,7 +113,7 @@ def post_api_storages_pools(
 
 
 @app.patch("/api/storages/pools", tags=["storages"], operation_id="update_storage_pool")
-def post_api_storages_pools(
+def patch_api_storages_pools(
         request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -159,7 +162,7 @@ def get_api_storages_uuid(
 
 
 @app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[Task], operation_id="create_storage")
-def post_api_storage(
+def post_tasks_api_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

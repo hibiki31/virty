@@ -1,22 +1,23 @@
-from time import sleep
-from fastapi import APIRouter, Depends, Request, HTTPException
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from .models import *
-from .schemas import *
-
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import Task
-from task.functions import TaskManager
-from node.models import NodeModel
 from mixin.database import get_db
-from mixin.log import setup_logger
 from mixin.exception import notfound_exception
+from mixin.log import setup_logger
 
-from module import virtlib
-
+from .models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
+from .schemas import (
+    Network,
+    NetworkForQuery,
+    NetworkPage,
+    NetworkPool,
+    NetworkPoolForCreate,
+    NetworkPoolForUpdate,
+)
 
 app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
@@ -24,28 +25,24 @@ logger = setup_logger(__name__)
 
 @app.get("", response_model=NetworkPage, operation_id="get_networks")
 def get_api_networks(
+        param: NetworkForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        limit: int = 25,
-        page: int = 0,
-        name_like: str = None,
-        node_name_like: str = None,
-        type: str = None
     ):
     
     query = db.query(NetworkModel)
     
-    if name_like:
-        query = query.filter(NetworkModel.name.like(f'%{name_like}%'))
+    if param.name_like:
+        query = query.filter(NetworkModel.name.like(f'%{param.name_like}%'))
     
-    if node_name_like:
-        query = query.filter(NetworkModel.node_name.like(f'%{node_name_like}%'))
+    if param.node_name_like:
+        query = query.filter(NetworkModel.node_name.like(f'%{param.node_name_like}%'))
     
-    if type:
-        query = query.filter(NetworkModel.type==type)
+    if param.type:
+        query = query.filter(NetworkModel.type==param.type)
     
     count = query.count()
-    query = query.limit(limit).offset(int(limit*page))
+    query = query.limit(param.limit).offset(int(param.limit*param.page))
     
     return { "count": count, "data": query.all() }
 
