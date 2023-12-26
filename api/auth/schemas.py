@@ -1,6 +1,6 @@
-from fastapi_camelcase import CamelModel
 from typing import List, Optional
 from pydantic import BaseModel
+from mixin.schemas import BaseSchema
 
 # RFCでスネークケース指定あるやんけ
 class TokenRFC6749Response(BaseModel):
@@ -12,14 +12,13 @@ class AuthValidateResponse(TokenRFC6749Response):
     username: str
 
 
-class TokenData(CamelModel):
-    user_id: Optional[str] = None
+class TokenData(BaseSchema):
+    user_id: Optional[str] | None = None
     scopes: List[str] = []
     role: List[str] = []
     projects: List[str] = []
 
-class SetupRequest(CamelModel):
+class SetupRequest(BaseSchema):
     username: str
     password: str
-    class Config:
-        orm_mode = True
+

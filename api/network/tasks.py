@@ -13,10 +13,15 @@ from mixin.log import setup_logger
 from module import virtlib
 from module import xmllib
 from module.ovslib import OVSManager
+from module import sshlib
 
 from task.functions import TaskBase, TaskRequest
 
 from time import time
+from random import randint
+
+from ipaddress import ip_interface
+import httpx
 
 
 worker_task = TaskBase()
@@ -183,3 +188,72 @@ def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel
     return model
 
 
+@worker_task(key="post.network.provider")
+def post_network_provider(self: TaskBase, task: TaskModel, request: TaskRequest):
+    db = self.db
+    body: NetworkProvider = NetworkProvider(**request.body)
+    
+    vni = randint(1,2**24)
+    # VNIの16新数ゼロ梅
+    # 4桁:接頭辞 vbr-
+    # 6桁:VNI 24bit
+    # 4桁:ノード識別子 AXYZ
+    net_id = str('{:06x}'.format(vni))
+    gw_ip = ip_interface(f"{body.gateway_address}/{body.network_prefix}")
+
+    # Network Node
+    network_node:NodeModel = db.query(NodeModel).filter(NodeModel.name==body.network_node).one()
+    editor = xmllib.XmlEditor("static","net_provider")
+    editor.network_provider(
+        name=f'vbr-{net_id}', bridge=f'vbr-{net_id}',
+        address=str(gw_ip.ip),
+        netmask=str(gw_ip.netmask),
+        domain=str(body.dns_domain),
+        start=body.dhcp_start,
+        end=body.dhcp_end
+        )
+    xml = editor.dump_str()
+   
+    # ソイや！
+    manager = virtlib.VirtManager(node_model=network_node)
+    manager.network_define(xml_str=xml)
+
+    
+    nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="vxlan_overlay")).order_by(NodeModel.name).all()
+
+    find_role = lambda i: [ j for j in i if j.role_name=="vxlan_overlay"][0]
+
+    # Network node to Worker node
+    counter = 0
+    for node in nodes:
+        if node.name == body.network_node:
+            continue
+        node: NodeModel
+        node_extra = find_role(node.roles).extra_json
+
+        req_data = {
+            "vni": vni,
+            "node_id": counter,
+            "remote_ip": node_extra['local_ip']
+        }
+        resp = httpx.post(url=f'http://{network_node.domain}:8766/vxlan', json=req_data)
+        logger.info(resp)
+        counter += 1
+
+    # Worker node to Network node
+    for node in nodes:
+        if node.name == body.network_node:
+            continue
+        editor = xmllib.XmlEditor("static","net_internal")
+        editor.network_internal(name=f'vbr-{net_id}')
+        xml = editor.dump_str()
+    
+        manager = virtlib.VirtManager(node_model=node)
+        manager.network_define(xml_str=xml)
+        req_data = {
+            "vni": vni,
+            "node_id": 0,
+            "remote_ip": node_extra['network_node_ip']
+        }
+        resp = httpx.post(url=f'http://{node.domain}:8766/vxlan', json=req_data)
+        logger.info(resp)

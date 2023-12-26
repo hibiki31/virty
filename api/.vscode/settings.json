@@ -1,18 +1,11 @@
 {
     "python.pythonPath": "/usr/local/bin/python",
-    "python.formatting.provider": "autopep8",
-    "python.linting.pylintEnabled": false,
-    "python.linting.lintOnSave": true,
-    "python.linting.enabled": true,
-    "workbench.colorTheme": "One Monokai",
-    "sqltools.connections": [{
-        "name": "Container database",
-        "driver": "PostgreSQL",
-        "previewLimit": 50,
-        "server": "postgress",
-        "port": 5432,
-        "database": "mydatabase",
-        "username": "postgres",
-        "password": "password"
-    }]
+    "workbench.colorTheme": "Visual Studio Dark",
+    "workbench.editor.enablePreview": false,
+    "[python]": {
+        "editor.codeActionsOnSave": {
+          "source.fixAll.ruff": "explicit",
+          "source.organizeImports.ruff": "explicit"
+        }
+    }
 }

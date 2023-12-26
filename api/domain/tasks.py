@@ -82,7 +82,8 @@ def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
     task.message = "VM list updated has been successfull"
 
 
-def post_vm_ticketd(db:Session, task: TaskModel):
+@worker_task(key="post.vm.project")
+def post_vm_project(self: TaskBase, task: TaskModel, request: TaskRequest):
     req = DomainTicketForCreate(**loads(task.request))
     issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
 
@@ -225,24 +226,24 @@ def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     except:
         raise Exception("node not found")
 
-    if domains != []:
-        raise Exception("domain name is duplicated")
+    # if domains != []:
+    #     raise Exception("domain name is duplicated")
 
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
     # XMLのベース読み込んで編集開始
     editor = xmllib.XmlEditor("static","domain_base")
 
+    domain_uuid = editor.domain_uuid_generate()
+
     editor.domain_emulator_edit(node.os_like)
     editor.domain_base_edit(
-        domain_name=f'{req.name}@{task.user_id}',
+        domain_name=f'{req.name}@{task.user_id}#{domain_uuid}',
         memory_mega_byte=req.memory_mega_byte,
         core=req.cpu,
         vnc_port=0,
         vnc_passwd=None
     )
-
-    domain_uuid = editor.domain_uuid_generate()
     
     # ネットワークインターフェイス
     for interface in req.interface:

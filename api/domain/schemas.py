@@ -1,37 +1,30 @@
 from enum import Enum
-from datetime import datetime
-from typing import List, Optional, Any, Literal, Dict
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Literal
 
-from fastapi_camelcase import CamelModel
-from pyparsing import str_type
-
+from mixin.schemas import GetPagination, BaseSchema
 from node.schemas import Node
 
-class DomainDrive(CamelModel):
-    device: str = None
-    type: str = None
-    source: str = None
-    target: str = None
-    class Config:
-        orm_mode  =  True
 
-class DomainInterface(CamelModel):
-    type: str =None
-    mac: str = None
-    target: str = None
-    bridge: str = None
-    network: str = None
-    port: str = None
-    class Config:
-        orm_mode  =  True
+class DomainDrive(BaseSchema):
+    device: str | None = None
+    type: str | None = None
+    source: str | None = None
+    target: str | None = None
 
 
-class DomainProject(CamelModel):
+class DomainInterface(BaseSchema):
+    type: str  | None = None
+    mac: str  | None = None
+    target: str  | None = None
+    bridge: str  | None = None
+    network: str  | None = None
+    port: str  | None = None
+
+
+class DomainProject(BaseSchema):
     id: str
     name: str
-    class Config:
-        orm_mode  =  True
+
 
 
 class DomainStatus(int, Enum):
@@ -46,26 +39,29 @@ class DomainStatus(int, Enum):
         schema["x-enum-varnames"] = [choice.name for choice in cls]
 
 
-class Domain(CamelModel):
+class Domain(BaseSchema):
     uuid: str
     name: str
     core: int
     memory: int
     status: int # TODO: DomainStatusに置き換える
-    description: str = None
+    description: str  | None = None
     node_name: str
-    owner_user_id: str = None
-    owner_project_id: str = None
-    owner_project: DomainProject = None
-    vnc_port: int = None
-    vnc_password: str = None
-    drives: list[DomainDrive] | None = None
-    interfaces: list[DomainInterface] | None = None
-    class Config:
-        orm_mode  =  True
+    owner_user_id: str  | None = None
+    owner_project_id: str  | None = None
+    owner_project: DomainProject  | None = None
+    vnc_port: int  | None = None
+    vnc_password: str  | None = None
+    drives: list[DomainDrive] | None  | None = None
+    interfaces: list[DomainInterface] | None  | None = None
 
 
-class DomainPagenation(CamelModel):
+class DomainForQuery(GetPagination):
+    name_like: str  | None = None
+    node_name_like: str  | None = None
+
+
+class DomainPage(BaseSchema):
     count: int
     data: List[Domain]
 
@@ -74,105 +70,112 @@ class DomainDetail(Domain):
     node: Node
 
 
-class DomainBase(CamelModel):
+class DomainBase(BaseSchema):
     uuid: str
-    class Config:
-        orm_mode  =  True
 
-class DomainPatchUser(CamelModel):
+
+class DomainPatchUser(BaseSchema):
     uuid: str
     user_id: str
 
-class DomainPatchName(CamelModel):
+
+class DomainPatchName(BaseSchema):
     uuid: str
     name: str
 
-class DomainPatchCore(CamelModel):
+
+class DomainPatchCore(BaseSchema):
     uuid: str
     core: int
 
-class DomainProjectForUpdate(CamelModel):
+
+class DomainProjectForUpdate(BaseSchema):
     uuid: str
     project_id: str
+
 
 class DomainForDelete(DomainBase):
     pass
 
+
 class DomainPatch(DomainBase):
-    status: str = None
-    path: str = None
-    target: str = None
+    status: str  | None = None
+    path: str  | None = None
+    target: str  | None = None
+
 
 class DomainPowerStatus(str, Enum):
     ON = "on"
     OFF = "off"
 
-class PowerStatusForUpdateDomain(CamelModel):
-    status: str = None # TODO: DomainPowerStatusに置き換える
+
+class PowerStatusForUpdateDomain(BaseSchema):
+    status: str  | None = None # TODO: DomainPowerStatusに置き換える
 
 
-class CdromForUpdateDomain(CamelModel):
-    path: str = None
-    target: str = None
+class CdromForUpdateDomain(BaseSchema):
+    path: str  | None = None
+    target: str  | None = None
 
 
-class DomainDetailXmlInterface(CamelModel):
+class DomainDetailXmlInterface(BaseSchema):
     type: str
     mac: str
-    target: str = None
-    bridge: str = None
-    network: str = None
-    port: str = None
+    target: str  | None = None
+    bridge: str  | None = None
+    network: str  | None = None
+    port: str  | None = None
 
-class DomainDetailXmlDrive(CamelModel):
+
+class DomainDetailXmlDrive(BaseSchema):
     device: str
     type: str
-    source: str = None
-    target: str = None
+    source: str  | None = None
+    target: str  | None = None
 
-class DomainDetailXml(CamelModel):
+
+class DomainDetailXml(BaseSchema):
     name:str
     memory: int
     memoryUnit: str
     vcpu: int
     uuid: str
-    vnc_port: int = None
+    vnc_port: int  | None = None
     disk: List[DomainDetailXmlDrive]
     interface: List[DomainDetailXmlInterface]
     boot: List[str]
     selinux: bool
 
-class DomainDetailSelect(CamelModel):
+
+class DomainDetailSelect(BaseSchema):
     db: Domain
     node: Node
     xml: DomainDetailXml
     token: str
-    class Config:
-        orm_mode  =  True
 
-class DomainForCreateDisk(CamelModel):
+
+class DomainForCreateDisk(BaseSchema):
     type: str
     save_pool_uuid: str
-    original_pool_uuid: str = None
-    original_name: str = None
-    size_giga_byte: int = None
-    template_name: str = None
-    class Config:
-        orm_mode  =  True
+    original_pool_uuid: str  | None = None
+    original_name: str  | None = None
+    size_giga_byte: int  | None = None
+    template_name: str  | None = None
 
-class DomainForCreateInterface(CamelModel):
+
+class DomainForCreateInterface(BaseSchema):
     type: str
-    mac: str = None
+    mac: str  | None = None
     network_uuid: str
-    port: str = None
-    class Config:
-        orm_mode  =  True
+    port: str  | None = None
 
-class CloudInitInsert(CamelModel):
+
+class CloudInitInsert(BaseSchema):
     hostname: str
     userData: str
 
-class DomainForCreate(CamelModel):
+
+class DomainForCreate(BaseSchema):
     type: Literal['manual', 'project']
     name: str
     node_name: str
@@ -180,24 +183,22 @@ class DomainForCreate(CamelModel):
     cpu: int
     disks: List[DomainForCreateDisk]
     interface: List[DomainForCreateInterface]
-    cloud_init: CloudInitInsert = None
-    class Config:
-        orm_mode  =  True
+    cloud_init: CloudInitInsert  | None = None
 
-class NetworkForUpdateDomain(CamelModel):
+
+class NetworkForUpdateDomain(BaseSchema):
     mac: str
     network_uuid: str
-    port: str = None
+    port: str  | None = None
 
 
-class InterfaceForDomainTicket(CamelModel):
+class InterfaceForDomainTicket(BaseSchema):
     id: int
-    mac: str = None
+    mac: str  | None = None
 
 
-class DomainTicketForCreate(CamelModel):
-    type: str
-    issuance_id: int
+class DomainInProjectForCreate(BaseSchema):
+    project_id: str
     name: str
     memory: int
     core: int
@@ -205,6 +206,4 @@ class DomainTicketForCreate(CamelModel):
     flavor_size_g: int
     storage_pool_id: int
     interfaces: list[InterfaceForDomainTicket]
-    cloud_init: CloudInitInsert = None
-    class Config:
-        orm_mode  =  True
+    cloud_init: CloudInitInsert  | None = None

@@ -1,105 +1,122 @@
-from datetime import datetime
-from typing import Any, List, Literal
-import uuid
-from pydantic import BaseModel, Field
+from typing import List, Literal
 
-from fastapi_camelcase import CamelModel
+from pydantic import Field
+
+from mixin.schemas import GetPagination, BaseSchema
 
 
-class PaseNetworkPortgroup(CamelModel):
+class PaseNetworkPortgroup(BaseSchema):
     name: str
-    vlan_id: str = None
+    vlan_id: str | None = None
     is_default: bool
-    class Config:
-        orm_mode  =  True
+    
 
 
 class NetworkPortgroup(PaseNetworkPortgroup):
     pass
 
 
-class PaseNetwork(CamelModel):
+class PaseNetwork(BaseSchema):
     name: str
     uuid: str
     type: str
-    dhcp: bool = None
-    description: str = None
-    active: bool = None
-    bridge: str = None
-    auto_start: bool = None
+    dhcp: bool | None = None
+    description: str | None = None
+    active: bool | None = None
+    bridge: str | None = None
+    auto_start: bool | None = None
     portgroups: List[NetworkPortgroup]
-    class Config:
-        orm_mode  =  True
+    
 
 
 class Network(PaseNetwork):
     node_name: str
-    description: str = None
-    update_token: str = None
-    class Config:
-        orm_mode  =  True
+    description: str | None = None
+    update_token: str | None = None
+    
 
 
-class NetworkForCreate(CamelModel):
+class NetworkForQuery(GetPagination):
+    name_like: str | None = None
+    node_name_like: str | None = None
+    type: str | None = None
+
+
+class NetworkPage(BaseSchema):
+    count: int
+    data: List[Network]
+    
+    
+
+class NetworkForCreate(BaseSchema):
     name: str
     node_name: str
     type: Literal['bridge', 'ovs'] = Field( description='brdige or ovs')
-    bridge_device: str = None
-    class Config:
-        orm_mode  =  True
+    bridge_device: str | None = None
+    
 
-class NetworkForDelete(CamelModel):
+class NetworkForDelete(BaseSchema):
     uuid: str
 
-class NetworkOVSForCreate(CamelModel):
+class NetworkOVSForCreate(BaseSchema):
     default: bool
     name: str
-    vlan_id: int = None
-    class Config:
-        orm_mode  =  True
+    vlan_id: int | None = None
+    
 
-class NetworkOVSForDelete(CamelModel):
+
+class NetworkProviderForCreate(BaseSchema):
+    name: str | None = None
+    dns_domain: str | None = None
+    network_address: str | None = None
+    network_prefix: str | None = None
+    gateway_address: str | None = None
+    dhcp_start: str | None = None
+    dhcp_end: str | None = None
+    network_node: str | None = None
+    
+
+    
+
+
+class NetworkOVSForDelete(BaseSchema):
     uuid: str
     name: str
-    class Config:
-        orm_mode  =  True
+    
 
 
-class NetworkPoolForCreate(CamelModel):
+class NetworkPoolForCreate(BaseSchema):
     name: str
 
 
-class NetworkPoolForUpdate(CamelModel):
+class NetworkPoolForUpdate(BaseSchema):
     pool_id: int
     network_uuid: str
-    port_name:str = None
+    port_name:str | None = None
 
 
-class NetworkForNetworkPool(CamelModel):
+class NetworkForNetworkPool(BaseSchema):
     name: str
     uuid: str
     node_name: str
     bridge: str
     type: str
-    class Config:
-        orm_mode  =  True
+    
 
 
-class NetworkPoolPort(CamelModel):
+class NetworkPoolPort(BaseSchema):
     name: str= None
-    vlan_id: int = None
+    vlan_id: int | None = None
     network: NetworkForNetworkPool
-    class Config:
-        orm_mode  =  True
+    
 
 
-class NetworkPool(CamelModel):
-    id: int = None
-    name: str = None
-    networks: List[NetworkForNetworkPool] = None
-    ports: List[NetworkPoolPort] = None
-    class Config:
-        orm_mode  =  True
+class NetworkPool(BaseSchema):
+    id: int | None = None
+    name: str | None = None
+    networks: List[NetworkForNetworkPool] | None = None
+    ports: List[NetworkPoolPort] | None = None
+    
 
-class PostVXLANInternal(CamelModel):
+class PostVXLANInternal(BaseSchema):
     project_id: str

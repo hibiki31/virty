@@ -1,25 +1,15 @@
-from urllib import request
-from fastapi import APIRouter, Depends, Request
-from fastapi import HTTPException
-from sqlalchemy import or_, desc
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-
-from .models import *
-from .schemas import *
+from sqlalchemy.orm.exc import NoResultFound
 
 from auth.router import CurrentUser, get_current_user
-from task.schemas import Task, TaskRequest
-from task.functions import TaskManager
-from user.models import UserModel
-from project.models import ProjectModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-from mixin.exception import notfound_exception
+from project.models import ProjectModel
 
-from celery import chain, group
-
-from module.virtlib import VirtManager
-
+from .models import DomainModel
+from .schemas import DomainDetail, DomainForQuery, DomainPage
 
 app = APIRouter(
     tags=["vms"]
@@ -28,35 +18,31 @@ app = APIRouter(
 logger = setup_logger(__name__)
 
 
-@app.get("/api/vms",response_model=DomainPagenation, operation_id="get_vms")
+@app.get("/api/vms",response_model=DomainPage, operation_id="get_vms")
 def get_api_domain(
+        param: DomainForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        admin: bool = False,
-        limit: int = 25,
-        page: int = 0,
-        name_like: str = None,
-        node_name_like: str = None
     ):
 
     query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)
 
-    if admin:
+    if param.admin:
         current_user.verify_scope(scopes=["admin"])
     else:
         query = query.filter(or_(
                 DomainModel.owner_user_id==current_user.id,
                 DomainModel.project.has(ProjectModel.users.any(username=current_user.id))
         ))
-    if name_like:
-        query = query.filter(DomainModel.name.like(f'%{name_like}%'))
-    if node_name_like:
-        query = query.filter(DomainModel.node_name.like(f'%{node_name_like}%'))
+    if param.name_like:
+        query = query.filter(DomainModel.name.like(f'%{param.name_like}%'))
+    if param.node_name_like:
+        query = query.filter(DomainModel.node_name.like(f'%{param.node_name_like}%'))
 
     count = query.count()
 
     query = query.order_by(desc(DomainModel.name))
-    vms = query.limit(limit).offset(int(limit*page)).all()
+    vms = query.limit(param.limit).offset(int(param.limit*param.page)).all()
 
     return {"count": count, "data": vms}
 
@@ -69,14 +55,14 @@ def get_api_domain_uuid(
     ):
     try:
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
-    except:
+    except NoResultFound:
         raise HTTPException(status_code=404, detail="Not found domain")
 
     return domain
 
 
 @app.get("/api/vms/vnc/{token}", operation_id="get_vnc_address")
-def get_api_domain(
+def get_api_domain_vnc_token(
         token: str,
         db: Session = Depends(get_db),
     ):

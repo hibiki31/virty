@@ -1,0 +1,25 @@
+[Unit]
+Description = virty-agent.service daemon
+After = libvirtd.service
+
+[Service]
+ExecStart=/opt/virty/agent
+WorkingDirectory=/opt/virty
+Restart=always
+Type=simple
+User=root
+Group=root
+# Other directives omitted
+# (file size)
+LimitFSIZE=infinity
+# (cpu time)
+LimitCPU=infinity
+# (virtual memory size)
+LimitAS=infinity
+# (open files)
+LimitNOFILE=64000
+# (processes/threads)
+LimitNPROC=64000
+
+[Install]
+WantedBy = multi-user.target

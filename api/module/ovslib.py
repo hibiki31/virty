@@ -1,4 +1,4 @@
-from ryu.lib.ovs import vsctl
+# from ryu.lib.ovs import vsctl
 
 from mixin.log import setup_logger
 

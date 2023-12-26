@@ -15,7 +15,7 @@ class UserModel(Base):
     username = Column(String, primary_key=True, index=True)
     hashed_password = Column(String)
     scopes = relationship('UserScopeModel', lazy=False)
-    projects = relationship("ProjectModel", secondary=association_users_to_projects, back_populates="users", lazy=False)
+    projects = relationship("ProjectModel", secondary=association_users_to_projects, back_populates="users", lazy=False, viewonly=True)
 
 
 class UserScopeModel(Base):

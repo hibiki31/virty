@@ -1,25 +1,30 @@
 FROM ubuntu:22.04
 
+ENV PATH $PATH:/root/.local/bin/
 RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://ftp.riken.go.jp/Linux/ubuntu/%g" /etc/apt/sources.list
 
-RUN apt-get update -y && apt-get install -y \
-    make gcc wget openssh-client openssh-server \
-    genisoimage rsync \
-    libvirt-clients libvirt-dev \
-    python3 python3-pip
+RUN apt-get update -y
+RUN apt-get install -y \
+    make \
+    gcc \
+    wget \
+    git \
+    openssh-client \
+    openssh-server \
+    genisoimage \
+    rsync \
+    libvirt-clients \
+    libvirt-dev \
+    python3 \
+    python3-pip
 
-RUN apt-get install -y git
+COPY ../requirements.txt /tmp/
+COPY ../requirements.dev.txt /tmp/
 
-COPY ./requirements.txt /tmp/
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install --user -r /tmp/requirements.txt
+RUN pip3 install --user -r /tmp/requirements.dev.txt
 
-RUN mkdir -p /opt/app && mkdir -p /opt/data
-COPY . /opt/app
-WORKDIR /opt/app
-
-ENV PATH $PATH:/root/.local/bin/
 
 EXPOSE 8000
-
 CMD bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"

@@ -39,7 +39,7 @@ def post_tasks_nodes(
         body_libvirt = NodeRoleForUpdate(node_name=body.name, role_name="libvirt")
         task_libvirt = TaskManager(db=db)
         task_libvirt.select(method="patch", resource="node", object="role")
-        task_libvirt.commit(user=cu, req=req, body=body_libvirt,dep_uuid=task.model.uuid)
+        task_libvirt.commit(user=cu, req=req, body=body_libvirt, dep_uuid=task.model.uuid)
         dependence_uuid = task_libvirt.model.uuid
 
         return [task.model, task_libvirt.model]
@@ -64,12 +64,13 @@ def delete_tasks_nodes_name(
 
 @app.patch("/roles", response_model=Task, operation_id="update_node_role")
 def patch_api_node_role(
-        request: NodeRoleForUpdate,
+        body: NodeRoleForUpdate,
+        req: Request,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
     task = TaskManager(db=db)
     task.select('patch', 'node', 'role')
-    task.commit(user=current_user, request=request)
+    task.commit(user=current_user, req=req, body=body)
     
-    return task.model
+    return [ task.model ]

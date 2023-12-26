@@ -1,7 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON, Float, Text
-from mixin.database import Base
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, String, Text
 
-from user.models import UserModel
+from mixin.database import Base
 
 
 class TaskModel(Base):
@@ -11,8 +10,16 @@ class TaskModel(Base):
     start_time = Column(DateTime(timezone=True))
     update_time = Column(DateTime(timezone=True))
     run_time = Column(Float)
-    user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'))
-    dependence_uuid = Column(String, ForeignKey('tasks.uuid', onupdate='CASCADE', ondelete='CASCADE'))
+    user_id = Column(String, ForeignKey(
+        'users.username', 
+        onupdate='CASCADE', 
+        ondelete='CASCADE'
+    ))
+    dependence_uuid = Column(String, ForeignKey(
+        'tasks.uuid', 
+        onupdate='CASCADE', 
+        ondelete='CASCADE'
+    ))
     status = Column(String) # init, start, finish
     resource = Column(String) # node, domain, network...
     object = Column(String) # base, power...

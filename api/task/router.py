@@ -1,20 +1,15 @@
-from asyncio.log import logger
-from fastapi import APIRouter, Depends, HTTPException
-from starlette.websockets import WebSocket
-from starlette.requests import Request
-from starlette.endpoints import WebSocketEndpoint
-from starlette.routing import Route, WebSocketRoute
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, true
-from mixin.database import get_db
-from auth.router import get_current_user, CurrentUser
-
-from .models import *
-from .schemas import *
-
-import time
 import hashlib
+import time
+from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from auth.router import CurrentUser, get_current_user
+from mixin.database import get_db
+from task.models import TaskModel
+from task.schemas import Task, TaskForQuery, TaskIncomplete, TaskPage
 
 app = APIRouter(
     prefix="/api",
@@ -22,17 +17,12 @@ app = APIRouter(
 )
 
 
-@app.get("/tasks", response_model=TaskPagesnation, operation_id="get_tasks")
+@app.get("/tasks", response_model=TaskPage, operation_id="get_tasks")
 def get_tasks(
+        param: TaskForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         admin: bool = False,
-        limit: int = 25,
-        page: int = 0,
-        resource: str = None,
-        object: str = None,
-        method: str = None,
-        status: str = None,
     ):
 
     query = db.query(TaskModel)
@@ -42,20 +32,20 @@ def get_tasks(
     else:
         query.filter(TaskModel.user_id==current_user.id)
 
-    if resource:
-        query = query.filter(TaskModel.resource==resource)
-    if object:
-        query = query.filter(TaskModel.object==object)
-    if method:
-        query = query.filter(TaskModel.method==method)
-    if status:
-        query = query.filter(TaskModel.status==status)
+    if param.resource:
+        query = query.filter(TaskModel.resource==param.resource)
+    if param.object:
+        query = query.filter(TaskModel.object==param.object)
+    if param.method:
+        query = query.filter(TaskModel.method==param.method)
+    if param.status:
+        query = query.filter(TaskModel.status==param.status)
     
     count = query.count()
 
     query = query.order_by(desc(TaskModel.post_time))
-    task = query.limit(limit).offset(int(limit*page)).all()
-
+    task = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    
     return { "count": count, "data": task }
 
 
@@ -107,15 +97,13 @@ def get_tasks_incomplete(
 
 
 @app.get("/tasks/{uuid}", response_model=Task, operation_id="get_task")
-def get_tasks(
+def get_task_uuid(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
-    task = db.query(TaskModel)\
-            .filter(TaskModel.uuid==uuid).one_or_none()
-    
-    if task == None:
+    task = db.query(TaskModel).filter(TaskModel.uuid==uuid).one_or_none()
+    if task is None:
         raise HTTPException(status_code=404, detail="task uuid not found")
     
     return task

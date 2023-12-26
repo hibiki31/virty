@@ -1,0 +1,4 @@
+nuitka
+httpx
+typer
+tabulate

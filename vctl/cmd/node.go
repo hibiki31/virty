@@ -1,10 +1,10 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -14,9 +14,15 @@ import (
 var nodeCmd = &cobra.Command{
 	Use:   "node",
 	Short: "A brief description of your command",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("node called")
+		c := GetClient()
+		ctx := context.TODO()
+		res, _, _ := c.NodesAPI.GetNode(ctx, "").Execute()
+
+		for _, i := range res.Data {
+			fmt.Println(i)
+		}
 	},
 }
 

@@ -1,10 +1,10 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -13,14 +13,65 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
-	Long: ``,
+	Short: "show subcommand",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("get called")
 	},
 }
 
+var getNodeCmd = &cobra.Command{
+	Use:   "node",
+	Short: "get nodes list",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		c := GetClient()
+		ctx := context.TODO()
+		res, _, _ := c.NodesAPI.GetNode(ctx, "").Execute()
+
+		for _, i := range res.Data {
+			fmt.Println(i.Name, i.Domain, i.OsName, i.CpuGen, i.Memory)
+		}
+	},
+}
+
+var getVMCmd = &cobra.Command{
+	Use:   "vm",
+	Short: "get vms list",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		c := GetClient()
+		ctx := context.TODO()
+		r := c.VmsAPI.GetVms(ctx).Limit(15).Page(0)
+		res, _, _ := r.Execute()
+
+		for _, i := range res.Data {
+			fmt.Println(i.Name, i.Uuid, i.Core, i.Memory, i.NodeName)
+		}
+	},
+}
+
+var getTaskCmd = &cobra.Command{
+	Use:   "task",
+	Short: "get tasks list",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		c := GetClient()
+		ctx := context.TODO()
+		r := c.TasksAPI.GetTasks(ctx).Limit(10)
+		res, _, _ := r.Execute()
+
+		for _, i := range res.Data {
+			fmt.Println(i.PostTime, *i.Uuid, *i.Method, *i.Object, *i.Resource, *i.Message)
+		}
+	},
+}
+
 func init() {
+	getCmd.AddCommand(getNodeCmd)
+	getCmd.AddCommand(getVMCmd)
+	getCmd.AddCommand(getTaskCmd)
+
 	rootCmd.AddCommand(getCmd)
 
 	// Here you will define your flags and configuration settings.
