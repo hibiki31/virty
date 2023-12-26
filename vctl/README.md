@@ -8,7 +8,8 @@ docker run --rm \
   -i https://virty-pr.hinagiku.me/api/openapi.json \
   -g go \
   --package-name openapi \
-  -o /local/openapi
+  -o /local/virty-go \
+  --git-repo-id virty-go --git-user-id hibiki31
 
 sudo chown -R akane:akane openapi/
 ```

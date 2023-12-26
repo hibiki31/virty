@@ -1,21 +1,21 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
-	"github.com/spf13/cobra"
-	"github.com/go-yaml/yaml"
-	"encoding/json"
+	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/go-yaml/yaml"
+	"github.com/spf13/cobra"
 )
 
 var apiURL string
@@ -26,7 +26,7 @@ type Response struct {
 
 type Configfile struct {
 	AccessToken string
-	Endpoint string
+	Endpoint    string
 }
 
 // loginCmd represents the login command
@@ -44,11 +44,11 @@ var loginCmd = &cobra.Command{
 		postData.Add("username", username)
 		postData.Add("password", password)
 
-		resp, err := http.PostForm(apiURL + "/api/auth", postData)
-        if err != nil {
-            log.Fatal(err)
-        }
-		
+		resp, err := http.PostForm(apiURL+"/api/auth", postData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		defer resp.Body.Close()
 
 		if resp.StatusCode >= 400 {
@@ -58,9 +58,8 @@ var loginCmd = &cobra.Command{
 
 		var response Response
 
-
 		body, _ := ioutil.ReadAll(resp.Body)
-		
+
 		if err := json.Unmarshal(body, &response); err != nil {
 			fmt.Println(err)
 			return
@@ -72,14 +71,14 @@ var loginCmd = &cobra.Command{
 		configfile.AccessToken = "Bearer " + response.AccessToken
 		configfile.Endpoint = apiURL
 
-		buf, _ := yaml.Marshal(configfile)                          
-                                   
-		// []byte をファイルに上書きしています。 
+		buf, _ := yaml.Marshal(configfile)
+
+		// []byte をファイルに上書きしています。
 		conf, err := os.UserHomeDir()
 		perm := "0600"
 		perm32, _ := strconv.ParseUint(perm, 8, 32)
-		err = ioutil.WriteFile(filepath.Join(conf, ".virtyctl"), buf, os.FileMode(perm32)) 
-		os.Chmod(filepath.Join(conf, ".virtyctl"), 0600)          
+		err = os.WriteFile(filepath.Join(conf, ".virtyctl"), buf, os.FileMode(perm32))
+		os.Chmod(filepath.Join(conf, ".virtyctl"), 0600)
 	},
 }
 
