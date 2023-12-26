@@ -1,19 +1,13 @@
 import os
-from statistics import mode
+import xml.etree.ElementTree as ET
 from uuid import uuid4
 
-import xml.etree.ElementTree as ET
-
-from sqlalchemy import false
-
-from settings import APP_ROOT
+from domain.schemas import *
 from mixin.log import setup_logger
 from module.model import AttributeDict
-
-from storage.schemas import PaseImage, PaseStorage
-from domain.schemas import *
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
-from network.models import NetworkModel
+from settings import APP_ROOT
+from storage.schemas import PaseImage
 
 logger = setup_logger(__name__)
 
@@ -85,8 +79,8 @@ class XmlEditor():
 
         data = PaseImage(
             name = self.xml.find('name').text,
-            capacity = unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text),
-            allocation = unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text),
+            capacity = int(unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text)),
+            allocation = int(unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text)),
             capacity_unit = "G",
             allocation_unit = "G",
             path = self.xml.find('target').find('path').text

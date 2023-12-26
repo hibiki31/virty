@@ -1,29 +1,26 @@
 from datetime import datetime
 from typing import Any, List
 
-from fastapi_camelcase import CamelModel
+from pydantic import Json
 
-from mixin.schemas import GetPagination
+from mixin.schemas import BaseSchema, GetPagination
 
 
-class TaskBase(CamelModel):
-    post_time: datetime = None
-    run_time: float = None
-    start_time: datetime = None
-    update_time: datetime = None
-    user_id: str = None
-    status: str = None
-    resource: str = None
-    object: str = None
-    method: str = None
-    dependence_uuid: str = None
-    request: Any = None
-    result: dict = None
-    message: str = None
-    log: str = None
-
-    class Config:
-        orm_mode  =  True
+class TaskBase(BaseSchema):
+    post_time: datetime | None = None
+    run_time: float | None = None
+    start_time: datetime | None = None
+    update_time: datetime | None = None
+    user_id: str | None = None
+    status: str | None = None
+    resource: str | None = None
+    object: str
+    method: str
+    dependence_uuid: str | None = None
+    request: Json | None = None
+    result: dict | None = None
+    message: str | None = None
+    log: str | None = None
     
 
 class TaskForCreate(TaskBase):
@@ -31,28 +28,28 @@ class TaskForCreate(TaskBase):
 
 
 class TaskForQuery(GetPagination):
-    resource: str = None
-    object: str = None
-    method: str = None
-    status: str = None
+    resource: str | None = None
+    object: str | None = None
+    method: str | None = None
+    status: str | None = None
 
 
 class Task(TaskBase):
-    uuid: str = None
+    uuid: str | None = None
 
 
-class TaskPage(CamelModel):
+class TaskPage(BaseSchema):
     count: int
     data: List[Task]
 
 
-class TaskRequest(CamelModel):
-    url: str = None
+class TaskRequest(BaseSchema):
+    url: str | None = None
     path_param: Any
     body: Any
 
 
-class TaskIncomplete(CamelModel):
+class TaskIncomplete(BaseSchema):
     hash: str
     count: int
     uuids: List[str]

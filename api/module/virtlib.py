@@ -1,27 +1,15 @@
 
-import sys
-import sqlite3
-import subprocess
-import xml.etree.ElementTree as ET
+from typing import List
+
 import libvirt
-import pings
-import os
-import uuid
 
-from module.xmllib import XmlEditor
-
-from node.models import NodeModel
-from module.model import ImageModel
 from mixin.log import setup_logger
-from storage.models import StorageModel, StorageMetadataModel
+from module.xmllib import XmlEditor
+from node.models import NodeModel
+from storage.models import StorageModel
 from storage.schemas import PaseStorage
-from network.models import NetworkModel
 
-from typing import List, Optional
-
-from celery.utils.log import get_task_logger
-
-logger = get_task_logger(__name__)
+logger = setup_logger(__name__)
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):
@@ -76,13 +64,13 @@ class VirtManager():
                 uuid = pool.UUIDString(),
                 name = pool.name(),
                 node_name = self.node_model.name,
-                capacity = storage_xml.capacity,
-                available = storage_xml.available,
+                capacity = int(storage_xml.capacity),
+                available = int(storage_xml.available),
                 path = storage_xml.path,
                 active = pool.isActive(),
                 auto_start = pool.autostart(),
                 status = pool.info()[0],
-                update_token = token,
+                update_token = str(token),
                 images= []
             )
             for image_obj in pool.listAllVolumes():

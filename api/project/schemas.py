@@ -1,39 +1,35 @@
 from typing import List
 
 from anyio import Any
-from fastapi_camelcase import CamelModel
 
-from mixin.schemas import GetPagination
+from mixin.schemas import GetPagination, BaseSchema
 
 
-class ProjectBase(CamelModel):
+class ProjectBase(BaseSchema):
     id: str
     name: str
-    class Config:
-        orm_mode = True
+    
 
-class ProjectForCreate(CamelModel):
+class ProjectForCreate(BaseSchema):
     project_name: str
     user_ids: List[str]
 
 
-class ProjectForDelete(CamelModel):
+class ProjectForDelete(BaseSchema):
     id: str
 
 
-class ProjectForUpdate(CamelModel):
+class ProjectForUpdate(BaseSchema):
     project_id: str
     user_id: str
 
 
-class ProjectUser(CamelModel):
+class ProjectUser(BaseSchema):
     username: str
-    class Config:
-        orm_mode = True
 
 
 class ProjectForQuery(GetPagination):
-    name_like: str = None
+    name_like: str | None = None
 
 
 class Project(ProjectBase):
@@ -45,10 +41,8 @@ class Project(ProjectBase):
     used_core: int
     network_pools: Any
     storage_pools: Any
-    class Config:
-        orm_mode = True
 
 
-class ProjectPage(CamelModel):
+class ProjectPage(BaseSchema):
     count: int
     data: List[Project]

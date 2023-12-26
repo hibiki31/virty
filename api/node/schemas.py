@@ -1,18 +1,15 @@
 from typing import List
 
-from fastapi_camelcase import CamelModel
-
-from mixin.schemas import GetPagination
+from mixin.schemas import GetPagination, BaseSchema
 
 
-class NodeRole(CamelModel):
+class NodeRole(BaseSchema):
     role_name: str
-    extra_json: dict = None
-    class Config:
-        orm_mode  =  True
+    extra_json: dict | None = None
+    
 
 
-class Node(CamelModel):
+class Node(BaseSchema):
     name: str
     description: str
     domain: str
@@ -25,56 +22,55 @@ class Node(CamelModel):
     os_name: str
     os_version: str
     status: int
-    qemu_version: str = None
-    libvirt_version: str = None
+    qemu_version: str | None = None
+    libvirt_version: str | None = None
     roles: List[NodeRole]
-    class Config:
-        orm_mode  =  True
+    
 
 
-class NodePage(CamelModel):
+class NodePage(BaseSchema):
     count: int
     data: List[Node]
 
 
 class NodeForQuery(GetPagination):
-    name_like: str = None
+    name_like: str | None = None
 
 
-class NodeRoleForUpdate(CamelModel):
+class NodeRoleForUpdate(BaseSchema):
     node_name: str
     role_name: str
-    extra_json: dict = None
+    extra_json: dict | None = None
 
 
-class NodeInterfaceIpv4Info(CamelModel):
+class NodeInterfaceIpv4Info(BaseSchema):
     address: str
     prefixlen: int
     label: str
 
 
-class NodeInterfaceIpv6Info(CamelModel):
+class NodeInterfaceIpv6Info(BaseSchema):
     address: str
     prefixlen: int
 
 
-class NodeInterface(CamelModel):
+class NodeInterface(BaseSchema):
     ifname: str
     operstate: str
     mtu: int
-    master: str = None
+    master: str | None = None
     link_type: str
-    mac_address: str = None
+    mac_address: str | None = None
     ipv4_info: List[NodeInterfaceIpv4Info]
     ipv6_info: List[NodeInterfaceIpv6Info]
 
 
-class SSHKeyPair(CamelModel):
+class SSHKeyPair(BaseSchema):
     private_key: str
     public_key: str
 
 
-class NodeBase(CamelModel):
+class NodeBase(BaseSchema):
     name: str
 
 
@@ -90,7 +86,7 @@ class NodeForCreate(NodeBase):
     libvirt_role: bool
 
 
-class NodePoolForUpdate(CamelModel):
+class NodePoolForUpdate(BaseSchema):
     pool_id:int
     node_name:str
     core: int

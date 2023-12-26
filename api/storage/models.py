@@ -14,7 +14,7 @@ class StorageModel(Base):
     active = Column(Boolean)
     auto_start = Column(Boolean)
     status = Column(Integer)
-    images = relationship('ImageModel')
+    images = relationship('ImageModel', viewonly=True)
     update_token = Column(String)
     meta_data = relationship('StorageMetadataModel', uselist=False, backref="storages")
     allocation_commit = 0

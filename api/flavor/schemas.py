@@ -1,31 +1,27 @@
 from typing import List
 
-from fastapi_camelcase import CamelModel
-
-from mixin.schemas import GetPagination
+from mixin.schemas import BaseSchema, GetPagination
 
 
-class FlavorForCreate(CamelModel):
+class FlavorForCreate(BaseSchema):
     name: str
     os: str
     manual_url: str
     icon: str
     cloud_init_ready: bool
     description: str
-    class Config:
-        orm_mode  =  True
+    
 
         
 class Flavor(FlavorForCreate):
     id: int
-    class Config:
-        orm_mode  =  True
+    
         
 
-class FlavorPage(CamelModel):
+class FlavorPage(BaseSchema):
     count: int
     data: List[Flavor]
     
 
 class FlavorForQuery(GetPagination):
-    name_like: str = None
+    name_like: str| None = None 

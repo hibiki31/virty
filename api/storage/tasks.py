@@ -33,22 +33,22 @@ def put_storage_list(self: TaskBase, task: TaskModel, request: TaskRequest):
                 uuid=storage.uuid,
                 name=storage.name,
                 node_name=storage.node_name,
-                capacity=storage.capacity,
-                available=storage.available,
+                capacity=int(storage.capacity),
+                available=int(storage.available),
                 path=storage.path,
                 active=storage.active,
                 auto_start=storage.auto_start,
                 status=storage.status,
-                update_token=storage.update_token
+                update_token=str(storage.update_token)
             )
             for image in storage.images:
                 image_model = ImageModel(
                     name=image.name,
                     storage_uuid=image.storage_uuid,
-                    capacity=image.capacity,
-                    allocation=image.allocation,
+                    capacity=int(image.capacity),
+                    allocation=int(image.allocation),
                     path=image.path,
-                    update_token=image.update_token
+                    update_token=str(image.update_token)
                 )
                 db.merge(image_model)
             # ストレージを登録

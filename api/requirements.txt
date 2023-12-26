@@ -1,33 +1,24 @@
-# Ansible
-ansible==7.3.0
-aiosqlite==0.17.0
-# FastAPI
-fastapi==0.75.0
-fastapi-camelcase==1.0.5
-fastapi-jwt-auth==0.5.0
-uvicorn==0.17.5
-websockets==10.3
-# SQLAlchemy
-SQLAlchemy==1.3.20
-alembic==1.7.7
-psycopg2-binary>=2.8.6
-pydantic==1.10.7
-# libvirt
-libvirt-python==8.1.0
-# Tools
-jsonify==0.5
-bcrypt==3.2.0
-pings==0.0.1
-python-multipart==0.0.5
-passlib==1.7.4
-paramiko==2.11.0
-requests==2.27.1
-# OVS
-ryu==4.34
 # pip list -o
-# worker
-celery==5.2.7
-pyparsing>=3.0.9
-redis>=4.4.0
-flower>=1.2.0
-httpx==0.25.0
+
+# Ansible
+ansible>=9.1.0
+ansible-base>=2.10.17
+# FastAPI
+fastapi>=0.106.0
+fastapi-camelcase>=2.0.0
+fastapi-jwt-auth>=0.5.0
+uvicorn>=0.25.0
+# SQLAlchemy
+SQLAlchemy>=2.0.23
+alembic>=1.13.1
+psycopg2-binary>=2.9.9
+pydantic>=2.5.3
+# libvirt
+libvirt-python>=9.10.0
+# Tools
+bcrypt>=4.1.2
+pings>=0.0.1
+python-multipart>=0.0.6
+passlib>=1.7.4
+paramiko>=3.4.0
+httpx>=0.26.0

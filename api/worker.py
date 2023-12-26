@@ -76,7 +76,7 @@ def run_scheduler(task_manager: TaskBase):
         # 以下はWaitタスクの処理
         depends_task:TaskModel = db.query(TaskModel).filter(
             TaskModel.uuid==task.dependence_uuid
-            ).with_lockmode('update').one()
+            ).with_for_update().one()
 
         if depends_task.status == "error" or depends_task.status == "lost":
             task.status = "error"

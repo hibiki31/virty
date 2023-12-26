@@ -68,7 +68,7 @@ class ProjectModel(Base):
         cascade="all, delete",
         passive_deletes=True
     )
-    domains = relationship("DomainModel", backref="project")
+    domains = relationship("DomainModel", backref="project", viewonly=True)
     # limit
     is_admin = Column(Boolean, nullable=False, default=False)
     core = Column(Integer, nullable=False, default=8)

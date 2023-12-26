@@ -139,7 +139,7 @@ def patch_vm_cdrom():
 
     for vm in resp.json()["data"]:
         if vm["name"] == "testcode-vm":
-            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": vm["nodeName"]})
+            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "nodeName": vm["nodeName"]})
             print_resp(resp=resp)
             image_path = resp.json()["data"][0]["path"]
             
@@ -163,7 +163,7 @@ def patch_vm_cdrom():
 
     for vm in resp.json()["data"]:
         if vm["name"] == "testcode-vm":
-            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "node_name": "test-node"})
+            resp = httpx.request(method="get", url=f'{BASE_URL}/api/images', headers=HEADERS, params={"name": env["iso_name"], "nodeName": vm["nodeName"]})
             print_resp(resp=resp)
             image_path = resp.json()["data"][0]["path"]
             

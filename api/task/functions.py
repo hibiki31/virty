@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from mixin.database import SessionLocal
 from mixin.log import setup_logger
+from mixin.schemas import BaseSchema
 from task.models import TaskModel
 from task.schemas import TaskRequest
 
@@ -53,7 +54,7 @@ class TaskManager():
     
     def commit(
             self, user, req=None, 
-            body: BaseModel=BaseModel(), param={}, dep_uuid=None
+            body: BaseSchema=BaseSchema(), param={}, dep_uuid=None
         ):
         status = "wait" if dep_uuid else "init"
         task_uuid = str(uuid.uuid4())

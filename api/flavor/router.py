@@ -28,7 +28,7 @@ def post_api_flavors(
             detail=f"{request_model.name} already exists."
         )
     
-    flavor_model = FlavorModel(**request_model.dict())
+    flavor_model = FlavorModel(**request_model.model_dump())
     db.add(flavor_model)
     db.commit()
     return db.query(FlavorModel).filter(FlavorModel.id==flavor_model.id).all()

@@ -1,5 +1,4 @@
 import json, yaml, shutil, os
-from pytest import console_main
 
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
@@ -212,27 +211,16 @@ def debug():
     play_source =  dict(
         name = "Ansible Play",
         hosts = 'all',
-        gather_facts = 'no',
+        gather_facts = 'yes',
         tasks = [
-            dict(action=dict(module='shell', args='lssss -l'), register='shell_out')
+            dict(action=dict(module='shell', args='ls -l'), register='shell_out')
         ]
     )
     
-    host_list = [ "akane@192.168.144.31" ]
+    host_list = [ "akane@192.168.144.33" ]
 
     results = ansible_run(play_source=play_source, host_list=host_list)
-
-    for host, result in results.host_ok.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_failed.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
-    
-    for host, result in results.host_unreachable.items():
-        print(host)
-        print(json.dumps(result._result, indent=4))
+    print(json.dumps(results, indent=4))
 
 def test():
     pass

@@ -1,168 +1,145 @@
 from typing import List
 
-from fastapi_camelcase import CamelModel
-
 from flavor.schemas import Flavor
-from mixin.schemas import GetPagination
+from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
 
 
-class ImageBase(CamelModel):
+class ImageBase(BaseSchema):
     pass
 
 
 class StorageForQuery(GetPagination):
-    name_like: str = None
-    node_name: str = None
+    name_like: str | None = None
+    node_name: str | None = None
 
 
-class StorageMetadata(CamelModel):
-    rool: str = None
-    protocol: str = None
-    device_type: str = None
-    class Config:
-        orm_mode  =  True
+class StorageMetadata(BaseSchema):
+    rool: str | None = None
+    protocol: str | None = None
+    device_type: str | None = None
+    
 
 
-class StorageMetadataForUpdate(CamelModel):
+class StorageMetadataForUpdate(BaseSchema):
     uuid: str
     rool: str
     protocol: str
     device_type: str
-    class Config:
-        orm_mode  =  True
+    
 
 
-class ImageForUpdateImageFlavor(CamelModel):
+class ImageForUpdateImageFlavor(BaseSchema):
     storage_uuid: str
     path: str
     node_name: str
     flavor_id: int
-    class Config:
-        orm_mode  =  True
+    
 
 
-class Storage(CamelModel):
+class Storage(BaseSchema):
     name: str
     uuid: str
     status: int
     active: bool
-    available: int = None
-    capacity: int = None
+    available: int | None = None
+    capacity: int | None = None
     node_name: str
     node: Node
     auto_start: bool
-    path: str = None
-    meta_data: StorageMetadata = None
-    update_token:str = None
-    allocation_commit: int = None
-    capacity_commit: int = None
-    class Config:
-        orm_mode  =  True
+    path: str | None = None
+    meta_data: StorageMetadata | None = None
+    update_token:str | None = None
+    allocation_commit: int | None = None
+    capacity_commit: int | None = None
     
 
-class StoragePage(CamelModel):
+class StoragePage(BaseSchema):
     count: int
     data: List[Storage]
-    class Config:
-        orm_mode  =  True
 
 
 class PaseImage(ImageBase):
     name:str
-    storage_uuid:str = None
-    capacity:int
-    allocation:int
+    storage_uuid:str | None = None
+    capacity: float
+    allocation: float
     path:str
-    update_token:str = None
-    class Config:
-        orm_mode  =  True
+    update_token:str | None = None
 
 
-class PaseStorage(CamelModel):
+class PaseStorage(BaseSchema):
     uuid: str
     name: str
-    node_name: str = None
-    capacity: int = None
-    available: int = None
-    path: str = None
+    node_name: str | None = None
+    capacity: int | None = None
+    available: int | None = None
+    path: str | None = None
     active: bool
     auto_start: bool
     status: int
-    update_token:str = None
+    update_token:str | None = None
     images: List[PaseImage]
-    class Config:
-        orm_mode  =  True
 
 
-class ImageDomain(CamelModel):
-    owner_user_id: str = None
-    issuance_id: int = None
+class ImageDomain(BaseSchema):
+    owner_user_id: str | None = None
+    issuance_id: int | None = None
     name: str
     uuid: str
 
 
 class Image(ImageBase):
     name:str
-    storage_uuid:str = None
+    storage_uuid:str | None = None
     capacity:int
     storage: Storage
-    flavor: Flavor = None
+    flavor: Flavor | None = None
     allocation:int
     path:str
-    update_token:str = None
-    domain: ImageDomain = None
-    class Config:
-        orm_mode  =  True
+    update_token:str | None = None
+    domain: ImageDomain | None = None
 
 
-class StorageForCreate(CamelModel):
+class StorageForCreate(BaseSchema):
     name: str
     node_name: str
     path: str
-    class Config:
-        orm_mode  =  True
 
 
-class StorageForDelete(CamelModel):
+class StorageForDelete(BaseSchema):
     uuid: str
     node_name: str
 
 
-class ImageSCP(CamelModel):
+class ImageSCP(BaseSchema):
     from_node_name: str
     to_node_name: str
     from_file_path: str
     to_file_path: str
 
 
-class StoragePoolForCreate(CamelModel):
+class StoragePoolForCreate(BaseSchema):
     name:str
     storage_uuids: List[str]
 
 
-class StoragePoolForUpdate(CamelModel):
+class StoragePoolForUpdate(BaseSchema):
     id:str
     storage_uuids: List[str]
 
 
-class StorageForStorageContainer(CamelModel):
+class StorageForStorageContainer(BaseSchema):
     name: str
     uuid: str
     node_name: str
-    class Config:
-        orm_mode  =  True
 
 
-class StorageContainerForStoragePool(CamelModel):
+class StorageContainerForStoragePool(BaseSchema):
     storage: StorageForStorageContainer
-    class Config:
-        orm_mode  =  True
 
 
-class StoragePool(CamelModel):
+class StoragePool(BaseSchema):
     id: int
     name: str
     storages: List[StorageContainerForStoragePool]
-    class Config:
-        orm_mode  =  True

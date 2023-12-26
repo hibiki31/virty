@@ -1,11 +1,5 @@
 import httpx
-import json
-from pprint import pprint
-import time
-import datetime
-import sys
-
-from common import BASE_URL, env, HEADERS, print_resp, wait_tasks, tester
+from common import BASE_URL, HEADERS, env, print_resp, tester
 
 
 @tester
@@ -20,7 +14,12 @@ def create_flavors():
 
 @tester
 def delete_flavors():
-    resp = httpx.request(method="get", url=f'{BASE_URL}/api/flavors', params={"name": env["flavors"][0]["name"]},headers=HEADERS)
+    resp = httpx.request(
+        method="get", 
+        url=f'{BASE_URL}/api/flavors', 
+        params={"nameLike": env["flavors"][0]["name"]},
+        headers=HEADERS
+    )
     print_resp(resp=resp, debug=True)
     
     for i in resp.json()["data"]:
