@@ -1,7 +1,7 @@
 # Develop
 pytest==7.0.1
 # Ansible
-ansible==5.8.0
+ansible==8.5.0
 aiosqlite==0.17.0
 # FastAPI
 fastapi==0.75.0
