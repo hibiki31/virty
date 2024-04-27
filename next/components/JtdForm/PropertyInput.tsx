@@ -57,7 +57,7 @@ export const PropertyInput: FC<PropertyInputProps> = (props) => {
   const { control, getValues, setValue } = useFormContext();
   const propertyName = prefixPropertyName + propertyKey;
   const { choices, isLoading } = useChoices(propertyJtd.metadata, getValues, propertyName);
-  const { setExtraData, extraData } = useFormExtraData();
+  const { setExtraData, extraData } = useFormExtraData(propertyName);
 
   useEffect(() => {
     if (typeof propertyJtd.metadata?.default === 'function' && !getValues(propertyName)) {

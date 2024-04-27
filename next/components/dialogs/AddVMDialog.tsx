@@ -368,7 +368,7 @@ const addVMFormJtd = {
                 metadata: {
                   name: 'Port',
                   default: '',
-                  hidden: (_: any, extraData: any) => extraData.networkType !== 'openvswitch',
+                  hidden: (get: any) => get(1, 'networkUuid', true).networkType !== 'openvswitch',
                   choices: (get: any) => {
                     const networkUuid = get(1, 'networkUuid');
                     return networkUuid ? `ports-${networkUuid}` : '';

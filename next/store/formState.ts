@@ -1,7 +1,15 @@
 import { Schema } from 'jtd';
 import { useCallback, useEffect, useState } from 'react';
 import { FieldValues, UseFormGetValues } from 'react-hook-form';
-import { atom, DefaultValue, selectorFamily, useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
+import {
+  atom,
+  atomFamily,
+  DefaultValue,
+  selectorFamily,
+  useRecoilState,
+  useResetRecoilState,
+  useSetRecoilState,
+} from 'recoil';
 import { ajv, getRelatedValue } from '~/lib/jtd';
 import { Choice, MetaData } from '~/lib/jtd/types';
 
@@ -167,13 +175,13 @@ export const useJtdForm = (jtd: Schema) => {
   return { reset };
 };
 
-const formExtraDataState = atom<Record<string, any>>({
+const formExtraDataState = atomFamily<Record<string, any>, string>({
   key: 'formExtraData',
   default: {},
 });
 
-export const useFormExtraData = () => {
-  const [formExtraData, setFormExtraData] = useRecoilState(formExtraDataState);
+export const useFormExtraData = (propertyName: string) => {
+  const [formExtraData, setFormExtraData] = useRecoilState(formExtraDataState(propertyName));
 
   const setExtraData = useCallback(
     (extraData: any) => {

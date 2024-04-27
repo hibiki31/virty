@@ -1,6 +1,7 @@
 import Ajv from 'ajv/dist/jtd';
 import { Schema } from 'jtd';
 import { FieldValues, UseFormGetValues } from 'react-hook-form';
+import { useFormExtraData } from '~/store/formState';
 
 export const generateProperty = (propertyJtd: Schema, rootJtd: Schema = propertyJtd): any => {
   return 'properties' in propertyJtd
@@ -39,11 +40,18 @@ export const generateDiscriminatorProperty = (discriminatorJtd: Schema, rootJtd:
 };
 
 export const getRelatedValue =
-  (getValues: UseFormGetValues<FieldValues>, currentName: string) => (popCount: number, addName: string) => {
+  (getValues: UseFormGetValues<FieldValues>, currentName: string) =>
+  (popCount: number, addName: string, isExtraData?: boolean) => {
     const path = currentName.split('.');
     const prefixName = path.slice(0, path.length - popCount).join('.');
-    const value = getValues(prefixName + '.' + addName);
-    return value;
+    const propertyName = prefixName + '.' + addName;
+    const { extraData } = useFormExtraData(propertyName);
+
+    if (isExtraData) {
+      return extraData || {};
+    }
+
+    return getValues(propertyName);
   };
 
 /**
