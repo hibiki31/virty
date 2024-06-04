@@ -30,7 +30,7 @@ class NetworkModel(Base):
     update_token = Column(String)
     ip = Column(String)
     mac = Column(String)
-    portgroups = relationship('NetworkPortgroupModel')
+    portgroups = relationship('NetworkPortgroupModel', viewonly=True)
 
 
 class NetworkPortgroupModel(Base):

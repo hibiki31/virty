@@ -1,22 +1,23 @@
-import jwt
-
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
+
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
+    SecurityScopes,
+)
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Security, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
 
-from mixin.log import setup_logger
 from mixin.database import get_db
-from settings import SECRET_KEY, API_VERSION
+from mixin.log import setup_logger
+from settings import SECRET_KEY
+from user.models import UserModel, UserScopeModel
 
 from .schemas import *
-from user.models import UserModel, UserScopeModel
-from task.functions import TaskManager
-from project.schemas import ProjectForCreate
-
 
 logger = setup_logger(__name__)
 

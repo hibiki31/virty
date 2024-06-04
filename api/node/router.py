@@ -1,35 +1,46 @@
-from os import name, chmod, makedirs
+from os import chmod, makedirs
+from typing import List
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy import true
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-
-from .models import *
-from .schemas import *
-
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import Task
-from task.functions import TaskManager
 from mixin.database import get_db
+from mixin.exception import HTTPException
 from mixin.log import setup_logger
-from mixin.exception import *
+from module.sshlib import SSHManager
 
-from node.models import NodeModel
-
+from .models import NodeModel
+from .schemas import (
+    Node,
+    NodeForQuery,
+    NodeInterface,
+    NodeInterfaceIpv4Info,
+    NodeInterfaceIpv6Info,
+    NodePage,
+    SSHKeyPair,
+)
 
 app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=List[Node], operation_id="get_nodes")
+@app.get("", response_model=NodePage, operation_id="get_nodes")
 def get_api_nodes(
+        param: NodeForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
+    
+    query = db.query(NodeModel)
+    if param.name_like:
+        query = query.filter(NodeModel.name.like(f'%{param.name_like}%'))
+    
+    count = query.count()
+    query = query.limit(param.limit).offset(int(param.limit * param.page))
 
-    return db.query(NodeModel).all()
+
+    return {"count": count, "data": query.all()}
 
 
 @app.post("/key", operation_id="update_ssh_key_pair")
@@ -60,7 +71,7 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
             private_key = f.read()
         with open("/root/.ssh/id_rsa.pub") as f:
             public_key = f.read()
-    except:
+    except FileNotFoundError:
         pass
 
     return SSHKeyPair(private_key=private_key, public_key=public_key)
@@ -74,10 +85,77 @@ def get_api_node(
     ):
 
     node = db.query(NodeModel).filter(NodeModel.name==name).one_or_none()
-    if node == None:
+    if node is None:
         raise HTTPException(status_code=404, detail="node is not found")
 
     return node
+
+
+@app.get("/{name}/facts")
+def get_node_name_facts(
+        name: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+
+    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
+    
+    if node is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    return node.ansible_facts
+
+
+@app.get("/{name}/network",response_model=List[NodeInterface])
+def get_node_name_network(
+        name: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+
+    node:NodeModel = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
+    
+    if node is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+    
+
+
+    ssh_manager = SSHManager(user=node.user_name, domain=node.domain, port=node.port)
+    interfaces = ssh_manager.run_cmd_json(["ip", "-j", "a"])
+
+    res = []
+
+    for i in interfaces:
+        tmp = NodeInterface(
+            ifname = i["ifname"],
+            operstate = i["operstate"],
+            mtu = i["mtu"],
+            master = i["master"] if ("master" in i) else None,
+            link_type = i["link_type"],
+            mac_address = i["address"] if ("address" in i) else None,
+            ipv4_info = [],
+            ipv6_info = [],
+        )
+        for j in i["addr_info"]:
+            if j["family"] == "inet6":
+                tmp.ipv6_info.append(
+                    NodeInterfaceIpv6Info(
+                        address=j["local"],
+                        prefixlen=j["prefixlen"]
+                    )
+                )
+            if j["family"] == "inet4":
+                tmp.ipv6_info.append(
+                    NodeInterfaceIpv4Info(
+                        address=j["local"],
+                        prefixlen=j["prefixlen"],
+                        label=j["label"]
+                    )
+                )
+        res.append(tmp)
+
+    return res
+
 
 
 # @app.get("/nodes/pools", tags=["nodes"])
@@ -108,18 +186,3 @@ def get_api_node(
 #     db.add(ass)
 #     db.commit()
 #     return True
-
-
-@app.get("/{name}/facts", operation_id="get_node_facts")
-def get_node_name_facts(
-        name: str,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ):
-
-    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
-    
-    if node == None:
-        raise HTTPException(status_code=404, detail="Node not found")
-
-    return node.ansible_facts

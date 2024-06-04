@@ -1,4 +1,5 @@
 import subprocess
+import json
 
 from mixin.log import setup_logger
 
@@ -26,6 +27,13 @@ class SSHManager():
     def run_cmd(self, cmd):
         cmd = self.base_cmd + cmd
         return subprocess.run(cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+
+    def run_cmd_json(self, cmd):
+        res = self.run_cmd(cmd=cmd)
+        if res.returncode != 0:
+            raise Exception("SSH Remote command failed", res.stderr)
+        return json.loads(res.stdout)
 
     
     def get_node_mem(self):

@@ -1,26 +1,17 @@
-from urllib import request
-from fastapi import APIRouter, Depends, Request
-from fastapi import HTTPException
-from sqlalchemy import or_
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+
+from auth.router import CurrentUser, get_current_user
+from mixin.database import get_db
+from mixin.exception import notfound_exception
+from mixin.log import setup_logger
+from network.models import NetworkModel
+from project.models import ProjectModel
+from task.functions import TaskManager
+from task.schemas import Task
 
 from .models import *
 from .schemas import *
-
-from auth.router import CurrentUser, get_current_user
-from task.schemas import Task, TaskRequest
-from task.functions import TaskManager
-from user.models import UserModel
-from network.models import NetworkModel
-from project.models import ProjectModel
-from mixin.database import get_db
-from mixin.log import setup_logger
-from mixin.exception import notfound_exception
-
-from celery import chain, group
-
-from module.virtlib import VirtManager
-
 
 app = APIRouter(
     tags=["vms-task"],
@@ -190,22 +181,22 @@ def patch_api_tasks_vms_uuid_cdrom(
 #     return vm
 
 
-# @app.patch("/project")
-# def path_vms_project(
-#         request: DomainProjectForUpdate,
-#         current_user: CurrentUser = Depends(get_current_user),
-#         db: Session = Depends(get_db),
-#     ):
-#     try:
-#         vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
-#         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
-#     except:
-#         raise notfound_exception(msg="not found vm or group")
+@app.patch("/project")
+def path_vms_project(
+        request: DomainProjectForUpdate,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    try:
+        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
+        db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
+    except:
+        raise notfound_exception(msg="not found vm or group")
     
-#     vm.owner_project_id = request.project_id
-#     db.commit()
+    vm.owner_project_id = request.project_id
+    db.commit()
 
-#     return vm
+    return vm
 
 
 @app.patch("/{uuid}/network", response_model=List[Task], operation_id="update_vm_network")

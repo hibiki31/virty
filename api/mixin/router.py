@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
-from fastapi_camelcase import CamelModel
-from typing import List, Optional
-from pydantic import BaseModel, Field
 
 
 from user.models import UserModel
-
+from mixin.schemas import BaseSchema
 from mixin.database import get_db
 from mixin.log import setup_logger
 from settings import API_VERSION
@@ -16,7 +13,7 @@ app = APIRouter(prefix="/api",tags=["mixin"])
 logger = setup_logger(__name__)
 
 
-class Version(CamelModel):
+class Version(BaseSchema):
     initialized: bool
     version: str
 

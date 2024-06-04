@@ -1,92 +1,104 @@
-from datetime import datetime
-from importlib.resources import path
-from time import strftime
-from typing import Any, List, Optional
+from typing import List
 
-from fastapi_camelcase import CamelModel
-from flavor.models import FlavorModel
-
-from node.schemas import Node
 from flavor.schemas import Flavor
-
-
+from mixin.schemas import BaseSchema, GetPagination
 from storage.schemas import Storage
 
 
-class ImageBase(CamelModel):
+class ImageBase(BaseSchema):
     pass
 
 
-class ImageForUpdateImageFlavor(CamelModel):
+class ImageForUpdateImageFlavor(BaseSchema):
     storage_uuid: str
     path: str
     node_name: str
     flavor_id: int
-    class Config:
-        orm_mode  =  True
+    
 
 
-class ImageDomain(CamelModel):
-    owner_user_id: str = None
-    issuance_id: int = None
+class ImageDomain(BaseSchema):
+    owner_user_id: str | None = None
+    issuance_id: int | None = None
     name: str
     uuid: str
+
 
 class Image(ImageBase):
     name:str
-    storage_uuid:str = None
+    storage_uuid:str | None = None
     capacity:int
     storage: Storage
-    flavor: Flavor = None
+    flavor: Flavor | None = None
     allocation:int
     path:str
-    update_token:str = None
-    domain: ImageDomain = None
-    class Config:
-        orm_mode  =  True
+    update_token:str | None = None
+    domain: ImageDomain | None = None
+    
 
-class StorageForCreate(CamelModel):
+
+class ImagePage(BaseSchema):
+    count: int
+    data: List[Image]
+    
+
+
+class ImageForQuery(GetPagination):
+    node_name: str | None = None
+    pool_uuid: str | None = None
+    name:str | None = None
+    name_like:str | None = None
+    rool:str | None = None
+
+
+class StorageForCreate(BaseSchema):
     name: str
     node_name: str
     path: str
-    class Config:
-        orm_mode  =  True
+    
 
-class StorageForDelete(CamelModel):
+
+class StorageForDelete(BaseSchema):
     uuid: str
     node_name: str
 
-class ImageSCP(CamelModel):
+
+class ImageSCP(BaseSchema):
     from_node_name: str
     to_node_name: str
     from_file_path: str
     to_file_path: str
 
-class StoragePoolForCreate(CamelModel):
+
+class ImageDownloadForCreate(BaseSchema):
+    storage_uuid: str
+    image_url: str
+
+
+class StoragePoolForCreate(BaseSchema):
     name:str
     storage_uuids: List[str]
 
 
-class StoragePoolForUpdate(CamelModel):
+class StoragePoolForUpdate(BaseSchema):
     id:str
     storage_uuids: List[str]
 
 
-class StorageForStorageContainer(CamelModel):
+class StorageForStorageContainer(BaseSchema):
     name: str
     uuid: str
     node_name: str
-    class Config:
-        orm_mode  =  True
+    
 
-class StorageContainerForStoragePool(CamelModel):
+
+class StorageContainerForStoragePool(BaseSchema):
     storage: StorageForStorageContainer
-    class Config:
-        orm_mode  =  True
+    
 
-class StoragePool(CamelModel):
+
+class StoragePool(BaseSchema):
     id: int
     name: str
     storages: List[StorageContainerForStoragePool]
-    class Config:
-        orm_mode  =  True
+    

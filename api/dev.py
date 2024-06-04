@@ -8,11 +8,11 @@ from node.models import NodeModel
 
 from domain.tasks import put_vm_list
 
-from module.ansiblelib import AnsibleManager
+from module.ansiblelib import AnsibleManager, debug
 
 
 def main():
-    pass
+    debug()
 
 if __name__ == "__main__":
     main()

@@ -1,27 +1,15 @@
 
-import sys
-import sqlite3
-import subprocess
-import xml.etree.ElementTree as ET
+from typing import List
+
 import libvirt
-import pings
-import os
-import uuid
 
-from module.xmllib import XmlEditor
-
-from node.models import NodeModel
-from module.model import ImageModel
 from mixin.log import setup_logger
-from storage.models import StorageModel, StorageMetadataModel
+from module.xmllib import XmlEditor
+from node.models import NodeModel
+from storage.models import StorageModel
 from storage.schemas import PaseStorage
-from network.models import NetworkModel
 
-from typing import List, Optional
-
-from celery.utils.log import get_task_logger
-
-logger = get_task_logger(__name__)
+logger = setup_logger(__name__)
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):
@@ -77,13 +65,13 @@ class VirtManager():
                 uuid = pool.UUIDString(),
                 name = pool.name(),
                 node_name = self.node_model.name,
-                capacity = storage_xml.capacity,
-                available = storage_xml.available,
+                capacity = int(storage_xml.capacity),
+                available = int(storage_xml.available),
                 path = storage_xml.path,
                 active = pool.isActive(),
                 auto_start = pool.autostart(),
                 status = pool.info()[0],
-                update_token = token,
+                update_token = str(token),
                 images= []
             )
             for image_obj in pool.listAllVolumes():
@@ -204,7 +192,25 @@ class VirtManager():
             pass
         net.undefine()
 
- 
+    
+    def network_ovs_add(self, uuid, name, vlan):
+        net = self.node.networkLookupByUUIDString(uuid)
+        xml = f'''
+        <portgroup name="{name}">
+            <vlan>
+            <tag id="{str(vlan)}" />
+            </vlan>
+        </portgroup>
+        '''
+        # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
+        # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
+        # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
+        # parentIndex: 1先頭, -1適当末尾
+        res = net.update(command=3,section=9, xml=xml, parentIndex=1)
+        if res == -1:
+            raise Exception("An error occurred after updating the network with libvirt")
+
+
     def network_ovs_add(self, uuid, name, vlan):
         net = self.node.networkLookupByUUIDString(uuid)
         xml = f'''

@@ -34,6 +34,8 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     
     node_infomation = ansible_manager.node_infomation()
 
+    print(node_infomation)
+
     ssh_role = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ssh").one_or_none()
     if ssh_role == None:
         ssh_role = NodeRoleModel(name="ssh")
@@ -114,9 +116,32 @@ def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
         patch_node_role_libvirt(db=db, task=task, node=node)
     elif add_role_name == "ovs":
         patch_node_role_ovs(db=db, task=task, node=node, request=body)
+    elif add_role_name == "vxlan_overlay":
+        patch_node_role_vxlan_overlay(db=db, task=task, node=node, request=body)
     
     task.message = "Node patch has been successfull"
 
+
+# def patch_node_role_vxlan_overlay(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
+#     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+    
+#     role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="vxlan_overlay").one_or_none()
+    
+#     if role_model == None:
+#         role_model = NodeRoleModel(name="vxlan_overlay")
+#         db.add(role_model)
+
+#     if not db.query(AssociationNodeToRole).filter(
+#             AssociationNodeToRole.node_name==node.name, 
+#             AssociationNodeToRole.role_name=="vxlan_overlay"
+#         ).one_or_none():
+#         a = AssociationNodeToRole(extra_json=request.extra_json)
+#         a.role = role_model
+#         node.roles.append(a)
+
+#     db.commit()
+
+#     return node
 
 def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     
