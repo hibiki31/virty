@@ -78,15 +78,23 @@ sudo systemctl status openvswitch-switch.service
 
 #### Creating Bridges
 
+If you have only one interface and SSH, you can switch IPs by devising the following. If you want to configure Vlan or other settings, you need to connect further commands.
+
 ```bash
-ovs-vsctl add-br ovs-br0
-ovs-vsctl add-port ovs-br0 eth0
-ovs-vsctl set port ovs-br0 tag=200
-ovs-vsctl set port eth0 tag=100 vlan_mode=native-untagged
+sudo ovs-vsctl add-port ovs-br0 eth0 ; sudo netplan apply
+```
+
+Setting Example
+
+```bash
+sudo ovs-vsctl add-br ovs-br0
+sudo ovs-vsctl add-port ovs-br0 eth0
+sudo ovs-vsctl set port ovs-br0 tag=200 # Not required if vlan is not used
+sudo ovs-vsctl set port eth0 tag=100 vlan_mode=native-untagged # Not required if vlan is not used
 ovs-vsctl show
 ```
 
-#### Configure IP (Ubuntu)
+Netplan Example
 
 ```yaml
 network:
@@ -102,6 +110,9 @@ network:
         addresses: [ 192.168.200.254 ]
   version: 2
 ```
+
+
+
 
 ### Backup
 
