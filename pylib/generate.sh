@@ -1,6 +1,5 @@
 #!/bin/bash
 
-rm setup.py
 rm -rf virty-api-client
 sudo rm -rf virty.egg-info
 rm -rf api
