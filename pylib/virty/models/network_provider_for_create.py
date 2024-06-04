@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,35 +12,74 @@ T = TypeVar("T", bound="NetworkProviderForCreate")
 class NetworkProviderForCreate:
     """
     Attributes:
-        name (Union[Unset, str]):
-        dns_domain (Union[Unset, str]):
-        network_address (Union[Unset, str]):
-        network_prefix (Union[Unset, str]):
-        gateway_address (Union[Unset, str]):
-        dhcp_start (Union[Unset, str]):
-        dhcp_end (Union[Unset, str]):
-        network_node (Union[Unset, str]):
+        name (Union[None, Unset, str]):
+        dns_domain (Union[None, Unset, str]):
+        network_address (Union[None, Unset, str]):
+        network_prefix (Union[None, Unset, str]):
+        gateway_address (Union[None, Unset, str]):
+        dhcp_start (Union[None, Unset, str]):
+        dhcp_end (Union[None, Unset, str]):
+        network_node (Union[None, Unset, str]):
     """
 
-    name: Union[Unset, str] = UNSET
-    dns_domain: Union[Unset, str] = UNSET
-    network_address: Union[Unset, str] = UNSET
-    network_prefix: Union[Unset, str] = UNSET
-    gateway_address: Union[Unset, str] = UNSET
-    dhcp_start: Union[Unset, str] = UNSET
-    dhcp_end: Union[Unset, str] = UNSET
-    network_node: Union[Unset, str] = UNSET
+    name: Union[None, Unset, str] = UNSET
+    dns_domain: Union[None, Unset, str] = UNSET
+    network_address: Union[None, Unset, str] = UNSET
+    network_prefix: Union[None, Unset, str] = UNSET
+    gateway_address: Union[None, Unset, str] = UNSET
+    dhcp_start: Union[None, Unset, str] = UNSET
+    dhcp_end: Union[None, Unset, str] = UNSET
+    network_node: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-        dns_domain = self.dns_domain
-        network_address = self.network_address
-        network_prefix = self.network_prefix
-        gateway_address = self.gateway_address
-        dhcp_start = self.dhcp_start
-        dhcp_end = self.dhcp_end
-        network_node = self.network_node
+        name: Union[None, Unset, str]
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        dns_domain: Union[None, Unset, str]
+        if isinstance(self.dns_domain, Unset):
+            dns_domain = UNSET
+        else:
+            dns_domain = self.dns_domain
+
+        network_address: Union[None, Unset, str]
+        if isinstance(self.network_address, Unset):
+            network_address = UNSET
+        else:
+            network_address = self.network_address
+
+        network_prefix: Union[None, Unset, str]
+        if isinstance(self.network_prefix, Unset):
+            network_prefix = UNSET
+        else:
+            network_prefix = self.network_prefix
+
+        gateway_address: Union[None, Unset, str]
+        if isinstance(self.gateway_address, Unset):
+            gateway_address = UNSET
+        else:
+            gateway_address = self.gateway_address
+
+        dhcp_start: Union[None, Unset, str]
+        if isinstance(self.dhcp_start, Unset):
+            dhcp_start = UNSET
+        else:
+            dhcp_start = self.dhcp_start
+
+        dhcp_end: Union[None, Unset, str]
+        if isinstance(self.dhcp_end, Unset):
+            dhcp_end = UNSET
+        else:
+            dhcp_end = self.dhcp_end
+
+        network_node: Union[None, Unset, str]
+        if isinstance(self.network_node, Unset):
+            network_node = UNSET
+        else:
+            network_node = self.network_node
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -67,21 +106,78 @@ class NetworkProviderForCreate:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        name = d.pop("name", UNSET)
 
-        dns_domain = d.pop("dnsDomain", UNSET)
+        def _parse_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        network_address = d.pop("networkAddress", UNSET)
+        name = _parse_name(d.pop("name", UNSET))
 
-        network_prefix = d.pop("networkPrefix", UNSET)
+        def _parse_dns_domain(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        gateway_address = d.pop("gatewayAddress", UNSET)
+        dns_domain = _parse_dns_domain(d.pop("dnsDomain", UNSET))
 
-        dhcp_start = d.pop("dhcpStart", UNSET)
+        def _parse_network_address(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        dhcp_end = d.pop("dhcpEnd", UNSET)
+        network_address = _parse_network_address(d.pop("networkAddress", UNSET))
 
-        network_node = d.pop("networkNode", UNSET)
+        def _parse_network_prefix(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        network_prefix = _parse_network_prefix(d.pop("networkPrefix", UNSET))
+
+        def _parse_gateway_address(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        gateway_address = _parse_gateway_address(d.pop("gatewayAddress", UNSET))
+
+        def _parse_dhcp_start(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        dhcp_start = _parse_dhcp_start(d.pop("dhcpStart", UNSET))
+
+        def _parse_dhcp_end(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        dhcp_end = _parse_dhcp_end(d.pop("dhcpEnd", UNSET))
+
+        def _parse_network_node(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        network_node = _parse_network_node(d.pop("networkNode", UNSET))
 
         network_provider_for_create = cls(
             name=name,

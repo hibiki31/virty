@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,20 +12,34 @@ T = TypeVar("T", bound="StorageMetadata")
 class StorageMetadata:
     """
     Attributes:
-        rool (Union[Unset, str]):
-        protocol (Union[Unset, str]):
-        device_type (Union[Unset, str]):
+        rool (Union[None, Unset, str]):
+        protocol (Union[None, Unset, str]):
+        device_type (Union[None, Unset, str]):
     """
 
-    rool: Union[Unset, str] = UNSET
-    protocol: Union[Unset, str] = UNSET
-    device_type: Union[Unset, str] = UNSET
+    rool: Union[None, Unset, str] = UNSET
+    protocol: Union[None, Unset, str] = UNSET
+    device_type: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        rool = self.rool
-        protocol = self.protocol
-        device_type = self.device_type
+        rool: Union[None, Unset, str]
+        if isinstance(self.rool, Unset):
+            rool = UNSET
+        else:
+            rool = self.rool
+
+        protocol: Union[None, Unset, str]
+        if isinstance(self.protocol, Unset):
+            protocol = UNSET
+        else:
+            protocol = self.protocol
+
+        device_type: Union[None, Unset, str]
+        if isinstance(self.device_type, Unset):
+            device_type = UNSET
+        else:
+            device_type = self.device_type
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -42,11 +56,33 @@ class StorageMetadata:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        rool = d.pop("rool", UNSET)
 
-        protocol = d.pop("protocol", UNSET)
+        def _parse_rool(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        device_type = d.pop("deviceType", UNSET)
+        rool = _parse_rool(d.pop("rool", UNSET))
+
+        def _parse_protocol(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        protocol = _parse_protocol(d.pop("protocol", UNSET))
+
+        def _parse_device_type(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        device_type = _parse_device_type(d.pop("deviceType", UNSET))
 
         storage_metadata = cls(
             rool=rool,

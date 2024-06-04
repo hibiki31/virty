@@ -1,5 +1,4 @@
-
-## install
+## 生成
 
 開発（editable）モードでのインストール（自動更新）
 
@@ -8,13 +7,15 @@ pip install -e .
 pip uninstall virty
 ```
 
-## openapi-python-client
+openapi-python-clientで生成
 
 ```
-openapi-python-client generate --url https://virty-pr.hinagiku.me/api/openapi.json
+./generate.sh
 ```
 
-## openapi-generator-cli
+## その他
+
+openapi-generator-cliは使わない
 
 ```bash
 docker run --rm \

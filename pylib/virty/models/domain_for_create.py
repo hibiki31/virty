@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,7 +26,7 @@ class DomainForCreate:
         cpu (int):
         disks (List['DomainForCreateDisk']):
         interface (List['DomainForCreateInterface']):
-        cloud_init (Union[Unset, CloudInitInsert]):
+        cloud_init (Union['CloudInitInsert', None, Unset]):
     """
 
     type: DomainForCreateType
@@ -36,31 +36,39 @@ class DomainForCreate:
     cpu: int
     disks: List["DomainForCreateDisk"]
     interface: List["DomainForCreateInterface"]
-    cloud_init: Union[Unset, "CloudInitInsert"] = UNSET
+    cloud_init: Union["CloudInitInsert", None, Unset] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        from ..models.cloud_init_insert import CloudInitInsert
+
         type = self.type.value
 
         name = self.name
+
         node_name = self.node_name
+
         memory_mega_byte = self.memory_mega_byte
+
         cpu = self.cpu
+
         disks = []
         for disks_item_data in self.disks:
             disks_item = disks_item_data.to_dict()
-
             disks.append(disks_item)
 
         interface = []
         for interface_item_data in self.interface:
             interface_item = interface_item_data.to_dict()
-
             interface.append(interface_item)
 
-        cloud_init: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.cloud_init, Unset):
+        cloud_init: Union[Dict[str, Any], None, Unset]
+        if isinstance(self.cloud_init, Unset):
+            cloud_init = UNSET
+        elif isinstance(self.cloud_init, CloudInitInsert):
             cloud_init = self.cloud_init.to_dict()
+        else:
+            cloud_init = self.cloud_init
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -111,12 +119,22 @@ class DomainForCreate:
 
             interface.append(interface_item)
 
-        _cloud_init = d.pop("cloudInit", UNSET)
-        cloud_init: Union[Unset, CloudInitInsert]
-        if isinstance(_cloud_init, Unset):
-            cloud_init = UNSET
-        else:
-            cloud_init = CloudInitInsert.from_dict(_cloud_init)
+        def _parse_cloud_init(data: object) -> Union["CloudInitInsert", None, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                cloud_init_type_0 = CloudInitInsert.from_dict(data)
+
+                return cloud_init_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["CloudInitInsert", None, Unset], data)
+
+        cloud_init = _parse_cloud_init(d.pop("cloudInit", UNSET))
 
         domain_for_create = cls(
             type=type,

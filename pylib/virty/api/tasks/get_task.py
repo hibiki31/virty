@@ -13,12 +13,12 @@ from ...types import Response
 def _get_kwargs(
     uuid: str,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
-        "url": "/api/tasks/{uuid}".format(
-            uuid=uuid,
-        ),
+        "url": f"/api/tasks/{uuid}",
     }
+
+    return _kwargs
 
 
 def _parse_response(
@@ -54,7 +54,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Union[HTTPValidationError, Task]]:
-    """Get Tasks
+    """Get Task Uuid
 
     Args:
         uuid (str):
@@ -83,7 +83,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Optional[Union[HTTPValidationError, Task]]:
-    """Get Tasks
+    """Get Task Uuid
 
     Args:
         uuid (str):
@@ -107,7 +107,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Union[HTTPValidationError, Task]]:
-    """Get Tasks
+    """Get Task Uuid
 
     Args:
         uuid (str):
@@ -134,7 +134,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Optional[Union[HTTPValidationError, Task]]:
-    """Get Tasks
+    """Get Task Uuid
 
     Args:
         uuid (str):

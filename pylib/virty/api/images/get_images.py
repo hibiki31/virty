@@ -6,46 +6,80 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.image import Image
+from ...models.image_page import ImagePage
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    node_name: Union[Unset, None, str] = UNSET,
-    pool_uuid: Union[Unset, None, str] = UNSET,
-    name: Union[Unset, None, str] = UNSET,
-    rool: Union[Unset, None, str] = UNSET,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    node_name: Union[None, Unset, str] = UNSET,
+    pool_uuid: Union[None, Unset, str] = UNSET,
+    name: Union[None, Unset, str] = UNSET,
+    name_like: Union[None, Unset, str] = UNSET,
+    rool: Union[None, Unset, str] = UNSET,
 ) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
-    params["node_name"] = node_name
-
-    params["pool_uuid"] = pool_uuid
-
-    params["name"] = name
-
-    params["rool"] = rool
 
     params["limit"] = limit
 
     params["page"] = page
 
+    params["admin"] = admin
+
+    json_node_name: Union[None, Unset, str]
+    if isinstance(node_name, Unset):
+        json_node_name = UNSET
+    else:
+        json_node_name = node_name
+    params["nodeName"] = json_node_name
+
+    json_pool_uuid: Union[None, Unset, str]
+    if isinstance(pool_uuid, Unset):
+        json_pool_uuid = UNSET
+    else:
+        json_pool_uuid = pool_uuid
+    params["poolUuid"] = json_pool_uuid
+
+    json_name: Union[None, Unset, str]
+    if isinstance(name, Unset):
+        json_name = UNSET
+    else:
+        json_name = name
+    params["name"] = json_name
+
+    json_name_like: Union[None, Unset, str]
+    if isinstance(name_like, Unset):
+        json_name_like = UNSET
+    else:
+        json_name_like = name_like
+    params["nameLike"] = json_name_like
+
+    json_rool: Union[None, Unset, str]
+    if isinstance(rool, Unset):
+        json_rool = UNSET
+    else:
+        json_rool = rool
+    params["rool"] = json_rool
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/api/images",
         "params": params,
     }
 
+    return _kwargs
+
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, Image]]:
+) -> Optional[Union[HTTPValidationError, ImagePage]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = Image.from_dict(response.json())
+        response_200 = ImagePage.from_dict(response.json())
 
         return response_200
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
@@ -60,7 +94,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, Image]]:
+) -> Response[Union[HTTPValidationError, ImagePage]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,38 +106,44 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    node_name: Union[Unset, None, str] = UNSET,
-    pool_uuid: Union[Unset, None, str] = UNSET,
-    name: Union[Unset, None, str] = UNSET,
-    rool: Union[Unset, None, str] = UNSET,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-) -> Response[Union[HTTPValidationError, Image]]:
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    node_name: Union[None, Unset, str] = UNSET,
+    pool_uuid: Union[None, Unset, str] = UNSET,
+    name: Union[None, Unset, str] = UNSET,
+    name_like: Union[None, Unset, str] = UNSET,
+    rool: Union[None, Unset, str] = UNSET,
+) -> Response[Union[HTTPValidationError, ImagePage]]:
     """Get Api Images
 
     Args:
-        node_name (Union[Unset, None, str]):
-        pool_uuid (Union[Unset, None, str]):
-        name (Union[Unset, None, str]):
-        rool (Union[Unset, None, str]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        node_name (Union[None, Unset, str]):
+        pool_uuid (Union[None, Unset, str]):
+        name (Union[None, Unset, str]):
+        name_like (Union[None, Unset, str]):
+        rool (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, Image]]
+        Response[Union[HTTPValidationError, ImagePage]]
     """
 
     kwargs = _get_kwargs(
+        limit=limit,
+        page=page,
+        admin=admin,
         node_name=node_name,
         pool_uuid=pool_uuid,
         name=name,
+        name_like=name_like,
         rool=rool,
-        limit=limit,
-        page=page,
     )
 
     response = client.get_httpx_client().request(
@@ -116,77 +156,89 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    node_name: Union[Unset, None, str] = UNSET,
-    pool_uuid: Union[Unset, None, str] = UNSET,
-    name: Union[Unset, None, str] = UNSET,
-    rool: Union[Unset, None, str] = UNSET,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-) -> Optional[Union[HTTPValidationError, Image]]:
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    node_name: Union[None, Unset, str] = UNSET,
+    pool_uuid: Union[None, Unset, str] = UNSET,
+    name: Union[None, Unset, str] = UNSET,
+    name_like: Union[None, Unset, str] = UNSET,
+    rool: Union[None, Unset, str] = UNSET,
+) -> Optional[Union[HTTPValidationError, ImagePage]]:
     """Get Api Images
 
     Args:
-        node_name (Union[Unset, None, str]):
-        pool_uuid (Union[Unset, None, str]):
-        name (Union[Unset, None, str]):
-        rool (Union[Unset, None, str]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        node_name (Union[None, Unset, str]):
+        pool_uuid (Union[None, Unset, str]):
+        name (Union[None, Unset, str]):
+        name_like (Union[None, Unset, str]):
+        rool (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, Image]
+        Union[HTTPValidationError, ImagePage]
     """
 
     return sync_detailed(
         client=client,
+        limit=limit,
+        page=page,
+        admin=admin,
         node_name=node_name,
         pool_uuid=pool_uuid,
         name=name,
+        name_like=name_like,
         rool=rool,
-        limit=limit,
-        page=page,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    node_name: Union[Unset, None, str] = UNSET,
-    pool_uuid: Union[Unset, None, str] = UNSET,
-    name: Union[Unset, None, str] = UNSET,
-    rool: Union[Unset, None, str] = UNSET,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-) -> Response[Union[HTTPValidationError, Image]]:
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    node_name: Union[None, Unset, str] = UNSET,
+    pool_uuid: Union[None, Unset, str] = UNSET,
+    name: Union[None, Unset, str] = UNSET,
+    name_like: Union[None, Unset, str] = UNSET,
+    rool: Union[None, Unset, str] = UNSET,
+) -> Response[Union[HTTPValidationError, ImagePage]]:
     """Get Api Images
 
     Args:
-        node_name (Union[Unset, None, str]):
-        pool_uuid (Union[Unset, None, str]):
-        name (Union[Unset, None, str]):
-        rool (Union[Unset, None, str]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        node_name (Union[None, Unset, str]):
+        pool_uuid (Union[None, Unset, str]):
+        name (Union[None, Unset, str]):
+        name_like (Union[None, Unset, str]):
+        rool (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, Image]]
+        Response[Union[HTTPValidationError, ImagePage]]
     """
 
     kwargs = _get_kwargs(
+        limit=limit,
+        page=page,
+        admin=admin,
         node_name=node_name,
         pool_uuid=pool_uuid,
         name=name,
+        name_like=name_like,
         rool=rool,
-        limit=limit,
-        page=page,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -197,39 +249,45 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    node_name: Union[Unset, None, str] = UNSET,
-    pool_uuid: Union[Unset, None, str] = UNSET,
-    name: Union[Unset, None, str] = UNSET,
-    rool: Union[Unset, None, str] = UNSET,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-) -> Optional[Union[HTTPValidationError, Image]]:
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    node_name: Union[None, Unset, str] = UNSET,
+    pool_uuid: Union[None, Unset, str] = UNSET,
+    name: Union[None, Unset, str] = UNSET,
+    name_like: Union[None, Unset, str] = UNSET,
+    rool: Union[None, Unset, str] = UNSET,
+) -> Optional[Union[HTTPValidationError, ImagePage]]:
     """Get Api Images
 
     Args:
-        node_name (Union[Unset, None, str]):
-        pool_uuid (Union[Unset, None, str]):
-        name (Union[Unset, None, str]):
-        rool (Union[Unset, None, str]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        node_name (Union[None, Unset, str]):
+        pool_uuid (Union[None, Unset, str]):
+        name (Union[None, Unset, str]):
+        name_like (Union[None, Unset, str]):
+        rool (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, Image]
+        Union[HTTPValidationError, ImagePage]
     """
 
     return (
         await asyncio_detailed(
             client=client,
+            limit=limit,
+            page=page,
+            admin=admin,
             node_name=node_name,
             pool_uuid=pool_uuid,
             name=name,
+            name_like=name_like,
             rool=rool,
-            limit=limit,
-            page=page,
         )
     ).parsed

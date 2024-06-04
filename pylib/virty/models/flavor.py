@@ -1,11 +1,7 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-if TYPE_CHECKING:
-    from ..models.flavor_page import FlavorPage
-
 
 T = TypeVar("T", bound="Flavor")
 
@@ -14,28 +10,50 @@ T = TypeVar("T", bound="Flavor")
 class Flavor:
     """
     Attributes:
-        count (int):
-        data (List['FlavorPage']):
+        name (str):
+        os (str):
+        manual_url (str):
+        icon (str):
+        cloud_init_ready (bool):
+        description (str):
+        id (int):
     """
 
-    count: int
-    data: List["FlavorPage"]
+    name: str
+    os: str
+    manual_url: str
+    icon: str
+    cloud_init_ready: bool
+    description: str
+    id: int
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        count = self.count
-        data = []
-        for data_item_data in self.data:
-            data_item = data_item_data.to_dict()
+        name = self.name
 
-            data.append(data_item)
+        os = self.os
+
+        manual_url = self.manual_url
+
+        icon = self.icon
+
+        cloud_init_ready = self.cloud_init_ready
+
+        description = self.description
+
+        id = self.id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "count": count,
-                "data": data,
+                "name": name,
+                "os": os,
+                "manualUrl": manual_url,
+                "icon": icon,
+                "cloudInitReady": cloud_init_ready,
+                "description": description,
+                "id": id,
             }
         )
 
@@ -43,21 +61,29 @@ class Flavor:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.flavor_page import FlavorPage
-
         d = src_dict.copy()
-        count = d.pop("count")
+        name = d.pop("name")
 
-        data = []
-        _data = d.pop("data")
-        for data_item_data in _data:
-            data_item = FlavorPage.from_dict(data_item_data)
+        os = d.pop("os")
 
-            data.append(data_item)
+        manual_url = d.pop("manualUrl")
+
+        icon = d.pop("icon")
+
+        cloud_init_ready = d.pop("cloudInitReady")
+
+        description = d.pop("description")
+
+        id = d.pop("id")
 
         flavor = cls(
-            count=count,
-            data=data,
+            name=name,
+            os=os,
+            manual_url=manual_url,
+            icon=icon,
+            cloud_init_ready=cloud_init_ready,
+            description=description,
+            id=id,
         )
 
         flavor.additional_properties = d

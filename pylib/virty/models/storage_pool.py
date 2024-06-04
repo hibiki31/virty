@@ -26,11 +26,12 @@ class StoragePool:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         name = self.name
+
         storages = []
         for storages_item_data in self.storages:
             storages_item = storages_item_data.to_dict()
-
             storages.append(storages_item)
 
         field_dict: Dict[str, Any] = {}

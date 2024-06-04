@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -6,7 +6,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.node_role_for_update_extrajson import NodeRoleForUpdateExtrajson
+    from ..models.node_role_for_update_extra_json_type_0 import NodeRoleForUpdateExtraJsonType0
 
 
 T = TypeVar("T", bound="NodeRoleForUpdate")
@@ -18,20 +18,28 @@ class NodeRoleForUpdate:
     Attributes:
         node_name (str):
         role_name (str):
-        extra_json (Union[Unset, NodeRoleForUpdateExtrajson]):
+        extra_json (Union['NodeRoleForUpdateExtraJsonType0', None, Unset]):
     """
 
     node_name: str
     role_name: str
-    extra_json: Union[Unset, "NodeRoleForUpdateExtrajson"] = UNSET
+    extra_json: Union["NodeRoleForUpdateExtraJsonType0", None, Unset] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        from ..models.node_role_for_update_extra_json_type_0 import NodeRoleForUpdateExtraJsonType0
+
         node_name = self.node_name
+
         role_name = self.role_name
-        extra_json: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.extra_json, Unset):
+
+        extra_json: Union[Dict[str, Any], None, Unset]
+        if isinstance(self.extra_json, Unset):
+            extra_json = UNSET
+        elif isinstance(self.extra_json, NodeRoleForUpdateExtraJsonType0):
             extra_json = self.extra_json.to_dict()
+        else:
+            extra_json = self.extra_json
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -48,19 +56,29 @@ class NodeRoleForUpdate:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.node_role_for_update_extrajson import NodeRoleForUpdateExtrajson
+        from ..models.node_role_for_update_extra_json_type_0 import NodeRoleForUpdateExtraJsonType0
 
         d = src_dict.copy()
         node_name = d.pop("nodeName")
 
         role_name = d.pop("roleName")
 
-        _extra_json = d.pop("extraJson", UNSET)
-        extra_json: Union[Unset, NodeRoleForUpdateExtrajson]
-        if isinstance(_extra_json, Unset):
-            extra_json = UNSET
-        else:
-            extra_json = NodeRoleForUpdateExtrajson.from_dict(_extra_json)
+        def _parse_extra_json(data: object) -> Union["NodeRoleForUpdateExtraJsonType0", None, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                extra_json_type_0 = NodeRoleForUpdateExtraJsonType0.from_dict(data)
+
+                return extra_json_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["NodeRoleForUpdateExtraJsonType0", None, Unset], data)
+
+        extra_json = _parse_extra_json(d.pop("extraJson", UNSET))
 
         node_role_for_update = cls(
             node_name=node_name,

@@ -20,6 +20,7 @@ class NodeInterfaceIpv6Info:
 
     def to_dict(self) -> Dict[str, Any]:
         address = self.address
+
         prefixlen = self.prefixlen
 
         field_dict: Dict[str, Any] = {}

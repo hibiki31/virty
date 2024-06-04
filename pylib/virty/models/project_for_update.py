@@ -20,6 +20,7 @@ class ProjectForUpdate:
 
     def to_dict(self) -> Dict[str, Any]:
         project_id = self.project_id
+
         user_id = self.user_id
 
         field_dict: Dict[str, Any] = {}

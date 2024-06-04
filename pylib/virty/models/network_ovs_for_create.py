@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,18 +14,24 @@ class NetworkOVSForCreate:
     Attributes:
         default (bool):
         name (str):
-        vlan_id (Union[Unset, int]):
+        vlan_id (Union[None, Unset, int]):
     """
 
     default: bool
     name: str
-    vlan_id: Union[Unset, int] = UNSET
+    vlan_id: Union[None, Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         default = self.default
+
         name = self.name
-        vlan_id = self.vlan_id
+
+        vlan_id: Union[None, Unset, int]
+        if isinstance(self.vlan_id, Unset):
+            vlan_id = UNSET
+        else:
+            vlan_id = self.vlan_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,7 +53,14 @@ class NetworkOVSForCreate:
 
         name = d.pop("name")
 
-        vlan_id = d.pop("vlanId", UNSET)
+        def _parse_vlan_id(data: object) -> Union[None, Unset, int]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, int], data)
+
+        vlan_id = _parse_vlan_id(d.pop("vlanId", UNSET))
 
         network_ovs_for_create = cls(
             default=default,

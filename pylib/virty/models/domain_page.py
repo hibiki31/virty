@@ -4,30 +4,30 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
-    from ..models.task import Task
+    from ..models.domain import Domain
 
 
-T = TypeVar("T", bound="TaskPagesnation")
+T = TypeVar("T", bound="DomainPage")
 
 
 @_attrs_define
-class TaskPagesnation:
+class DomainPage:
     """
     Attributes:
         count (int):
-        data (List['Task']):
+        data (List['Domain']):
     """
 
     count: int
-    data: List["Task"]
+    data: List["Domain"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         count = self.count
+
         data = []
         for data_item_data in self.data:
             data_item = data_item_data.to_dict()
-
             data.append(data_item)
 
         field_dict: Dict[str, Any] = {}
@@ -43,7 +43,7 @@ class TaskPagesnation:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.task import Task
+        from ..models.domain import Domain
 
         d = src_dict.copy()
         count = d.pop("count")
@@ -51,17 +51,17 @@ class TaskPagesnation:
         data = []
         _data = d.pop("data")
         for data_item_data in _data:
-            data_item = Task.from_dict(data_item_data)
+            data_item = Domain.from_dict(data_item_data)
 
             data.append(data_item)
 
-        task_pagesnation = cls(
+        domain_page = cls(
             count=count,
             data=data,
         )
 
-        task_pagesnation.additional_properties = d
-        return task_pagesnation
+        domain_page.additional_properties = d
+        return domain_page
 
     @property
     def additional_keys(self) -> List[str]:

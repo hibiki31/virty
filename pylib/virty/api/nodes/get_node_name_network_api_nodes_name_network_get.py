@@ -13,12 +13,12 @@ from ...types import Response
 def _get_kwargs(
     name: str,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
-        "url": "/api/nodes/{name}/network".format(
-            name=name,
-        ),
+        "url": f"/api/nodes/{name}/network",
     }
+
+    return _kwargs
 
 
 def _parse_response(
@@ -59,7 +59,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Union[HTTPValidationError, List["NodeInterface"]]]:
-    """Get Node Name Facts
+    """Get Node Name Network
 
     Args:
         name (str):
@@ -88,7 +88,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Optional[Union[HTTPValidationError, List["NodeInterface"]]]:
-    """Get Node Name Facts
+    """Get Node Name Network
 
     Args:
         name (str):
@@ -112,7 +112,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Union[HTTPValidationError, List["NodeInterface"]]]:
-    """Get Node Name Facts
+    """Get Node Name Network
 
     Args:
         name (str):
@@ -139,7 +139,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Optional[Union[HTTPValidationError, List["NodeInterface"]]]:
-    """Get Node Name Facts
+    """Get Node Name Network
 
     Args:
         name (str):

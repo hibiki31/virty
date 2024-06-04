@@ -22,7 +22,9 @@ class StorageForStorageContainer:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         uuid = self.uuid
+
         node_name = self.node_name
 
         field_dict: Dict[str, Any] = {}

@@ -12,18 +12,23 @@ T = TypeVar("T", bound="TokenData")
 class TokenData:
     """
     Attributes:
-        id (Union[Unset, str]):
+        id (Union[None, Unset, str]):
         scopes (Union[Unset, List[str]]):
         role (Union[Unset, List[str]]):
     """
 
-    id: Union[Unset, str] = UNSET
+    id: Union[None, Unset, str] = UNSET
     scopes: Union[Unset, List[str]] = UNSET
     role: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        id = self.id
+        id: Union[None, Unset, str]
+        if isinstance(self.id, Unset):
+            id = UNSET
+        else:
+            id = self.id
+
         scopes: Union[Unset, List[str]] = UNSET
         if not isinstance(self.scopes, Unset):
             scopes = self.scopes
@@ -47,7 +52,15 @@ class TokenData:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        id = d.pop("id", UNSET)
+
+        def _parse_id(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        id = _parse_id(d.pop("id", UNSET))
 
         scopes = cast(List[str], d.pop("scopes", UNSET))
 

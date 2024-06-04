@@ -12,12 +12,12 @@ from ...types import Response
 def _get_kwargs(
     username: str,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "delete",
-        "url": "/api/users/{username}".format(
-            username=username,
-        ),
+        "url": f"/api/users/{username}",
     }
+
+    return _kwargs
 
 
 def _parse_response(

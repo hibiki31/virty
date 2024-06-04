@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,12 +21,12 @@ class Network:
         type (str):
         portgroups (List['NetworkPortgroup']):
         node_name (str):
-        dhcp (Union[Unset, bool]):
-        description (Union[Unset, str]):
-        active (Union[Unset, bool]):
-        bridge (Union[Unset, str]):
-        auto_start (Union[Unset, bool]):
-        update_token (Union[Unset, str]):
+        dhcp (Union[None, Unset, bool]):
+        description (Union[None, Unset, str]):
+        active (Union[None, Unset, bool]):
+        bridge (Union[None, Unset, str]):
+        auto_start (Union[None, Unset, bool]):
+        update_token (Union[None, Unset, str]):
     """
 
     name: str
@@ -34,31 +34,63 @@ class Network:
     type: str
     portgroups: List["NetworkPortgroup"]
     node_name: str
-    dhcp: Union[Unset, bool] = UNSET
-    description: Union[Unset, str] = UNSET
-    active: Union[Unset, bool] = UNSET
-    bridge: Union[Unset, str] = UNSET
-    auto_start: Union[Unset, bool] = UNSET
-    update_token: Union[Unset, str] = UNSET
+    dhcp: Union[None, Unset, bool] = UNSET
+    description: Union[None, Unset, str] = UNSET
+    active: Union[None, Unset, bool] = UNSET
+    bridge: Union[None, Unset, str] = UNSET
+    auto_start: Union[None, Unset, bool] = UNSET
+    update_token: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         uuid = self.uuid
+
         type = self.type
+
         portgroups = []
         for portgroups_item_data in self.portgroups:
             portgroups_item = portgroups_item_data.to_dict()
-
             portgroups.append(portgroups_item)
 
         node_name = self.node_name
-        dhcp = self.dhcp
-        description = self.description
-        active = self.active
-        bridge = self.bridge
-        auto_start = self.auto_start
-        update_token = self.update_token
+
+        dhcp: Union[None, Unset, bool]
+        if isinstance(self.dhcp, Unset):
+            dhcp = UNSET
+        else:
+            dhcp = self.dhcp
+
+        description: Union[None, Unset, str]
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
+        active: Union[None, Unset, bool]
+        if isinstance(self.active, Unset):
+            active = UNSET
+        else:
+            active = self.active
+
+        bridge: Union[None, Unset, str]
+        if isinstance(self.bridge, Unset):
+            bridge = UNSET
+        else:
+            bridge = self.bridge
+
+        auto_start: Union[None, Unset, bool]
+        if isinstance(self.auto_start, Unset):
+            auto_start = UNSET
+        else:
+            auto_start = self.auto_start
+
+        update_token: Union[None, Unset, str]
+        if isinstance(self.update_token, Unset):
+            update_token = UNSET
+        else:
+            update_token = self.update_token
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -106,17 +138,59 @@ class Network:
 
         node_name = d.pop("nodeName")
 
-        dhcp = d.pop("dhcp", UNSET)
+        def _parse_dhcp(data: object) -> Union[None, Unset, bool]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, bool], data)
 
-        description = d.pop("description", UNSET)
+        dhcp = _parse_dhcp(d.pop("dhcp", UNSET))
 
-        active = d.pop("active", UNSET)
+        def _parse_description(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        bridge = d.pop("bridge", UNSET)
+        description = _parse_description(d.pop("description", UNSET))
 
-        auto_start = d.pop("autoStart", UNSET)
+        def _parse_active(data: object) -> Union[None, Unset, bool]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, bool], data)
 
-        update_token = d.pop("updateToken", UNSET)
+        active = _parse_active(d.pop("active", UNSET))
+
+        def _parse_bridge(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        bridge = _parse_bridge(d.pop("bridge", UNSET))
+
+        def _parse_auto_start(data: object) -> Union[None, Unset, bool]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, bool], data)
+
+        auto_start = _parse_auto_start(d.pop("autoStart", UNSET))
+
+        def _parse_update_token(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        update_token = _parse_update_token(d.pop("updateToken", UNSET))
 
         network = cls(
             name=name,

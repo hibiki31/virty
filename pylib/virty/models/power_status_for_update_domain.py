@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,14 +12,18 @@ T = TypeVar("T", bound="PowerStatusForUpdateDomain")
 class PowerStatusForUpdateDomain:
     """
     Attributes:
-        status (Union[Unset, str]):
+        status (Union[None, Unset, str]):
     """
 
-    status: Union[Unset, str] = UNSET
+    status: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        status = self.status
+        status: Union[None, Unset, str]
+        if isinstance(self.status, Unset):
+            status = UNSET
+        else:
+            status = self.status
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -32,7 +36,15 @@ class PowerStatusForUpdateDomain:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        status = d.pop("status", UNSET)
+
+        def _parse_status(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        status = _parse_status(d.pop("status", UNSET))
 
         power_status_for_update_domain = cls(
             status=status,

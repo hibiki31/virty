@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,18 +14,24 @@ class NetworkPoolForUpdate:
     Attributes:
         pool_id (int):
         network_uuid (str):
-        port_name (Union[Unset, str]):
+        port_name (Union[None, Unset, str]):
     """
 
     pool_id: int
     network_uuid: str
-    port_name: Union[Unset, str] = UNSET
+    port_name: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         pool_id = self.pool_id
+
         network_uuid = self.network_uuid
-        port_name = self.port_name
+
+        port_name: Union[None, Unset, str]
+        if isinstance(self.port_name, Unset):
+            port_name = UNSET
+        else:
+            port_name = self.port_name
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,7 +53,14 @@ class NetworkPoolForUpdate:
 
         network_uuid = d.pop("networkUuid")
 
-        port_name = d.pop("portName", UNSET)
+        def _parse_port_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        port_name = _parse_port_name(d.pop("portName", UNSET))
 
         network_pool_for_update = cls(
             pool_id=pool_id,

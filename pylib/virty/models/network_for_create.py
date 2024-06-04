@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,21 +16,27 @@ class NetworkForCreate:
         name (str):
         node_name (str):
         type (NetworkForCreateType): brdige or ovs
-        bridge_device (Union[Unset, str]):
+        bridge_device (Union[None, Unset, str]):
     """
 
     name: str
     node_name: str
     type: NetworkForCreateType
-    bridge_device: Union[Unset, str] = UNSET
+    bridge_device: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         node_name = self.node_name
+
         type = self.type.value
 
-        bridge_device = self.bridge_device
+        bridge_device: Union[None, Unset, str]
+        if isinstance(self.bridge_device, Unset):
+            bridge_device = UNSET
+        else:
+            bridge_device = self.bridge_device
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -55,7 +61,14 @@ class NetworkForCreate:
 
         type = NetworkForCreateType(d.pop("type"))
 
-        bridge_device = d.pop("bridgeDevice", UNSET)
+        def _parse_bridge_device(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        bridge_device = _parse_bridge_device(d.pop("bridgeDevice", UNSET))
 
         network_for_create = cls(
             name=name,

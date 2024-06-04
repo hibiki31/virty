@@ -4,8 +4,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
-    from ..models.user_project import UserProject
-    from ..models.user_scope import UserScope
+    from ..models.user import User
 
 
 T = TypeVar("T", bound="UserPage")
@@ -15,37 +14,28 @@ T = TypeVar("T", bound="UserPage")
 class UserPage:
     """
     Attributes:
-        username (str):
-        scopes (List['UserScope']):
-        projects (List['UserProject']):
+        count (int):
+        data (List['User']):
     """
 
-    username: str
-    scopes: List["UserScope"]
-    projects: List["UserProject"]
+    count: int
+    data: List["User"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        username = self.username
-        scopes = []
-        for scopes_item_data in self.scopes:
-            scopes_item = scopes_item_data.to_dict()
+        count = self.count
 
-            scopes.append(scopes_item)
-
-        projects = []
-        for projects_item_data in self.projects:
-            projects_item = projects_item_data.to_dict()
-
-            projects.append(projects_item)
+        data = []
+        for data_item_data in self.data:
+            data_item = data_item_data.to_dict()
+            data.append(data_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "username": username,
-                "scopes": scopes,
-                "projects": projects,
+                "count": count,
+                "data": data,
             }
         )
 
@@ -53,30 +43,21 @@ class UserPage:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.user_project import UserProject
-        from ..models.user_scope import UserScope
+        from ..models.user import User
 
         d = src_dict.copy()
-        username = d.pop("username")
+        count = d.pop("count")
 
-        scopes = []
-        _scopes = d.pop("scopes")
-        for scopes_item_data in _scopes:
-            scopes_item = UserScope.from_dict(scopes_item_data)
+        data = []
+        _data = d.pop("data")
+        for data_item_data in _data:
+            data_item = User.from_dict(data_item_data)
 
-            scopes.append(scopes_item)
-
-        projects = []
-        _projects = d.pop("projects")
-        for projects_item_data in _projects:
-            projects_item = UserProject.from_dict(projects_item_data)
-
-            projects.append(projects_item)
+            data.append(data_item)
 
         user_page = cls(
-            username=username,
-            scopes=scopes,
-            projects=projects,
+            count=count,
+            data=data,
         )
 
         user_page.additional_properties = d

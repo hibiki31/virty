@@ -1,12 +1,10 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 if TYPE_CHECKING:
-    from ..models.project_user import ProjectUser
+    from ..models.project import Project
 
 
 T = TypeVar("T", bound="ProjectPage")
@@ -16,109 +14,50 @@ T = TypeVar("T", bound="ProjectPage")
 class ProjectPage:
     """
     Attributes:
-        id (str):
-        name (str):
-        memory_g (int):
-        core (int):
-        storage_capacity_g (int):
-        users (List['ProjectUser']):
-        used_memory_g (int):
-        used_core (int):
-        network_pools (Union[Unset, Any]):
-        storage_pools (Union[Unset, Any]):
+        count (int):
+        data (List['Project']):
     """
 
-    id: str
-    name: str
-    memory_g: int
-    core: int
-    storage_capacity_g: int
-    users: List["ProjectUser"]
-    used_memory_g: int
-    used_core: int
-    network_pools: Union[Unset, Any] = UNSET
-    storage_pools: Union[Unset, Any] = UNSET
+    count: int
+    data: List["Project"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        name = self.name
-        memory_g = self.memory_g
-        core = self.core
-        storage_capacity_g = self.storage_capacity_g
-        users = []
-        for users_item_data in self.users:
-            users_item = users_item_data.to_dict()
+        count = self.count
 
-            users.append(users_item)
-
-        used_memory_g = self.used_memory_g
-        used_core = self.used_core
-        network_pools = self.network_pools
-        storage_pools = self.storage_pools
+        data = []
+        for data_item_data in self.data:
+            data_item = data_item_data.to_dict()
+            data.append(data_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "id": id,
-                "name": name,
-                "memoryG": memory_g,
-                "core": core,
-                "storageCapacityG": storage_capacity_g,
-                "users": users,
-                "usedMemoryG": used_memory_g,
-                "usedCore": used_core,
+                "count": count,
+                "data": data,
             }
         )
-        if network_pools is not UNSET:
-            field_dict["networkPools"] = network_pools
-        if storage_pools is not UNSET:
-            field_dict["storagePools"] = storage_pools
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.project_user import ProjectUser
+        from ..models.project import Project
 
         d = src_dict.copy()
-        id = d.pop("id")
+        count = d.pop("count")
 
-        name = d.pop("name")
+        data = []
+        _data = d.pop("data")
+        for data_item_data in _data:
+            data_item = Project.from_dict(data_item_data)
 
-        memory_g = d.pop("memoryG")
-
-        core = d.pop("core")
-
-        storage_capacity_g = d.pop("storageCapacityG")
-
-        users = []
-        _users = d.pop("users")
-        for users_item_data in _users:
-            users_item = ProjectUser.from_dict(users_item_data)
-
-            users.append(users_item)
-
-        used_memory_g = d.pop("usedMemoryG")
-
-        used_core = d.pop("usedCore")
-
-        network_pools = d.pop("networkPools", UNSET)
-
-        storage_pools = d.pop("storagePools", UNSET)
+            data.append(data_item)
 
         project_page = cls(
-            id=id,
-            name=name,
-            memory_g=memory_g,
-            core=core,
-            storage_capacity_g=storage_capacity_g,
-            users=users,
-            used_memory_g=used_memory_g,
-            used_core=used_core,
-            network_pools=network_pools,
-            storage_pools=storage_pools,
+            count=count,
+            data=data,
         )
 
         project_page.additional_properties = d

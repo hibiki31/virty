@@ -20,6 +20,7 @@ class StoragePoolForUpdate:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         storage_uuids = self.storage_uuids
 
         field_dict: Dict[str, Any] = {}

@@ -11,23 +11,24 @@ class CloudInitInsert:
     """
     Attributes:
         hostname (str):
-        user_data (str):
+        userdata (str):
     """
 
     hostname: str
-    user_data: str
+    userdata: str
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         hostname = self.hostname
-        user_data = self.user_data
+
+        userdata = self.userdata
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "hostname": hostname,
-                "userData": user_data,
+                "userdata": userdata,
             }
         )
 
@@ -38,11 +39,11 @@ class CloudInitInsert:
         d = src_dict.copy()
         hostname = d.pop("hostname")
 
-        user_data = d.pop("userData")
+        userdata = d.pop("userdata")
 
         cloud_init_insert = cls(
             hostname=hostname,
-            user_data=user_data,
+            userdata=userdata,
         )
 
         cloud_init_insert.additional_properties = d

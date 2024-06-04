@@ -22,7 +22,9 @@ class TaskIncomplete:
 
     def to_dict(self) -> Dict[str, Any]:
         hash_ = self.hash_
+
         count = self.count
+
         uuids = self.uuids
 
         field_dict: Dict[str, Any] = {}

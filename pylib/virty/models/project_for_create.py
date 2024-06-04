@@ -20,6 +20,7 @@ class ProjectForCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         project_name = self.project_name
+
         user_ids = self.user_ids
 
         field_dict: Dict[str, Any] = {}

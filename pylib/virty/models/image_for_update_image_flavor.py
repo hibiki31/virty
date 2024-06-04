@@ -24,8 +24,11 @@ class ImageForUpdateImageFlavor:
 
     def to_dict(self) -> Dict[str, Any]:
         storage_uuid = self.storage_uuid
+
         path = self.path
+
         node_name = self.node_name
+
         flavor_id = self.flavor_id
 
         field_dict: Dict[str, Any] = {}

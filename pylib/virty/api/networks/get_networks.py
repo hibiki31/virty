@@ -12,30 +12,51 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    name_like: Union[Unset, None, str] = UNSET,
-    node_name_like: Union[Unset, None, str] = UNSET,
-    type: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    name_like: Union[None, Unset, str] = UNSET,
+    node_name_like: Union[None, Unset, str] = UNSET,
+    type: Union[None, Unset, str] = UNSET,
 ) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
+
     params["limit"] = limit
 
     params["page"] = page
 
-    params["name_like"] = name_like
+    params["admin"] = admin
 
-    params["node_name_like"] = node_name_like
+    json_name_like: Union[None, Unset, str]
+    if isinstance(name_like, Unset):
+        json_name_like = UNSET
+    else:
+        json_name_like = name_like
+    params["nameLike"] = json_name_like
 
-    params["type"] = type
+    json_node_name_like: Union[None, Unset, str]
+    if isinstance(node_name_like, Unset):
+        json_node_name_like = UNSET
+    else:
+        json_node_name_like = node_name_like
+    params["nodeNameLike"] = json_node_name_like
+
+    json_type: Union[None, Unset, str]
+    if isinstance(type, Unset):
+        json_type = UNSET
+    else:
+        json_type = type
+    params["type"] = json_type
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/api/networks",
         "params": params,
     }
+
+    return _kwargs
 
 
 def _parse_response(
@@ -69,20 +90,22 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    name_like: Union[Unset, None, str] = UNSET,
-    node_name_like: Union[Unset, None, str] = UNSET,
-    type: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    name_like: Union[None, Unset, str] = UNSET,
+    node_name_like: Union[None, Unset, str] = UNSET,
+    type: Union[None, Unset, str] = UNSET,
 ) -> Response[Union[HTTPValidationError, NetworkPage]]:
     """Get Api Networks
 
     Args:
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        name_like (Union[Unset, None, str]):
-        node_name_like (Union[Unset, None, str]):
-        type (Union[Unset, None, str]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        name_like (Union[None, Unset, str]):
+        node_name_like (Union[None, Unset, str]):
+        type (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -95,6 +118,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         limit=limit,
         page=page,
+        admin=admin,
         name_like=name_like,
         node_name_like=node_name_like,
         type=type,
@@ -110,20 +134,22 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    name_like: Union[Unset, None, str] = UNSET,
-    node_name_like: Union[Unset, None, str] = UNSET,
-    type: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    name_like: Union[None, Unset, str] = UNSET,
+    node_name_like: Union[None, Unset, str] = UNSET,
+    type: Union[None, Unset, str] = UNSET,
 ) -> Optional[Union[HTTPValidationError, NetworkPage]]:
     """Get Api Networks
 
     Args:
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        name_like (Union[Unset, None, str]):
-        node_name_like (Union[Unset, None, str]):
-        type (Union[Unset, None, str]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        name_like (Union[None, Unset, str]):
+        node_name_like (Union[None, Unset, str]):
+        type (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -137,6 +163,7 @@ def sync(
         client=client,
         limit=limit,
         page=page,
+        admin=admin,
         name_like=name_like,
         node_name_like=node_name_like,
         type=type,
@@ -146,20 +173,22 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    name_like: Union[Unset, None, str] = UNSET,
-    node_name_like: Union[Unset, None, str] = UNSET,
-    type: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    name_like: Union[None, Unset, str] = UNSET,
+    node_name_like: Union[None, Unset, str] = UNSET,
+    type: Union[None, Unset, str] = UNSET,
 ) -> Response[Union[HTTPValidationError, NetworkPage]]:
     """Get Api Networks
 
     Args:
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        name_like (Union[Unset, None, str]):
-        node_name_like (Union[Unset, None, str]):
-        type (Union[Unset, None, str]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        name_like (Union[None, Unset, str]):
+        node_name_like (Union[None, Unset, str]):
+        type (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -172,6 +201,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         limit=limit,
         page=page,
+        admin=admin,
         name_like=name_like,
         node_name_like=node_name_like,
         type=type,
@@ -185,20 +215,22 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    name_like: Union[Unset, None, str] = UNSET,
-    node_name_like: Union[Unset, None, str] = UNSET,
-    type: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    admin: Union[Unset, bool] = False,
+    name_like: Union[None, Unset, str] = UNSET,
+    node_name_like: Union[None, Unset, str] = UNSET,
+    type: Union[None, Unset, str] = UNSET,
 ) -> Optional[Union[HTTPValidationError, NetworkPage]]:
     """Get Api Networks
 
     Args:
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        name_like (Union[Unset, None, str]):
-        node_name_like (Union[Unset, None, str]):
-        type (Union[Unset, None, str]):
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        admin (Union[Unset, bool]):  Default: False.
+        name_like (Union[None, Unset, str]):
+        node_name_like (Union[None, Unset, str]):
+        type (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -213,6 +245,7 @@ async def asyncio(
             client=client,
             limit=limit,
             page=page,
+            admin=admin,
             name_like=name_like,
             node_name_like=node_name_like,
             type=type,

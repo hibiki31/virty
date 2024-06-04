@@ -6,49 +6,72 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.task_pagesnation import TaskPagesnation
+from ...models.task_page import TaskPage
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    admin: Union[Unset, None, bool] = False,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    resource: Union[Unset, None, str] = UNSET,
-    object_: Union[Unset, None, str] = UNSET,
-    method: Union[Unset, None, str] = UNSET,
-    status: Union[Unset, None, str] = UNSET,
+    admin: Union[Unset, bool] = False,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    resource: Union[None, Unset, str] = UNSET,
+    object_: Union[None, Unset, str] = UNSET,
+    method: Union[None, Unset, str] = UNSET,
+    status: Union[None, Unset, str] = UNSET,
 ) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
+
     params["admin"] = admin
 
     params["limit"] = limit
 
     params["page"] = page
 
-    params["resource"] = resource
+    json_resource: Union[None, Unset, str]
+    if isinstance(resource, Unset):
+        json_resource = UNSET
+    else:
+        json_resource = resource
+    params["resource"] = json_resource
 
-    params["object"] = object_
+    json_object_: Union[None, Unset, str]
+    if isinstance(object_, Unset):
+        json_object_ = UNSET
+    else:
+        json_object_ = object_
+    params["object"] = json_object_
 
-    params["method"] = method
+    json_method: Union[None, Unset, str]
+    if isinstance(method, Unset):
+        json_method = UNSET
+    else:
+        json_method = method
+    params["method"] = json_method
 
-    params["status"] = status
+    json_status: Union[None, Unset, str]
+    if isinstance(status, Unset):
+        json_status = UNSET
+    else:
+        json_status = status
+    params["status"] = json_status
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/api/tasks",
         "params": params,
     }
 
+    return _kwargs
+
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, TaskPagesnation]]:
+) -> Optional[Union[HTTPValidationError, TaskPage]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = TaskPagesnation.from_dict(response.json())
+        response_200 = TaskPage.from_dict(response.json())
 
         return response_200
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
@@ -63,7 +86,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, TaskPagesnation]]:
+) -> Response[Union[HTTPValidationError, TaskPage]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -75,31 +98,31 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    admin: Union[Unset, None, bool] = False,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    resource: Union[Unset, None, str] = UNSET,
-    object_: Union[Unset, None, str] = UNSET,
-    method: Union[Unset, None, str] = UNSET,
-    status: Union[Unset, None, str] = UNSET,
-) -> Response[Union[HTTPValidationError, TaskPagesnation]]:
+    admin: Union[Unset, bool] = False,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    resource: Union[None, Unset, str] = UNSET,
+    object_: Union[None, Unset, str] = UNSET,
+    method: Union[None, Unset, str] = UNSET,
+    status: Union[None, Unset, str] = UNSET,
+) -> Response[Union[HTTPValidationError, TaskPage]]:
     """Get Tasks
 
     Args:
-        admin (Union[Unset, None, bool]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        resource (Union[Unset, None, str]):
-        object_ (Union[Unset, None, str]):
-        method (Union[Unset, None, str]):
-        status (Union[Unset, None, str]):
+        admin (Union[Unset, bool]):  Default: False.
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        resource (Union[None, Unset, str]):
+        object_ (Union[None, Unset, str]):
+        method (Union[None, Unset, str]):
+        status (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TaskPagesnation]]
+        Response[Union[HTTPValidationError, TaskPage]]
     """
 
     kwargs = _get_kwargs(
@@ -122,31 +145,31 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    admin: Union[Unset, None, bool] = False,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    resource: Union[Unset, None, str] = UNSET,
-    object_: Union[Unset, None, str] = UNSET,
-    method: Union[Unset, None, str] = UNSET,
-    status: Union[Unset, None, str] = UNSET,
-) -> Optional[Union[HTTPValidationError, TaskPagesnation]]:
+    admin: Union[Unset, bool] = False,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    resource: Union[None, Unset, str] = UNSET,
+    object_: Union[None, Unset, str] = UNSET,
+    method: Union[None, Unset, str] = UNSET,
+    status: Union[None, Unset, str] = UNSET,
+) -> Optional[Union[HTTPValidationError, TaskPage]]:
     """Get Tasks
 
     Args:
-        admin (Union[Unset, None, bool]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        resource (Union[Unset, None, str]):
-        object_ (Union[Unset, None, str]):
-        method (Union[Unset, None, str]):
-        status (Union[Unset, None, str]):
+        admin (Union[Unset, bool]):  Default: False.
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        resource (Union[None, Unset, str]):
+        object_ (Union[None, Unset, str]):
+        method (Union[None, Unset, str]):
+        status (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TaskPagesnation]
+        Union[HTTPValidationError, TaskPage]
     """
 
     return sync_detailed(
@@ -164,31 +187,31 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    admin: Union[Unset, None, bool] = False,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    resource: Union[Unset, None, str] = UNSET,
-    object_: Union[Unset, None, str] = UNSET,
-    method: Union[Unset, None, str] = UNSET,
-    status: Union[Unset, None, str] = UNSET,
-) -> Response[Union[HTTPValidationError, TaskPagesnation]]:
+    admin: Union[Unset, bool] = False,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    resource: Union[None, Unset, str] = UNSET,
+    object_: Union[None, Unset, str] = UNSET,
+    method: Union[None, Unset, str] = UNSET,
+    status: Union[None, Unset, str] = UNSET,
+) -> Response[Union[HTTPValidationError, TaskPage]]:
     """Get Tasks
 
     Args:
-        admin (Union[Unset, None, bool]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        resource (Union[Unset, None, str]):
-        object_ (Union[Unset, None, str]):
-        method (Union[Unset, None, str]):
-        status (Union[Unset, None, str]):
+        admin (Union[Unset, bool]):  Default: False.
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        resource (Union[None, Unset, str]):
+        object_ (Union[None, Unset, str]):
+        method (Union[None, Unset, str]):
+        status (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TaskPagesnation]]
+        Response[Union[HTTPValidationError, TaskPage]]
     """
 
     kwargs = _get_kwargs(
@@ -209,31 +232,31 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    admin: Union[Unset, None, bool] = False,
-    limit: Union[Unset, None, int] = 25,
-    page: Union[Unset, None, int] = 0,
-    resource: Union[Unset, None, str] = UNSET,
-    object_: Union[Unset, None, str] = UNSET,
-    method: Union[Unset, None, str] = UNSET,
-    status: Union[Unset, None, str] = UNSET,
-) -> Optional[Union[HTTPValidationError, TaskPagesnation]]:
+    admin: Union[Unset, bool] = False,
+    limit: Union[Unset, int] = 25,
+    page: Union[Unset, int] = 0,
+    resource: Union[None, Unset, str] = UNSET,
+    object_: Union[None, Unset, str] = UNSET,
+    method: Union[None, Unset, str] = UNSET,
+    status: Union[None, Unset, str] = UNSET,
+) -> Optional[Union[HTTPValidationError, TaskPage]]:
     """Get Tasks
 
     Args:
-        admin (Union[Unset, None, bool]):
-        limit (Union[Unset, None, int]):  Default: 25.
-        page (Union[Unset, None, int]):
-        resource (Union[Unset, None, str]):
-        object_ (Union[Unset, None, str]):
-        method (Union[Unset, None, str]):
-        status (Union[Unset, None, str]):
+        admin (Union[Unset, bool]):  Default: False.
+        limit (Union[Unset, int]):  Default: 25.
+        page (Union[Unset, int]):  Default: 0.
+        resource (Union[None, Unset, str]):
+        object_ (Union[None, Unset, str]):
+        method (Union[None, Unset, str]):
+        status (Union[None, Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TaskPagesnation]
+        Union[HTTPValidationError, TaskPage]
     """
 
     return (

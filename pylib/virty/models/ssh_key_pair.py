@@ -20,6 +20,7 @@ class SSHKeyPair:
 
     def to_dict(self) -> Dict[str, Any]:
         private_key = self.private_key
+
         public_key = self.public_key
 
         field_dict: Dict[str, Any] = {}

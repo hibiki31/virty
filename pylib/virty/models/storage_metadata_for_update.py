@@ -24,8 +24,11 @@ class StorageMetadataForUpdate:
 
     def to_dict(self) -> Dict[str, Any]:
         uuid = self.uuid
+
         rool = self.rool
+
         protocol = self.protocol
+
         device_type = self.device_type
 
         field_dict: Dict[str, Any] = {}

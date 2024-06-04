@@ -20,6 +20,7 @@ class Version:
 
     def to_dict(self) -> Dict[str, Any]:
         initialized = self.initialized
+
         version = self.version
 
         field_dict: Dict[str, Any] = {}

@@ -28,10 +28,15 @@ class NodeForCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         description = self.description
+
         domain = self.domain
+
         user_name = self.user_name
+
         port = self.port
+
         libvirt_role = self.libvirt_role
 
         field_dict: Dict[str, Any] = {}

@@ -22,7 +22,9 @@ class NodeInterfaceIpv4Info:
 
     def to_dict(self) -> Dict[str, Any]:
         address = self.address
+
         prefixlen = self.prefixlen
+
         label = self.label
 
         field_dict: Dict[str, Any] = {}

@@ -1,4 +1,4 @@
-""" Contains all the data models used in inputs/outputs """
+"""Contains all the data models used in inputs/outputs"""
 
 from .auth_validate_response import AuthValidateResponse
 from .body_login import BodyLogin
@@ -12,7 +12,7 @@ from .domain_for_create_disk import DomainForCreateDisk
 from .domain_for_create_interface import DomainForCreateInterface
 from .domain_for_create_type import DomainForCreateType
 from .domain_interface import DomainInterface
-from .domain_pagenation import DomainPagenation
+from .domain_page import DomainPage
 from .domain_project import DomainProject
 from .domain_project_for_update import DomainProjectForUpdate
 from .flavor import Flavor
@@ -45,9 +45,9 @@ from .node_interface_ipv_4_info import NodeInterfaceIpv4Info
 from .node_interface_ipv_6_info import NodeInterfaceIpv6Info
 from .node_page import NodePage
 from .node_role import NodeRole
-from .node_role_extrajson import NodeRoleExtrajson
+from .node_role_extra_json_type_0 import NodeRoleExtraJsonType0
 from .node_role_for_update import NodeRoleForUpdate
-from .node_role_for_update_extrajson import NodeRoleForUpdateExtrajson
+from .node_role_for_update_extra_json_type_0 import NodeRoleForUpdateExtraJsonType0
 from .power_status_for_update_domain import PowerStatusForUpdateDomain
 from .project import Project
 from .project_for_create import ProjectForCreate
@@ -68,9 +68,8 @@ from .storage_pool_for_create import StoragePoolForCreate
 from .storage_pool_for_update import StoragePoolForUpdate
 from .task import Task
 from .task_incomplete import TaskIncomplete
-from .task_pagesnation import TaskPagesnation
-from .task_request import TaskRequest
-from .task_result import TaskResult
+from .task_page import TaskPage
+from .task_result_type_0 import TaskResultType0
 from .token_data import TokenData
 from .token_rfc6749_response import TokenRFC6749Response
 from .user import User
@@ -94,7 +93,7 @@ __all__ = (
     "DomainForCreateInterface",
     "DomainForCreateType",
     "DomainInterface",
-    "DomainPagenation",
+    "DomainPage",
     "DomainProject",
     "DomainProjectForUpdate",
     "Flavor",
@@ -127,9 +126,9 @@ __all__ = (
     "NodeInterfaceIpv6Info",
     "NodePage",
     "NodeRole",
-    "NodeRoleExtrajson",
+    "NodeRoleExtraJsonType0",
     "NodeRoleForUpdate",
-    "NodeRoleForUpdateExtrajson",
+    "NodeRoleForUpdateExtraJsonType0",
     "PowerStatusForUpdateDomain",
     "Project",
     "ProjectForCreate",
@@ -150,9 +149,8 @@ __all__ = (
     "StoragePoolForUpdate",
     "Task",
     "TaskIncomplete",
-    "TaskPagesnation",
-    "TaskRequest",
-    "TaskResult",
+    "TaskPage",
+    "TaskResultType0",
     "TokenData",
     "TokenRFC6749Response",
     "User",

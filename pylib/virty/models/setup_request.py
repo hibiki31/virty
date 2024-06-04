@@ -20,6 +20,7 @@ class SetupRequest:
 
     def to_dict(self) -> Dict[str, Any]:
         username = self.username
+
         password = self.password
 
         field_dict: Dict[str, Any] = {}

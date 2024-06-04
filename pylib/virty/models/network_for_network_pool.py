@@ -26,9 +26,13 @@ class NetworkForNetworkPool:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         uuid = self.uuid
+
         node_name = self.node_name
+
         bridge = self.bridge
+
         type = self.type
 
         field_dict: Dict[str, Any] = {}

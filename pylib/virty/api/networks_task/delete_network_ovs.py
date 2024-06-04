@@ -14,13 +14,12 @@ def _get_kwargs(
     uuid: str,
     name: str,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "delete",
-        "url": "/api/tasks/networks/{uuid}/ovs/{name}".format(
-            uuid=uuid,
-            name=name,
-        ),
+        "url": f"/api/tasks/networks/{uuid}/ovs/{name}",
     }
+
+    return _kwargs
 
 
 def _parse_response(

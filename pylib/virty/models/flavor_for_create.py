@@ -28,10 +28,15 @@ class FlavorForCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         os = self.os
+
         manual_url = self.manual_url
+
         icon = self.icon
+
         cloud_init_ready = self.cloud_init_ready
+
         description = self.description
 
         field_dict: Dict[str, Any] = {}

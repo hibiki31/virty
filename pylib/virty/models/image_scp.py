@@ -24,8 +24,11 @@ class ImageSCP:
 
     def to_dict(self) -> Dict[str, Any]:
         from_node_name = self.from_node_name
+
         to_node_name = self.to_node_name
+
         from_file_path = self.from_file_path
+
         to_file_path = self.to_file_path
 
         field_dict: Dict[str, Any] = {}

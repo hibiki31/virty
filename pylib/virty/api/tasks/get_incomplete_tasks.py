@@ -12,21 +12,24 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    hash_: Union[Unset, None, str] = UNSET,
-    admin: Union[Unset, None, bool] = False,
+    hash_: Union[Unset, str] = UNSET,
+    admin: Union[Unset, bool] = False,
 ) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
+
     params["hash"] = hash_
 
     params["admin"] = admin
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/api/tasks/incomplete",
         "params": params,
     }
+
+    return _kwargs
 
 
 def _parse_response(
@@ -60,14 +63,14 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    hash_: Union[Unset, None, str] = UNSET,
-    admin: Union[Unset, None, bool] = False,
+    hash_: Union[Unset, str] = UNSET,
+    admin: Union[Unset, bool] = False,
 ) -> Response[Union[HTTPValidationError, TaskIncomplete]]:
     """Get Tasks Incomplete
 
     Args:
-        hash_ (Union[Unset, None, str]):
-        admin (Union[Unset, None, bool]):
+        hash_ (Union[Unset, str]):
+        admin (Union[Unset, bool]):  Default: False.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -92,14 +95,14 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    hash_: Union[Unset, None, str] = UNSET,
-    admin: Union[Unset, None, bool] = False,
+    hash_: Union[Unset, str] = UNSET,
+    admin: Union[Unset, bool] = False,
 ) -> Optional[Union[HTTPValidationError, TaskIncomplete]]:
     """Get Tasks Incomplete
 
     Args:
-        hash_ (Union[Unset, None, str]):
-        admin (Union[Unset, None, bool]):
+        hash_ (Union[Unset, str]):
+        admin (Union[Unset, bool]):  Default: False.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -119,14 +122,14 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    hash_: Union[Unset, None, str] = UNSET,
-    admin: Union[Unset, None, bool] = False,
+    hash_: Union[Unset, str] = UNSET,
+    admin: Union[Unset, bool] = False,
 ) -> Response[Union[HTTPValidationError, TaskIncomplete]]:
     """Get Tasks Incomplete
 
     Args:
-        hash_ (Union[Unset, None, str]):
-        admin (Union[Unset, None, bool]):
+        hash_ (Union[Unset, str]):
+        admin (Union[Unset, bool]):  Default: False.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -149,14 +152,14 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    hash_: Union[Unset, None, str] = UNSET,
-    admin: Union[Unset, None, bool] = False,
+    hash_: Union[Unset, str] = UNSET,
+    admin: Union[Unset, bool] = False,
 ) -> Optional[Union[HTTPValidationError, TaskIncomplete]]:
     """Get Tasks Incomplete
 
     Args:
-        hash_ (Union[Unset, None, str]):
-        admin (Union[Unset, None, bool]):
+        hash_ (Union[Unset, str]):
+        admin (Union[Unset, bool]):  Default: False.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

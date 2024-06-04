@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -23,8 +23,8 @@ class NodeInterface:
         link_type (str):
         ipv_4_info (List['NodeInterfaceIpv4Info']):
         ipv_6_info (List['NodeInterfaceIpv6Info']):
-        master (Union[Unset, str]):
-        mac_address (Union[Unset, str]):
+        master (Union[None, Unset, str]):
+        mac_address (Union[None, Unset, str]):
     """
 
     ifname: str
@@ -33,29 +33,40 @@ class NodeInterface:
     link_type: str
     ipv_4_info: List["NodeInterfaceIpv4Info"]
     ipv_6_info: List["NodeInterfaceIpv6Info"]
-    master: Union[Unset, str] = UNSET
-    mac_address: Union[Unset, str] = UNSET
+    master: Union[None, Unset, str] = UNSET
+    mac_address: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         ifname = self.ifname
+
         operstate = self.operstate
+
         mtu = self.mtu
+
         link_type = self.link_type
+
         ipv_4_info = []
         for ipv_4_info_item_data in self.ipv_4_info:
             ipv_4_info_item = ipv_4_info_item_data.to_dict()
-
             ipv_4_info.append(ipv_4_info_item)
 
         ipv_6_info = []
         for ipv_6_info_item_data in self.ipv_6_info:
             ipv_6_info_item = ipv_6_info_item_data.to_dict()
-
             ipv_6_info.append(ipv_6_info_item)
 
-        master = self.master
-        mac_address = self.mac_address
+        master: Union[None, Unset, str]
+        if isinstance(self.master, Unset):
+            master = UNSET
+        else:
+            master = self.master
+
+        mac_address: Union[None, Unset, str]
+        if isinstance(self.mac_address, Unset):
+            mac_address = UNSET
+        else:
+            mac_address = self.mac_address
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -104,9 +115,23 @@ class NodeInterface:
 
             ipv_6_info.append(ipv_6_info_item)
 
-        master = d.pop("master", UNSET)
+        def _parse_master(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        mac_address = d.pop("macAddress", UNSET)
+        master = _parse_master(d.pop("master", UNSET))
+
+        def _parse_mac_address(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        mac_address = _parse_mac_address(d.pop("macAddress", UNSET))
 
         node_interface = cls(
             ifname=ifname,

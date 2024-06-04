@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="TaskResult")
+T = TypeVar("T", bound="TaskResultType0")
 
 
 @_attrs_define
-class TaskResult:
+class TaskResultType0:
     """ """
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -15,17 +15,16 @@ class TaskResult:
     def to_dict(self) -> Dict[str, Any]:
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        task_result = cls()
+        task_result_type_0 = cls()
 
-        task_result.additional_properties = d
-        return task_result
+        task_result_type_0.additional_properties = d
+        return task_result_type_0
 
     @property
     def additional_keys(self) -> List[str]:

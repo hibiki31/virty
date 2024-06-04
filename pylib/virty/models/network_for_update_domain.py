@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,18 +14,24 @@ class NetworkForUpdateDomain:
     Attributes:
         mac (str):
         network_uuid (str):
-        port (Union[Unset, str]):
+        port (Union[None, Unset, str]):
     """
 
     mac: str
     network_uuid: str
-    port: Union[Unset, str] = UNSET
+    port: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         mac = self.mac
+
         network_uuid = self.network_uuid
-        port = self.port
+
+        port: Union[None, Unset, str]
+        if isinstance(self.port, Unset):
+            port = UNSET
+        else:
+            port = self.port
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,7 +53,14 @@ class NetworkForUpdateDomain:
 
         network_uuid = d.pop("networkUuid")
 
-        port = d.pop("port", UNSET)
+        def _parse_port(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        port = _parse_port(d.pop("port", UNSET))
 
         network_for_update_domain = cls(
             mac=mac,

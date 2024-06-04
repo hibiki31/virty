@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,23 +12,42 @@ T = TypeVar("T", bound="DomainDrive")
 class DomainDrive:
     """
     Attributes:
-        device (Union[Unset, str]):
-        type (Union[Unset, str]):
-        source (Union[Unset, str]):
-        target (Union[Unset, str]):
+        device (Union[None, Unset, str]):
+        type (Union[None, Unset, str]):
+        source (Union[None, Unset, str]):
+        target (Union[None, Unset, str]):
     """
 
-    device: Union[Unset, str] = UNSET
-    type: Union[Unset, str] = UNSET
-    source: Union[Unset, str] = UNSET
-    target: Union[Unset, str] = UNSET
+    device: Union[None, Unset, str] = UNSET
+    type: Union[None, Unset, str] = UNSET
+    source: Union[None, Unset, str] = UNSET
+    target: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        device = self.device
-        type = self.type
-        source = self.source
-        target = self.target
+        device: Union[None, Unset, str]
+        if isinstance(self.device, Unset):
+            device = UNSET
+        else:
+            device = self.device
+
+        type: Union[None, Unset, str]
+        if isinstance(self.type, Unset):
+            type = UNSET
+        else:
+            type = self.type
+
+        source: Union[None, Unset, str]
+        if isinstance(self.source, Unset):
+            source = UNSET
+        else:
+            source = self.source
+
+        target: Union[None, Unset, str]
+        if isinstance(self.target, Unset):
+            target = UNSET
+        else:
+            target = self.target
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,13 +66,42 @@ class DomainDrive:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        device = d.pop("device", UNSET)
 
-        type = d.pop("type", UNSET)
+        def _parse_device(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        source = d.pop("source", UNSET)
+        device = _parse_device(d.pop("device", UNSET))
 
-        target = d.pop("target", UNSET)
+        def _parse_type(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        type = _parse_type(d.pop("type", UNSET))
+
+        def _parse_source(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        source = _parse_source(d.pop("source", UNSET))
+
+        def _parse_target(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        target = _parse_target(d.pop("target", UNSET))
 
         domain_drive = cls(
             device=device,

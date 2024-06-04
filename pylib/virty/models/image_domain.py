@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,21 +14,32 @@ class ImageDomain:
     Attributes:
         name (str):
         uuid (str):
-        owner_user_id (Union[Unset, str]):
-        issuance_id (Union[Unset, int]):
+        owner_user_id (Union[None, Unset, str]):
+        issuance_id (Union[None, Unset, int]):
     """
 
     name: str
     uuid: str
-    owner_user_id: Union[Unset, str] = UNSET
-    issuance_id: Union[Unset, int] = UNSET
+    owner_user_id: Union[None, Unset, str] = UNSET
+    issuance_id: Union[None, Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         uuid = self.uuid
-        owner_user_id = self.owner_user_id
-        issuance_id = self.issuance_id
+
+        owner_user_id: Union[None, Unset, str]
+        if isinstance(self.owner_user_id, Unset):
+            owner_user_id = UNSET
+        else:
+            owner_user_id = self.owner_user_id
+
+        issuance_id: Union[None, Unset, int]
+        if isinstance(self.issuance_id, Unset):
+            issuance_id = UNSET
+        else:
+            issuance_id = self.issuance_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -52,9 +63,23 @@ class ImageDomain:
 
         uuid = d.pop("uuid")
 
-        owner_user_id = d.pop("ownerUserId", UNSET)
+        def _parse_owner_user_id(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        issuance_id = d.pop("issuanceId", UNSET)
+        owner_user_id = _parse_owner_user_id(d.pop("ownerUserId", UNSET))
+
+        def _parse_issuance_id(data: object) -> Union[None, Unset, int]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, int], data)
+
+        issuance_id = _parse_issuance_id(d.pop("issuanceId", UNSET))
 
         image_domain = cls(
             name=name,

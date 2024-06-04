@@ -20,6 +20,7 @@ class UserForCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         user_id = self.user_id
+
         password = self.password
 
         field_dict: Dict[str, Any] = {}

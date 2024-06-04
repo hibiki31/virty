@@ -1,14 +1,10 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 if TYPE_CHECKING:
-    from ..models.flavor import Flavor
-    from ..models.image_domain import ImageDomain
-    from ..models.storage_page import StoragePage
+    from ..models.image import Image
 
 
 T = TypeVar("T", bound="ImagePage")
@@ -18,112 +14,50 @@ T = TypeVar("T", bound="ImagePage")
 class ImagePage:
     """
     Attributes:
-        name (str):
-        capacity (int):
-        storage (StoragePage):
-        allocation (int):
-        path (str):
-        storage_uuid (Union[Unset, str]):
-        flavor (Union[Unset, Flavor]):
-        update_token (Union[Unset, str]):
-        domain (Union[Unset, ImageDomain]):
+        count (int):
+        data (List['Image']):
     """
 
-    name: str
-    capacity: int
-    storage: "StoragePage"
-    allocation: int
-    path: str
-    storage_uuid: Union[Unset, str] = UNSET
-    flavor: Union[Unset, "Flavor"] = UNSET
-    update_token: Union[Unset, str] = UNSET
-    domain: Union[Unset, "ImageDomain"] = UNSET
+    count: int
+    data: List["Image"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-        capacity = self.capacity
-        storage = self.storage.to_dict()
+        count = self.count
 
-        allocation = self.allocation
-        path = self.path
-        storage_uuid = self.storage_uuid
-        flavor: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.flavor, Unset):
-            flavor = self.flavor.to_dict()
-
-        update_token = self.update_token
-        domain: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.domain, Unset):
-            domain = self.domain.to_dict()
+        data = []
+        for data_item_data in self.data:
+            data_item = data_item_data.to_dict()
+            data.append(data_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "name": name,
-                "capacity": capacity,
-                "storage": storage,
-                "allocation": allocation,
-                "path": path,
+                "count": count,
+                "data": data,
             }
         )
-        if storage_uuid is not UNSET:
-            field_dict["storageUuid"] = storage_uuid
-        if flavor is not UNSET:
-            field_dict["flavor"] = flavor
-        if update_token is not UNSET:
-            field_dict["updateToken"] = update_token
-        if domain is not UNSET:
-            field_dict["domain"] = domain
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.flavor import Flavor
-        from ..models.image_domain import ImageDomain
-        from ..models.storage_page import StoragePage
+        from ..models.image import Image
 
         d = src_dict.copy()
-        name = d.pop("name")
+        count = d.pop("count")
 
-        capacity = d.pop("capacity")
+        data = []
+        _data = d.pop("data")
+        for data_item_data in _data:
+            data_item = Image.from_dict(data_item_data)
 
-        storage = StoragePage.from_dict(d.pop("storage"))
-
-        allocation = d.pop("allocation")
-
-        path = d.pop("path")
-
-        storage_uuid = d.pop("storageUuid", UNSET)
-
-        _flavor = d.pop("flavor", UNSET)
-        flavor: Union[Unset, Flavor]
-        if isinstance(_flavor, Unset):
-            flavor = UNSET
-        else:
-            flavor = Flavor.from_dict(_flavor)
-
-        update_token = d.pop("updateToken", UNSET)
-
-        _domain = d.pop("domain", UNSET)
-        domain: Union[Unset, ImageDomain]
-        if isinstance(_domain, Unset):
-            domain = UNSET
-        else:
-            domain = ImageDomain.from_dict(_domain)
+            data.append(data_item)
 
         image_page = cls(
-            name=name,
-            capacity=capacity,
-            storage=storage,
-            allocation=allocation,
-            path=path,
-            storage_uuid=storage_uuid,
-            flavor=flavor,
-            update_token=update_token,
-            domain=domain,
+            count=count,
+            data=data,
         )
 
         image_page.additional_properties = d

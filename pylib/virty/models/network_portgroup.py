@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,18 +14,24 @@ class NetworkPortgroup:
     Attributes:
         name (str):
         is_default (bool):
-        vlan_id (Union[Unset, str]):
+        vlan_id (Union[None, Unset, str]):
     """
 
     name: str
     is_default: bool
-    vlan_id: Union[Unset, str] = UNSET
+    vlan_id: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         is_default = self.is_default
-        vlan_id = self.vlan_id
+
+        vlan_id: Union[None, Unset, str]
+        if isinstance(self.vlan_id, Unset):
+            vlan_id = UNSET
+        else:
+            vlan_id = self.vlan_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,7 +53,14 @@ class NetworkPortgroup:
 
         is_default = d.pop("isDefault")
 
-        vlan_id = d.pop("vlanId", UNSET)
+        def _parse_vlan_id(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        vlan_id = _parse_vlan_id(d.pop("vlanId", UNSET))
 
         network_portgroup = cls(
             name=name,

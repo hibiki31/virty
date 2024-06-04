@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.flavor_page import FlavorPage
+from ...models.flavor import Flavor
 from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
 
@@ -13,19 +13,19 @@ from ...types import Response
 def _get_kwargs(
     flavor_id: int,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "delete",
-        "url": "/api/flavors/{flavor_id}".format(
-            flavor_id=flavor_id,
-        ),
+        "url": f"/api/flavors/{flavor_id}",
     }
+
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[FlavorPage, HTTPValidationError]]:
+) -> Optional[Union[Flavor, HTTPValidationError]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = FlavorPage.from_dict(response.json())
+        response_200 = Flavor.from_dict(response.json())
 
         return response_200
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
@@ -40,7 +40,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[FlavorPage, HTTPValidationError]]:
+) -> Response[Union[Flavor, HTTPValidationError]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -53,7 +53,7 @@ def sync_detailed(
     flavor_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[FlavorPage, HTTPValidationError]]:
+) -> Response[Union[Flavor, HTTPValidationError]]:
     """Delete Flavors
 
     Args:
@@ -64,7 +64,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[FlavorPage, HTTPValidationError]]
+        Response[Union[Flavor, HTTPValidationError]]
     """
 
     kwargs = _get_kwargs(
@@ -82,7 +82,7 @@ def sync(
     flavor_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[FlavorPage, HTTPValidationError]]:
+) -> Optional[Union[Flavor, HTTPValidationError]]:
     """Delete Flavors
 
     Args:
@@ -93,7 +93,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[FlavorPage, HTTPValidationError]
+        Union[Flavor, HTTPValidationError]
     """
 
     return sync_detailed(
@@ -106,7 +106,7 @@ async def asyncio_detailed(
     flavor_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[FlavorPage, HTTPValidationError]]:
+) -> Response[Union[Flavor, HTTPValidationError]]:
     """Delete Flavors
 
     Args:
@@ -117,7 +117,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[FlavorPage, HTTPValidationError]]
+        Response[Union[Flavor, HTTPValidationError]]
     """
 
     kwargs = _get_kwargs(
@@ -133,7 +133,7 @@ async def asyncio(
     flavor_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[FlavorPage, HTTPValidationError]]:
+) -> Optional[Union[Flavor, HTTPValidationError]]:
     """Delete Flavors
 
     Args:
@@ -144,7 +144,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[FlavorPage, HTTPValidationError]
+        Union[Flavor, HTTPValidationError]
     """
 
     return (

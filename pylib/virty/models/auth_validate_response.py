@@ -22,7 +22,9 @@ class AuthValidateResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         access_token = self.access_token
+
         token_type = self.token_type
+
         username = self.username
 
         field_dict: Dict[str, Any] = {}

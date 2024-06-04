@@ -12,12 +12,12 @@ from ...types import Response
 def _get_kwargs(
     token: str,
 ) -> Dict[str, Any]:
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
-        "url": "/api/vms/vnc/{token}".format(
-            token=token,
-        ),
+        "url": f"/api/vms/vnc/{token}",
     }
+
+    return _kwargs
 
 
 def _parse_response(
@@ -52,7 +52,7 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Get Api Domain
+    """Get Api Domain Vnc Token
 
     Args:
         token (str):
@@ -81,7 +81,7 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Get Api Domain
+    """Get Api Domain Vnc Token
 
     Args:
         token (str):
@@ -105,7 +105,7 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Get Api Domain
+    """Get Api Domain Vnc Token
 
     Args:
         token (str):
@@ -132,7 +132,7 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Get Api Domain
+    """Get Api Domain Vnc Token
 
     Args:
         token (str):

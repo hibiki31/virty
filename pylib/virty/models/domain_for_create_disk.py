@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,27 +14,48 @@ class DomainForCreateDisk:
     Attributes:
         type (str):
         save_pool_uuid (str):
-        original_pool_uuid (Union[Unset, str]):
-        original_name (Union[Unset, str]):
-        size_giga_byte (Union[Unset, int]):
-        template_name (Union[Unset, str]):
+        original_pool_uuid (Union[None, Unset, str]):
+        original_name (Union[None, Unset, str]):
+        size_giga_byte (Union[None, Unset, int]):
+        template_name (Union[None, Unset, str]):
     """
 
     type: str
     save_pool_uuid: str
-    original_pool_uuid: Union[Unset, str] = UNSET
-    original_name: Union[Unset, str] = UNSET
-    size_giga_byte: Union[Unset, int] = UNSET
-    template_name: Union[Unset, str] = UNSET
+    original_pool_uuid: Union[None, Unset, str] = UNSET
+    original_name: Union[None, Unset, str] = UNSET
+    size_giga_byte: Union[None, Unset, int] = UNSET
+    template_name: Union[None, Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         type = self.type
+
         save_pool_uuid = self.save_pool_uuid
-        original_pool_uuid = self.original_pool_uuid
-        original_name = self.original_name
-        size_giga_byte = self.size_giga_byte
-        template_name = self.template_name
+
+        original_pool_uuid: Union[None, Unset, str]
+        if isinstance(self.original_pool_uuid, Unset):
+            original_pool_uuid = UNSET
+        else:
+            original_pool_uuid = self.original_pool_uuid
+
+        original_name: Union[None, Unset, str]
+        if isinstance(self.original_name, Unset):
+            original_name = UNSET
+        else:
+            original_name = self.original_name
+
+        size_giga_byte: Union[None, Unset, int]
+        if isinstance(self.size_giga_byte, Unset):
+            size_giga_byte = UNSET
+        else:
+            size_giga_byte = self.size_giga_byte
+
+        template_name: Union[None, Unset, str]
+        if isinstance(self.template_name, Unset):
+            template_name = UNSET
+        else:
+            template_name = self.template_name
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -62,13 +83,41 @@ class DomainForCreateDisk:
 
         save_pool_uuid = d.pop("savePoolUuid")
 
-        original_pool_uuid = d.pop("originalPoolUuid", UNSET)
+        def _parse_original_pool_uuid(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        original_name = d.pop("originalName", UNSET)
+        original_pool_uuid = _parse_original_pool_uuid(d.pop("originalPoolUuid", UNSET))
 
-        size_giga_byte = d.pop("sizeGigaByte", UNSET)
+        def _parse_original_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        template_name = d.pop("templateName", UNSET)
+        original_name = _parse_original_name(d.pop("originalName", UNSET))
+
+        def _parse_size_giga_byte(data: object) -> Union[None, Unset, int]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, int], data)
+
+        size_giga_byte = _parse_size_giga_byte(d.pop("sizeGigaByte", UNSET))
+
+        def _parse_template_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        template_name = _parse_template_name(d.pop("templateName", UNSET))
 
         domain_for_create_disk = cls(
             type=type,

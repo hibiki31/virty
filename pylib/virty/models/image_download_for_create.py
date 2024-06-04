@@ -20,6 +20,7 @@ class ImageDownloadForCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         storage_uuid = self.storage_uuid
+
         image_url = self.image_url
 
         field_dict: Dict[str, Any] = {}
