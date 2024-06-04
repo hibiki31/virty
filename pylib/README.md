@@ -19,7 +19,7 @@ openapi-python-client generate --url https://virty-pr.hinagiku.me/api/openapi.js
 ```bash
 docker run --rm \
   -v ${PWD}:/local openapitools/openapi-generator-cli generate \
-  -i https://virty-pr.hinagiku.me/api/openapi.json \
+  -i https://virty-dev.hinagiku.me/api/openapi.json \
   -g python-pydantic-v1 \
   --package-name virty_client \
   -o /local/openapi/python

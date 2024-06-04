@@ -1,15 +1,37 @@
+## 開発
 
+開発時はWSL環境に直接pipでパッケージをインストールして開発を行う
+
+```
+sudo pip3 install -e ../pylib
+sudo pip3 install -r ./requirements.txt
+export PYTHONPATH="/home/akane/virty/vctl:$PYTHONPATH"
+```
+
+コマンドの設置と補完のインストール
 
 ```
 ./install.sh && source /etc/bash_completion.d/virty
 ```
 
-```
-export PYTHONPATH="/home/akane/virty/vctl:$PYTHONPATH"
-```
+テスト
 
 ```
-sudo chmod 755 ./main.bin
-sudo cp ./main.bin /usr/local/bin/virty
-virty --install-completion bash
+virty auth
+```
+
+時々ライブラリを更新しよう（../pylib/README.md）
+
+## ビルド
+
+ビルド
+
+```
+./build.sh
+```
+
+スクリプト実行
+
+```
+./install_command.sh
 ```
