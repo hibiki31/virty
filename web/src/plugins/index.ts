@@ -12,9 +12,13 @@ import router from '../router'
 // Types
 import type { App } from 'vue'
 
+// Custom
+import Notifications from '@kyvg/vue3-notification'
+
 export function registerPlugins (app: App) {
   app
     .use(vuetify)
     .use(router)
     .use(pinia)
+    .use(Notifications)
 }

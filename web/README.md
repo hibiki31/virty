@@ -12,11 +12,16 @@ rmdir virty-dev
 
 プロジェクトの作成（vuetify）
 
-```
+```bash
 yarn create vuetify
 mv vuetify-project/* ./
 ```
 
+Axiosのインストール
+
+```bash
+yarn add axios
+```
 
 
 # Vuetify (Default)
