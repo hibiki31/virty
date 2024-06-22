@@ -1,0 +1,24 @@
+{
+	"name": "WEB",
+	"context": ".",
+	"dockerFile": "./Dockerfile",
+	"forwardPorts": [
+		8080
+	],
+	"mounts": [
+		"source=devcontainer-virty-web-nodemodule,target=${containerWorkspaceFolder}/node_modules,type=volume"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"azemoh.one-monokai",
+				"mhutchie.git-graph",
+				"Vue.volar",
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"EditorConfig.EditorConfig",
+				"Vue.vscode-typescript-vue-plugin"
+			]
+		}
+	}
+}
