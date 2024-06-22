@@ -3,6 +3,7 @@
 開発時はWSL環境に直接pipでパッケージをインストールして開発を行う
 
 ```
+sudo pip3 uninstall virty
 sudo pip3 install -e ../pylib
 sudo pip3 install -r ./requirements.txt
 export PYTHONPATH="/home/akane/virty/vctl:$PYTHONPATH"

@@ -19,6 +19,7 @@ from settings import API_VERSION
 from storage.router import app as storage_router
 from task.router import app as task_router
 from user.router import app as user_router
+from ipam.router import app as ipam_router
 
 logger = setup_logger(__name__)
 
@@ -78,6 +79,7 @@ app.include_router(project_router)
 app.include_router(flavor_router)
 app.include_router(exporter_router)
 app.include_router(mixin_router)
+app.include_router(ipam_router)
 
 
 

@@ -2,7 +2,7 @@ import os
 import pathlib
 import secrets
 
-
+CLOUDFLARE_API_URL = "https://api.cloudflare.com/client/v4"
 SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql://postgres:password@db:5432/mydatabase')
 APP_ROOT = os.getenv('APP_ROOT', str(pathlib.Path('./').resolve()))
 DATA_ROOT = os.getenv('DATA_ROOT', str(pathlib.Path('./data').resolve()))
