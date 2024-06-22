@@ -1,3 +1,3 @@
 FROM node:20-buster
 
-EXPOSE 8080
+EXPOSE 5173

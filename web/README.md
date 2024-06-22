@@ -1,5 +1,7 @@
 ## プロジェクトの作成
 
+https://ja.vitejs.dev/guide/
+
 プロジェクトの作成
 
 ```bash
@@ -14,8 +16,21 @@ rmdir virty-dev
 yarn install
 ```
 
+他ホストからの通信を許可する(vite.config.ts)
+
+```ts
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    host: true,
+  },
+})
+```
+
+
 実行
 
 ```bash
 yarn run dev
 ```
+

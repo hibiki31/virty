@@ -3,7 +3,7 @@
 	"context": ".",
 	"dockerFile": "./Dockerfile",
 	"forwardPorts": [
-		8080
+		5173
 	],
 	"mounts": [
 		"source=devcontainer-virty-web-nodemodule,target=${containerWorkspaceFolder}/node_modules,type=volume"
