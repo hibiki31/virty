@@ -1,75 +1,29 @@
-# Nuxt 3 Minimal Starter
+# WEB
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+セットアップ
 
-## Setup
-
-Make sure to install the dependencies:
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+```
+npx nuxi@latest init web
+yarn add -D vuetify vite-plugin-vuetify
+yarn add @mdi/font
 ```
 
-## Development Server
+## OpenAPI
 
-Start the development server on `http://localhost:3000`:
+https://openapi-ts.dev/openapi-fetch/examples
 
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+```
+npx openapi-typescript https://virty-dev.hinagiku.me/api/openapi.json -o ./schema.d.ts
+npm i openapi-fetch
+npm i -D openapi-typescript typescript
 ```
 
-## Production
+頑張るやつ
 
-Build the application for production:
+https://techblog.hacomono.jp/entry/2023/07/04/110000
 
-```bash
-# npm
-npm run build
 
-# pnpm
-pnpm run build
 
-# yarn
-yarn build
+上記の進化バージョン
 
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+https://nuxt-open-fetch.vercel.app/
