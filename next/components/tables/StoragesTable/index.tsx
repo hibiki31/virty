@@ -6,12 +6,14 @@ import { storagesApi } from '~/lib/api';
 import useSWR from 'swr';
 import { CheckboxBlankOutline, CheckboxOutline } from 'mdi-material-ui';
 import { NextLink } from '~/components/utils/NextLink';
+import { usePagination } from '~/lib/utils/hooks';
 
 export const StoragesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    'storagesApi.getStorages',
-    () => storagesApi.getStorages().then((res) => res.data),
+    ['storagesApi.getStorages', limit, page],
+    () => storagesApi.getStorages(limit, page).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -24,9 +26,14 @@ export const StoragesTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
-        pageSize={25}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.uuid!}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[

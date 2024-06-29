@@ -8,12 +8,14 @@ import NextLink from 'next/link';
 import { OpenDialogButton } from '~/components/buttons/OpenDialogButton';
 import { ServerPlus } from 'mdi-material-ui';
 import { JoinNetworkPoolDialog } from '~/components/dialogs/JoinNetworkPoolDialog';
+import { usePagination } from '~/lib/utils/hooks';
 
 export const NetworksTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    'networkApi.getNetworks',
-    () => networkApi.getNetworks().then((res) => res.data),
+    ['networkApi.getNetworks', limit, page],
+    () => networkApi.getNetworks(limit, page).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -26,9 +28,14 @@ export const NetworksTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
-        pageSize={25}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.uuid!}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[

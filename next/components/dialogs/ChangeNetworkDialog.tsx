@@ -40,8 +40,8 @@ export const ChangeNetworkDialog: FC<Props> = ({ open, onClose, vmUuid, macAddre
     reset();
     resetFetchers();
     setFetcher('networks', () =>
-      networkApi.getNetworks().then((res) => {
-        const networks = res.data.filter((network) => network.nodeName === nodeName);
+      networkApi.getNetworks(-1).then((res) => {
+        const networks = res.data.data.filter((network) => network.nodeName === nodeName);
         setOvsNetworkUuids(networks.filter((network) => network.type === 'openvswitch').map((network) => network.uuid));
         return networks.map((network) => ({ value: network.uuid, label: network.name }));
       })

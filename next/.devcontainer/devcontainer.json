@@ -1,18 +1,19 @@
 {
 	"name": "WEB",
-	// Dockerのビルド場所
-	"context": "..",
-	// ビルドするファイル、このjsonからの相対パス
-	"dockerFile": "../Dockerfile.dev",
+	"context": ".",
+	"dockerFile": "./Dockerfile",
 	"mounts": [
-		// node_moduleは速くないと重いし残ってて欲しいから別マウント
-		"source=virty-develop-next-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-	],
-	"extensions": [
-		"octref.vetur",
-		"dbaeumer.vscode-eslint"
+		"source=virty-develop-next-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
 	],
 	"forwardPorts": [
 		3000
 	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"mhutchie.git-graph",
+				"dbaeumer.vscode-eslint"
+			]
+		}
+	}
 }

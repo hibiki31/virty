@@ -9,7 +9,7 @@ export const FlavorsTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
   const { data, error, isValidating } = useSWR(
     'flavorsApi.getFlavors',
-    () => flavorsApi.getFlavors().then((res) => res.data),
+    () => flavorsApi.getFlavors().then((res) => res.data.data),
     { revalidateOnFocus: false }
   );
 

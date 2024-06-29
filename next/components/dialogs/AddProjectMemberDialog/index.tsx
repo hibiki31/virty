@@ -11,7 +11,7 @@ import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  project: Project;
+  project: Project['data'][0];
   onClose: () => void;
 };
 
@@ -36,7 +36,9 @@ export const AddProjectMemberDialog: FC<Props> = ({ open, project, onClose }) =>
     resetFetchers();
 
     setFetcher('users', () =>
-      usersApi.getUsers().then((res) => res.data.map((user: any) => ({ label: user.username, value: user.username })))
+      usersApi
+        .getUsers(-1)
+        .then((res) => res.data.data.map((user: any) => ({ label: user.username, value: user.username })))
     );
   }, [open, reset, resetFetchers, setFetcher]);
 

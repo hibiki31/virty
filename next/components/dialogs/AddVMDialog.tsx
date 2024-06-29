@@ -45,7 +45,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
     }
     setValue('form.spec.nodeName', '');
     setFetcher('nodes', () =>
-      nodesApi.getNodes().then((res) => res.data.map((node) => ({ value: node.name, label: node.name })))
+      nodesApi.getNodes(-1).then((res) => res.data.data.map((node) => ({ value: node.name, label: node.name })))
     );
   }, [open, setValue, setFetcher]);
 
@@ -66,9 +66,9 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.storage.savePoolUuid', '');
           setFetcher('storages', () =>
             storagesApi
-              .getStorages()
+              .getStorages(-1)
               .then((res) =>
-                res.data
+                res.data.data
                   .filter((storage) => storage.nodeName === nodeName)
                   .map((storage) => ({ value: storage.uuid, label: storage.name }))
               )
@@ -81,8 +81,8 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
             },
           ]);
           setFetcher('networks', () =>
-            networkApi.getNetworks().then((res) =>
-              res.data
+            networkApi.getNetworks(-1).then((res) =>
+              res.data.data
                 .filter((network) => network.nodeName === nodeName)
                 .map((network) => ({
                   value: network.uuid,
@@ -105,9 +105,9 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.storage.originalName', '');
           setFetcher('images', () =>
             imagesApi
-              .getImages()
+              .getImages(undefined, undefined, undefined, undefined, -1)
               .then((res) =>
-                res.data
+                res.data.data
                   .filter((image) => image.storageUuid === originalPoolUuid)
                   .map((image) => ({ value: image.name, label: image.name }))
               )

@@ -6,17 +6,19 @@ import { projectApi } from '~/lib/api';
 import useSWR from 'swr';
 import { useAuth } from '~/store/userState';
 import { UserChip } from './UserChip';
-import { UserBase } from '~/lib/api/generated';
+import { ProjectUser } from '~/lib/api/generated';
 import { OpenMenuButton } from '~/components/buttons/OpenMenuButton';
 import { ProjectMenu } from '~/components/menus/ProjectMenu';
 import { DotsVertical } from 'mdi-material-ui';
+import { usePagination } from '~/lib/utils/hooks';
 
 export const ProjectsTable: FC = () => {
   const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
     ['projectApi.getProjects', user],
-    ([, user]) => projectApi.getProjects(user?.isAdminMode).then((res) => res.data),
+    ([, user]) => projectApi.getProjects(user?.isAdminMode, limit, page).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -29,9 +31,14 @@ export const ProjectsTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
-        pageSize={25}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.id}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[
@@ -51,7 +58,7 @@ export const ProjectsTable: FC = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {(params.value as UserBase[]).map((user, i) => (
+                {(params.value as ProjectUser[]).map((user, i) => (
                   <UserChip key={i} user={user} />
                 ))}
               </Box>
