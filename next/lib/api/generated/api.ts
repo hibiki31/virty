@@ -13,13 +13,15 @@
  */
 
 
-import { Configuration } from './configuration';
-import globalAxios, { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { Configuration } from './configuration';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
+import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from './common';
+import type { RequestArgs } from './base';
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
+import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
  * 
@@ -29,22 +31,22 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
 export interface AuthValidateResponse {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof AuthValidateResponse
      */
-    'access_token': any;
+    'access_token': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof AuthValidateResponse
      */
-    'token_type': any;
+    'token_type': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof AuthValidateResponse
      */
-    'username': any;
+    'username': string;
 }
 /**
  * 
@@ -54,16 +56,16 @@ export interface AuthValidateResponse {
 export interface CdromForUpdateDomain {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof CdromForUpdateDomain
      */
-    'path'?: any;
+    'path'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof CdromForUpdateDomain
      */
-    'target'?: any;
+    'target'?: string | null;
 }
 /**
  * 
@@ -73,16 +75,16 @@ export interface CdromForUpdateDomain {
 export interface CloudInitInsert {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof CloudInitInsert
      */
-    'hostname': any;
+    'hostname': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof CloudInitInsert
      */
-    'userdata': any;
+    'userdata': string;
 }
 /**
  * 
@@ -92,88 +94,88 @@ export interface CloudInitInsert {
 export interface Domain {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Domain
      */
-    'core': any;
+    'core': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Domain
      */
-    'memory': any;
+    'memory': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Domain
      */
-    'status': any;
+    'status': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'description'?: any;
+    'description'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'ownerUserId'?: any;
+    'ownerUserId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'ownerProjectId'?: any;
+    'ownerProjectId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {DomainProject}
      * @memberof Domain
      */
-    'ownerProject'?: any;
+    'ownerProject'?: DomainProject | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Domain
      */
-    'vncPort'?: any;
+    'vncPort'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Domain
      */
-    'vncPassword'?: any;
+    'vncPassword'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainDrive>}
      * @memberof Domain
      */
-    'drives'?: any;
+    'drives'?: Array<DomainDrive> | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainInterface>}
      * @memberof Domain
      */
-    'interfaces'?: any;
+    'interfaces'?: Array<DomainInterface> | null;
 }
 /**
  * 
@@ -183,88 +185,88 @@ export interface Domain {
 export interface DomainDetail {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainDetail
      */
-    'core': any;
+    'core': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainDetail
      */
-    'memory': any;
+    'memory': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainDetail
      */
-    'status': any;
+    'status': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'description'?: any;
+    'description'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'ownerUserId'?: any;
+    'ownerUserId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'ownerProjectId'?: any;
+    'ownerProjectId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {DomainProject}
      * @memberof DomainDetail
      */
-    'ownerProject'?: any;
+    'ownerProject'?: DomainProject | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainDetail
      */
-    'vncPort'?: any;
+    'vncPort'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDetail
      */
-    'vncPassword'?: any;
+    'vncPassword'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainDrive>}
      * @memberof DomainDetail
      */
-    'drives'?: any;
+    'drives'?: Array<DomainDrive> | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainInterface>}
      * @memberof DomainDetail
      */
-    'interfaces'?: any;
+    'interfaces'?: Array<DomainInterface> | null;
     /**
      * 
      * @type {Node}
@@ -280,28 +282,28 @@ export interface DomainDetail {
 export interface DomainDrive {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDrive
      */
-    'device'?: any;
+    'device'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDrive
      */
-    'type'?: any;
+    'type'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDrive
      */
-    'source'?: any;
+    'source'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainDrive
      */
-    'target'?: any;
+    'target'?: string | null;
 }
 /**
  * 
@@ -311,52 +313,52 @@ export interface DomainDrive {
 export interface DomainForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreate
      */
     'type': DomainForCreateTypeEnum;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreate
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainForCreate
      */
-    'memoryMegaByte': any;
+    'memoryMegaByte': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainForCreate
      */
-    'cpu': any;
+    'cpu': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainForCreateDisk>}
      * @memberof DomainForCreate
      */
-    'disks': any;
+    'disks': Array<DomainForCreateDisk>;
     /**
      * 
-     * @type {any}
+     * @type {Array<DomainForCreateInterface>}
      * @memberof DomainForCreate
      */
-    'interface': any;
+    'interface': Array<DomainForCreateInterface>;
     /**
      * 
-     * @type {any}
+     * @type {CloudInitInsert}
      * @memberof DomainForCreate
      */
-    'cloudInit'?: any;
+    'cloudInit'?: CloudInitInsert | null;
 }
 
 export const DomainForCreateTypeEnum = {
@@ -374,40 +376,40 @@ export type DomainForCreateTypeEnum = typeof DomainForCreateTypeEnum[keyof typeo
 export interface DomainForCreateDisk {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateDisk
      */
-    'type': any;
+    'type': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateDisk
      */
-    'savePoolUuid': any;
+    'savePoolUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateDisk
      */
-    'originalPoolUuid'?: any;
+    'originalPoolUuid'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateDisk
      */
-    'originalName'?: any;
+    'originalName'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainForCreateDisk
      */
-    'sizeGigaByte'?: any;
+    'sizeGigaByte'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateDisk
      */
-    'templateName'?: any;
+    'templateName'?: string | null;
 }
 /**
  * 
@@ -417,28 +419,28 @@ export interface DomainForCreateDisk {
 export interface DomainForCreateInterface {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateInterface
      */
-    'type': any;
+    'type': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateInterface
      */
-    'mac'?: any;
+    'mac'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateInterface
      */
-    'networkUuid': any;
+    'networkUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainForCreateInterface
      */
-    'port'?: any;
+    'port'?: string | null;
 }
 /**
  * 
@@ -448,40 +450,40 @@ export interface DomainForCreateInterface {
 export interface DomainInterface {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'type'?: any;
+    'type'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'mac'?: any;
+    'mac'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'target'?: any;
+    'target'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'bridge'?: any;
+    'bridge'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'network'?: any;
+    'network'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainInterface
      */
-    'port'?: any;
+    'port'?: string | null;
 }
 /**
  * 
@@ -491,16 +493,16 @@ export interface DomainInterface {
 export interface DomainPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof DomainPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Domain>}
      * @memberof DomainPage
      */
-    'data': any;
+    'data': Array<Domain>;
 }
 /**
  * 
@@ -510,16 +512,16 @@ export interface DomainPage {
 export interface DomainProject {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainProject
      */
-    'id': any;
+    'id': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainProject
      */
-    'name': any;
+    'name': string;
 }
 /**
  * 
@@ -529,16 +531,16 @@ export interface DomainProject {
 export interface DomainProjectForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainProjectForUpdate
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof DomainProjectForUpdate
      */
-    'projectId': any;
+    'projectId': string;
 }
 /**
  * 
@@ -548,46 +550,46 @@ export interface DomainProjectForUpdate {
 export interface Flavor {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Flavor
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Flavor
      */
-    'os': any;
+    'os': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Flavor
      */
-    'manualUrl': any;
+    'manualUrl': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Flavor
      */
-    'icon': any;
+    'icon': string;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Flavor
      */
-    'cloudInitReady': any;
+    'cloudInitReady': boolean;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Flavor
      */
-    'description': any;
+    'description': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Flavor
      */
-    'id': any;
+    'id': number;
 }
 /**
  * 
@@ -597,40 +599,40 @@ export interface Flavor {
 export interface FlavorForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof FlavorForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof FlavorForCreate
      */
-    'os': any;
+    'os': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof FlavorForCreate
      */
-    'manualUrl': any;
+    'manualUrl': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof FlavorForCreate
      */
-    'icon': any;
+    'icon': string;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof FlavorForCreate
      */
-    'cloudInitReady': any;
+    'cloudInitReady': boolean;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof FlavorForCreate
      */
-    'description': any;
+    'description': string;
 }
 /**
  * 
@@ -640,16 +642,16 @@ export interface FlavorForCreate {
 export interface FlavorPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof FlavorPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Flavor>}
      * @memberof FlavorPage
      */
-    'data': any;
+    'data': Array<Flavor>;
 }
 /**
  * 
@@ -659,10 +661,10 @@ export interface FlavorPage {
 export interface HTTPValidationError {
     /**
      * 
-     * @type {any}
+     * @type {Array<ValidationError>}
      * @memberof HTTPValidationError
      */
-    'detail'?: any;
+    'detail'?: Array<ValidationError>;
 }
 /**
  * 
@@ -672,22 +674,22 @@ export interface HTTPValidationError {
 export interface Image {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Image
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Image
      */
-    'storageUuid'?: any;
+    'storageUuid'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Image
      */
-    'capacity': any;
+    'capacity': number;
     /**
      * 
      * @type {Storage}
@@ -696,34 +698,34 @@ export interface Image {
     'storage': Storage;
     /**
      * 
-     * @type {any}
+     * @type {Flavor}
      * @memberof Image
      */
-    'flavor'?: any;
+    'flavor'?: Flavor | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Image
      */
-    'allocation': any;
+    'allocation': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Image
      */
-    'path': any;
+    'path': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Image
      */
-    'updateToken'?: any;
+    'updateToken'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {ImageDomain}
      * @memberof Image
      */
-    'domain'?: any;
+    'domain'?: ImageDomain | null;
 }
 /**
  * 
@@ -733,28 +735,28 @@ export interface Image {
 export interface ImageDomain {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageDomain
      */
-    'ownerUserId'?: any;
+    'ownerUserId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof ImageDomain
      */
-    'issuanceId'?: any;
+    'issuanceId'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageDomain
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageDomain
      */
-    'uuid': any;
+    'uuid': string;
 }
 /**
  * 
@@ -764,16 +766,16 @@ export interface ImageDomain {
 export interface ImageDownloadForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageDownloadForCreate
      */
-    'storageUuid': any;
+    'storageUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageDownloadForCreate
      */
-    'imageUrl': any;
+    'imageUrl': string;
 }
 /**
  * 
@@ -783,28 +785,28 @@ export interface ImageDownloadForCreate {
 export interface ImageForUpdateImageFlavor {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageForUpdateImageFlavor
      */
-    'storageUuid': any;
+    'storageUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageForUpdateImageFlavor
      */
-    'path': any;
+    'path': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageForUpdateImageFlavor
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof ImageForUpdateImageFlavor
      */
-    'flavorId': any;
+    'flavorId': number;
 }
 /**
  * 
@@ -814,16 +816,16 @@ export interface ImageForUpdateImageFlavor {
 export interface ImagePage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof ImagePage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Image>}
      * @memberof ImagePage
      */
-    'data': any;
+    'data': Array<Image>;
 }
 /**
  * 
@@ -833,28 +835,28 @@ export interface ImagePage {
 export interface ImageSCP {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageSCP
      */
-    'fromNodeName': any;
+    'fromNodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageSCP
      */
-    'toNodeName': any;
+    'toNodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageSCP
      */
-    'fromFilePath': any;
+    'fromFilePath': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ImageSCP
      */
-    'toFilePath': any;
+    'toFilePath': string;
 }
 /**
  * 
@@ -864,70 +866,70 @@ export interface ImageSCP {
 export interface Network {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'type': any;
+    'type': string;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Network
      */
-    'dhcp'?: any;
+    'dhcp'?: boolean | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'description'?: any;
+    'description'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Network
      */
-    'active'?: any;
+    'active'?: boolean | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'bridge'?: any;
+    'bridge'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Network
      */
-    'autoStart'?: any;
+    'autoStart'?: boolean | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<NetworkPortgroup>}
      * @memberof Network
      */
-    'portgroups': any;
+    'portgroups': Array<NetworkPortgroup>;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Network
      */
-    'updateToken'?: any;
+    'updateToken'?: string | null;
 }
 /**
  * 
@@ -937,28 +939,28 @@ export interface Network {
 export interface NetworkForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForCreate
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * brdige or ovs
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForCreate
      */
     'type': NetworkForCreateTypeEnum;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForCreate
      */
-    'bridgeDevice'?: any;
+    'bridgeDevice'?: string | null;
 }
 
 export const NetworkForCreateTypeEnum = {
@@ -976,34 +978,34 @@ export type NetworkForCreateTypeEnum = typeof NetworkForCreateTypeEnum[keyof typ
 export interface NetworkForNetworkPool {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForNetworkPool
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForNetworkPool
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForNetworkPool
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForNetworkPool
      */
-    'bridge': any;
+    'bridge': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForNetworkPool
      */
-    'type': any;
+    'type': string;
 }
 /**
  * 
@@ -1013,22 +1015,22 @@ export interface NetworkForNetworkPool {
 export interface NetworkForUpdateDomain {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForUpdateDomain
      */
-    'mac': any;
+    'mac': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForUpdateDomain
      */
-    'networkUuid': any;
+    'networkUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkForUpdateDomain
      */
-    'port'?: any;
+    'port'?: string | null;
 }
 /**
  * 
@@ -1038,22 +1040,22 @@ export interface NetworkForUpdateDomain {
 export interface NetworkOVSForCreate {
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof NetworkOVSForCreate
      */
-    'default': any;
+    'default': boolean;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkOVSForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NetworkOVSForCreate
      */
-    'vlanId'?: any;
+    'vlanId'?: number | null;
 }
 /**
  * 
@@ -1063,16 +1065,16 @@ export interface NetworkOVSForCreate {
 export interface NetworkPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NetworkPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Network>}
      * @memberof NetworkPage
      */
-    'data': any;
+    'data': Array<Network>;
 }
 /**
  * 
@@ -1082,28 +1084,28 @@ export interface NetworkPage {
 export interface NetworkPool {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NetworkPool
      */
-    'id'?: any;
+    'id'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPool
      */
-    'name'?: any;
+    'name'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<NetworkForNetworkPool>}
      * @memberof NetworkPool
      */
-    'networks'?: any;
+    'networks'?: Array<NetworkForNetworkPool> | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<NetworkPoolPort>}
      * @memberof NetworkPool
      */
-    'ports'?: any;
+    'ports'?: Array<NetworkPoolPort> | null;
 }
 /**
  * 
@@ -1113,10 +1115,10 @@ export interface NetworkPool {
 export interface NetworkPoolForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPoolForCreate
      */
-    'name': any;
+    'name': string;
 }
 /**
  * 
@@ -1126,22 +1128,22 @@ export interface NetworkPoolForCreate {
 export interface NetworkPoolForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NetworkPoolForUpdate
      */
-    'poolId': any;
+    'poolId': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPoolForUpdate
      */
-    'networkUuid': any;
+    'networkUuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPoolForUpdate
      */
-    'portName'?: any;
+    'portName'?: string | null;
 }
 /**
  * 
@@ -1151,16 +1153,16 @@ export interface NetworkPoolForUpdate {
 export interface NetworkPoolPort {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPoolPort
      */
-    'name'?: any;
+    'name'?: string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NetworkPoolPort
      */
-    'vlanId'?: any;
+    'vlanId'?: number | null;
     /**
      * 
      * @type {NetworkForNetworkPool}
@@ -1176,22 +1178,22 @@ export interface NetworkPoolPort {
 export interface NetworkPortgroup {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPortgroup
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkPortgroup
      */
-    'vlanId'?: any;
+    'vlanId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof NetworkPortgroup
      */
-    'isDefault': any;
+    'isDefault': boolean;
 }
 /**
  * 
@@ -1201,52 +1203,52 @@ export interface NetworkPortgroup {
 export interface NetworkProviderForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'name'?: any;
+    'name'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'dnsDomain'?: any;
+    'dnsDomain'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'networkAddress'?: any;
+    'networkAddress'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'networkPrefix'?: any;
+    'networkPrefix'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'gatewayAddress'?: any;
+    'gatewayAddress'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'dhcpStart'?: any;
+    'dhcpStart'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'dhcpEnd'?: any;
+    'dhcpEnd'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NetworkProviderForCreate
      */
-    'networkNode'?: any;
+    'networkNode'?: string | null;
 }
 /**
  * 
@@ -1256,94 +1258,94 @@ export interface NetworkProviderForCreate {
 export interface Node {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'description': any;
+    'description': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'domain': any;
+    'domain': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'userName': any;
+    'userName': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Node
      */
-    'port': any;
+    'port': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Node
      */
-    'core': any;
+    'core': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Node
      */
-    'memory': any;
+    'memory': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'cpuGen': any;
+    'cpuGen': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'osLike': any;
+    'osLike': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'osName': any;
+    'osName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'osVersion': any;
+    'osVersion': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Node
      */
-    'status': any;
+    'status': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'qemuVersion'?: any;
+    'qemuVersion'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Node
      */
-    'libvirtVersion'?: any;
+    'libvirtVersion'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<NodeRole>}
      * @memberof Node
      */
-    'roles': any;
+    'roles': Array<NodeRole>;
 }
 /**
  * 
@@ -1353,40 +1355,40 @@ export interface Node {
 export interface NodeForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeForCreate
      */
-    'description': any;
+    'description': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeForCreate
      */
-    'domain': any;
+    'domain': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeForCreate
      */
-    'userName': any;
+    'userName': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NodeForCreate
      */
-    'port': any;
+    'port': number;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof NodeForCreate
      */
-    'libvirtRole': any;
+    'libvirtRole': boolean;
 }
 /**
  * 
@@ -1396,52 +1398,52 @@ export interface NodeForCreate {
 export interface NodeInterface {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterface
      */
-    'ifname': any;
+    'ifname': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterface
      */
-    'operstate': any;
+    'operstate': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NodeInterface
      */
-    'mtu': any;
+    'mtu': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterface
      */
-    'master'?: any;
+    'master'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterface
      */
-    'linkType': any;
+    'linkType': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterface
      */
-    'macAddress'?: any;
+    'macAddress'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<NodeInterfaceIpv4Info>}
      * @memberof NodeInterface
      */
-    'ipv4Info': any;
+    'ipv4Info': Array<NodeInterfaceIpv4Info>;
     /**
      * 
-     * @type {any}
+     * @type {Array<NodeInterfaceIpv6Info>}
      * @memberof NodeInterface
      */
-    'ipv6Info': any;
+    'ipv6Info': Array<NodeInterfaceIpv6Info>;
 }
 /**
  * 
@@ -1451,22 +1453,22 @@ export interface NodeInterface {
 export interface NodeInterfaceIpv4Info {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterfaceIpv4Info
      */
-    'address': any;
+    'address': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NodeInterfaceIpv4Info
      */
-    'prefixlen': any;
+    'prefixlen': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterfaceIpv4Info
      */
-    'label': any;
+    'label': string;
 }
 /**
  * 
@@ -1476,16 +1478,16 @@ export interface NodeInterfaceIpv4Info {
 export interface NodeInterfaceIpv6Info {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeInterfaceIpv6Info
      */
-    'address': any;
+    'address': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NodeInterfaceIpv6Info
      */
-    'prefixlen': any;
+    'prefixlen': number;
 }
 /**
  * 
@@ -1495,16 +1497,16 @@ export interface NodeInterfaceIpv6Info {
 export interface NodePage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof NodePage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Node>}
      * @memberof NodePage
      */
-    'data': any;
+    'data': Array<Node>;
 }
 /**
  * 
@@ -1514,16 +1516,16 @@ export interface NodePage {
 export interface NodeRole {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeRole
      */
-    'roleName': any;
+    'roleName': string;
     /**
      * 
-     * @type {any}
+     * @type {object}
      * @memberof NodeRole
      */
-    'extraJson'?: any;
+    'extraJson'?: object | null;
 }
 /**
  * 
@@ -1533,22 +1535,22 @@ export interface NodeRole {
 export interface NodeRoleForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeRoleForUpdate
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof NodeRoleForUpdate
      */
-    'roleName': any;
+    'roleName': string;
     /**
      * 
-     * @type {any}
+     * @type {object}
      * @memberof NodeRoleForUpdate
      */
-    'extraJson'?: any;
+    'extraJson'?: object | null;
 }
 /**
  * 
@@ -1558,10 +1560,10 @@ export interface NodeRoleForUpdate {
 export interface PowerStatusForUpdateDomain {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof PowerStatusForUpdateDomain
      */
-    'status'?: any;
+    'status'?: string | null;
 }
 /**
  * 
@@ -1571,52 +1573,52 @@ export interface PowerStatusForUpdateDomain {
 export interface Project {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Project
      */
-    'id': any;
+    'id': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Project
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Project
      */
-    'memoryG': any;
+    'memoryG': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Project
      */
-    'core': any;
+    'core': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Project
      */
-    'storageCapacityG': any;
+    'storageCapacityG': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<ProjectUser>}
      * @memberof Project
      */
-    'users': any;
+    'users': Array<ProjectUser>;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Project
      */
-    'usedMemoryG': any;
+    'usedMemoryG': number;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Project
      */
-    'usedCore': any;
+    'usedCore': number;
     /**
      * 
      * @type {any}
@@ -1638,16 +1640,16 @@ export interface Project {
 export interface ProjectForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ProjectForCreate
      */
-    'projectName': any;
+    'projectName': string;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof ProjectForCreate
      */
-    'userIds': any;
+    'userIds': Array<string>;
 }
 /**
  * 
@@ -1657,16 +1659,16 @@ export interface ProjectForCreate {
 export interface ProjectForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ProjectForUpdate
      */
-    'projectId': any;
+    'projectId': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ProjectForUpdate
      */
-    'userId': any;
+    'userId': string;
 }
 /**
  * 
@@ -1676,16 +1678,16 @@ export interface ProjectForUpdate {
 export interface ProjectPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof ProjectPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Project>}
      * @memberof ProjectPage
      */
-    'data': any;
+    'data': Array<Project>;
 }
 /**
  * 
@@ -1695,10 +1697,10 @@ export interface ProjectPage {
 export interface ProjectUser {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ProjectUser
      */
-    'username': any;
+    'username': string;
 }
 /**
  * 
@@ -1708,16 +1710,16 @@ export interface ProjectUser {
 export interface SSHKeyPair {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof SSHKeyPair
      */
-    'privateKey': any;
+    'privateKey': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof SSHKeyPair
      */
-    'publicKey': any;
+    'publicKey': string;
 }
 /**
  * 
@@ -1727,16 +1729,16 @@ export interface SSHKeyPair {
 export interface SetupRequest {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof SetupRequest
      */
-    'username': any;
+    'username': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof SetupRequest
      */
-    'password': any;
+    'password': string;
 }
 /**
  * 
@@ -1746,46 +1748,46 @@ export interface SetupRequest {
 export interface Storage {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Storage
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Storage
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Storage
      */
-    'status': any;
+    'status': number;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Storage
      */
-    'active': any;
+    'active': boolean;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Storage
      */
-    'available'?: any;
+    'available'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Storage
      */
-    'capacity'?: any;
+    'capacity'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Storage
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
      * @type {Node}
@@ -1794,40 +1796,40 @@ export interface Storage {
     'node': Node;
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Storage
      */
-    'autoStart': any;
+    'autoStart': boolean;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Storage
      */
-    'path'?: any;
+    'path'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {StorageMetadata}
      * @memberof Storage
      */
-    'metaData'?: any;
+    'metaData'?: StorageMetadata | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Storage
      */
-    'updateToken'?: any;
+    'updateToken'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Storage
      */
-    'allocationCommit'?: any;
+    'allocationCommit'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Storage
      */
-    'capacityCommit'?: any;
+    'capacityCommit'?: number | null;
 }
 /**
  * 
@@ -1850,22 +1852,22 @@ export interface StorageContainerForStoragePool {
 export interface StorageForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForCreate
      */
-    'nodeName': any;
+    'nodeName': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForCreate
      */
-    'path': any;
+    'path': string;
 }
 /**
  * 
@@ -1875,22 +1877,22 @@ export interface StorageForCreate {
 export interface StorageForStorageContainer {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForStorageContainer
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForStorageContainer
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageForStorageContainer
      */
-    'nodeName': any;
+    'nodeName': string;
 }
 /**
  * 
@@ -1900,22 +1902,22 @@ export interface StorageForStorageContainer {
 export interface StorageMetadata {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadata
      */
-    'rool'?: any;
+    'rool'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadata
      */
-    'protocol'?: any;
+    'protocol'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadata
      */
-    'deviceType'?: any;
+    'deviceType'?: string | null;
 }
 /**
  * 
@@ -1925,28 +1927,28 @@ export interface StorageMetadata {
 export interface StorageMetadataForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadataForUpdate
      */
-    'uuid': any;
+    'uuid': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadataForUpdate
      */
-    'rool': any;
+    'rool': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadataForUpdate
      */
-    'protocol': any;
+    'protocol': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StorageMetadataForUpdate
      */
-    'deviceType': any;
+    'deviceType': string;
 }
 /**
  * 
@@ -1956,16 +1958,16 @@ export interface StorageMetadataForUpdate {
 export interface StoragePage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof StoragePage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Storage>}
      * @memberof StoragePage
      */
-    'data': any;
+    'data': Array<Storage>;
 }
 /**
  * 
@@ -1975,22 +1977,22 @@ export interface StoragePage {
 export interface StoragePool {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof StoragePool
      */
-    'id': any;
+    'id': number;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StoragePool
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {Array<StorageContainerForStoragePool>}
      * @memberof StoragePool
      */
-    'storages': any;
+    'storages': Array<StorageContainerForStoragePool>;
 }
 /**
  * 
@@ -2000,16 +2002,16 @@ export interface StoragePool {
 export interface StoragePoolForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StoragePoolForCreate
      */
-    'name': any;
+    'name': string;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof StoragePoolForCreate
      */
-    'storageUuids': any;
+    'storageUuids': Array<string>;
 }
 /**
  * 
@@ -2019,16 +2021,16 @@ export interface StoragePoolForCreate {
 export interface StoragePoolForUpdate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof StoragePoolForUpdate
      */
-    'id': any;
+    'id': string;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof StoragePoolForUpdate
      */
-    'storageUuids': any;
+    'storageUuids': Array<string>;
 }
 /**
  * 
@@ -2038,94 +2040,94 @@ export interface StoragePoolForUpdate {
 export interface Task {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'postTime'?: any;
+    'postTime'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof Task
      */
-    'runTime'?: any;
+    'runTime'?: number | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'startTime'?: any;
+    'startTime'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'updateTime'?: any;
+    'updateTime'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'userId'?: any;
+    'userId'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'status'?: any;
+    'status'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'resource'?: any;
+    'resource'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'object': any;
+    'object': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'method': any;
+    'method': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'dependenceUuid'?: any;
+    'dependenceUuid'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {}
      * @memberof Task
      */
-    'request'?: any;
+    'request'?:  | null;
     /**
      * 
-     * @type {any}
+     * @type {object}
      * @memberof Task
      */
-    'result'?: any;
+    'result'?: object | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'message'?: any;
+    'message'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'log'?: any;
+    'log'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Task
      */
-    'uuid'?: any;
+    'uuid'?: string | null;
 }
 /**
  * 
@@ -2135,22 +2137,22 @@ export interface Task {
 export interface TaskIncomplete {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof TaskIncomplete
      */
-    'hash': any;
+    'hash': string;
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof TaskIncomplete
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof TaskIncomplete
      */
-    'uuids': any;
+    'uuids': Array<string>;
 }
 /**
  * 
@@ -2160,16 +2162,16 @@ export interface TaskIncomplete {
 export interface TaskPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof TaskPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<Task>}
      * @memberof TaskPage
      */
-    'data': any;
+    'data': Array<Task>;
 }
 /**
  * 
@@ -2179,22 +2181,22 @@ export interface TaskPage {
 export interface TokenData {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof TokenData
      */
-    'id'?: any;
+    'id'?: string | null;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof TokenData
      */
-    'scopes'?: any;
+    'scopes'?: Array<string>;
     /**
      * 
-     * @type {any}
+     * @type {Array<string>}
      * @memberof TokenData
      */
-    'role'?: any;
+    'role'?: Array<string>;
 }
 /**
  * 
@@ -2204,16 +2206,16 @@ export interface TokenData {
 export interface TokenRFC6749Response {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof TokenRFC6749Response
      */
-    'access_token': any;
+    'access_token': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof TokenRFC6749Response
      */
-    'token_type': any;
+    'token_type': string;
 }
 /**
  * 
@@ -2223,22 +2225,22 @@ export interface TokenRFC6749Response {
 export interface User {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof User
      */
-    'username': any;
+    'username': string;
     /**
      * 
-     * @type {any}
+     * @type {Array<UserScope>}
      * @memberof User
      */
-    'scopes': any;
+    'scopes': Array<UserScope>;
     /**
      * 
-     * @type {any}
+     * @type {Array<UserProject>}
      * @memberof User
      */
-    'projects': any;
+    'projects': Array<UserProject>;
 }
 /**
  * 
@@ -2248,16 +2250,16 @@ export interface User {
 export interface UserForCreate {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof UserForCreate
      */
-    'userId': any;
+    'userId': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof UserForCreate
      */
-    'password': any;
+    'password': string;
 }
 /**
  * 
@@ -2267,16 +2269,16 @@ export interface UserForCreate {
 export interface UserPage {
     /**
      * 
-     * @type {any}
+     * @type {number}
      * @memberof UserPage
      */
-    'count': any;
+    'count': number;
     /**
      * 
-     * @type {any}
+     * @type {Array<User>}
      * @memberof UserPage
      */
-    'data': any;
+    'data': Array<User>;
 }
 /**
  * 
@@ -2286,10 +2288,10 @@ export interface UserPage {
 export interface UserProject {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof UserProject
      */
-    'name': any;
+    'name': string;
 }
 /**
  * 
@@ -2299,10 +2301,10 @@ export interface UserProject {
 export interface UserScope {
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof UserScope
      */
-    'name': any;
+    'name': string;
 }
 /**
  * 
@@ -2312,22 +2314,29 @@ export interface UserScope {
 export interface ValidationError {
     /**
      * 
-     * @type {any}
+     * @type {Array<ValidationErrorLocInner>}
      * @memberof ValidationError
      */
-    'loc': any;
+    'loc': Array<ValidationErrorLocInner>;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ValidationError
      */
-    'msg': any;
+    'msg': string;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof ValidationError
      */
-    'type': any;
+    'type': string;
+}
+/**
+ * 
+ * @export
+ * @interface ValidationErrorLocInner
+ */
+export interface ValidationErrorLocInner {
 }
 /**
  * 
@@ -2337,16 +2346,16 @@ export interface ValidationError {
 export interface Version {
     /**
      * 
-     * @type {any}
+     * @type {boolean}
      * @memberof Version
      */
-    'initialized': any;
+    'initialized': boolean;
     /**
      * 
-     * @type {any}
+     * @type {string}
      * @memberof Version
      */
-    'version': any;
+    'version': string;
 }
 
 /**
@@ -2358,16 +2367,16 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @summary Login For Access Token
-         * @param {any} username 
-         * @param {any} password 
-         * @param {any} [grantType] 
-         * @param {any} [scope] 
-         * @param {any} [clientId] 
-         * @param {any} [clientSecret] 
+         * @param {string} username 
+         * @param {string} password 
+         * @param {string | null} [grantType] 
+         * @param {string} [scope] 
+         * @param {string | null} [clientId] 
+         * @param {string | null} [clientSecret] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login: async (username: any, password: any, grantType?: any, scope?: any, clientId?: any, clientSecret?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        login: async (username: string, password: string, grantType?: string | null, scope?: string, clientId?: string | null, clientSecret?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'username' is not null or undefined
             assertParamExists('login', 'username', username)
             // verify required parameter 'password' is not null or undefined
@@ -2430,7 +2439,7 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        setup: async (setupRequest: SetupRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        setup: async (setupRequest: SetupRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'setupRequest' is not null or undefined
             assertParamExists('setup', 'setupRequest', setupRequest)
             const localVarPath = `/api/auth/setup`;
@@ -2465,7 +2474,7 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        validateToken: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        validateToken: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/auth/validate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2506,18 +2515,20 @@ export const AuthApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Login For Access Token
-         * @param {any} username 
-         * @param {any} password 
-         * @param {any} [grantType] 
-         * @param {any} [scope] 
-         * @param {any} [clientId] 
-         * @param {any} [clientSecret] 
+         * @param {string} username 
+         * @param {string} password 
+         * @param {string | null} [grantType] 
+         * @param {string} [scope] 
+         * @param {string | null} [clientId] 
+         * @param {string | null} [clientSecret] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async login(username: any, password: any, grantType?: any, scope?: any, clientId?: any, clientSecret?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TokenRFC6749Response>> {
+        async login(username: string, password: string, grantType?: string | null, scope?: string, clientId?: string | null, clientSecret?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TokenRFC6749Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.login(username, password, grantType, scope, clientId, clientSecret, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.login']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -2526,9 +2537,11 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async setup(setupRequest: SetupRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async setup(setupRequest: SetupRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.setup(setupRequest, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.setup']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -2536,9 +2549,11 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async validateToken(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthValidateResponse>> {
+        async validateToken(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthValidateResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.validateToken(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.validateToken']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -2553,16 +2568,16 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @summary Login For Access Token
-         * @param {any} username 
-         * @param {any} password 
-         * @param {any} [grantType] 
-         * @param {any} [scope] 
-         * @param {any} [clientId] 
-         * @param {any} [clientSecret] 
+         * @param {string} username 
+         * @param {string} password 
+         * @param {string | null} [grantType] 
+         * @param {string} [scope] 
+         * @param {string | null} [clientId] 
+         * @param {string | null} [clientSecret] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login(username: any, password: any, grantType?: any, scope?: any, clientId?: any, clientSecret?: any, options?: any): AxiosPromise<TokenRFC6749Response> {
+        login(username: string, password: string, grantType?: string | null, scope?: string, clientId?: string | null, clientSecret?: string | null, options?: any): AxiosPromise<TokenRFC6749Response> {
             return localVarFp.login(username, password, grantType, scope, clientId, clientSecret, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2597,17 +2612,17 @@ export class AuthApi extends BaseAPI {
     /**
      * 
      * @summary Login For Access Token
-     * @param {any} username 
-     * @param {any} password 
-     * @param {any} [grantType] 
-     * @param {any} [scope] 
-     * @param {any} [clientId] 
-     * @param {any} [clientSecret] 
+     * @param {string} username 
+     * @param {string} password 
+     * @param {string | null} [grantType] 
+     * @param {string} [scope] 
+     * @param {string | null} [clientId] 
+     * @param {string | null} [clientSecret] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthApi
      */
-    public login(username: any, password: any, grantType?: any, scope?: any, clientId?: any, clientSecret?: any, options?: AxiosRequestConfig) {
+    public login(username: string, password: string, grantType?: string | null, scope?: string, clientId?: string | null, clientSecret?: string | null, options?: RawAxiosRequestConfig) {
         return AuthApiFp(this.configuration).login(username, password, grantType, scope, clientId, clientSecret, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -2619,7 +2634,7 @@ export class AuthApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof AuthApi
      */
-    public setup(setupRequest: SetupRequest, options?: AxiosRequestConfig) {
+    public setup(setupRequest: SetupRequest, options?: RawAxiosRequestConfig) {
         return AuthApiFp(this.configuration).setup(setupRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -2630,10 +2645,11 @@ export class AuthApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof AuthApi
      */
-    public validateToken(options?: AxiosRequestConfig) {
+    public validateToken(options?: RawAxiosRequestConfig) {
         return AuthApiFp(this.configuration).validateToken(options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -2649,7 +2665,7 @@ export const FlavorsApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createFlavor: async (flavorForCreate: FlavorForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createFlavor: async (flavorForCreate: FlavorForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'flavorForCreate' is not null or undefined
             assertParamExists('createFlavor', 'flavorForCreate', flavorForCreate)
             const localVarPath = `/api/flavors`;
@@ -2685,11 +2701,11 @@ export const FlavorsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Delete Flavors
-         * @param {any} flavorId 
+         * @param {number} flavorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteFlavor: async (flavorId: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteFlavor: async (flavorId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'flavorId' is not null or undefined
             assertParamExists('deleteFlavor', 'flavorId', flavorId)
             const localVarPath = `/api/flavors/{flavor_id}`
@@ -2723,14 +2739,14 @@ export const FlavorsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Get Api Flavors
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFlavors: async (limit?: any, page?: any, admin?: any, nameLike?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getFlavors: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/flavors`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2791,34 +2807,40 @@ export const FlavorsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createFlavor(flavorForCreate: FlavorForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async createFlavor(flavorForCreate: FlavorForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createFlavor(flavorForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FlavorsApi.createFlavor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Flavors
-         * @param {any} flavorId 
+         * @param {number} flavorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteFlavor(flavorId: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Flavor>> {
+        async deleteFlavor(flavorId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Flavor>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteFlavor(flavorId, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FlavorsApi.deleteFlavor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Flavors
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getFlavors(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FlavorPage>> {
+        async getFlavors(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FlavorPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getFlavors(limit, page, admin, nameLike, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FlavorsApi.getFlavors']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -2843,24 +2865,24 @@ export const FlavorsApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @summary Delete Flavors
-         * @param {any} flavorId 
+         * @param {number} flavorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteFlavor(flavorId: any, options?: any): AxiosPromise<Flavor> {
+        deleteFlavor(flavorId: number, options?: any): AxiosPromise<Flavor> {
             return localVarFp.deleteFlavor(flavorId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Flavors
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFlavors(limit?: any, page?: any, admin?: any, nameLike?: any, options?: any): AxiosPromise<FlavorPage> {
+        getFlavors(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: any): AxiosPromise<FlavorPage> {
             return localVarFp.getFlavors(limit, page, admin, nameLike, options).then((request) => request(axios, basePath));
         },
     };
@@ -2881,37 +2903,38 @@ export class FlavorsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof FlavorsApi
      */
-    public createFlavor(flavorForCreate: FlavorForCreate, options?: AxiosRequestConfig) {
+    public createFlavor(flavorForCreate: FlavorForCreate, options?: RawAxiosRequestConfig) {
         return FlavorsApiFp(this.configuration).createFlavor(flavorForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Flavors
-     * @param {any} flavorId 
+     * @param {number} flavorId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FlavorsApi
      */
-    public deleteFlavor(flavorId: any, options?: AxiosRequestConfig) {
+    public deleteFlavor(flavorId: number, options?: RawAxiosRequestConfig) {
         return FlavorsApiFp(this.configuration).deleteFlavor(flavorId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Flavors
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FlavorsApi
      */
-    public getFlavors(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig) {
+    public getFlavors(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig) {
         return FlavorsApiFp(this.configuration).getFlavors(limit, page, admin, nameLike, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -2923,18 +2946,18 @@ export const ImagesApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * 
          * @summary Get Api Images
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nodeName] 
-         * @param {any} [poolUuid] 
-         * @param {any} [name] 
-         * @param {any} [nameLike] 
-         * @param {any} [rool] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nodeName] 
+         * @param {string | null} [poolUuid] 
+         * @param {string | null} [name] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [rool] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getImages: async (limit?: any, page?: any, admin?: any, nodeName?: any, poolUuid?: any, name?: any, nameLike?: any, rool?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getImages: async (limit?: number, page?: number, admin?: boolean, nodeName?: string | null, poolUuid?: string | null, name?: string | null, nameLike?: string | null, rool?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/images`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2997,11 +3020,11 @@ export const ImagesApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * 
          * @summary Put Api Images Scp
-         * @param {any} [body] 
+         * @param {ImageSCP} [imageSCP] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scpImage: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        scpImage: async (imageSCP?: ImageSCP, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/images/scp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3025,7 +3048,7 @@ export const ImagesApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(imageSCP, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3039,7 +3062,7 @@ export const ImagesApiAxiosParamCreator = function (configuration?: Configuratio
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateImageFlavor: async (imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateImageFlavor: async (imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'imageForUpdateImageFlavor' is not null or undefined
             assertParamExists('updateImageFlavor', 'imageForUpdateImageFlavor', imageForUpdateImageFlavor)
             const localVarPath = `/api/images`;
@@ -3085,31 +3108,35 @@ export const ImagesApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Get Api Images
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nodeName] 
-         * @param {any} [poolUuid] 
-         * @param {any} [name] 
-         * @param {any} [nameLike] 
-         * @param {any} [rool] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nodeName] 
+         * @param {string | null} [poolUuid] 
+         * @param {string | null} [name] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [rool] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getImages(limit?: any, page?: any, admin?: any, nodeName?: any, poolUuid?: any, name?: any, nameLike?: any, rool?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImagePage>> {
+        async getImages(limit?: number, page?: number, admin?: boolean, nodeName?: string | null, poolUuid?: string | null, name?: string | null, nameLike?: string | null, rool?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImagePage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getImages(limit, page, admin, nodeName, poolUuid, name, nameLike, rool, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ImagesApi.getImages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Put Api Images Scp
-         * @param {any} [body] 
+         * @param {ImageSCP} [imageSCP] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scpImage(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.scpImage(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async scpImage(imageSCP?: ImageSCP, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.scpImage(imageSCP, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ImagesApi.scpImage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -3118,9 +3145,11 @@ export const ImagesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateImageFlavor(imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async updateImageFlavor(imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateImageFlavor(imageForUpdateImageFlavor, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ImagesApi.updateImageFlavor']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -3135,29 +3164,29 @@ export const ImagesApiFactory = function (configuration?: Configuration, basePat
         /**
          * 
          * @summary Get Api Images
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nodeName] 
-         * @param {any} [poolUuid] 
-         * @param {any} [name] 
-         * @param {any} [nameLike] 
-         * @param {any} [rool] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nodeName] 
+         * @param {string | null} [poolUuid] 
+         * @param {string | null} [name] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [rool] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getImages(limit?: any, page?: any, admin?: any, nodeName?: any, poolUuid?: any, name?: any, nameLike?: any, rool?: any, options?: any): AxiosPromise<ImagePage> {
+        getImages(limit?: number, page?: number, admin?: boolean, nodeName?: string | null, poolUuid?: string | null, name?: string | null, nameLike?: string | null, rool?: string | null, options?: any): AxiosPromise<ImagePage> {
             return localVarFp.getImages(limit, page, admin, nodeName, poolUuid, name, nameLike, rool, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Put Api Images Scp
-         * @param {any} [body] 
+         * @param {ImageSCP} [imageSCP] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scpImage(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.scpImage(body, options).then((request) => request(axios, basePath));
+        scpImage(imageSCP?: ImageSCP, options?: any): AxiosPromise<any> {
+            return localVarFp.scpImage(imageSCP, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3182,32 +3211,32 @@ export class ImagesApi extends BaseAPI {
     /**
      * 
      * @summary Get Api Images
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nodeName] 
-     * @param {any} [poolUuid] 
-     * @param {any} [name] 
-     * @param {any} [nameLike] 
-     * @param {any} [rool] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nodeName] 
+     * @param {string | null} [poolUuid] 
+     * @param {string | null} [name] 
+     * @param {string | null} [nameLike] 
+     * @param {string | null} [rool] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ImagesApi
      */
-    public getImages(limit?: any, page?: any, admin?: any, nodeName?: any, poolUuid?: any, name?: any, nameLike?: any, rool?: any, options?: AxiosRequestConfig) {
+    public getImages(limit?: number, page?: number, admin?: boolean, nodeName?: string | null, poolUuid?: string | null, name?: string | null, nameLike?: string | null, rool?: string | null, options?: RawAxiosRequestConfig) {
         return ImagesApiFp(this.configuration).getImages(limit, page, admin, nodeName, poolUuid, name, nameLike, rool, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Put Api Images Scp
-     * @param {any} [body] 
+     * @param {ImageSCP} [imageSCP] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ImagesApi
      */
-    public scpImage(body?: any, options?: AxiosRequestConfig) {
-        return ImagesApiFp(this.configuration).scpImage(body, options).then((request) => request(this.axios, this.basePath));
+    public scpImage(imageSCP?: ImageSCP, options?: RawAxiosRequestConfig) {
+        return ImagesApiFp(this.configuration).scpImage(imageSCP, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3218,10 +3247,11 @@ export class ImagesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof ImagesApi
      */
-    public updateImageFlavor(imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options?: AxiosRequestConfig) {
+    public updateImageFlavor(imageForUpdateImageFlavor: ImageForUpdateImageFlavor, options?: RawAxiosRequestConfig) {
         return ImagesApiFp(this.configuration).updateImageFlavor(imageForUpdateImageFlavor, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -3237,7 +3267,7 @@ export const ImagesTaskApiAxiosParamCreator = function (configuration?: Configur
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        downloadImage: async (imageDownloadForCreate: ImageDownloadForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        downloadImage: async (imageDownloadForCreate: ImageDownloadForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'imageDownloadForCreate' is not null or undefined
             assertParamExists('downloadImage', 'imageDownloadForCreate', imageDownloadForCreate)
             const localVarPath = `/api/tasks/images/download`;
@@ -3276,7 +3306,7 @@ export const ImagesTaskApiAxiosParamCreator = function (configuration?: Configur
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshImages: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        refreshImages: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/images`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3321,9 +3351,11 @@ export const ImagesTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async downloadImage(imageDownloadForCreate: ImageDownloadForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async downloadImage(imageDownloadForCreate: ImageDownloadForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.downloadImage(imageDownloadForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ImagesTaskApi.downloadImage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -3331,9 +3363,11 @@ export const ImagesTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async refreshImages(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async refreshImages(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.refreshImages(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ImagesTaskApi.refreshImages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -3382,7 +3416,7 @@ export class ImagesTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof ImagesTaskApi
      */
-    public downloadImage(imageDownloadForCreate: ImageDownloadForCreate, options?: AxiosRequestConfig) {
+    public downloadImage(imageDownloadForCreate: ImageDownloadForCreate, options?: RawAxiosRequestConfig) {
         return ImagesTaskApiFp(this.configuration).downloadImage(imageDownloadForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -3393,10 +3427,11 @@ export class ImagesTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof ImagesTaskApi
      */
-    public refreshImages(options?: AxiosRequestConfig) {
+    public refreshImages(options?: RawAxiosRequestConfig) {
         return ImagesTaskApiFp(this.configuration).refreshImages(options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -3411,7 +3446,7 @@ export const MetricsApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getMetrics: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getMetrics: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/metrics`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3451,9 +3486,11 @@ export const MetricsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getMetrics(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getMetrics(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getMetrics(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MetricsApi.getMetrics']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -3471,7 +3508,7 @@ export const MetricsApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getMetrics(options?: any): AxiosPromise<any> {
+        getMetrics(options?: any): AxiosPromise<string> {
             return localVarFp.getMetrics(options).then((request) => request(axios, basePath));
         },
     };
@@ -3491,10 +3528,11 @@ export class MetricsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MetricsApi
      */
-    public getMetrics(options?: AxiosRequestConfig) {
+    public getMetrics(options?: RawAxiosRequestConfig) {
         return MetricsApiFp(this.configuration).getMetrics(options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -3509,7 +3547,7 @@ export const MixinApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVersion: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getVersion: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/version`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3549,9 +3587,11 @@ export const MixinApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getVersion(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Version>> {
+        async getVersion(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Version>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getVersion(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MixinApi.getVersion']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -3589,10 +3629,11 @@ export class MixinApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MixinApi
      */
-    public getVersion(options?: AxiosRequestConfig) {
+    public getVersion(options?: RawAxiosRequestConfig) {
         return MixinApiFp(this.configuration).getVersion(options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -3608,7 +3649,7 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNetworkPool: async (networkPoolForCreate: NetworkPoolForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createNetworkPool: async (networkPoolForCreate: NetworkPoolForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'networkPoolForCreate' is not null or undefined
             assertParamExists('createNetworkPool', 'networkPoolForCreate', networkPoolForCreate)
             const localVarPath = `/api/networks/pools`;
@@ -3644,11 +3685,11 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Delete Pools Uuid
-         * @param {any} id 
+         * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetworkPool: async (id: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteNetworkPool: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('deleteNetworkPool', 'id', id)
             const localVarPath = `/api/networks/pools/{id}`
@@ -3682,11 +3723,11 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Get Api Networks Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetwork: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNetwork: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('getNetwork', 'uuid', uuid)
             const localVarPath = `/api/networks/{uuid}`
@@ -3723,7 +3764,7 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetworkPools: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNetworkPools: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/networks/pools`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3754,16 +3795,16 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Get Api Networks
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
-         * @param {any} [type] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
+         * @param {string | null} [type] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetworks: async (limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, type?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNetworks: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, type?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/networks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3822,7 +3863,7 @@ export const NetworksApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateNetworkPool: async (networkPoolForUpdate: NetworkPoolForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateNetworkPool: async (networkPoolForUpdate: NetworkPoolForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'networkPoolForUpdate' is not null or undefined
             assertParamExists('updateNetworkPool', 'networkPoolForUpdate', networkPoolForUpdate)
             const localVarPath = `/api/networks/pools`;
@@ -3872,31 +3913,37 @@ export const NetworksApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createNetworkPool(networkPoolForCreate: NetworkPoolForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async createNetworkPool(networkPoolForCreate: NetworkPoolForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createNetworkPool(networkPoolForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.createNetworkPool']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Pools Uuid
-         * @param {any} id 
+         * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteNetworkPool(id: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteNetworkPool(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteNetworkPool(id, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.deleteNetworkPool']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Networks Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNetwork(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Network>> {
+        async getNetwork(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Network>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNetwork(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.getNetwork']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -3904,25 +3951,29 @@ export const NetworksApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNetworkPools(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getNetworkPools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<NetworkPool>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNetworkPools(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.getNetworkPools']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Networks
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
-         * @param {any} [type] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
+         * @param {string | null} [type] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNetworks(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, type?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NetworkPage>> {
+        async getNetworks(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, type?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NetworkPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNetworks(limit, page, admin, nameLike, nodeNameLike, type, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.getNetworks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -3931,9 +3982,11 @@ export const NetworksApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateNetworkPool(networkPoolForUpdate: NetworkPoolForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async updateNetworkPool(networkPoolForUpdate: NetworkPoolForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateNetworkPool(networkPoolForUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksApi.updateNetworkPool']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -3958,21 +4011,21 @@ export const NetworksApiFactory = function (configuration?: Configuration, baseP
         /**
          * 
          * @summary Delete Pools Uuid
-         * @param {any} id 
+         * @param {number} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetworkPool(id: any, options?: any): AxiosPromise<any> {
+        deleteNetworkPool(id: number, options?: any): AxiosPromise<any> {
             return localVarFp.deleteNetworkPool(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Networks Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetwork(uuid: any, options?: any): AxiosPromise<Network> {
+        getNetwork(uuid: string, options?: any): AxiosPromise<Network> {
             return localVarFp.getNetwork(uuid, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3981,22 +4034,22 @@ export const NetworksApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetworkPools(options?: any): AxiosPromise<any> {
+        getNetworkPools(options?: any): AxiosPromise<Array<NetworkPool>> {
             return localVarFp.getNetworkPools(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Networks
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
-         * @param {any} [type] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
+         * @param {string | null} [type] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNetworks(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, type?: any, options?: any): AxiosPromise<NetworkPage> {
+        getNetworks(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, type?: string | null, options?: any): AxiosPromise<NetworkPage> {
             return localVarFp.getNetworks(limit, page, admin, nameLike, nodeNameLike, type, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4027,31 +4080,31 @@ export class NetworksApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public createNetworkPool(networkPoolForCreate: NetworkPoolForCreate, options?: AxiosRequestConfig) {
+    public createNetworkPool(networkPoolForCreate: NetworkPoolForCreate, options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).createNetworkPool(networkPoolForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Pools Uuid
-     * @param {any} id 
+     * @param {number} id 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public deleteNetworkPool(id: any, options?: AxiosRequestConfig) {
+    public deleteNetworkPool(id: number, options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).deleteNetworkPool(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Networks Uuid
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public getNetwork(uuid: any, options?: AxiosRequestConfig) {
+    public getNetwork(uuid: string, options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).getNetwork(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -4062,24 +4115,24 @@ export class NetworksApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public getNetworkPools(options?: AxiosRequestConfig) {
+    public getNetworkPools(options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).getNetworkPools(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Networks
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
-     * @param {any} [nodeNameLike] 
-     * @param {any} [type] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
+     * @param {string | null} [nodeNameLike] 
+     * @param {string | null} [type] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public getNetworks(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, type?: any, options?: AxiosRequestConfig) {
+    public getNetworks(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, type?: string | null, options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).getNetworks(limit, page, admin, nameLike, nodeNameLike, type, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -4091,10 +4144,11 @@ export class NetworksApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworksApi
      */
-    public updateNetworkPool(networkPoolForUpdate: NetworkPoolForUpdate, options?: AxiosRequestConfig) {
+    public updateNetworkPool(networkPoolForUpdate: NetworkPoolForUpdate, options?: RawAxiosRequestConfig) {
         return NetworksApiFp(this.configuration).updateNetworkPool(networkPoolForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -4106,11 +4160,11 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {NetworkForCreate} [networkForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNetwork: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createNetwork: async (networkForCreate?: NetworkForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/networks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4134,7 +4188,7 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(networkForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4144,12 +4198,12 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkOVSForCreate} [networkOVSForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNetworkOvs: async (uuid: any, body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createNetworkOvs: async (uuid: string, networkOVSForCreate?: NetworkOVSForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('createNetworkOvs', 'uuid', uuid)
             const localVarPath = `/api/tasks/networks/{uuid}/ovs`
@@ -4176,7 +4230,7 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(networkOVSForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4186,11 +4240,11 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Delete Api Storage
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetwork: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteNetwork: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('deleteNetwork', 'uuid', uuid)
             const localVarPath = `/api/tasks/networks/{uuid}`
@@ -4224,12 +4278,12 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Post Api Networks Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} name 
+         * @param {string} uuid 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetworkOvs: async (uuid: any, name: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteNetworkOvs: async (uuid: string, name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('deleteNetworkOvs', 'uuid', uuid)
             // verify required parameter 'name' is not null or undefined
@@ -4266,11 +4320,11 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} [body] 
+         * @param {NetworkProviderForCreate} [networkProviderForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postUuidOvsApiTasksNetworksProvidersPost: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        postUuidOvsApiTasksNetworksProvidersPost: async (networkProviderForCreate?: NetworkProviderForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/networks/providers`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4294,7 +4348,7 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(networkProviderForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4307,7 +4361,7 @@ export const NetworksTaskApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshNetworks: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        refreshNetworks: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/networks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4348,59 +4402,69 @@ export const NetworksTaskApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {NetworkForCreate} [networkForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createNetwork(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createNetwork(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async createNetwork(networkForCreate?: NetworkForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createNetwork(networkForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.createNetwork']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkOVSForCreate} [networkOVSForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createNetworkOvs(uuid: any, body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createNetworkOvs(uuid, body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async createNetworkOvs(uuid: string, networkOVSForCreate?: NetworkOVSForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createNetworkOvs(uuid, networkOVSForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.createNetworkOvs']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Api Storage
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteNetwork(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteNetwork(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteNetwork(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.deleteNetwork']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Post Api Networks Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} name 
+         * @param {string} uuid 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteNetworkOvs(uuid: any, name: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteNetworkOvs(uuid: string, name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteNetworkOvs(uuid, name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.deleteNetworkOvs']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} [body] 
+         * @param {NetworkProviderForCreate} [networkProviderForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async postUuidOvsApiTasksNetworksProvidersPost(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.postUuidOvsApiTasksNetworksProvidersPost(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate?: NetworkProviderForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.postUuidOvsApiTasksNetworksProvidersPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -4408,9 +4472,11 @@ export const NetworksTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async refreshNetworks(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async refreshNetworks(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.refreshNetworks(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NetworksTaskApi.refreshNetworks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -4425,54 +4491,54 @@ export const NetworksTaskApiFactory = function (configuration?: Configuration, b
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {NetworkForCreate} [networkForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNetwork(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.createNetwork(body, options).then((request) => request(axios, basePath));
+        createNetwork(networkForCreate?: NetworkForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.createNetwork(networkForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkOVSForCreate} [networkOVSForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNetworkOvs(uuid: any, body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.createNetworkOvs(uuid, body, options).then((request) => request(axios, basePath));
+        createNetworkOvs(uuid: string, networkOVSForCreate?: NetworkOVSForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.createNetworkOvs(uuid, networkOVSForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Delete Api Storage
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetwork(uuid: any, options?: any): AxiosPromise<any> {
+        deleteNetwork(uuid: string, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteNetwork(uuid, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Api Networks Uuid Ovs
-         * @param {any} uuid 
-         * @param {any} name 
+         * @param {string} uuid 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNetworkOvs(uuid: any, name: any, options?: any): AxiosPromise<any> {
+        deleteNetworkOvs(uuid: string, name: string, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteNetworkOvs(uuid, name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Uuid Ovs
-         * @param {any} [body] 
+         * @param {NetworkProviderForCreate} [networkProviderForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        postUuidOvsApiTasksNetworksProvidersPost(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.postUuidOvsApiTasksNetworksProvidersPost(body, options).then((request) => request(axios, basePath));
+        postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate?: NetworkProviderForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4480,7 +4546,7 @@ export const NetworksTaskApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshNetworks(options?: any): AxiosPromise<any> {
+        refreshNetworks(options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.refreshNetworks(options).then((request) => request(axios, basePath));
         },
     };
@@ -4496,63 +4562,63 @@ export class NetworksTaskApi extends BaseAPI {
     /**
      * 
      * @summary Post Api Storage
-     * @param {any} [body] 
+     * @param {NetworkForCreate} [networkForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public createNetwork(body?: any, options?: AxiosRequestConfig) {
-        return NetworksTaskApiFp(this.configuration).createNetwork(body, options).then((request) => request(this.axios, this.basePath));
+    public createNetwork(networkForCreate?: NetworkForCreate, options?: RawAxiosRequestConfig) {
+        return NetworksTaskApiFp(this.configuration).createNetwork(networkForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Uuid Ovs
-     * @param {any} uuid 
-     * @param {any} [body] 
+     * @param {string} uuid 
+     * @param {NetworkOVSForCreate} [networkOVSForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public createNetworkOvs(uuid: any, body?: any, options?: AxiosRequestConfig) {
-        return NetworksTaskApiFp(this.configuration).createNetworkOvs(uuid, body, options).then((request) => request(this.axios, this.basePath));
+    public createNetworkOvs(uuid: string, networkOVSForCreate?: NetworkOVSForCreate, options?: RawAxiosRequestConfig) {
+        return NetworksTaskApiFp(this.configuration).createNetworkOvs(uuid, networkOVSForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Api Storage
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public deleteNetwork(uuid: any, options?: AxiosRequestConfig) {
+    public deleteNetwork(uuid: string, options?: RawAxiosRequestConfig) {
         return NetworksTaskApiFp(this.configuration).deleteNetwork(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Api Networks Uuid Ovs
-     * @param {any} uuid 
-     * @param {any} name 
+     * @param {string} uuid 
+     * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public deleteNetworkOvs(uuid: any, name: any, options?: AxiosRequestConfig) {
+    public deleteNetworkOvs(uuid: string, name: string, options?: RawAxiosRequestConfig) {
         return NetworksTaskApiFp(this.configuration).deleteNetworkOvs(uuid, name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Uuid Ovs
-     * @param {any} [body] 
+     * @param {NetworkProviderForCreate} [networkProviderForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public postUuidOvsApiTasksNetworksProvidersPost(body?: any, options?: AxiosRequestConfig) {
-        return NetworksTaskApiFp(this.configuration).postUuidOvsApiTasksNetworksProvidersPost(body, options).then((request) => request(this.axios, this.basePath));
+    public postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate?: NetworkProviderForCreate, options?: RawAxiosRequestConfig) {
+        return NetworksTaskApiFp(this.configuration).postUuidOvsApiTasksNetworksProvidersPost(networkProviderForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4562,10 +4628,11 @@ export class NetworksTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NetworksTaskApi
      */
-    public refreshNetworks(options?: AxiosRequestConfig) {
+    public refreshNetworks(options?: RawAxiosRequestConfig) {
         return NetworksTaskApiFp(this.configuration).refreshNetworks(options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -4577,11 +4644,11 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Api Node
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNode: async (name: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNode: async (name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
             assertParamExists('getNode', 'name', name)
             const localVarPath = `/api/nodes/{name}`
@@ -4615,11 +4682,11 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Node Name Facts
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameFactsApiNodesNameFactsGet: async (name: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNodeNameFactsApiNodesNameFactsGet: async (name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
             assertParamExists('getNodeNameFactsApiNodesNameFactsGet', 'name', name)
             const localVarPath = `/api/nodes/{name}/facts`
@@ -4653,11 +4720,11 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Node Name Network
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameNetworkApiNodesNameNetworkGet: async (name: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNodeNameNetworkApiNodesNameNetworkGet: async (name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
             assertParamExists('getNodeNameNetworkApiNodesNameNetworkGet', 'name', name)
             const localVarPath = `/api/nodes/{name}/network`
@@ -4691,14 +4758,14 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Api Nodes
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodes: async (limit?: any, page?: any, admin?: any, nameLike?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getNodes: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/nodes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4748,7 +4815,7 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getSshKeyPair: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getSshKeyPair: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/nodes/key`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4783,7 +4850,7 @@ export const NodesApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateSshKeyPair: async (sSHKeyPair: SSHKeyPair, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateSshKeyPair: async (sSHKeyPair: SSHKeyPair, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'sSHKeyPair' is not null or undefined
             assertParamExists('updateSshKeyPair', 'sSHKeyPair', sSHKeyPair)
             const localVarPath = `/api/nodes/key`;
@@ -4829,49 +4896,57 @@ export const NodesApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Get Api Node
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNode(name: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Node>> {
+        async getNode(name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Node>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNode(name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.getNode']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Node Name Facts
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNodeNameFactsApiNodesNameFactsGet(name: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getNodeNameFactsApiNodesNameFactsGet(name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNodeNameFactsApiNodesNameFactsGet(name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.getNodeNameFactsApiNodesNameFactsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Node Name Network
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNodeNameNetworkApiNodesNameNetworkGet(name: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getNodeNameNetworkApiNodesNameNetworkGet(name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<NodeInterface>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNodeNameNetworkApiNodesNameNetworkGet(name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.getNodeNameNetworkApiNodesNameNetworkGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Nodes
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getNodes(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodePage>> {
+        async getNodes(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodePage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getNodes(limit, page, admin, nameLike, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.getNodes']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -4879,9 +4954,11 @@ export const NodesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getSshKeyPair(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKeyPair>> {
+        async getSshKeyPair(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKeyPair>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getSshKeyPair(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.getSshKeyPair']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -4890,9 +4967,11 @@ export const NodesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateSshKeyPair(sSHKeyPair, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesApi.updateSshKeyPair']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -4907,44 +4986,44 @@ export const NodesApiFactory = function (configuration?: Configuration, basePath
         /**
          * 
          * @summary Get Api Node
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNode(name: any, options?: any): AxiosPromise<Node> {
+        getNode(name: string, options?: any): AxiosPromise<Node> {
             return localVarFp.getNode(name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Node Name Facts
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameFactsApiNodesNameFactsGet(name: any, options?: any): AxiosPromise<any> {
+        getNodeNameFactsApiNodesNameFactsGet(name: string, options?: any): AxiosPromise<any> {
             return localVarFp.getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Node Name Network
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodeNameNetworkApiNodesNameNetworkGet(name: any, options?: any): AxiosPromise<any> {
+        getNodeNameNetworkApiNodesNameNetworkGet(name: string, options?: any): AxiosPromise<Array<NodeInterface>> {
             return localVarFp.getNodeNameNetworkApiNodesNameNetworkGet(name, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Nodes
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getNodes(limit?: any, page?: any, admin?: any, nameLike?: any, options?: any): AxiosPromise<NodePage> {
+        getNodes(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: any): AxiosPromise<NodePage> {
             return localVarFp.getNodes(limit, page, admin, nameLike, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4979,51 +5058,51 @@ export class NodesApi extends BaseAPI {
     /**
      * 
      * @summary Get Api Node
-     * @param {any} name 
+     * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getNode(name: any, options?: AxiosRequestConfig) {
+    public getNode(name: string, options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).getNode(name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Node Name Facts
-     * @param {any} name 
+     * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getNodeNameFactsApiNodesNameFactsGet(name: any, options?: AxiosRequestConfig) {
+    public getNodeNameFactsApiNodesNameFactsGet(name: string, options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).getNodeNameFactsApiNodesNameFactsGet(name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Node Name Network
-     * @param {any} name 
+     * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getNodeNameNetworkApiNodesNameNetworkGet(name: any, options?: AxiosRequestConfig) {
+    public getNodeNameNetworkApiNodesNameNetworkGet(name: string, options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).getNodeNameNetworkApiNodesNameNetworkGet(name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Nodes
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getNodes(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig) {
+    public getNodes(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).getNodes(limit, page, admin, nameLike, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5034,7 +5113,7 @@ export class NodesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public getSshKeyPair(options?: AxiosRequestConfig) {
+    public getSshKeyPair(options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).getSshKeyPair(options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5046,10 +5125,11 @@ export class NodesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesApi
      */
-    public updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: AxiosRequestConfig) {
+    public updateSshKeyPair(sSHKeyPair: SSHKeyPair, options?: RawAxiosRequestConfig) {
         return NodesApiFp(this.configuration).updateSshKeyPair(sSHKeyPair, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -5061,11 +5141,11 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {any} [body] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNode: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createNode: async (nodeForCreate?: NodeForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/nodes`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5089,7 +5169,7 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5099,11 +5179,11 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
         /**
          * 
          * @summary Delete Tasks Nodes Name
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNode: async (name: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteNode: async (name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'name' is not null or undefined
             assertParamExists('deleteNode', 'name', name)
             const localVarPath = `/api/tasks/nodes/{name}`
@@ -5141,7 +5221,7 @@ export const NodesTaskApiAxiosParamCreator = function (configuration?: Configura
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateNodeRole: async (nodeRoleForUpdate: NodeRoleForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateNodeRole: async (nodeRoleForUpdate: NodeRoleForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'nodeRoleForUpdate' is not null or undefined
             assertParamExists('updateNodeRole', 'nodeRoleForUpdate', nodeRoleForUpdate)
             const localVarPath = `/api/tasks/nodes/roles`;
@@ -5187,24 +5267,28 @@ export const NodesTaskApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {any} [body] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createNode(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createNode(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async createNode(nodeForCreate?: NodeForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createNode(nodeForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesTaskApi.createNode']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Tasks Nodes Name
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteNode(name: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteNode(name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteNode(name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesTaskApi.deleteNode']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -5213,9 +5297,11 @@ export const NodesTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateNodeRole(nodeRoleForUpdate: NodeRoleForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
+        async updateNodeRole(nodeRoleForUpdate: NodeRoleForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateNodeRole(nodeRoleForUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['NodesTaskApi.updateNodeRole']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -5230,21 +5316,21 @@ export const NodesTaskApiFactory = function (configuration?: Configuration, base
         /**
          * 
          * @summary Post Tasks Nodes
-         * @param {any} [body] 
+         * @param {NodeForCreate} [nodeForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNode(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.createNode(body, options).then((request) => request(axios, basePath));
+        createNode(nodeForCreate?: NodeForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.createNode(nodeForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Delete Tasks Nodes Name
-         * @param {any} name 
+         * @param {string} name 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteNode(name: any, options?: any): AxiosPromise<any> {
+        deleteNode(name: string, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteNode(name, options).then((request) => request(axios, basePath));
         },
         /**
@@ -5270,24 +5356,24 @@ export class NodesTaskApi extends BaseAPI {
     /**
      * 
      * @summary Post Tasks Nodes
-     * @param {any} [body] 
+     * @param {NodeForCreate} [nodeForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesTaskApi
      */
-    public createNode(body?: any, options?: AxiosRequestConfig) {
-        return NodesTaskApiFp(this.configuration).createNode(body, options).then((request) => request(this.axios, this.basePath));
+    public createNode(nodeForCreate?: NodeForCreate, options?: RawAxiosRequestConfig) {
+        return NodesTaskApiFp(this.configuration).createNode(nodeForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Tasks Nodes Name
-     * @param {any} name 
+     * @param {string} name 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof NodesTaskApi
      */
-    public deleteNode(name: any, options?: AxiosRequestConfig) {
+    public deleteNode(name: string, options?: RawAxiosRequestConfig) {
         return NodesTaskApiFp(this.configuration).deleteNode(name, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5299,10 +5385,11 @@ export class NodesTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof NodesTaskApi
      */
-    public updateNodeRole(nodeRoleForUpdate: NodeRoleForUpdate, options?: AxiosRequestConfig) {
+    public updateNodeRole(nodeRoleForUpdate: NodeRoleForUpdate, options?: RawAxiosRequestConfig) {
         return NodesTaskApiFp(this.configuration).updateNodeRole(nodeRoleForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -5318,7 +5405,7 @@ export const ProjectsApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createProject: async (projectForCreate: ProjectForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createProject: async (projectForCreate: ProjectForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'projectForCreate' is not null or undefined
             assertParamExists('createProject', 'projectForCreate', projectForCreate)
             const localVarPath = `/api/tasks/projects`;
@@ -5354,11 +5441,11 @@ export const ProjectsApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Delete Api Projects
-         * @param {any} projectId 
+         * @param {string} projectId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteProject: async (projectId: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteProject: async (projectId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'projectId' is not null or undefined
             assertParamExists('deleteProject', 'projectId', projectId)
             const localVarPath = `/api/tasks/projects/{project_id}`
@@ -5392,14 +5479,14 @@ export const ProjectsApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Get Api Projects
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [nameLike] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getProjects: async (admin?: any, limit?: any, page?: any, nameLike?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getProjects: async (admin?: boolean, limit?: number, page?: number, nameLike?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/projects`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5450,7 +5537,7 @@ export const ProjectsApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProject: async (projectForUpdate: ProjectForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateProject: async (projectForUpdate: ProjectForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'projectForUpdate' is not null or undefined
             assertParamExists('updateProject', 'projectForUpdate', projectForUpdate)
             const localVarPath = `/api/projects`;
@@ -5500,34 +5587,40 @@ export const ProjectsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createProject(projectForCreate: ProjectForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async createProject(projectForCreate: ProjectForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createProject(projectForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.createProject']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Api Projects
-         * @param {any} projectId 
+         * @param {string} projectId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteProject(projectId: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteProject(projectId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteProject(projectId, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.deleteProject']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Projects
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [nameLike] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getProjects(admin?: any, limit?: any, page?: any, nameLike?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProjectPage>> {
+        async getProjects(admin?: boolean, limit?: number, page?: number, nameLike?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProjectPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getProjects(admin, limit, page, nameLike, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.getProjects']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -5536,9 +5629,11 @@ export const ProjectsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateProject(projectForUpdate: ProjectForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async updateProject(projectForUpdate: ProjectForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateProject(projectForUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.updateProject']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -5563,24 +5658,24 @@ export const ProjectsApiFactory = function (configuration?: Configuration, baseP
         /**
          * 
          * @summary Delete Api Projects
-         * @param {any} projectId 
+         * @param {string} projectId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteProject(projectId: any, options?: any): AxiosPromise<any> {
+        deleteProject(projectId: string, options?: any): AxiosPromise<any> {
             return localVarFp.deleteProject(projectId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Projects
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [nameLike] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getProjects(admin?: any, limit?: any, page?: any, nameLike?: any, options?: any): AxiosPromise<ProjectPage> {
+        getProjects(admin?: boolean, limit?: number, page?: number, nameLike?: string | null, options?: any): AxiosPromise<ProjectPage> {
             return localVarFp.getProjects(admin, limit, page, nameLike, options).then((request) => request(axios, basePath));
         },
         /**
@@ -5611,34 +5706,34 @@ export class ProjectsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof ProjectsApi
      */
-    public createProject(projectForCreate: ProjectForCreate, options?: AxiosRequestConfig) {
+    public createProject(projectForCreate: ProjectForCreate, options?: RawAxiosRequestConfig) {
         return ProjectsApiFp(this.configuration).createProject(projectForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Api Projects
-     * @param {any} projectId 
+     * @param {string} projectId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProjectsApi
      */
-    public deleteProject(projectId: any, options?: AxiosRequestConfig) {
+    public deleteProject(projectId: string, options?: RawAxiosRequestConfig) {
         return ProjectsApiFp(this.configuration).deleteProject(projectId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Projects
-     * @param {any} [admin] 
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [nameLike] 
+     * @param {boolean} [admin] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {string | null} [nameLike] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProjectsApi
      */
-    public getProjects(admin?: any, limit?: any, page?: any, nameLike?: any, options?: AxiosRequestConfig) {
+    public getProjects(admin?: boolean, limit?: number, page?: number, nameLike?: string | null, options?: RawAxiosRequestConfig) {
         return ProjectsApiFp(this.configuration).getProjects(admin, limit, page, nameLike, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5650,10 +5745,11 @@ export class ProjectsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof ProjectsApi
      */
-    public updateProject(projectForUpdate: ProjectForUpdate, options?: AxiosRequestConfig) {
+    public updateProject(projectForUpdate: ProjectForUpdate, options?: RawAxiosRequestConfig) {
         return ProjectsApiFp(this.configuration).updateProject(projectForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -5669,7 +5765,7 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createStoragePool: async (storagePoolForCreate: StoragePoolForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createStoragePool: async (storagePoolForCreate: StoragePoolForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'storagePoolForCreate' is not null or undefined
             assertParamExists('createStoragePool', 'storagePoolForCreate', storagePoolForCreate)
             const localVarPath = `/api/storages/pools`;
@@ -5705,11 +5801,11 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Get Api Storages Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStorage: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getStorage: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('getStorage', 'uuid', uuid)
             const localVarPath = `/api/storages/{uuid}`
@@ -5746,7 +5842,7 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStoragePools: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getStoragePools: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/storages/pools`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5777,15 +5873,15 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Get Api Storages
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeName] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeName] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStorages: async (limit?: any, page?: any, admin?: any, nameLike?: any, nodeName?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getStorages: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeName?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/storages`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5836,11 +5932,11 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {StorageMetadataForUpdate} [storageMetadataForUpdate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateStorageMetadata: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateStorageMetadata: async (storageMetadataForUpdate?: StorageMetadataForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/storages`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5864,7 +5960,7 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(storageMetadataForUpdate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5878,7 +5974,7 @@ export const StoragesApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateStoragePool: async (storagePoolForUpdate: StoragePoolForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateStoragePool: async (storagePoolForUpdate: StoragePoolForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'storagePoolForUpdate' is not null or undefined
             assertParamExists('updateStoragePool', 'storagePoolForUpdate', storagePoolForUpdate)
             const localVarPath = `/api/storages/pools`;
@@ -5928,20 +6024,24 @@ export const StoragesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createStoragePool(storagePoolForCreate: StoragePoolForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async createStoragePool(storagePoolForCreate: StoragePoolForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createStoragePool(storagePoolForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.createStoragePool']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Storages Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getStorage(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Storage>> {
+        async getStorage(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Storage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getStorage(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.getStorage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -5949,35 +6049,41 @@ export const StoragesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getStoragePools(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getStoragePools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StoragePool>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getStoragePools(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.getStoragePools']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Storages
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeName] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeName] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getStorages(limit?: any, page?: any, admin?: any, nameLike?: any, nodeName?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoragePage>> {
+        async getStorages(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeName?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoragePage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getStorages(limit, page, admin, nameLike, nodeName, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.getStorages']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {StorageMetadataForUpdate} [storageMetadataForUpdate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateStorageMetadata(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateStorageMetadata(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async updateStorageMetadata(storageMetadataForUpdate?: StorageMetadataForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateStorageMetadata(storageMetadataForUpdate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.updateStorageMetadata']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -5986,9 +6092,11 @@ export const StoragesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateStoragePool(storagePoolForUpdate: StoragePoolForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async updateStoragePool(storagePoolForUpdate: StoragePoolForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateStoragePool(storagePoolForUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesApi.updateStoragePool']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -6013,11 +6121,11 @@ export const StoragesApiFactory = function (configuration?: Configuration, baseP
         /**
          * 
          * @summary Get Api Storages Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStorage(uuid: any, options?: any): AxiosPromise<Storage> {
+        getStorage(uuid: string, options?: any): AxiosPromise<Storage> {
             return localVarFp.getStorage(uuid, options).then((request) => request(axios, basePath));
         },
         /**
@@ -6026,32 +6134,32 @@ export const StoragesApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStoragePools(options?: any): AxiosPromise<any> {
+        getStoragePools(options?: any): AxiosPromise<Array<StoragePool>> {
             return localVarFp.getStoragePools(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Storages
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeName] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeName] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getStorages(limit?: any, page?: any, admin?: any, nameLike?: any, nodeName?: any, options?: any): AxiosPromise<StoragePage> {
+        getStorages(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeName?: string | null, options?: any): AxiosPromise<StoragePage> {
             return localVarFp.getStorages(limit, page, admin, nameLike, nodeName, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Api Storage
-         * @param {any} [body] 
+         * @param {StorageMetadataForUpdate} [storageMetadataForUpdate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateStorageMetadata(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.updateStorageMetadata(body, options).then((request) => request(axios, basePath));
+        updateStorageMetadata(storageMetadataForUpdate?: StorageMetadataForUpdate, options?: any): AxiosPromise<any> {
+            return localVarFp.updateStorageMetadata(storageMetadataForUpdate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6081,19 +6189,19 @@ export class StoragesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public createStoragePool(storagePoolForCreate: StoragePoolForCreate, options?: AxiosRequestConfig) {
+    public createStoragePool(storagePoolForCreate: StoragePoolForCreate, options?: RawAxiosRequestConfig) {
         return StoragesApiFp(this.configuration).createStoragePool(storagePoolForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Storages Uuid
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public getStorage(uuid: any, options?: AxiosRequestConfig) {
+    public getStorage(uuid: string, options?: RawAxiosRequestConfig) {
         return StoragesApiFp(this.configuration).getStorage(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -6104,36 +6212,36 @@ export class StoragesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public getStoragePools(options?: AxiosRequestConfig) {
+    public getStoragePools(options?: RawAxiosRequestConfig) {
         return StoragesApiFp(this.configuration).getStoragePools(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Storages
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
-     * @param {any} [nodeName] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
+     * @param {string | null} [nodeName] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public getStorages(limit?: any, page?: any, admin?: any, nameLike?: any, nodeName?: any, options?: AxiosRequestConfig) {
+    public getStorages(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeName?: string | null, options?: RawAxiosRequestConfig) {
         return StoragesApiFp(this.configuration).getStorages(limit, page, admin, nameLike, nodeName, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Api Storage
-     * @param {any} [body] 
+     * @param {StorageMetadataForUpdate} [storageMetadataForUpdate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public updateStorageMetadata(body?: any, options?: AxiosRequestConfig) {
-        return StoragesApiFp(this.configuration).updateStorageMetadata(body, options).then((request) => request(this.axios, this.basePath));
+    public updateStorageMetadata(storageMetadataForUpdate?: StorageMetadataForUpdate, options?: RawAxiosRequestConfig) {
+        return StoragesApiFp(this.configuration).updateStorageMetadata(storageMetadataForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -6144,10 +6252,11 @@ export class StoragesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof StoragesApi
      */
-    public updateStoragePool(storagePoolForUpdate: StoragePoolForUpdate, options?: AxiosRequestConfig) {
+    public updateStoragePool(storagePoolForUpdate: StoragePoolForUpdate, options?: RawAxiosRequestConfig) {
         return StoragesApiFp(this.configuration).updateStoragePool(storagePoolForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -6159,11 +6268,11 @@ export const StoragesTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Post Tasks Api Storage
-         * @param {any} [body] 
+         * @param {StorageForCreate} [storageForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createStorage: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createStorage: async (storageForCreate?: StorageForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/storages`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6187,7 +6296,7 @@ export const StoragesTaskApiAxiosParamCreator = function (configuration?: Config
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(storageForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6197,11 +6306,11 @@ export const StoragesTaskApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @summary Delete Api Storages
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteStorage: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteStorage: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('deleteStorage', 'uuid', uuid)
             const localVarPath = `/api/tasks/storages/{uuid}`
@@ -6245,24 +6354,28 @@ export const StoragesTaskApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Post Tasks Api Storage
-         * @param {any} [body] 
+         * @param {StorageForCreate} [storageForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createStorage(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createStorage(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async createStorage(storageForCreate?: StorageForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createStorage(storageForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesTaskApi.createStorage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Api Storages
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteStorage(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteStorage(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteStorage(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoragesTaskApi.deleteStorage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -6277,21 +6390,21 @@ export const StoragesTaskApiFactory = function (configuration?: Configuration, b
         /**
          * 
          * @summary Post Tasks Api Storage
-         * @param {any} [body] 
+         * @param {StorageForCreate} [storageForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createStorage(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.createStorage(body, options).then((request) => request(axios, basePath));
+        createStorage(storageForCreate?: StorageForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.createStorage(storageForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Delete Api Storages
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteStorage(uuid: any, options?: any): AxiosPromise<any> {
+        deleteStorage(uuid: string, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteStorage(uuid, options).then((request) => request(axios, basePath));
         },
     };
@@ -6307,27 +6420,28 @@ export class StoragesTaskApi extends BaseAPI {
     /**
      * 
      * @summary Post Tasks Api Storage
-     * @param {any} [body] 
+     * @param {StorageForCreate} [storageForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoragesTaskApi
      */
-    public createStorage(body?: any, options?: AxiosRequestConfig) {
-        return StoragesTaskApiFp(this.configuration).createStorage(body, options).then((request) => request(this.axios, this.basePath));
+    public createStorage(storageForCreate?: StorageForCreate, options?: RawAxiosRequestConfig) {
+        return StoragesTaskApiFp(this.configuration).createStorage(storageForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Api Storages
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoragesTaskApi
      */
-    public deleteStorage(uuid: any, options?: AxiosRequestConfig) {
+    public deleteStorage(uuid: string, options?: RawAxiosRequestConfig) {
         return StoragesTaskApiFp(this.configuration).deleteStorage(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -6342,7 +6456,7 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteTasks: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteTasks: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6373,12 +6487,12 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {any} [hash] 
-         * @param {any} [admin] 
+         * @param {string} [hash] 
+         * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getIncompleteTasks: async (hash?: any, admin?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getIncompleteTasks: async (hash?: string, admin?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/incomplete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6417,11 +6531,11 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Task Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTask: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getTask: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('getTask', 'uuid', uuid)
             const localVarPath = `/api/tasks/{uuid}`
@@ -6455,17 +6569,17 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Tasks
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [resource] 
-         * @param {any} [object] 
-         * @param {any} [method] 
-         * @param {any} [status] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [resource] 
+         * @param {string | null} [object] 
+         * @param {string | null} [method] 
+         * @param {string | null} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasks: async (admin?: any, limit?: any, page?: any, resource?: any, object?: any, method?: any, status?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getTasks: async (admin?: boolean, limit?: number, page?: number, resource?: string | null, object?: string | null, method?: string | null, status?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6537,49 +6651,57 @@ export const TasksApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteTasks(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteTasks(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteTasks(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TasksApi.deleteTasks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {any} [hash] 
-         * @param {any} [admin] 
+         * @param {string} [hash] 
+         * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getIncompleteTasks(hash?: any, admin?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskIncomplete>> {
+        async getIncompleteTasks(hash?: string, admin?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskIncomplete>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getIncompleteTasks(hash, admin, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TasksApi.getIncompleteTasks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Task Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTask(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
+        async getTask(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getTask(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TasksApi.getTask']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Tasks
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [resource] 
-         * @param {any} [object] 
-         * @param {any} [method] 
-         * @param {any} [status] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [resource] 
+         * @param {string | null} [object] 
+         * @param {string | null} [method] 
+         * @param {string | null} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTasks(admin?: any, limit?: any, page?: any, resource?: any, object?: any, method?: any, status?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskPage>> {
+        async getTasks(admin?: boolean, limit?: number, page?: number, resource?: string | null, object?: string | null, method?: string | null, status?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getTasks(admin, limit, page, resource, object, method, status, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TasksApi.getTasks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -6597,44 +6719,44 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteTasks(options?: any): AxiosPromise<any> {
+        deleteTasks(options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteTasks(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Tasks Incomplete
-         * @param {any} [hash] 
-         * @param {any} [admin] 
+         * @param {string} [hash] 
+         * @param {boolean} [admin] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getIncompleteTasks(hash?: any, admin?: any, options?: any): AxiosPromise<TaskIncomplete> {
+        getIncompleteTasks(hash?: string, admin?: boolean, options?: any): AxiosPromise<TaskIncomplete> {
             return localVarFp.getIncompleteTasks(hash, admin, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Task Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTask(uuid: any, options?: any): AxiosPromise<Task> {
+        getTask(uuid: string, options?: any): AxiosPromise<Task> {
             return localVarFp.getTask(uuid, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Tasks
-         * @param {any} [admin] 
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [resource] 
-         * @param {any} [object] 
-         * @param {any} [method] 
-         * @param {any} [status] 
+         * @param {boolean} [admin] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {string | null} [resource] 
+         * @param {string | null} [object] 
+         * @param {string | null} [method] 
+         * @param {string | null} [status] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTasks(admin?: any, limit?: any, page?: any, resource?: any, object?: any, method?: any, status?: any, options?: any): AxiosPromise<TaskPage> {
+        getTasks(admin?: boolean, limit?: number, page?: number, resource?: string | null, object?: string | null, method?: string | null, status?: string | null, options?: any): AxiosPromise<TaskPage> {
             return localVarFp.getTasks(admin, limit, page, resource, object, method, status, options).then((request) => request(axios, basePath));
         },
     };
@@ -6654,53 +6776,54 @@ export class TasksApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public deleteTasks(options?: AxiosRequestConfig) {
+    public deleteTasks(options?: RawAxiosRequestConfig) {
         return TasksApiFp(this.configuration).deleteTasks(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Tasks Incomplete
-     * @param {any} [hash] 
-     * @param {any} [admin] 
+     * @param {string} [hash] 
+     * @param {boolean} [admin] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getIncompleteTasks(hash?: any, admin?: any, options?: AxiosRequestConfig) {
+    public getIncompleteTasks(hash?: string, admin?: boolean, options?: RawAxiosRequestConfig) {
         return TasksApiFp(this.configuration).getIncompleteTasks(hash, admin, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Task Uuid
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getTask(uuid: any, options?: AxiosRequestConfig) {
+    public getTask(uuid: string, options?: RawAxiosRequestConfig) {
         return TasksApiFp(this.configuration).getTask(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Tasks
-     * @param {any} [admin] 
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [resource] 
-     * @param {any} [object] 
-     * @param {any} [method] 
-     * @param {any} [status] 
+     * @param {boolean} [admin] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {string | null} [resource] 
+     * @param {string | null} [object] 
+     * @param {string | null} [method] 
+     * @param {string | null} [status] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public getTasks(admin?: any, limit?: any, page?: any, resource?: any, object?: any, method?: any, status?: any, options?: AxiosRequestConfig) {
+    public getTasks(admin?: boolean, limit?: number, page?: number, resource?: string | null, object?: string | null, method?: string | null, status?: string | null, options?: RawAxiosRequestConfig) {
         return TasksApiFp(this.configuration).getTasks(admin, limit, page, resource, object, method, status, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -6716,7 +6839,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createUser: async (userForCreate: UserForCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createUser: async (userForCreate: UserForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'userForCreate' is not null or undefined
             assertParamExists('createUser', 'userForCreate', userForCreate)
             const localVarPath = `/api/users`;
@@ -6752,11 +6875,11 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Delete User
-         * @param {any} username 
+         * @param {string} username 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteUser: async (username: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteUser: async (username: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'username' is not null or undefined
             assertParamExists('deleteUser', 'username', username)
             const localVarPath = `/api/users/{username}`
@@ -6793,7 +6916,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCurrentUser: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getCurrentUser: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/users/me`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6824,14 +6947,14 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * 
          * @summary Get Api Users
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getUsers: async (limit?: any, page?: any, admin?: any, nameLike?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getUsers: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/users`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6892,20 +7015,24 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createUser(userForCreate: UserForCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async createUser(userForCreate: UserForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createUser(userForCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.createUser']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete User
-         * @param {any} username 
+         * @param {string} username 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteUser(username: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteUser(username: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteUser(username, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.deleteUser']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -6913,23 +7040,27 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getCurrentUser(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TokenData>> {
+        async getCurrentUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TokenData>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getCurrentUser(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.getCurrentUser']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Users
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getUsers(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserPage>> {
+        async getUsers(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getUsers(limit, page, admin, nameLike, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.getUsers']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -6954,11 +7085,11 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
         /**
          * 
          * @summary Delete User
-         * @param {any} username 
+         * @param {string} username 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteUser(username: any, options?: any): AxiosPromise<any> {
+        deleteUser(username: string, options?: any): AxiosPromise<any> {
             return localVarFp.deleteUser(username, options).then((request) => request(axios, basePath));
         },
         /**
@@ -6973,14 +7104,14 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
         /**
          * 
          * @summary Get Api Users
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getUsers(limit?: any, page?: any, admin?: any, nameLike?: any, options?: any): AxiosPromise<UserPage> {
+        getUsers(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: any): AxiosPromise<UserPage> {
             return localVarFp.getUsers(limit, page, admin, nameLike, options).then((request) => request(axios, basePath));
         },
     };
@@ -7001,19 +7132,19 @@ export class UsersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof UsersApi
      */
-    public createUser(userForCreate: UserForCreate, options?: AxiosRequestConfig) {
+    public createUser(userForCreate: UserForCreate, options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).createUser(userForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete User
-     * @param {any} username 
+     * @param {string} username 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof UsersApi
      */
-    public deleteUser(username: any, options?: AxiosRequestConfig) {
+    public deleteUser(username: string, options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).deleteUser(username, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -7024,25 +7155,26 @@ export class UsersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof UsersApi
      */
-    public getCurrentUser(options?: AxiosRequestConfig) {
+    public getCurrentUser(options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).getCurrentUser(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Users
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof UsersApi
      */
-    public getUsers(limit?: any, page?: any, admin?: any, nameLike?: any, options?: AxiosRequestConfig) {
+    public getUsers(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).getUsers(limit, page, admin, nameLike, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -7054,11 +7186,11 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
         /**
          * 
          * @summary Get Api Domain Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVm: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getVm: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('getVm', 'uuid', uuid)
             const localVarPath = `/api/vms/{uuid}`
@@ -7092,15 +7224,15 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
         /**
          * 
          * @summary Get Api Domain
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVms: async (limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getVms: async (limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/vms`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7151,11 +7283,11 @@ export const VmsApiAxiosParamCreator = function (configuration?: Configuration) 
         /**
          * 
          * @summary Get Api Domain Vnc Token
-         * @param {any} token 
+         * @param {string} token 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVncAddress: async (token: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getVncAddress: async (token: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'token' is not null or undefined
             assertParamExists('getVncAddress', 'token', token)
             const localVarPath = `/api/vms/vnc/{token}`
@@ -7195,39 +7327,45 @@ export const VmsApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Get Api Domain Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getVm(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainDetail>> {
+        async getVm(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainDetail>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getVm(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsApi.getVm']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Domain
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getVms(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainPage>> {
+        async getVms(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainPage>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getVms(limit, page, admin, nameLike, nodeNameLike, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsApi.getVms']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Get Api Domain Vnc Token
-         * @param {any} token 
+         * @param {string} token 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getVncAddress(token: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async getVncAddress(token: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getVncAddress(token, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsApi.getVncAddress']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -7242,35 +7380,35 @@ export const VmsApiFactory = function (configuration?: Configuration, basePath?:
         /**
          * 
          * @summary Get Api Domain Uuid
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVm(uuid: any, options?: any): AxiosPromise<DomainDetail> {
+        getVm(uuid: string, options?: any): AxiosPromise<DomainDetail> {
             return localVarFp.getVm(uuid, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Domain
-         * @param {any} [limit] 
-         * @param {any} [page] 
-         * @param {any} [admin] 
-         * @param {any} [nameLike] 
-         * @param {any} [nodeNameLike] 
+         * @param {number} [limit] 
+         * @param {number} [page] 
+         * @param {boolean} [admin] 
+         * @param {string | null} [nameLike] 
+         * @param {string | null} [nodeNameLike] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVms(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, options?: any): AxiosPromise<DomainPage> {
+        getVms(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, options?: any): AxiosPromise<DomainPage> {
             return localVarFp.getVms(limit, page, admin, nameLike, nodeNameLike, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get Api Domain Vnc Token
-         * @param {any} token 
+         * @param {string} token 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getVncAddress(token: any, options?: any): AxiosPromise<any> {
+        getVncAddress(token: string, options?: any): AxiosPromise<any> {
             return localVarFp.getVncAddress(token, options).then((request) => request(axios, basePath));
         },
     };
@@ -7286,43 +7424,44 @@ export class VmsApi extends BaseAPI {
     /**
      * 
      * @summary Get Api Domain Uuid
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsApi
      */
-    public getVm(uuid: any, options?: AxiosRequestConfig) {
+    public getVm(uuid: string, options?: RawAxiosRequestConfig) {
         return VmsApiFp(this.configuration).getVm(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Domain
-     * @param {any} [limit] 
-     * @param {any} [page] 
-     * @param {any} [admin] 
-     * @param {any} [nameLike] 
-     * @param {any} [nodeNameLike] 
+     * @param {number} [limit] 
+     * @param {number} [page] 
+     * @param {boolean} [admin] 
+     * @param {string | null} [nameLike] 
+     * @param {string | null} [nodeNameLike] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsApi
      */
-    public getVms(limit?: any, page?: any, admin?: any, nameLike?: any, nodeNameLike?: any, options?: AxiosRequestConfig) {
+    public getVms(limit?: number, page?: number, admin?: boolean, nameLike?: string | null, nodeNameLike?: string | null, options?: RawAxiosRequestConfig) {
         return VmsApiFp(this.configuration).getVms(limit, page, admin, nameLike, nodeNameLike, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Get Api Domain Vnc Token
-     * @param {any} token 
+     * @param {string} token 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsApi
      */
-    public getVncAddress(token: any, options?: AxiosRequestConfig) {
+    public getVncAddress(token: string, options?: RawAxiosRequestConfig) {
         return VmsApiFp(this.configuration).getVncAddress(token, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
 /**
@@ -7334,12 +7473,12 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * umount - path = null  mount - path = iso file path
          * @summary Patch Api Tasks Vms Uuid Cdrom
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {CdromForUpdateDomain} [cdromForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        controlVmCdrom: async (uuid: any, body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        controlVmCdrom: async (uuid: string, cdromForUpdateDomain?: CdromForUpdateDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('controlVmCdrom', 'uuid', uuid)
             const localVarPath = `/api/tasks/vms/{uuid}/cdrom`
@@ -7366,7 +7505,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(cdromForUpdateDomain, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7376,11 +7515,11 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Post Api Vms
-         * @param {any} [body] 
+         * @param {DomainForCreate} [domainForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createVm: async (body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createVm: async (domainForCreate?: DomainForCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/vms`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7404,7 +7543,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainForCreate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7414,11 +7553,11 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Delete Api Domains
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteVm: async (uuid: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteVm: async (uuid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('deleteVm', 'uuid', uuid)
             const localVarPath = `/api/tasks/vms/{uuid}`
@@ -7456,7 +7595,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pathVmsProjectApiTasksVmsProjectPatch: async (domainProjectForUpdate: DomainProjectForUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        pathVmsProjectApiTasksVmsProjectPatch: async (domainProjectForUpdate: DomainProjectForUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domainProjectForUpdate' is not null or undefined
             assertParamExists('pathVmsProjectApiTasksVmsProjectPatch', 'domainProjectForUpdate', domainProjectForUpdate)
             const localVarPath = `/api/tasks/vms/project`;
@@ -7495,7 +7634,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshVms: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        refreshVms: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/tasks/vms`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7526,12 +7665,12 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * **Power off required**  Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on \'network\' network type
          * @summary Patch Api Vm Network
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkForUpdateDomain} [networkForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateVmNetwork: async (uuid: any, body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateVmNetwork: async (uuid: string, networkForUpdateDomain?: NetworkForUpdateDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('updateVmNetwork', 'uuid', uuid)
             const localVarPath = `/api/tasks/vms/{uuid}/network`
@@ -7558,7 +7697,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(networkForUpdateDomain, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7568,12 +7707,12 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Patch Api Tasks Vms Uuid Power
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {PowerStatusForUpdateDomain} [powerStatusForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateVmPowerStatus: async (uuid: any, body?: any, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateVmPowerStatus: async (uuid: string, powerStatusForUpdateDomain?: PowerStatusForUpdateDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uuid' is not null or undefined
             assertParamExists('updateVmPowerStatus', 'uuid', uuid)
             const localVarPath = `/api/tasks/vms/{uuid}/power`
@@ -7600,7 +7739,7 @@ export const VmsTaskApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(powerStatusForUpdateDomain, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7620,36 +7759,42 @@ export const VmsTaskApiFp = function(configuration?: Configuration) {
         /**
          * umount - path = null  mount - path = iso file path
          * @summary Patch Api Tasks Vms Uuid Cdrom
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {CdromForUpdateDomain} [cdromForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async controlVmCdrom(uuid: any, body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.controlVmCdrom(uuid, body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async controlVmCdrom(uuid: string, cdromForUpdateDomain?: CdromForUpdateDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.controlVmCdrom(uuid, cdromForUpdateDomain, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.controlVmCdrom']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Post Api Vms
-         * @param {any} [body] 
+         * @param {DomainForCreate} [domainForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createVm(body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createVm(body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async createVm(domainForCreate?: DomainForCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createVm(domainForCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.createVm']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Delete Api Domains
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteVm(uuid: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async deleteVm(uuid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteVm(uuid, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.deleteVm']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -7658,9 +7803,11 @@ export const VmsTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate: DomainProjectForUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate: DomainProjectForUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.pathVmsProjectApiTasksVmsProjectPatch']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -7668,33 +7815,39 @@ export const VmsTaskApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async refreshVms(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async refreshVms(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.refreshVms(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.refreshVms']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * **Power off required**  Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on \'network\' network type
          * @summary Patch Api Vm Network
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkForUpdateDomain} [networkForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateVmNetwork(uuid: any, body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateVmNetwork(uuid, body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async updateVmNetwork(uuid: string, networkForUpdateDomain?: NetworkForUpdateDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateVmNetwork(uuid, networkForUpdateDomain, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.updateVmNetwork']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @summary Patch Api Tasks Vms Uuid Power
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {PowerStatusForUpdateDomain} [powerStatusForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateVmPowerStatus(uuid: any, body?: any, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateVmPowerStatus(uuid, body, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        async updateVmPowerStatus(uuid: string, powerStatusForUpdateDomain?: PowerStatusForUpdateDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateVmPowerStatus(uuid, powerStatusForUpdateDomain, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['VmsTaskApi.updateVmPowerStatus']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -7709,32 +7862,32 @@ export const VmsTaskApiFactory = function (configuration?: Configuration, basePa
         /**
          * umount - path = null  mount - path = iso file path
          * @summary Patch Api Tasks Vms Uuid Cdrom
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {CdromForUpdateDomain} [cdromForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        controlVmCdrom(uuid: any, body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.controlVmCdrom(uuid, body, options).then((request) => request(axios, basePath));
+        controlVmCdrom(uuid: string, cdromForUpdateDomain?: CdromForUpdateDomain, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.controlVmCdrom(uuid, cdromForUpdateDomain, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Post Api Vms
-         * @param {any} [body] 
+         * @param {DomainForCreate} [domainForCreate] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createVm(body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.createVm(body, options).then((request) => request(axios, basePath));
+        createVm(domainForCreate?: DomainForCreate, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.createVm(domainForCreate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Delete Api Domains
-         * @param {any} uuid 
+         * @param {string} uuid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteVm(uuid: any, options?: any): AxiosPromise<any> {
+        deleteVm(uuid: string, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.deleteVm(uuid, options).then((request) => request(axios, basePath));
         },
         /**
@@ -7753,30 +7906,30 @@ export const VmsTaskApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshVms(options?: any): AxiosPromise<any> {
+        refreshVms(options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.refreshVms(options).then((request) => request(axios, basePath));
         },
         /**
          * **Power off required**  Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on \'network\' network type
          * @summary Patch Api Vm Network
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {NetworkForUpdateDomain} [networkForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateVmNetwork(uuid: any, body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.updateVmNetwork(uuid, body, options).then((request) => request(axios, basePath));
+        updateVmNetwork(uuid: string, networkForUpdateDomain?: NetworkForUpdateDomain, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.updateVmNetwork(uuid, networkForUpdateDomain, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Patch Api Tasks Vms Uuid Power
-         * @param {any} uuid 
-         * @param {any} [body] 
+         * @param {string} uuid 
+         * @param {PowerStatusForUpdateDomain} [powerStatusForUpdateDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateVmPowerStatus(uuid: any, body?: any, options?: any): AxiosPromise<any> {
-            return localVarFp.updateVmPowerStatus(uuid, body, options).then((request) => request(axios, basePath));
+        updateVmPowerStatus(uuid: string, powerStatusForUpdateDomain?: PowerStatusForUpdateDomain, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.updateVmPowerStatus(uuid, powerStatusForUpdateDomain, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -7791,37 +7944,37 @@ export class VmsTaskApi extends BaseAPI {
     /**
      * umount - path = null  mount - path = iso file path
      * @summary Patch Api Tasks Vms Uuid Cdrom
-     * @param {any} uuid 
-     * @param {any} [body] 
+     * @param {string} uuid 
+     * @param {CdromForUpdateDomain} [cdromForUpdateDomain] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public controlVmCdrom(uuid: any, body?: any, options?: AxiosRequestConfig) {
-        return VmsTaskApiFp(this.configuration).controlVmCdrom(uuid, body, options).then((request) => request(this.axios, this.basePath));
+    public controlVmCdrom(uuid: string, cdromForUpdateDomain?: CdromForUpdateDomain, options?: RawAxiosRequestConfig) {
+        return VmsTaskApiFp(this.configuration).controlVmCdrom(uuid, cdromForUpdateDomain, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Post Api Vms
-     * @param {any} [body] 
+     * @param {DomainForCreate} [domainForCreate] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public createVm(body?: any, options?: AxiosRequestConfig) {
-        return VmsTaskApiFp(this.configuration).createVm(body, options).then((request) => request(this.axios, this.basePath));
+    public createVm(domainForCreate?: DomainForCreate, options?: RawAxiosRequestConfig) {
+        return VmsTaskApiFp(this.configuration).createVm(domainForCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Delete Api Domains
-     * @param {any} uuid 
+     * @param {string} uuid 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public deleteVm(uuid: any, options?: AxiosRequestConfig) {
+    public deleteVm(uuid: string, options?: RawAxiosRequestConfig) {
         return VmsTaskApiFp(this.configuration).deleteVm(uuid, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -7833,7 +7986,7 @@ export class VmsTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate: DomainProjectForUpdate, options?: AxiosRequestConfig) {
+    public pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate: DomainProjectForUpdate, options?: RawAxiosRequestConfig) {
         return VmsTaskApiFp(this.configuration).pathVmsProjectApiTasksVmsProjectPatch(domainProjectForUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -7844,35 +7997,36 @@ export class VmsTaskApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public refreshVms(options?: AxiosRequestConfig) {
+    public refreshVms(options?: RawAxiosRequestConfig) {
         return VmsTaskApiFp(this.configuration).refreshVms(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * **Power off required**  Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on \'network\' network type
      * @summary Patch Api Vm Network
-     * @param {any} uuid 
-     * @param {any} [body] 
+     * @param {string} uuid 
+     * @param {NetworkForUpdateDomain} [networkForUpdateDomain] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public updateVmNetwork(uuid: any, body?: any, options?: AxiosRequestConfig) {
-        return VmsTaskApiFp(this.configuration).updateVmNetwork(uuid, body, options).then((request) => request(this.axios, this.basePath));
+    public updateVmNetwork(uuid: string, networkForUpdateDomain?: NetworkForUpdateDomain, options?: RawAxiosRequestConfig) {
+        return VmsTaskApiFp(this.configuration).updateVmNetwork(uuid, networkForUpdateDomain, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary Patch Api Tasks Vms Uuid Power
-     * @param {any} uuid 
-     * @param {any} [body] 
+     * @param {string} uuid 
+     * @param {PowerStatusForUpdateDomain} [powerStatusForUpdateDomain] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof VmsTaskApi
      */
-    public updateVmPowerStatus(uuid: any, body?: any, options?: AxiosRequestConfig) {
-        return VmsTaskApiFp(this.configuration).updateVmPowerStatus(uuid, body, options).then((request) => request(this.axios, this.basePath));
+    public updateVmPowerStatus(uuid: string, powerStatusForUpdateDomain?: PowerStatusForUpdateDomain, options?: RawAxiosRequestConfig) {
+        return VmsTaskApiFp(this.configuration).updateVmPowerStatus(uuid, powerStatusForUpdateDomain, options).then((request) => request(this.axios, this.basePath));
     }
 }
+
 
 
