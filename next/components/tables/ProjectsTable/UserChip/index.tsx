@@ -1,11 +1,11 @@
 import { Chip } from '@mui/material';
 import { FC } from 'react';
-import { UserBase } from '~/lib/api/generated';
+import { ProjectUser } from '~/lib/api/generated';
 
 type Props = {
-  user: UserBase;
+  user: ProjectUser;
 };
 
 export const UserChip: FC<Props> = ({ user }) => {
-  return <Chip label={user.id} size="small" sx={{ mr: 1 }} />;
+  return <Chip label={user.username} size="small" sx={{ mr: 1 }} />;
 };

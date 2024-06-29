@@ -7,17 +7,28 @@ import useSWR from 'swr';
 import { FilterSettingsDrawer } from '~/components/utils/FilterSettingsDrawer';
 import { JTDDataType } from 'ajv/dist/core';
 import { generateProperty } from '~/lib/jtd';
-
+import { usePagination } from '~/lib/utils/hooks';
+import { useAuth } from '~/store/userState';
 type Filters = JTDDataType<typeof filtersJtd>;
 
 export const ImagesTable: FC = () => {
+  const { user } = useAuth();
   const { enqueueNotistack } = useNotistack();
   const [filters, setFilters] = useState<Filters>(generateProperty(filtersJtd));
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
-    ['imagesApi.getImages', filters],
-    ([_, f]) =>
+    ['imagesApi.getImages', filters, limit, page, user],
+    ([_, f, l, p, u]) =>
       imagesApi
-        .getImages(f.node || undefined, f.poolUuid || undefined, f.name || undefined, f.rool || undefined)
+        .getImages(
+          limit, 
+          page,
+          u?.isAdminMode,
+          f.node || undefined, 
+          f.poolUuid || undefined, 
+          f.name || undefined, 
+          f.rool || undefined
+        )
         .then((res) => res.data),
     { revalidateOnFocus: false }
   );
@@ -26,11 +37,12 @@ export const ImagesTable: FC = () => {
 
   const choicesFetchers = useMemo(
     () => ({
-      nodes: () => nodesApi.getNodes().then((res) => res.data.map((node) => ({ label: node.name, value: node.name }))),
+      nodes: () =>
+        nodesApi.getNodes(-1).then((res) => res.data.data.map((node) => ({ label: node.name, value: node.name }))),
       pools: async () => {
         const results = await Promise.all([
-          storagesApi.getStorages().then((res) =>
-            res.data.map((storage) => ({
+          storagesApi.getStorages(-1).then((res) =>
+            res.data.data.map((storage) => ({
               label: storage.name,
               value: storage.uuid,
             }))
@@ -57,9 +69,14 @@ export const ImagesTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
-        pageSize={25}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.name}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[

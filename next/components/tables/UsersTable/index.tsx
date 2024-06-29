@@ -6,12 +6,18 @@ import { usersApi } from '~/lib/api';
 import useSWR from 'swr';
 import { ScopeChip } from './ScopeChip';
 import { GroupChip } from './GroupChip';
+import { usePagination } from '~/lib/utils/hooks';
 
 export const UsersTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
-  const { data, error, isValidating } = useSWR('usersApi.getUsers', () => usersApi.getUsers().then((res) => res.data), {
-    revalidateOnFocus: false,
-  });
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
+  const { data, error, isValidating } = useSWR(
+    ['usersApi.getUsers', limit, page],
+    () => usersApi.getUsers(limit, page).then((res) => res.data),
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
   if (error) {
     enqueueNotistack('Failed to fetch users.', { variant: 'error' });
@@ -22,9 +28,14 @@ export const UsersTable: FC = () => {
       <DataGrid
         disableSelectionOnClick
         rowHeight={40}
-        pageSize={25}
+        page={page}
+        pageSize={limit}
+        paginationMode="server"
+        onPageChange={onPageChange}
+        onPageSizeChange={onLimitChange}
         getRowId={(row) => row.username}
-        rows={data || []}
+        rows={data?.data || []}
+        rowCount={data?.count || 0}
         loading={!data || isValidating}
         error={!!error || undefined}
         columns={[

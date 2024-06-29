@@ -34,7 +34,7 @@ export const ChangeStorageMetaDataDialog: FC<Props> = ({ open, uuid, metadata, o
     if (!open) {
       return;
     }
-    reset(metadata);
+    reset();
   }, [open, reset, metadata]);
 
   const handleChangeMetaData = (data: FormData) => {

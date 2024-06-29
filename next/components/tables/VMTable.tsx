@@ -22,7 +22,7 @@ export const VMTable: FC = () => {
   const { page, limit, onPageChange, onLimitChange } = usePagination();
   const { data, error, isValidating } = useSWR(
     ['vmsApi.getVms', user, page, limit, filters],
-    ([, u, p, l, f]) => vmsApi.getVms(u?.isAdminMode, l, p, f.name, f.nodeName).then((res) => res.data),
+    ([, u, p, l, f]) => vmsApi.getVms(l, p, u?.isAdminMode, f.name, f.nodeName).then((res) => res.data),
     { revalidateOnFocus: false }
   );
 
@@ -105,7 +105,7 @@ export const VMTable: FC = () => {
           },
           {
             headerName: 'Group',
-            field: 'ownerProject',
+            field: 'ownerProjectId',
             disableColumnMenu: true,
             flex: 1,
             minWidth: 150,

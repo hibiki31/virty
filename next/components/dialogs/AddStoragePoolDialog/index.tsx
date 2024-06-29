@@ -37,8 +37,8 @@ export const AddStoragePoolDialog: FC<Props> = ({ open, onClose }) => {
     resetFetchers();
 
     setFetcher('storages', () =>
-      storagesApi.getStorages().then((res) =>
-        res.data.map((storage) => ({
+      storagesApi.getStorages(-1).then((res) =>
+        res.data.data.map((storage) => ({
           label: storage.name,
           value: storage.name,
         }))

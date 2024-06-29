@@ -9,12 +9,18 @@ import { nodesApi } from '~/lib/api';
 import { Node, NodeRole } from '~/lib/api/generated';
 import { useNotistack } from '~/lib/utils/notistack';
 import { RoleChip } from './RoleChip';
+import { usePagination } from '~/lib/utils/hooks';
 
 export const NodesTable: FC = () => {
   const { enqueueNotistack } = useNotistack();
-  const { data, error, isValidating } = useSWR('nodesApi.getNodes', () => nodesApi.getNodes().then((res) => res.data), {
-    revalidateOnFocus: false,
-  });
+  const { page, limit, onPageChange, onLimitChange } = usePagination();
+  const { data, error, isValidating } = useSWR(
+    ['nodesApi.getNodes', limit, page],
+    () => nodesApi.getNodes(limit, page).then((res) => res.data),
+    {
+      revalidateOnFocus: false,
+    }
+  );
   const [selectedNode, setSelectedNode] = useState<Node | undefined>(undefined);
 
   if (error) {
@@ -27,9 +33,14 @@ export const NodesTable: FC = () => {
         <DataGrid
           disableSelectionOnClick
           rowHeight={40}
-          pageSize={25}
+          page={page}
+          pageSize={limit}
+          paginationMode="server"
+          onPageChange={onPageChange}
+          onPageSizeChange={onLimitChange}
           getRowId={(row) => row.name}
-          rows={data || []}
+          rows={data?.data || []}
+          rowCount={data?.count || 0}
           loading={!data || isValidating}
           error={!!error || undefined}
           columns={[
