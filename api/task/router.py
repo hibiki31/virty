@@ -44,7 +44,8 @@ def get_tasks(
     count = query.count()
 
     query = query.order_by(desc(TaskModel.post_time))
-    task = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    if query.limit > 0:
+        task = query.limit(param.limit).offset(int(param.limit*param.page)).all()
     
     return { "count": count, "data": task }
 

@@ -62,7 +62,8 @@ def get_api_images(
     res = []
     
     count = query.count()
-    query = query.limit(param.limit).offset(int(param.limit*param.page))
+    if param.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
 
     for i in query.all():
         if i[1]:
