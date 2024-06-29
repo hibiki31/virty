@@ -11,7 +11,7 @@ import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  project: Project['data'][0];
+  project: Project;
   onClose: () => void;
 };
 

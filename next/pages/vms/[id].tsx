@@ -57,7 +57,7 @@ const VMPage: NextPage<Props> = ({ id }) => {
       shouldRetryOnError: false,
     }
   );
-  const [macAddress, setMacAddress] = useState<string | undefined>(undefined);
+  const [macAddress, setMacAddress] = useState<string | undefined | null>(undefined);
   const [storageAnchorEl, setStorageAnchorEl] = useState<null | HTMLElement>(null);
   const [storage, setStorage] = useState<DomainDrive | undefined>(undefined);
   const { enqueueNotistack } = useNotistack();

@@ -88,7 +88,7 @@ const Page: NextPage<Props> = ({ id }) => {
           label="MetaData"
           DialogComponent={ChangeStorageMetaDataDialog}
           buttonProps={{ variant: 'contained', size: 'small' }}
-          dialogProps={{ uuid: id, metadata: data.metaData }}
+          dialogProps={{ uuid: id }}
         />
         <Button variant="contained" color="error" disableElevation size="small" onClick={deleteStorage}>
           Delete

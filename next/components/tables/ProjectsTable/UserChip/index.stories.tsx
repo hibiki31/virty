@@ -9,7 +9,7 @@ export default {
 export const Default: ComponentStoryObj<typeof UserChip> = {
   args: {
     user: {
-      id: 'user01',
+      username: 'user01',
     },
   },
 };

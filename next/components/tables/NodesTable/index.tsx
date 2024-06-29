@@ -21,7 +21,7 @@ export const NodesTable: FC = () => {
       revalidateOnFocus: false,
     }
   );
-  const [selectedNode, setSelectedNode] = useState<Node['data'][0] | undefined>(undefined);
+  const [selectedNode, setSelectedNode] = useState<Node | undefined>(undefined);
 
   if (error) {
     enqueueNotistack('Failed to fetch nodes.', { variant: 'error' });

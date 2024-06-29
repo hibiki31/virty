@@ -11,7 +11,7 @@ import { BaseDialog } from '../BaseDialog';
 
 type Props = {
   open: boolean;
-  node?: Node['data'][0];
+  node?: Node;
   onClose: () => void;
 };
 

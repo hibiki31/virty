@@ -7,7 +7,7 @@ import { BaseMenu } from '../BaseMenu';
 type Props = {
   open?: boolean;
   anchorEl: HTMLElement | null;
-  project: Project['data'][0];
+  project: Project;
   onClose: () => void;
 };
 

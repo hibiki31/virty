@@ -155,7 +155,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           data.form.cloudInit.useCloudInit === 'true'
             ? {
                 hostname: (data.form.cloudInit as any).hostname || '',
-                userData: (data.form.cloudInit as any).userData || '',
+                userdata: (data.form.cloudInit as any).userData || '',
               }
             : undefined,
       })

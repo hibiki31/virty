@@ -12,7 +12,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   vmUuid: string;
-  macAddress?: string;
+  macAddress?: string | null;
   nodeName: string;
 };
 
