@@ -44,7 +44,7 @@ export const StorageActionsMenu: FC<Props> = ({ anchorEl, onClose, vmUuid, stora
     resetFetchers();
     setFetcher('images', () =>
       imagesApi
-        .getImages(nodeName, undefined, undefined, 'iso', -1)
+        .getImages(-1, undefined, undefined, nodeName, undefined, undefined, 'iso', undefined)
         .then((res) => res.data.data.map((image) => ({ value: image.path, label: image.name })))
     );
   }, [changeImageOpen, reset, resetFetchers, setValue, setFetcher, nodeName]);
