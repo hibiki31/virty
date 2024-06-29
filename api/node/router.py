@@ -37,7 +37,8 @@ def get_api_nodes(
         query = query.filter(NodeModel.name.like(f'%{param.name_like}%'))
     
     count = query.count()
-    query = query.limit(param.limit).offset(int(param.limit * param.page))
+    if query.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit * param.page))
 
 
     return {"count": count, "data": query.all()}

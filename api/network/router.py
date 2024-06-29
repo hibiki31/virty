@@ -42,7 +42,8 @@ def get_api_networks(
         query = query.filter(NetworkModel.type==param.type)
     
     count = query.count()
-    query = query.limit(param.limit).offset(int(param.limit*param.page))
+    if query.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
     
     return { "count": count, "data": query.all() }
 

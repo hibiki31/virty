@@ -63,9 +63,10 @@ def get_api_users(
         query = query.filter(UserModel.usernamee.like(f"%{param.name_like}%"))
 
     count = query.count()
-    data = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    if query.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
 
-    return {"count": count, "data": data}
+    return {"count": count, "data": query.all()}
 
 
 @app.delete("/users/{username}", operation_id="delete_user")

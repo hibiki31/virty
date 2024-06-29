@@ -42,7 +42,10 @@ def get_api_domain(
     count = query.count()
 
     query = query.order_by(desc(DomainModel.name))
-    vms = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    
+    if param.limit > 0:
+        query.limit(param.limit).offset(int(param.limit*param.page))
+    vms = query.all()
 
     return {"count": count, "data": vms}
 
