@@ -63,7 +63,7 @@ def get_api_users(
         query = query.filter(UserModel.usernamee.like(f"%{param.name_like}%"))
 
     count = query.count()
-    if query.limit > 0:
+    if param.limit > 0:
         query = query.limit(param.limit).offset(int(param.limit*param.page))
 
     return {"count": count, "data": query.all()}

@@ -47,7 +47,8 @@ def get_api_flavors(
         query = query.filter(FlavorModel.name.like(f'%{param.name_like}%'))
     
     count = query.count()
-    query = query.limit(param.limit).offset(int(param.limit*param.page))
+    if param.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
     
     return {"count": count, "data": query.all()}
 

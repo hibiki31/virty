@@ -61,7 +61,7 @@ def get_api_storages(
         query = query.filter(StorageModel.name.like(f'%{param.name_like}%'))
 
     count = query.count()
-    if query.limit > 0:
+    if param.limit > 0:
         query = query.limit(param.limit).offset(int(param.limit*param.page))
     models = query.all()
 
