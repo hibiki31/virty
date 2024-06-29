@@ -105,7 +105,7 @@ export const AddVMDialog: FC<Props> = ({ open, onClose }) => {
           setValue('form.storage.originalName', '');
           setFetcher('images', () =>
             imagesApi
-              .getImages(undefined, undefined, undefined, undefined, -1)
+              .getImages(-1, undefined, undefined, undefined, undefined, undefined)
               .then((res) =>
                 res.data.data
                   .filter((image) => image.storageUuid === originalPoolUuid)
