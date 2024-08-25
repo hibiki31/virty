@@ -1,0 +1,21 @@
+{
+	"name": "virty-api",
+	"dockerComposeFile": "compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/api2/",
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"mhutchie.git-graph",
+				"KevinRose.vsc-python-indent",
+				"charliermarsh.ruff",
+				"tamasfe.even-better-toml"
+			]
+		}
+	},
+	"forwardPorts": [
+		8765
+	]
+}
