@@ -1,0 +1,13 @@
+{
+  "dockerComposeFile": "compose.yml",
+  "service": "golang",
+  "workspaceFolder": "/workspace/apigo",
+  "customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go"
+			]
+		}
+	},
+	"postStartCommand": ".devcontainer/init.sh"
+}

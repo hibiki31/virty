@@ -1,0 +1,23 @@
+services:
+  golang:
+    image: golang
+    volumes:
+      - "../../:/workspace:cached"
+    stdin_open: true
+    tty: true
+    ports:
+      - 0.0.0.0:8765:8765
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - 0.0.0.0:5432:5432
+    volumes:
+      - virty-apigo-postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: virty
+      POSTGRES_DB: virty
+      POSTGRES_PASSWORD: virty-passworde
+
+volumes:
+  virty-apigo-postgres-data:
