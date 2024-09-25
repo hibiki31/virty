@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from auth.router import app as auth_router
 from log import setup_logger
+from node.router import app as node_router
 from settings import API_VERSION
 from user.router import app as user_router
 
@@ -40,6 +41,7 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(node_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8765, reload=True)

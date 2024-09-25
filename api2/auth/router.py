@@ -200,8 +200,7 @@ def login_for_access_token(
         data={
             "sub": user.username,
             # "scopes": form_data.scopes,
-            "scopes": [i.name for i in list(user.scopes)],
-            "projects": [i.id for i in list(user.projects)]
+            "scopes": [i.name for i in list(user.scopes)]
             },
         expires_delta=access_token_expires,
     )
