@@ -6,6 +6,7 @@ services:
     stdin_open: true
     tty: true
     ports:
+      - 0.0.0.0:3333:3333
       - 0.0.0.0:8765:8765
   db:
     image: postgres:latest
