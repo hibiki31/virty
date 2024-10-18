@@ -2,16 +2,11 @@ package main
 
 import (
 	"fmt"
+	"virtygo/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-type User struct {
-	gorm.Model
-	Name  string
-	Email string
-}
 
 func Test() {
 	fmt.Print("hello")
@@ -22,18 +17,18 @@ func Test() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&User{})
+	db.AutoMigrate(&model.User{})
 	fmt.Println("migrated")
 
 	var count int64
-	db.Model(&User{}).Count(&count)
+	db.Model(&model.User{}).Count(&count)
 	if count == 0 {
-		db.Create(&User{Name: "user01", Email: "xxxxxx@xxx01.com"})
-		db.Create(&User{Name: "user02", Email: "xxxxxx@xxx02.com"})
-		db.Create(&User{Name: "user03", Email: "xxxxxx@xxx03.com"})
+		db.Create(&model.User{Name: "user01", Email: "xxxxxx@xxx01.com"})
+		db.Create(&model.User{Name: "user02", Email: "xxxxxx@xxx02.com"})
+		db.Create(&model.User{Name: "user03", Email: "xxxxxx@xxx03.com"})
 	}
 
-	var user User
-	db.Where(User{Name: "user02"}).First(&user)
+	var user model.User
+	db.Where(model.User{Name: "user02"}).First(&user)
 	fmt.Println(user)
 }

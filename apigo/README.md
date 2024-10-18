@@ -67,6 +67,40 @@ go get gorm.io/driver/postgres
 
 ## Air
 
+バイナリインストールと初期化
+
 ```
 go install github.com/air-verse/air@latest
+go init
+```
+
+自動リロード起動
+
+```
+air
+```
+
+### Swag
+
+インストールと初期化
+
+```
+go install github.com/swaggo/swag/cmd/swag@latest
+go get -u github.com/swaggo/echo-swagger
+swag init
+```
+
+更新するコマンド
+
+```bash
+swag fmt
+# ORMのモデルを解釈するための引数
+swag init --parseDependency --parseInternal
+```
+
+airの設定を変更
+
+```toml
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs"]
+  pre_cmd = ["swag fmt && swag init --parseDependency --parseInternal"]
 ```
