@@ -27,6 +27,7 @@ func main() {
 	defer db.Close()
 
 	handler.MountUser(e)
+	handler.MountToken(e)
 
 	e.Use(middleware.CORS())
 	e.GET("/api/*", echoSwagger.WrapHandler)

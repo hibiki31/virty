@@ -39,6 +39,15 @@ info:
   title: Recommend Swaggo API
   version: "1.0"
 paths:
+  /token:
+    post:
+      consumes:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      security:
+      - ApiKeyAuth: []
   /users:
     get:
       produces:
