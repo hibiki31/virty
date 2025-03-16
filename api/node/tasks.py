@@ -1,17 +1,14 @@
-from json import loads
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
-from fastapi import BackgroundTasks
+
 from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-
-
 from module import sshlib
 from module.ansiblelib import AnsibleManager
 from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
+
+from .models import AssociationNodeToRoleModel, NodeModel, NodeRoleModel
+from .schemas import NodeForCreate, NodeRoleForUpdate
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)

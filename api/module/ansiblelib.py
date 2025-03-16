@@ -1,17 +1,18 @@
-import json, yaml, shutil, os
+import json
+import os
 
+import yaml
+
+from ansible import context
+from ansible.executor.task_queue_manager import TaskQueueManager
+from ansible.inventory.manager import InventoryManager
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
-from ansible.vars.manager import VariableManager
-from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play import Play
-from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
-from ansible import context
-import ansible.constants as C
-
-from settings import APP_ROOT, DATA_ROOT
+from ansible.vars.manager import VariableManager
 from mixin.log import setup_logger
+from settings import APP_ROOT, DATA_ROOT
 
 logger = setup_logger(__name__)
 
@@ -22,12 +23,14 @@ class AnsibleManager():
     
     def run_playbook(self, book, extra_vars={}):
         result = ansible_run(play_source=book, host_list=[f"{self.user}@{self.domain}"], extra_vars=extra_vars)
+        logger.debug(result.res)
         summary = {
             "ok": 0,
             "failed": 0,
             "unreachable": 0
         }
-        for i in result:
+        logger.debug(result)
+        for i in result.res:
             if i["status"] == "ok":
                 summary["ok"] += 1
             elif i["status"] == "failed":
@@ -145,6 +148,8 @@ class ResultCallback(CallbackBase):
     
 
 def ansible_run(play_source, host_list, extra_vars={}):
+    os.environ['LC_ALL'] = 'C.UTF-8'
+    os.environ['LANG'] = 'C.UTF-8'
     logger.info(json.dumps([play_source, host_list, extra_vars], indent=4))
     # ansible-playbookで指定できる引数と同じ
     context.CLIARGS = ImmutableDict(
@@ -189,6 +194,7 @@ def ansible_run(play_source, host_list, extra_vars={}):
 
     # 実行
     tqm = None
+    
     try:
         tqm = TaskQueueManager(
                 inventory=inventory,
@@ -199,12 +205,11 @@ def ansible_run(play_source, host_list, extra_vars={}):
             )
         result = tqm.run(play)
     finally:
-        # 終了後に一時ファイルを削除している
-        if tqm is not None:
-            tqm.cleanup()
-        # Remove ansible tmpdir
-        shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
-        return results_callback.res
+        tqm.cleanup()
+        if loader:
+            loader.cleanup_all_tmp_files()
+            
+    return results_callback
 
 
 def debug():
