@@ -1,48 +1,27 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04
 
-RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://ftp.riken.go.jp/Linux/ubuntu/%g" /etc/apt/sources.list
-RUN apt update -y && apt install -y \
+ENV PATH $PATH:/root/.local/bin/:/opt/venv/bin/
+
+RUN apt-get update -y
+RUN apt-get install -y \
     make \
     gcc \
-    wget \
     openssh-client \
     openssh-server \
     genisoimage \
     rsync \
-    git \
     libvirt-clients \
     libvirt-dev \
     python3 \
-    python3-pip
+    python3-dev \
+    python3-venv
 
 COPY ./requirements.txt /tmp/
-RUN python3 -m pip install --upgrade pip
-RUN pip3 install --user -r /tmp/requirements.txt
+RUN python3 -m venv /opt/venv
+RUN pip3 install -r /tmp/requirements.txt
 
-FROM ubuntu:22.04 AS runner
-
-RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://ftp.riken.go.jp/Linux/ubuntu/%g" /etc/apt/sources.list
-RUN apt-get update -y --no-install-recommends \
-        && apt-get install -y \
-        wget \
-        openssh-client \
-        openssh-server \
-        genisoimage \
-        rsync \
-        libvirt-clients \
-        libvirt-dev \
-        python3 \
-        python3-pip \
-        && apt-get -y clean \
-        && rm -rf /var/lib/apt/lists/*
-
-COPY --from=build /root/.local /root/.local
-
-RUN mkdir -p /opt/app && mkdir -p /opt/data
 COPY . /opt/app
 WORKDIR /opt/app
-
-ENV PATH $PATH:/root/.local/bin/
 
 EXPOSE 8000
 

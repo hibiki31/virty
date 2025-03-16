@@ -1,8 +1,6 @@
-from typing import List
+from typing import Any, List
 
-from anyio import Any
-
-from mixin.schemas import GetPagination, BaseSchema
+from mixin.schemas import BaseSchema, GetPagination
 
 
 class ProjectBase(BaseSchema):
