@@ -14,8 +14,6 @@ services:
   db:
     image: postgres:latest
     restart: unless-stopped
-    ports:
-      - 0.0.0.0:5432:5432
     volumes:
       - virty-postgres-data:/var/lib/postgresql/data
     environment:

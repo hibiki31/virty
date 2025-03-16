@@ -1,11 +1,13 @@
 {
-    "python.pythonPath": "/usr/local/bin/python",
-    "workbench.colorTheme": "Visual Studio Dark",
-    "workbench.editor.enablePreview": false,
-    "[python]": {
-        "editor.codeActionsOnSave": {
-          "source.fixAll.ruff": "explicit",
-          "source.organizeImports.ruff": "explicit"
-        }
-    }
+  "workbench.colorTheme": "Visual Studio Dark",
+  "workbench.editor.enablePreview": false,
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    },
+  },
+  "python.analysis.extraPaths" : [
+    "/opt/venv/lib/python3.12/site-packages/"
+  ],
 }

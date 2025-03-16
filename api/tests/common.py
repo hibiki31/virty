@@ -1,12 +1,11 @@
-import httpx
-import json
-from pprint import pprint
-import time
 import functools
-from settings import ENV_FILE
+import json
+import time
+from pprint import pprint
 
+import httpx
 
-env = json.load(open(f'./tests/{ENV_FILE}', 'r'))
+env = json.load(open('./tests/env.json', 'r'))
 BASE_URL = env["base_url"]
 
 

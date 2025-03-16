@@ -4,7 +4,7 @@ git config --global --add safe.directory /workspaces
 
 apt-get install -y wget git
 
-python -m venv /opt/venv
+python3 -m venv /opt/venv
 
 pip install -r /workspaces/api/.devcontainer/requirements.txt
 pip install -r /workspaces/api/requirements.txt
