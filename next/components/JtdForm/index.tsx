@@ -15,7 +15,7 @@ type Props = {
 
 export const JtdForm: FC<Props> = ({ prefixPropertyName, propertyJtd, rootJtd, isEditing, isError = false }) => {
   const { reset } = useJtdForm(rootJtd);
-  const { resetExtraData } = useFormExtraData();
+  const { resetExtraData } = useFormExtraData('formExtraData');
 
   useEffect(
     () => () => {
