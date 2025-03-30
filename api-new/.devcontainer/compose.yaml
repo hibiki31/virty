@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: ./Dockerfile
+    volumes:
+      - ../..:/workspace:cached
+    command: sleep infinity
+  mongo:
+    image: mongo:8.0
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: app
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo_dev:/data/db
+    restart: unless-stopped
+
+  mongoexpress:
+    image: mongo-express:1.0.2
+    links:
+      - mongo
+    ports:
+      - 8081:8081
+    environment:
+      VCAP_APP_HOST: 0.0.0.0
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+    restart: unless-stopped
+
+volumes:
+  mongo_dev:

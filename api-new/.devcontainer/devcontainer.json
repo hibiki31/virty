@@ -1,0 +1,19 @@
+{
+	"name": "VirtyAPI",
+	"dockerComposeFile": "compose.yaml",
+	"service": "api",
+	"workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+    "postCreateCommand": "/workspace/api/.devcontainer/post.sh",
+	"forwardPorts": [ 8019 ],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"mhutchie.git-graph",
+				"charliermarsh.ruff",
+				"PKief.material-icon-theme",
+				"saoudrizwan.claude-dev"
+			]
+		}
+	}
+}
