@@ -8,7 +8,6 @@ services:
     volumes:
       - "../../:/workspaces:cached"
       - virty-develop-ssh-key:/root/.ssh
-      - virty-develop-venv:/opt/venv
     command: sleep infinity
 
   db:
@@ -23,5 +22,4 @@ services:
 
 volumes:
   virty-postgres-data:
-  virty-develop-venv:
   virty-develop-ssh-key:

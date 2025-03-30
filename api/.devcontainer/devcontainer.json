@@ -5,7 +5,6 @@
 	"workspaceFolder": "/workspaces/api/",
 	"postCreateCommand": ".devcontainer/post_create.sh",
 	"customizations": {
-		// Configure properties specific to VS Code.
 		"vscode": {
 			"extensions": [
 				"ms-python.python",

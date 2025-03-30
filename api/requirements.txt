@@ -2,6 +2,7 @@ fastapi==0.115.11
 uvicorn==0.34.0
 libvirt-python==11.1.0
 ansible==11.3.0
+ansible-runner==2.4.1 
 SQLAlchemy==2.0.39
 alembic==1.15.1
 PyJWT==2.10.1

@@ -70,7 +70,7 @@ def wait_tasks(resp):
                 break
             elif resp["status"] == "error":
                 print(f"{Color.RED}Task Error {Color.END}{uuid} {resp['resource']} {resp['object']} {counter}s")
-                print(resp["message"])
+                raise Exception(print(resp["message"]))
                 break
             time.sleep(0.5)
             counter += 0.5
