@@ -1,17 +1,14 @@
-from json import loads
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
-from fastapi import BackgroundTasks
+
 from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-
-
 from module import sshlib
 from module.ansiblelib import AnsibleManager
 from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
+
+from .models import AssociationNodeToRoleModel, NodeModel, NodeRoleModel
+from .schemas import NodeForCreate, NodeRoleForUpdate
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
@@ -71,7 +68,7 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
         os_name = ssh_manager.get_node_os_release()["PRETTY_NAME"],
         os_version = ssh_manager.get_node_os_release()["VERSION_ID"],
         status = 10,
-        ansible_facts = node_infomation["result"],
+        ansible_facts = node_infomation,
         qemu_version = None,
         libvirt_version = None,
     )
@@ -95,7 +92,6 @@ def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
         raise Exception("Node not found")
     
     db.query(AssociationNodeToRoleModel).filter(AssociationNodeToRoleModel.node_name==node_name).delete()
-    db.query(AssociationPoolsCpuModel).filter(AssociationPoolsCpuModel.node_name==node_name).delete()
     db.commit()
     db.query(NodeModel).filter(NodeModel.name==node_name).delete()
     db.commit()
@@ -147,12 +143,12 @@ def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
 
-    res = ansible_manager.run_playbook_file("pb_init_libvirt")
-    task.message = "ansible run successfull " + str(res["summary"])
+    res = ansible_manager.run(playbook_name="pb_init_libvirt")
+    task.message = "ansible run successfull " + str(res.status)
     
     role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="libvirt").one_or_none()
     
-    if role_model == None:
+    if role_model is None:
         role_model = NodeRoleModel(name="libvirt")
         db.add(role_model)
     

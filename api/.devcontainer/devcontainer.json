@@ -3,16 +3,16 @@
 	"dockerComposeFile": "compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces/api/",
-	"postCreateCommand": "git config --global --add safe.directory /workspaces",
+	"postCreateCommand": ".devcontainer/post_create.sh",
 	"customizations": {
-		// Configure properties specific to VS Code.
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
 				"mhutchie.git-graph",
 				"KevinRose.vsc-python-indent",
 				"charliermarsh.ruff",
-				"tamasfe.even-better-toml"
+				"tamasfe.even-better-toml",
+				"saoudrizwan.claude-dev"
 			]
 		}
 	},

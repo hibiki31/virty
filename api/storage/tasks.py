@@ -78,9 +78,9 @@ def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     editor.storage_base_edit(name=body.name, path=body.path)
 
     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
-    ansible_manager.run_playbook_file(
-        yaml="pb_make_dir_recurse",
-        extra_vars=[{"path": body.path}]
+    ansible_manager.run(
+        playbook_name="pb_make_dir_recurse",
+        extravars={"path": body.path}
     )
 
     # ソイや！

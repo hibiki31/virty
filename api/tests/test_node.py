@@ -1,6 +1,5 @@
 import httpx
-
-from common import BASE_URL, HEADERS, env, print_resp, wait_tasks, tester
+from common import BASE_URL, HEADERS, env, print_resp, tester, wait_tasks
 
 
 @tester
@@ -12,7 +11,7 @@ def delete_nodes():
     nodes = [ i["name"] for i in nodes_resp.json()["data"] ]
     print(nodes)
     for server in env["servers"]:
-        if not server["name"] in nodes:
+        if server["name"] not in nodes:
             continue
         resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/nodes/{server["name"]}', headers=HEADERS)
         print_resp(resp=resp, allow_not_found=True)
@@ -48,7 +47,7 @@ def post_nodes():
 @tester
 def patch_nodes_vxlan():
     for server in env["servers"]:
-        if not "local" in server:
+        if "local" not in server:
             continue
         req_data = {
             "nodeName": server["name"],

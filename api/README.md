@@ -1,5 +1,14 @@
 # API DOC
 
+パッケージの自動アップデート
+
+```
+pip install pip-review
+pip-review
+```
+
+
+
 ## 開発時のメモ
 
 テスト用コマンドの登録
