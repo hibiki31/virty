@@ -1,6 +1,5 @@
 <template>
   <v-container class="fill-height" max-width="900">
-    aaaa
     <div>
       <v-img class="mb-4" height="150" src="@/assets/logo.png" />
 

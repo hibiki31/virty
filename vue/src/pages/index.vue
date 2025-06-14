@@ -2,10 +2,10 @@
   <HelloWorld />
 </template>
 
+<route lang="yaml">
+meta:
+  layout: default
+</route>
+
 <script lang="ts" setup>
-// import { apiClient } from '@/api'
-
-// const { data, error } = await apiClient.GET('/api/version')
-// console.log(data)
-
 </script>

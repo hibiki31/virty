@@ -8,9 +8,8 @@
             <v-spacer></v-spacer>
           </v-toolbar>
           <v-card-text>
-            <v-text-field v-model="username" label="userId" prepend-icon="mdi-account" required type="text"
+            <v-text-field v-model="username" label="ID" prepend-icon="mdi-account" required type="text"
               variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
-
             <v-text-field v-model="password" label="Password" prepend-icon="mdi-lock" required type="password"
               variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
           </v-card-text>
@@ -97,26 +96,30 @@ const validateToken = () => {
     return
   }
 
+  auth.token = accessToken
+
   apiClient.GET('/api/auth/validate', {
     headers: {
       Authorization: 'Bearer ' + accessToken
     }
-  }).then(() => {
-    notify({
-      type: 'success',
-      title: '認証成功',
-      text: '認証情報が有効でした',
-    })
-    auth.loginSuccess(accessToken)
-    router.push((route.query.redirect as string | undefined) ?? '/')
-  }).catch(() => {
-    notify({
-      type: 'error',
-      title: '認証失敗',
-      text: '認証情報が失効しました',
-    })
-    removeCookie('accessToken')
-    auth.$state.tokenValidated = true
+  }).then((res) => {
+    if (res.response.ok) {
+      notify({
+        type: 'success',
+        title: 'Login successful',
+        text: 'Token were valid',
+      })
+      auth.loginSuccess(accessToken)
+      router.push((route.query.redirect as string | undefined) ?? '/')
+    } else {
+      notify({
+        type: 'error',
+        title: 'Login Failed',
+        text: 'Token have expired',
+      })
+      removeCookie('accessToken')
+      auth.$state.tokenValidated = true
+    }
   })
 }
 
