@@ -1,0 +1,27 @@
+{
+    "name": "virty-web",
+    "context": ".",
+    "dockerFile": "./Dockerfile",
+    "forwardPorts": [
+        3000
+    ],
+    "mounts": [
+        "source=virty-web,target=${containerWorkspaceFolder}/node_modules,type=volume"
+    ],
+    "postCreateCommand": "/workspaces/virty/vue/.devcontainer/post.sh",
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "azemoh.one-monokai",
+                "mhutchie.git-graph",
+                "Vue.volar",
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "EditorConfig.EditorConfig",
+                "hollowtree.vue-snippets"
+            ]
+        }
+    }
+}
