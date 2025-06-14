@@ -12,6 +12,10 @@ declare module 'vue' {
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
+    NodeAddDialog: typeof import('./components/nodes/NodeAddDialog.vue')['default']
+    NodeDeleteDialog: typeof import('./components/nodes/NodeDeleteDialog.vue')['default']
+    NodeKeyDialog: typeof import('./components/nodes/NodeKeyDialog.vue')['default']
+    NodeRolePatch: typeof import('./components/nodes/NodeRolePatch.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

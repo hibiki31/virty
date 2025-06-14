@@ -31,7 +31,6 @@ import { useNotification } from '@kyvg/vue3-notification'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient } from '@/api'
 import { getCookie, removeCookie, setCookie } from 'typescript-cookie'
-import { fa } from 'vuetify/locale'
 
 // module
 const { notify } = useNotification()

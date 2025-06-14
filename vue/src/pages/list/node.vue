@@ -1,9 +1,11 @@
 <template>
   <v-card>
+    <node-add-dialog v-model="dialogAdd"></node-add-dialog>
     <v-card-actions>
-      <v-btn prepend-icon="mdi-file-key" variant="flat" color="primary">KEY</v-btn>
-      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary">JOIN</v-btn>
-      <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error">LEAVE</v-btn>
+      <v-btn prepend-icon="mdi-file-key" variant="flat" color="primary" size="small">KEY</v-btn>
+      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
+        @click="dialogAdd = true">JOIN</v-btn>
+      <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error" size="small">LEAVE</v-btn>
     </v-card-actions>
     <v-data-table :items="items" :loading="loading" :items-per-page="10" density="comfortable">
     </v-data-table>
@@ -15,6 +17,8 @@
 
 const loading = ref(false)
 import { ref } from 'vue'
+
+const dialogAdd = ref(false)
 
 const selected = ref([])
 const items = [

@@ -3,7 +3,8 @@
     <v-list density="compact" nav class="primary--text text--primary">
       <v-list-item prepend-icon="mdi-cube-outline" title="VM" :to="{ name: '/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-server" title="Node" :to="{ name: '/list/node' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-account-group-outline" title="User" :to="{ name: '/' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-checkbox-multiple-marked-outline" title="Task"
+        :to="{ name: '/tasks' }"></v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
