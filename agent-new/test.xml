@@ -1,0 +1,21 @@
+<domain type='kvm'>
+	<name>golibvirt-vm</name>
+	<memory unit='MiB'>1024</memory>
+	<vcpu>1</vcpu>
+	<os>
+		<type arch='x86_64'>hvm</type>
+		<boot dev='hd'/>
+	</os>
+	<devices>
+		<disk type='file' device='disk'>
+		<driver name='qemu' type='qcow2'/>
+		<source file='/var/lib/libvirt/images/ubuntu.qcow2'/>
+		<target dev='vda' bus='virtio'/>
+		</disk>
+		<interface type='network'>
+		<source network='default'/>
+		<model type='virtio'/>
+		</interface>
+		<graphics type='vnc' port='-1'/>
+	</devices>
+	</domain>

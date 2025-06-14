@@ -4,7 +4,7 @@
 	"service": "api",
 	"workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
     "postCreateCommand": "/workspace/api/.devcontainer/post.sh",
-	"forwardPorts": [ 8019 ],
+	"forwardPorts": [ 8019, 8081 ],
 	"customizations": {
 		"vscode": {
 			"extensions": [
