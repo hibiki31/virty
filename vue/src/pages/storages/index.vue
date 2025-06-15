@@ -1,5 +1,7 @@
 <template>
   <v-card>
+    <storage-add-dialog v-model="stateCreateDialog"></storage-add-dialog>
+    <storage-metadata-edit v-model="stateEditDialog" :uuid="stateEditUUID"></storage-metadata-edit>
     <v-card-actions>
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
@@ -10,6 +12,10 @@
 
       <template v-slot:item.uuid="{ item }">
         <router-link :to="'/vms/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
+      </template>
+      <template v-slot:item.actions="{ item }">
+        <v-icon color="medium-emphasis" icon="mdi-pencil" size="small"
+          @click="stateEditDialog = true; stateEditUUID = item.uuid"></v-icon>
       </template>
 
     </v-data-table-server>
@@ -34,8 +40,11 @@ import { initStorageList, getStorageList } from '@/composables/storage'
 
 
 const loading = ref(false)
-const stateCreateDialog = ref(false)
 const itemsPerPage = ref(10)
+
+const stateCreateDialog = ref(false)
+const stateEditDialog = ref(false)
+const stateEditUUID = ref('')
 
 const headers = [
   { title: 'Name', value: 'name' },
@@ -67,6 +76,7 @@ const rescan = () => {
     }
   })
 }
+
 
 async function reload() {
   items.value = await getStorageList()

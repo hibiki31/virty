@@ -6,8 +6,8 @@
         @click="stateCreateDialog = true">CREATE</v-btn>
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
-      density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
-      @update:options="loadItems">
+      :items-per-page-options="itemsPerPAgeOption" density="comfortable" :items-length="items.count" :loading="loading"
+      item-value="name" @update:options="loadItems">
     </v-data-table-server>
 
   </v-card>
@@ -29,7 +29,7 @@ import { getImageList, initImageList } from '@/composables/image'
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(20)
 
 const headers = [
   { title: 'Name', value: 'name' },
@@ -39,28 +39,30 @@ const headers = [
   { title: 'Allocation', value: 'allocation' },
   { title: 'Domain Name', value: 'domainName' },
   { title: 'Flavor Name', value: 'flavor.name' },
-  { title: 'Path', value: 'path' },
   { title: 'Actions', value: 'actions' }
+]
+
+const itemsPerPAgeOption = [
+  { value: 10, title: '10' },
+  { value: 20, title: '20' },
+  { value: 25, title: '25' },
+  { value: 50, title: '50' },
+  { value: 100, title: '100' },
+  { value: -1, title: '$vuetify.dataFooter.itemsPerPageAll' }
 ]
 
 const items = ref<typeListImage>(initImageList)
 
-function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
+
+
+async function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
+  console.log(page, itemsPerPage)
   loading.value = true
-  apiClient.GET('/api/images', {
-    params: {
-      query: {
-        admin: true,
-        limit: itemsPerPage,
-        page: page,
-      }
-    }
-  }).then((res) => {
-    if (res.data) {
-      items.value = res.data
-    }
-    loading.value = false
-  })
+
+  const res = await getImageList(itemsPerPage, page)
+  items.value = res
+
+  loading.value = false
 }
 
 
@@ -74,7 +76,7 @@ const rescan = () => {
 
 
 async function reload() {
-  items.value = await getImageList()
+  items.value = await getImageList(itemsPerPage.value, 1)
 }
 
 useReloadListener(() => {

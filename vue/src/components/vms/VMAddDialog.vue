@@ -8,7 +8,8 @@
             <v-col>
               <v-text-field variant="outlined" density="comfortable" label="Name" v-model="postData.name"
                 :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
-                counter="64" @change="(val: string) => postData.cloudInit.hostname = val"></v-text-field>
+                counter="64"
+                @change="() => { if (postData.cloudInit) { postData.cloudInit.hostname = postData.name } }"></v-text-field>
             </v-col>
             <v-col md="2">
               <v-select variant="outlined" density="comfortable" label="Memory" :items="itemsMemory"
@@ -26,7 +27,7 @@
           <v-divider class="pt-5"></v-divider>
 
           <!-- ストレージ -->
-          <v-row v-for="disk in postData.disks" :key="disk.id">
+          <v-row v-for="disk in postData.disks">
             <v-col cols="12" md="2">
               <v-select variant="outlined" density="comfortable"
                 :items="[{ title: 'Empty', value: 'empty' }, { title: 'Copy', value: 'copy' }]" :rules="[r.required]"
@@ -39,57 +40,53 @@
             <v-col cols="12" md="2">
               <v-select variant="outlined" density="comfortable" label="Dest Pool"
                 :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)" :rules="[r.required]"
-                item-text="name" item-value="uuid" v-model="disk.savePoolUuid"></v-select>
+                item-title="name" item-value="uuid" v-model="disk.savePoolUuid"></v-select>
             </v-col>
             <v-col cols="12" md="2" v-if="disk.type === 'copy'">
               <v-select variant="outlined" density="comfortable" label="Src Pool"
                 :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
-                v-model="disk.originalPoolUuid" :rules="[r.required]" item-text="name" item-value="uuid"></v-select>
+                v-model="disk.originalPoolUuid" :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
             </v-col>
             <v-col cols="12" md="3" v-if="disk.type === 'copy'">
               <v-select variant="outlined" density="comfortable" label="Src Image"
                 :items="itemsImages.data.filter(x => x.storageUuid === disk.originalPoolUuid)" :rules="[r.required]"
-                item-text="name" item-value="name" v-model="disk.originalName"></v-select>
+                item-title="name" item-value="name" v-model="disk.originalName"></v-select>
             </v-col>
           </v-row>
           <v-divider class="pt-5"></v-divider>
           <!-- ネットワーク -->
           <v-row v-for="(nic, index) in postData.interface" :key="index">
             <v-col cols="12" md="3">
-              <v-select :items="[{ text: 'Network', value: 'network' }]" :rules="[r.required]" v-model="nic.type"
-                label="Network Type"></v-select>
+              <v-select variant="outlined" density="comfortable" :items="[{ title: 'Network', value: 'network' }]"
+                :rules="[r.required]" v-model="nic.type" label="Network Type"></v-select>
             </v-col>
             <v-col cols="12" md="3">
-              <v-select :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-text="name"
-                item-value="name" :rules="[r.required]" v-model="nic.networkName" label="Network"
+              <v-select variant="outlined" density="comfortable"
+                :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-title="name"
+                item-value="uuid" :rules="[r.required]" v-model="nic.networkUuid" label="Network"
                 @change="getNetworkDetail()"></v-select>
             </v-col>
-            <!-- <v-col cols="12" md="3" v-if="checkOVS(nic.networkName)">
-          <v-select :loading="nic.selectPort === null" :items="nic.selectPort" item-text="name" item-value=""
-            :rules="[r.required]" v-model="nic.port" label="Port"></v-select>
-        </v-col> -->
-            <v-col><v-icon class="mt-5" @click="deleteInterface(index)">mdi-minus</v-icon></v-col>
+            <v-col cols="12" md="3" v-if="checkOVS(nic.networkUuid)">
+              <v-select :loading="nic.port === null" :items="[]" item-title="name" item-value="" :rules="[r.required]"
+                label="Port"></v-select>
+            </v-col>
+            <v-col><v-btn variant="text" size="small" class="mt-1" @click="deleteInterface(index)"
+                icon="mdi-minus-circle-outline"></v-btn></v-col>
           </v-row>
-          <div>
-            <v-icon class="ma-1 mb-3" @click="addInterface">mdi-plus</v-icon>
-          </div>
-        </v-form>
+          <v-btn variant="text" size="small" class="" @click="addInterface" icon="mdi-plus-circle-outline"></v-btn>
+          <v-divider></v-divider>
 
-
-        <v-form class="form-box" ref="step4Form">
-          <v-switch dense v-model="useCloudInit" label="Use cloud-init" class="ma-2"></v-switch>
-          <div v-if="useCloudInit">
-            <v-text-field v-model="postData.cloudInit.hostname" label="Host name" dense
-              :rules="[r.required, r.limitLength64, r.characterRestrictions]">
+          <!-- Cloud-init -->
+          <v-checkbox density="comfortable" @update:model-value="togleCloudInit" label="Use cloud-init"
+            color="primary"></v-checkbox>
+          <div v-if="postData.cloudInit">
+            <v-text-field variant="outlined" density="comfortable" v-model="postData.cloudInit.hostname"
+              label="Host name" dense :rules="[r.required, r.limitLength64, r.characterRestrictions]">
             </v-text-field>
-            <v-textarea clearable class="text-caption" outlined auto-grow v-model="postData.cloudInit.userData"
-              clear-icon="mdi-close-circle" label="User-data"></v-textarea>
-            <v-textarea class="text-caption" outlined clearable auto-grow v-model="postData.cloudInit.networkConfig"
-              clear-icon="mdi-close-circle" label="Network-config"></v-textarea>
+            <v-textarea variant="outlined" density="comfortable" clearable class="text-caption" auto-grow
+              v-model="postData.cloudInit.userData" clear-icon="mdi-close-circle" label="User-data"></v-textarea>
           </div>
         </v-form>
-        <div class="form-box text-caption">
-        </div>
       </v-card-text>
       <v-divider></v-divider>
 
@@ -117,6 +114,9 @@ import { initStorageList, getStorageList } from '@/composables/storage';
 
 import type { typeListImage } from '@/composables/image';
 import { initImageList, getImageList } from '@/composables/image';
+import { apiClient } from '@/api';
+import { notifyTask } from '@/composables/notify';
+import type { bodyPostVM } from '@/composables/vm';
 
 const useCloudInit = ref(true)
 
@@ -127,15 +127,14 @@ const itemsNetworks = ref<typeListNetwork>(initNetworkList)
 const itemsStorages = ref<typeListStorage>(initStorageList)
 const itemsImages = ref<typeListImage>(initImageList)
 
-const postData = ref({
+const postData = reactive<bodyPostVM>({
   type: 'manual',
   name: '',
   nodeName: '',
-  memoryMegaByte: null,
-  cpu: null,
+  memoryMegaByte: 1024,
+  cpu: 2,
   disks: [
     {
-      id: 1,
       type: 'empty',
       savePoolUuid: 'default',
       originalPoolUuid: null,
@@ -147,82 +146,77 @@ const postData = ref({
     {
       type: 'network',
       mac: null,
-      networkName: '',
-      selectPort: null
+      networkUuid: '',
+      port: null
     }
   ],
-  cloudInit: {
-    hostname: '',
-    userData: `#cloud-config
+  cloudInit: null
+})
+
+function submit() {
+
+  apiClient.POST('/api/tasks/vms', { body: postData }).then(res => {
+    if (res.data) {
+      notifyTask(res.data[0].uuid || "")
+      dialogState.value = false
+    }
+  })
+}
+
+function togleCloudInit(value: any) {
+  if (value) {
+    postData.cloudInit = {
+      hostname: '',
+      userData: `#cloud-config
 password: password
 chpasswd: {expire: False}
 ssh_pwauth: True
 ssh_authorized_keys:
   - ssh-rsa AAA...fHQ== sample@example.com
-          `,
-    networkConfig: 'network:\n  version: 2\n  ethernets: []'
+          `
+    }
+  } else {
+    postData.cloudInit = null
   }
-})
-
-function submit() {
-
 }
+
 
 function getNetworkDetail() {
   //       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
 }
 
 function addInterface() {
-  postData.value.interface.push({
+  postData.interface.push({
     type: 'network',
     mac: null,
-    networkName: '',
-    selectPort: null
+    networkUuid: '',
+    port: null
   });
 }
 function deleteInterface(index: number) {
-  postData.value.interface.splice(index, 1);
+  postData.interface.splice(index, 1);
 }
 
 onMounted(async () => {
   itemsNodes.value = await getNode()
   itemsNetworks.value = await getNetworkList()
   itemsStorages.value = await getStorageList()
+  itemsImages.value = await getImageList(99999, 1)
 })
+
+function checkOVS(networkName: string) {
+  const net = itemsNetworks.value.data.filter(x => x.nodeName === postData.nodeName && x.name === networkName);
+  if (net.length === 1) {
+    return (net[0].type === 'openvswitch');
+  }
+}
 
 
 // export default {
 //   name: 'NodeAddDialog',
 //   data: function () {
 //     return {
-//       itemsStorages: [],
-//       itemsNetworks: [],
-//       itemsImages: [],
-//       itemsNodes: [],
 //       networkDetail: [],
-//       itemsMemory: [
-//         { text: '512MB', value: '512' },
-//         { text: '1GB', value: '1024' },
-//         { text: '2GB', value: '2048' },
-//         { text: '4GB', value: '4096' },
-//         { text: '8GB', value: '8192' },
-//         { text: '16GB', value: '16384' },
-//         { text: '32GB', value: '32768' }
-//       ],
-
-//       itemsCpu: [
-//         { text: '1 Core', value: '1' },
-//         { text: '2 Core', value: '2' },
-//         { text: '4 Core', value: '4' },
-//         { text: '8 Core', value: '8' },
-//         { text: '12 Core', value: '12' },
-//         { text: '16 Core', value: '16' },
-//         { text: '24 Core', value: '24' }
-//       ],
-//       stepCount: 1,
-//       useCloudInit: false,
-
-//       dialogState: false
 //     };
 //   },
 //   methods: {
@@ -244,41 +238,7 @@ onMounted(async () => {
 //     getNetworkDetail(uuid, nic) {
 //       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
 //     },
-//     addInterface() {
-//       this.postData.interface.push({
-//         type: 'network',
-//         mac: null,
-//         networkName: '',
-//         selectPort: null
-//       });
-//     },
-//     deleteInterface(index) {
-//       this.postData.interface.splice(index, 1);
-//     },
-//     validateStep1() {
-//       if (!this.$refs.step1Form.validate()) {
-//         return;
-//       }
-//       this.stepCount = 2;
-//     },
-//     validateStep2() {
-//       if (!this.$refs.step2Form.validate()) {
-//         return;
-//       }
-//       this.stepCount = 3;
-//     },
-//     validateStep3() {
-//       if (!this.$refs.step3Form.validate()) {
-//         return;
-//       }
-//       this.stepCount = 4;
-//     },
-//     validateStep4() {
-//       if (!this.$refs.step4Form.validate()) {
-//         return;
-//       }
-//       this.stepCount = 5;
-//     },
+//
 //     runMethod() {
 //       if (!this.useCloudInit) {
 //         this.postData.cloudInit = null;
@@ -297,13 +257,7 @@ onMounted(async () => {
 //         });
 //     }
 //   },
-//   mounted: function () {
-//     axios.get('/api/storages').then((response) => (this.itemsStorages = response.data));
-//     axios.get('/api/images').then((response) => (this.itemsImages = response.data));
-//     axios.get('/api/networks').then((response) => (this.itemsNetworks = response.data));
-//     axios.get('/api/nodes').then((response) => (this.itemsNodes = response.data));
-//   }
-// };
+
 </script>
 
 <style>
