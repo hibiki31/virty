@@ -20,16 +20,16 @@ services:
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
     command: python3 /opt/app/worker.py
-  nginx:
-    build: ./nginx
+  old:
+    build: ./web
     ports: 
       - 0.0.0.0:8765:80
     restart: always
-  next:
-    build: ./next
+  new:
+    build: ./vue
+    ports: 
+      - 0.0.0.0:8766:80
     restart: always
-    environment:
-      NEXT_PUBLIC_API_URL: ""
   db:
     image: postgres:latest
     volumes:

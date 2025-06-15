@@ -1,6 +1,6 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
-# docker run -it ubuntu:20.04 bash
+# docker run -it ubuntu:24.04 bash
 RUN apt-get update -y && apt-get install -y novnc websockify
 
 EXPOSE 5999
