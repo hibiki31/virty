@@ -2,7 +2,7 @@
   "name": "vuetify-project",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "5.0.0",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",

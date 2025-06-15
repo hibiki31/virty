@@ -3,6 +3,7 @@
     <div>
       <router-view class="ma-4" />
     </div>
+    <AppFooter />
   </v-main>
 </template>
 
