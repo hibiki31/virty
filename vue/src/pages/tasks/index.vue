@@ -5,6 +5,9 @@
         <v-chip :border="`${getStatusColor(value)} thin opacity-25`" :color="getStatusColor(value)" :text="value"
           size="small"></v-chip>
       </template>
+      <template v-slot:item.postTime="{ value }">
+        {{ toJST(value) }}
+      </template>
     </v-data-table>
   </v-card>
 </template>
@@ -14,6 +17,9 @@ import { reactive } from 'vue'
 import { apiClient } from '@/api'
 
 import type { paths } from '@/api/openapi'
+
+import { format, parse, parseISO } from 'date-fns'
+import ja from 'date-fns/locale/ja'
 
 const list = ref<paths['/api/tasks']['get']['responses']['200']['content']['application/json']>({
   count: 0,
@@ -80,12 +86,12 @@ let headers = [
 // }
 
 
-// const getStatusColor = (statusCode) => {
-//   if (statusCode === 'finish') return 'primary';
-//   else if (statusCode === 'init') return 'grey lighten-1';
-//   else if (statusCode === 'error') return 'error';
-//   else return 'yellow';
-// }
+const getStatusColor = (statusCode) => {
+  if (statusCode === 'finish') return 'primary';
+  else if (statusCode === 'init') return 'grey lighten-1';
+  else if (statusCode === 'error') return 'error';
+  else return 'yellow';
+}
 
 // const getMethodColor = (statusCode) => {
 //   if (statusCode === 'post') return 'success';
@@ -101,15 +107,16 @@ let headers = [
 //   else return 'mdi-help-rhombus';
 // }
 
-// const toJST = (val) => {
-//   return moment(val).add(9, 'hour').format('YYYY/MM/DD HH:mm');
-// }
-// const toFixedTow = (val) => {
-//   if (isFinite(val)) {
-//     return Number(val).toFixed(2);
-//   }
-//   return 0;
-// }
+const toJST = (val) => {
+  return format(parseISO(val), 'yyyy-MM-dd HH:mm', { locale: ja })
+}
+
+const toFixedTow = (val) => {
+  if (isFinite(val)) {
+    return Number(val).toFixed(2);
+  }
+  return 0;
+}
 
 
 
