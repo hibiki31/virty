@@ -55,13 +55,9 @@ const login = async () => {
       password: password.value,
       scope: ''
     },
-    bodySerializer(body) {
-      const fd = new FormData();
-      for (const name in body) {
-        fd.append(name, body[name]);
-      }
-      return fd;
-    },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
   }).then((res) => {
     if (res.data) {
       setCookie('accessToken', res.data.access_token)
