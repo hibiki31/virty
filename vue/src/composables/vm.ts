@@ -1,4 +1,7 @@
 import { apiClient } from "@/api";
+import type { paths, components } from "@/api/openapi";
+
+export type bodyPostVM = components["schemas"]["DomainForCreate"];
 
 export const itemsMemory = [
   { title: "512MB", value: "512" },
