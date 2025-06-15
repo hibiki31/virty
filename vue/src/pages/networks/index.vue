@@ -20,7 +20,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Nodes
+  title: Virty - Networks
 </route>
 
 <script lang="ts" setup>

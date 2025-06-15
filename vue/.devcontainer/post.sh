@@ -3,4 +3,4 @@
 corepack enable
 
 pnpm install
-echo apias ppp='pnpm' >> /root/.bashrc 
+echo alias ppp='pnpm' >> /root/.bashrc 

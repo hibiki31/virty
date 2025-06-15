@@ -15,7 +15,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Nodes
+  title: Virty - Images
 </route>
 
 <script lang="ts" setup>

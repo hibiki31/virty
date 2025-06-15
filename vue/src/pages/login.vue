@@ -23,6 +23,12 @@
   </v-container>
 </template>
 
+<route lang="yaml">
+meta:
+  title: Virty - Login
+  layout: login
+</route>
+
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'

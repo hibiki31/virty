@@ -21,7 +21,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Nodes
+  title: Virty - VMs
 </route>
 
 <script lang="ts" setup>

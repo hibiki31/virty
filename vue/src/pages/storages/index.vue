@@ -19,7 +19,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Nodes
+  title: Virty - Storages
 </route>
 
 <script lang="ts" setup>

@@ -172,6 +172,7 @@ function reload() {
     }).then((res) => {
       if (res.data) {
         data.value = res.data
+        window.document.title = `Virty - ${res.data.name}`
       }
     })
   }
