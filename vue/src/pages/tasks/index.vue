@@ -12,7 +12,7 @@
 
       <template v-slot:item.actions="{ item }">
         <v-icon color="medium-emphasis" icon="mdi-pencil" size="small"
-          @click="detailDialog = true; taskError = item.log"></v-icon>
+          @click="detailDialog = true; taskError = item.log || ''"></v-icon>
       </template>
     </v-data-table>
   </v-card>
@@ -24,13 +24,12 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { reactive } from 'vue'
 import { apiClient } from '@/api'
 
 import type { paths } from '@/api/openapi'
 
 import { format, parse, parseISO } from 'date-fns'
-import ja from 'date-fns/locale/ja'
+import { ja } from 'date-fns/locale/ja'
 import { useReloadListener } from '@/composables/trigger'
 
 const taskError = ref('')
@@ -91,7 +90,7 @@ let headers = [
 // }
 
 
-const getStatusColor = (statusCode) => {
+const getStatusColor = (statusCode: string) => {
   if (statusCode === 'finish') return 'primary';
   else if (statusCode === 'init') return 'grey lighten-1';
   else if (statusCode === 'error') return 'error';
@@ -116,7 +115,7 @@ const toJST = (val: string) => {
   return format(parseISO(val), 'yyyy-MM-dd HH:mm', { locale: ja })
 }
 
-const toFixedTow = (val: string) => {
+const toFixedTow = (val: number) => {
   if (isFinite(val)) {
     return Number(val).toFixed(2);
   }

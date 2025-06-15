@@ -63,7 +63,7 @@ const items = ref<typeListStorage>({
 const rescan = () => {
   apiClient.PUT('/api/tasks/images').then((res) => {
     if (res.data) {
-      notify("success", "The task has been queued.", res.data[0].uuid || "")
+      notify("success", "The task has been queued.", "")
     }
   })
 }
