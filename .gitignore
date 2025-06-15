@@ -7,3 +7,4 @@ feature/ansible_hosts.ini
 feature/dev.sh
 /compose.yaml
 __pycache__
+/.pnpm-store/
