@@ -11,4 +11,12 @@ function notify(type: NotificationType, title = "Success", text = "") {
   });
 }
 
+export function notifyTask(uuid: string) {
+  baseNotify({
+    type: "success",
+    title: "Task has been queued",
+    text: uuid,
+  });
+}
+
 export default notify;

@@ -23,6 +23,11 @@ declare module 'vue' {
     NodeRolePatch: typeof import('./components/nodes/NodeRolePatch.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StorageAddDialog: typeof import('./components/storages/StorageAddDialog.vue')['default']
+    StorageDeleteDialog: typeof import('./components/storages/StorageDeleteDialog.vue')['default']
+    StorageMetadataEdit: typeof import('./components/storages/StorageMetadataEdit.vue')['default']
+    StoragePoolAddDialog: typeof import('./components/storages/StoragePoolAddDialog.vue')['default']
+    StoragePoolJoinDialog: typeof import('./components/storages/StoragePoolJoinDialog.vue')['default']
     TaskDetailDialog: typeof import('./components/tasks/TaskDetailDialog.vue')['default']
     VMAddDialog: typeof import('./components/vms/VMAddDialog.vue')['default']
   }
