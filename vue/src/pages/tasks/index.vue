@@ -1,5 +1,6 @@
 <template>
   <v-card>
+    <task-detail-dialog :text="taskError" v-model="detailDialog"></task-detail-dialog>
     <v-data-table :headers="headers" :items="list.data" :items-per-page="10">
       <template v-slot:item.status="{ value }">
         <v-chip :border="`${getStatusColor(value)} thin opacity-25`" :color="getStatusColor(value)" :text="value"
@@ -8,9 +9,19 @@
       <template v-slot:item.postTime="{ value }">
         {{ toJST(value) }}
       </template>
+
+      <template v-slot:item.actions="{ item }">
+        <v-icon color="medium-emphasis" icon="mdi-pencil" size="small"
+          @click="detailDialog = true; taskError = item.log"></v-icon>
+      </template>
     </v-data-table>
   </v-card>
 </template>
+
+<route lang="yaml">
+meta:
+  title: Virty - Tasks
+</route>
 
 <script lang="ts" setup>
 import { reactive } from 'vue'
@@ -20,33 +31,27 @@ import type { paths } from '@/api/openapi'
 
 import { format, parse, parseISO } from 'date-fns'
 import ja from 'date-fns/locale/ja'
+import { useReloadListener } from '@/composables/trigger'
+
+const taskError = ref('')
+const detailDialog = ref(false)
 
 const list = ref<paths['/api/tasks']['get']['responses']['200']['content']['application/json']>({
   count: 0,
   data: [],
 })
 
-apiClient.GET('/api/tasks', {
-  params: {
-    query: {
-      admin: true,
-      limit: 100,
-    }
-  }
-}).then((res) => {
-  if (res.data) {
-    list.value = res.data
-  }
-})
+
 
 let headers = [
-  { text: 'Status', value: 'status' },
-  { text: 'PostTime', value: 'postTime' },
-  { text: 'Request', value: 'resource' },
-  { text: 'Method', value: 'method' },
-  { text: 'userId', value: 'userId' },
-  { text: 'ID', value: 'uuid' },
-  { text: 'TunTime', value: 'runTime' }
+  { title: 'Status', value: 'status' },
+  { title: 'PostTime', value: 'postTime' },
+  { title: 'Request', value: 'resource' },
+  { title: 'Method', value: 'method' },
+  { title: 'userId', value: 'userId' },
+  { title: 'ID', value: 'uuid' },
+  { title: 'TunTime', value: 'runTime' },
+  { title: 'Actions', value: 'actions' }
 ]
 
 // const methodTransration = (method) => {
@@ -107,16 +112,39 @@ const getStatusColor = (statusCode) => {
 //   else return 'mdi-help-rhombus';
 // }
 
-const toJST = (val) => {
+const toJST = (val: string) => {
   return format(parseISO(val), 'yyyy-MM-dd HH:mm', { locale: ja })
 }
 
-const toFixedTow = (val) => {
+const toFixedTow = (val: string) => {
   if (isFinite(val)) {
     return Number(val).toFixed(2);
   }
   return 0;
 }
+
+function reload() {
+  apiClient.GET('/api/tasks', {
+    params: {
+      query: {
+        admin: true,
+        limit: 100,
+      }
+    }
+  }).then((res) => {
+    if (res.data) {
+      list.value = res.data
+    }
+  })
+}
+
+useReloadListener(() => {
+  reload()
+})
+
+onMounted(() => {
+  reload()
+})
 
 
 

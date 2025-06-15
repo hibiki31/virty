@@ -9,6 +9,12 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    DomainAddDialog: typeof import('./components/vms/DomainAddDialog.vue')['default']
+    DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
+    DomainCDRomDialog: typeof import('./components/vms/DomainCDRomDialog.vue')['default']
+    DomainDeleteDialog: typeof import('./components/vms/DomainDeleteDialog.vue')['default']
+    DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
+    DomainNetworkChange: typeof import('./components/vms/DomainNetworkChange.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
@@ -18,5 +24,8 @@ declare module 'vue' {
     NodeRolePatch: typeof import('./components/nodes/NodeRolePatch.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TaskDetailDialog: typeof import('./components/tasks/TaskDetailDialog.vue')['default']
+    UnderlineSelect: typeof import('./components/rapper/UnderlineSelect.vue')['default']
+    VMAddDialog: typeof import('./components/vms/VMAddDialog.vue')['default']
   }
 }

@@ -53,6 +53,7 @@ const addNode = () => {
         title: 'Join Node successful',
         text: 'Wait until the task is completed'
       })
+      model.value = false
     } else {
       notify({
         type: 'error',

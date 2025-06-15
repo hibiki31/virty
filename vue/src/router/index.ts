@@ -58,4 +58,10 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+const DEFAULT_TITLE = "Virty Console";
+router.afterEach((to, from) => {
+  document.title =
+    typeof to.meta.title === "string" ? to.meta.title : DEFAULT_TITLE;
+});
+
 export default router;
