@@ -52,13 +52,13 @@ export const copyClipBoardCurl = (item: typeListTask["data"][0]) => {
 };
 
 export const getMethodColor = (statusCode: string) => {
-  if (statusCode === "post") return "success";
-  else if (statusCode === "put") return "primary";
+  if (statusCode === "post") return "primary";
+  else if (statusCode === "put") return "info";
   else if (statusCode === "delete") return "error";
   else return "yellow";
 };
 
-export const getResourceIcon = (resource: string) => {
+export const getResourceIcon = (resource: string | undefined | null) => {
   if (resource === "vm") return "mdi-cube-outline";
   else if (resource === "node") return "mdi-server";
   else if (resource === "storage") return "mdi-database";
@@ -66,20 +66,24 @@ export const getResourceIcon = (resource: string) => {
   else return "mdi-help-rhombus";
 };
 
-export const getStatusColor = (statusCode: string) => {
+export const getStatusColor = (statusCode: string | undefined | null) => {
   if (statusCode === "finish") return "primary";
   else if (statusCode === "init") return "grey lighten-1";
   else if (statusCode === "error") return "error";
   else return "yellow";
 };
 
-export const toJST = (val: string) => {
-  return format(parseISO(val), "yyyy-MM-dd HH:mm", { locale: ja });
+export const toJST = (val: string | undefined | null) => {
+  if (val) {
+    return format(parseISO(val), "yyyy-MM-dd HH:mm", { locale: ja });
+  } else {
+    return "error";
+  }
 };
 
 export const toFixedTow = (val: number) => {
   if (isFinite(val)) {
-    return Number(val).toFixed(2);
+    return Number(val).toFixed(1);
   }
   return 0;
 };

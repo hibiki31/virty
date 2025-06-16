@@ -14,3 +14,9 @@
 
 <script lang="ts" setup>
 </script>
+
+<style>
+.font-mono {
+  font-family: monospace;
+}
+</style>

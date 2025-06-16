@@ -19,14 +19,17 @@ meta:
 </route>
 
 <script lang="ts" setup>
+import type { typeListImage } from '@/composables/image'
+
 import { ref, onMounted } from 'vue'
-import { apiClient } from '@/api'
-import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
 
-import type { typeListImage } from '@/composables/image'
+import { apiClient } from '@/api'
+import notify from '@/composables/notify'
+
 import { getImageList, initImageList } from '@/composables/image'
 import { itemsPerPAgeOption } from '@/composables/table'
+
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
@@ -44,12 +47,10 @@ const headers = [
 ]
 
 
-
 const items = ref<typeListImage>(initImageList)
 
 
-
-async function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
+async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
   console.log(page, itemsPerPage)
   loading.value = true
 
@@ -70,7 +71,7 @@ const rescan = () => {
 
 
 async function reload() {
-  items.value = await getImageList(itemsPerPage.value, 1)
+  await loadItems({ page: 1, itemsPerPage: itemsPerPage.value })
 }
 
 useReloadListener(() => {

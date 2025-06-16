@@ -1657,7 +1657,7 @@ export interface components {
             /** Status */
             status?: string | null;
             /** Resource */
-            resource?: string | null;
+            resource: string;
             /** Object */
             object: string;
             /** Method */
