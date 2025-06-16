@@ -9,7 +9,7 @@ export const initImageList: typeListImage = {
   data: [],
 };
 
-export async function getImageList(limit = 100, page = 0) {
+export async function getImageList(limit = 20, page = 1) {
   const res = await apiClient.GET("/api/images", {
     params: {
       query: {

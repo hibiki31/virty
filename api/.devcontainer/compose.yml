@@ -1,10 +1,8 @@
-version: '3'
-
 services:
   app:
     build: ../
     ports:
-      - 0.0.0.0:8765:8765
+      - 0.0.0.0:7799:7799
     volumes:
       - "../../:/workspaces:cached"
       - virty-develop-ssh-key:/root/.ssh
