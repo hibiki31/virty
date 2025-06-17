@@ -25,13 +25,13 @@ def post_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
     ):
-    if request.user_id == "":
+    if request.username == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Blanks are not allowed in id",
         )
 
-    if db.query(UserModel).filter(UserModel.username==request.user_id).one_or_none():
+    if db.query(UserModel).filter(UserModel.username==request.username).one_or_none():
         raise HTTPException(
             status_code=400,
             detail="User already exists",
@@ -39,7 +39,7 @@ def post_api_users(
 
     # ユーザ追加
     user_model = UserModel(
-        username=request.user_id,
+        username=request.username,
         hashed_password=pwd_context.hash(request.password),
     )
 

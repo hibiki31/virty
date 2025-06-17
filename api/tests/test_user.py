@@ -1,26 +1,14 @@
-import httpx
-import json
-from pprint import pprint
-import time
-import datetime
-import sys
-
-from common import BASE_URL, env, HEADERS, print_resp, wait_tasks, tester
-
-
-@tester
-def create_user():
-    for env_user in env["users"]:
+def test_create_user(env, client):
+    for user in env.users:
         req_data = {
-            "userId": env_user["username"],
-            "password": env_user["password"]
+            "username": user.username,
+            "password": user.password
         }
-        resp = httpx.request(method="post", url=f'{BASE_URL}/api/users', json=req_data, headers=HEADERS)
-        print_resp(resp=resp)
+        res = client.post("/api/users", json=req_data)
+        assert res.status_code == 200
 
 
-@tester
-def delete_user():
-    for env_user in env["users"]:
-        resp = httpx.request(method="delete", url=f'{BASE_URL}/api/users/{env_user["username"]}', headers=HEADERS)
-        print_resp(resp=resp, allow_not_found=True)
+def test_delete_user(env, client):
+    for user in env.users:
+        res = client.delete(f'/api/users/{user.username}')
+        assert res.status_code == 200

@@ -8,6 +8,7 @@ select = [
 ignore = [
     "D100", # パブリックモジュールにはdocstringを書く必要がある
     "INP001", # __init__.pyでモジュールを初期化する必要がある
+    "E501", #文字数!!!!
 ]
 fixable = ["ALL"]
 target-version = "py39"

@@ -4,10 +4,8 @@ from datetime import datetime
 from time import time
 
 from fastapi import BackgroundTasks
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from mixin.database import SessionLocal
 from mixin.log import setup_logger
 from mixin.schemas import BaseSchema
 from task.models import TaskModel
@@ -18,7 +16,6 @@ logger = setup_logger(__name__)
 class TaskBase:
     def __init__(self):
         self.task_func = {}
-        self.db = SessionLocal()
 
     def __call__(self, key):
         def receive_func(f):
@@ -33,11 +30,10 @@ class TaskBase:
     def include_task(self, tb):
         self.task_func.update(tb.task_func)
     
-    def run(self, key, task_model):
-        request = TaskRequest(**json.loads(task_model.request))
-
+    def run(self, key, task_model, db):
         try:
-            self.task_func[key](self, task_model, request)
+            self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
+                
         except KeyError:
             raise Exception("Task not found")
 

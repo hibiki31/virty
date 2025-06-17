@@ -1,0 +1,12 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+
+    - name: cp img
+      copy: 
+        src: '{{ src }}' 
+        dest: '{{ dst }}'
+        owner: root
+        group: root
+        mode: 0644

@@ -5,6 +5,7 @@ import libvirt
 
 from mixin.log import setup_logger
 from module.xmllib import XmlEditor
+from network.schemas import PaseNetwork
 from node.models import NodeModel
 from storage.models import StorageModel
 from storage.schemas import PaseStorage
@@ -84,7 +85,7 @@ class VirtManager():
         return data
 
 
-    def network_data(self):
+    def network_data(self) -> list[PaseNetwork]:
         networks = self.node.listAllNetworks()
         data = []
         for network in networks:

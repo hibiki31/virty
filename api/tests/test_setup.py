@@ -1,17 +1,10 @@
-import httpx
-import json
-from pprint import pprint
-import time
-import datetime
-import sys
-from common import BASE_URL, HEADERS, print_resp, tester
+def test_api_auth_validate_ng(gust_client):
+    assert gust_client.get('/api/auth/validate').status_code == 401
 
-@tester
-def api_auth_validate():
-    resp = httpx.get(f'{BASE_URL}/api/auth/validate',headers=HEADERS)
-    print_resp(resp=resp)
+    
+def test_api_auth_validate_ok(client):
+    assert client.get('/api/auth/validate').status_code == 200
 
-@tester
-def api_users_me():
-    resp = httpx.get(f'{BASE_URL}/api/users/me',headers=HEADERS)
-    print_resp(resp=resp)
+
+def test_api_users_me(client, env):
+    assert client.get('/api/users/me').json()["id"] == env.username

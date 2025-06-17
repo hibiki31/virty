@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
+
 from settings import SQLALCHEMY_DATABASE_URL
 
 
@@ -35,7 +37,9 @@ def get_db_url():
 
 
 Engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True, pool_recycle=60,
+    poolclass=NullPool
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=Engine)

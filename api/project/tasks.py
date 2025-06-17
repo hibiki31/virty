@@ -1,34 +1,21 @@
-from json import loads
 from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-from network.models import NetworkModel
-from task.models import TaskModel
-from node.models import NodeModel
-from user.models import UserModel
-
-from network.schemas import NetworkForCreate, NetworkForDelete
-
-from module.ovslib import OVSManager
-from module.virtlib import VirtManager
-from task.functions import TaskManager
 
 from mixin.log import setup_logger
 from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
+from user.models import UserModel
 
+from .models import *
+from .schemas import *
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
 @worker_task(key="post.project.root")
-def post_project_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body = ProjectForCreate(**request.body)
+def post_project_root(db: Session, model: TaskModel, req: TaskRequest):
+
+    body = ProjectForCreate.model_validate(req.body)
 
     project = ProjectModel(
         name=body.project_name
@@ -38,7 +25,7 @@ def post_project_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 
     for user in body.user_ids:
         project.users.append(db.query(UserModel).filter(UserModel.username==user).one())
-    project.users.append(db.query(UserModel).filter(UserModel.username==task.user_id).one())
+    project.users.append(db.query(UserModel).filter(UserModel.username==model.user_id).one())
     
     # nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
 
@@ -70,9 +57,8 @@ def post_project_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 
 
 @worker_task(key="delete.project.root")
-def delete_project_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    project_id = request.path_param["project_id"]
+def delete_project_root(db: Session, model: TaskModel, req: TaskRequest):
+    project_id = req.path_param["project_id"]
 
     
     db.query(ProjectModel).filter(ProjectModel.id==project_id).delete()
@@ -93,4 +79,4 @@ def delete_project_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     # db.delete(project)
     db.commit()
     
-    task.message = "Project has been deleted successfully"
+    model.message = "Project has been deleted successfully"

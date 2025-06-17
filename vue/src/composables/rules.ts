@@ -17,6 +17,14 @@ export const characterRestrictions = (value: string) => {
 export const intValueRestrictions = (value: string) =>
   Number.isInteger(Number(value)) || "Only Int value";
 
+export const portTCP = (value: any): true | string => {
+  const port = Number(value);
+  if (Number.isInteger(port) && port >= 0 && port < 65536) {
+    return true;
+  }
+  return "Only tcp port 0~65535";
+};
+
 // 先頭文字制限
 export const firstCharacterRestrictions = (value: string) => {
   const regex = /^[A-Za-z].*/;

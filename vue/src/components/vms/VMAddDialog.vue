@@ -131,7 +131,7 @@ const postData = reactive<bodyPostVM>({
   type: 'manual',
   name: '',
   nodeName: '',
-  memoryMegaByte: 1024,
+  memoryMegaByte: 512,
   cpu: 2,
   disks: [
     {

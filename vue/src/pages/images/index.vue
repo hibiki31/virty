@@ -51,7 +51,6 @@ const items = ref<typeListImage>(initImageList)
 
 
 async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
-  console.log(page, itemsPerPage)
   loading.value = true
 
   const res = await getImageList(itemsPerPage, page)

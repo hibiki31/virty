@@ -10,3 +10,4 @@ passlib==1.7.4
 psycopg2-binary==2.9.10
 python-multipart==0.0.20
 httpx==0.28.1
+rich==14.0.0

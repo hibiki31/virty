@@ -67,10 +67,19 @@ export const getResourceIcon = (resource: string | undefined | null) => {
 };
 
 export const getStatusColor = (statusCode: string | undefined | null) => {
-  if (statusCode === "finish") return "primary";
-  else if (statusCode === "init") return "grey lighten-1";
-  else if (statusCode === "error") return "error";
-  else return "yellow";
+  switch (statusCode) {
+    case "finish":
+      return "primary";
+    case "init":
+      return "blue-grey";
+    case "error":
+      return "error";
+    case "lost":
+      return "grey";
+    case "start":
+      return "info";
+  }
+  return "yellow";
 };
 
 export const toJST = (val: string | undefined | null) => {

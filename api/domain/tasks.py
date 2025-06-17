@@ -1,31 +1,41 @@
-from email.mime import base
-from json import loads
-from sqlalchemy.orm import Session
-from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-
 import re
+from json import loads
 from time import time
+
 from sqlalchemy import func, nullsfirst
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
-from task.functions import TaskManager
-from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel, associations_networks, associations_networks_pools
-from node.models import NodeModel
-from storage.models import AssociationStoragePoolModel, StorageModel, ImageModel, StorageMetadataModel, StoragePoolModel
-
-from module import virtlib
-from module import xmllib
-from module import sshlib
-from module import cloudinitlib
+from mixin.log import setup_logger
+from module import cloudinitlib, sshlib, virtlib, xmllib
 from module.ansiblelib import AnsibleManager
-
+from network.models import (
+    NetworkModel,
+    NetworkPoolModel,
+    NetworkPortgroupModel,
+    associations_networks,
+    associations_networks_pools,
+)
+from node.models import NodeModel
+from storage.models import (
+    AssociationStoragePoolModel,
+    ImageModel,
+    StorageModel,
+    StoragePoolModel,
+)
 from task.functions import TaskBase
+from task.models import TaskModel
 from task.schemas import TaskRequest
 
+from .models import DomainDriveModel, DomainInterfaceModel, DomainModel
+from .schemas import (
+    CdromForUpdateDomain,
+    DomainForCreate,
+    DomainForCreateDisk,
+    DomainForCreateInterface,
+    NetworkForUpdateDomain,
+    PowerStatusForUpdateDomain,
+)
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
@@ -33,8 +43,8 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.vm.list")
-def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
-    nodes:NodeModel = self.db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
+def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
+    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
     for node in nodes:
@@ -67,19 +77,151 @@ def put_vm_list(self: TaskBase, task: TaskModel, reqests: TaskRequest):
                 row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
             
             for disk in temp.disk:
-                db_image = self.db.query(ImageModel).filter(
+                db_image = db.query(ImageModel).filter(
                     ImageModel.storage.has(StorageModel.node_name==node.name),
                     ImageModel.path==disk.source).one_or_none()
-                if db_image != None:
+                if db_image is not None:
                     db_image.domain_uuid=temp.uuid
                 row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
-            self.db.merge(row)
+            db.merge(row)
         # ノードが変わる前に一度コミット
-        self.db.commit()
-    self.db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
-    self.db.commit()
+        db.commit()
+    db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
+    db.commit()
 
-    task.message = "VM list updated has been successfull"
+    model.message = "VM list updated has been successfull"
+
+
+@worker_task(key="post.vm.root")
+def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
+    req = DomainForCreate.model_validate(req.body)
+
+    if req.type == "ticket":
+        Exception("Ticket type is not allowed in this API")
+
+    # データベースから情報とってきて確認も行う
+    domains = db.query(DomainModel).filter(DomainModel.name==req.name).all()
+    if domains != []:
+        raise Exception("domain name is duplicated")
+    
+    try:
+        node = db.query(NodeModel).filter(NodeModel.name==req.node_name).one()
+    except NoResultFound:
+        raise Exception("node not found")
+
+    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+
+    # XMLのベース読み込んで編集開始
+    editor = xmllib.XmlEditor("static","domain_base")
+
+    domain_uuid = editor.domain_uuid_generate()
+
+    editor.domain_emulator_edit(node.os_like)
+    editor.domain_base_edit(
+        domain_name=f'{req.name}@{model.user_id}#{domain_uuid}',
+        memory_mega_byte=req.memory_mega_byte,
+        core=req.cpu,
+        vnc_port=0,
+        vnc_passwd=None
+    )
+    
+    # ネットワークインターフェイス
+    for interface in req.interface:
+        net = db.query(NetworkModel).filter(
+            NetworkModel.uuid==interface.network_uuid
+            ).one()
+
+        interface: DomainForCreateInterface
+        editor.domain_interface_add(
+            network_name=net.name, 
+            mac_address=None, 
+            port=interface.port
+        )
+
+    img_device_names = ["vda","vdb","vdc"]
+    
+    # ブロックデバイス
+    for device, device_name in zip(req.disks, img_device_names):
+        # 型定義
+        device: DomainForCreateDisk
+        # 作成先のプールを参照
+        try:
+            new_pool = db.query(StorageModel).filter(
+                StorageModel.uuid==device.save_pool_uuid
+                ).one()
+        except NoResultFound:
+            raise Exception("request storage pool uuid not found")
+        # ファイル名決めてる
+        create_image_path = f'{new_pool.path}/{model.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
+        # XMLに追加
+        editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
+
+        # 新規ディスクの場合
+        if device.type == "empty":
+            # 空のディスク作成
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
+            ssh_manager.qemu_create(
+                size_giga_byte=device.size_giga_byte,
+                path=create_image_path
+            )
+        # 既存ディスクのコピー
+        elif device.type == "copy":
+            # コピー元のプール情報参照
+            try:
+                pool_model:StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.original_pool_uuid).one()
+            except NoResultFound:
+                raise Exception("request src pool uuid not found")
+            pool_path = pool_model.path
+            file_name = device.original_name
+            from_image_path = pool_path + '/' + file_name
+
+            logger.info(f'{from_image_path}を{create_image_path}へコピーします')
+            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
+            ssh_manager.file_copy(
+                from_path=from_image_path,
+                to_path=create_image_path
+            )
+            logger.info(f'{create_image_path}のサイズを変更します')
+            ex_vars = {"create_image_path": create_image_path,  "size_giga_byte": f"{device.size_giga_byte}G"}
+            ansible_manager.run(playbook_name="vms/qemu_image", extravars=ex_vars)
+
+    # Cloud-init
+    if req.cloud_init is not None:
+        # iso作成
+        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,req.cloud_init.hostname)
+        cloudinit_manager.custom_user_data(req.cloud_init.userData)
+        iso_path = cloudinit_manager.make_iso()
+
+        # cloud-initのisoを保存するpoolを探してたけどやめた
+        # try:
+        #     query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
+        #     query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
+        #     init_pool_model:StorageModel = query.one()
+        # except:
+        #     raise Exception("cloud-init pool not found")
+        # send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
+        
+        # /var/virtyで固定
+        send_path = f"/var/virty/cloud-init/{domain_uuid}.iso"
+
+        ansible_manager.run(playbook_name="commom/make_dir_recurse",extravars={"path":"/var/virty/cloud-init/"})
+        ansible_manager.run(
+            playbook_name="commom/copy_virty_to_node",
+            extravars={
+                "src": iso_path,
+                "dst":"/var/virty/cloud-init/"
+        })
+        editor.domain_cdrom(target=None,path=send_path)
+
+
+    # ノードに接続してlibvirtでXMLを登録
+    node = virtlib.VirtManager(node_model=node)
+    node.domain_define(xml_str=editor.dump_str())
+
+    model.message = f"Virtual machine ({req.name}@{model.user_id}) has been added successfully"
+    logger.info('task終了')
+
+
 
 
 @worker_task(key="post.vm.project")
@@ -210,139 +352,7 @@ def post_vm_project(self: TaskBase, task: TaskModel, request: TaskRequest):
     raise Exception("avalilabel node not found")
 
 
-@worker_task(key="post.vm.root")
-def post_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 
-    db = self.db
-    if request.body["type"] == "ticket":
-        req = post_vm_ticketd(db=db, task=task)
-    else:
-        req = DomainForCreate(**request.body)
-
-    # データベースから情報とってきて確認も行う
-    domains: DomainModel = db.query(DomainModel).filter(DomainModel.name==req.name).all()
-    try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name==req.node_name).one()
-    except:
-        raise Exception("node not found")
-
-    # if domains != []:
-    #     raise Exception("domain name is duplicated")
-
-    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
-
-    # XMLのベース読み込んで編集開始
-    editor = xmllib.XmlEditor("static","domain_base")
-
-    domain_uuid = editor.domain_uuid_generate()
-
-    editor.domain_emulator_edit(node.os_like)
-    editor.domain_base_edit(
-        domain_name=f'{req.name}@{task.user_id}#{domain_uuid}',
-        memory_mega_byte=req.memory_mega_byte,
-        core=req.cpu,
-        vnc_port=0,
-        vnc_passwd=None
-    )
-    
-    # ネットワークインターフェイス
-    for interface in req.interface:
-        net: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==interface.network_uuid).one()
-
-        interface: DomainForCreateInterface
-        editor.domain_interface_add(
-            network_name=net.name, 
-            mac_address=None, 
-            port=interface.port
-        )
-
-    img_device_names = ["vda","vdb","vdc"]
-    
-    # ブロックデバイス
-    for device, device_name in zip(req.disks, img_device_names):
-        # 型定義
-        device: DomainForCreateDisk
-        # 作成先のプールを参照
-        try:
-            new_pool: StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.save_pool_uuid).one()
-        except:
-            raise Exception("request storage pool uuid not found")
-        # ファイル名決めてる
-        create_image_path = f'{new_pool.path}/{task.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
-        # XMLに追加
-        editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
-
-        # 新規ディスクの場合
-        if device.type == "empty":
-            # 空のディスク作成
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-            ssh_manager.qemu_create(
-                size_giga_byte=device.size_giga_byte,
-                path=create_image_path
-            )
-        # 既存ディスクのコピー
-        elif device.type == "copy":
-            # コピー元のプール情報参照
-            try:
-                pool_model:StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.original_pool_uuid).one()
-            except:
-                raise Exception("request src pool uuid not found")
-            pool_path = pool_model.path
-            file_name = device.original_name
-            from_image_path = pool_path + '/' + file_name
-
-            logger.info(f'{from_image_path}を{create_image_path}へコピーします')
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-            ssh_manager.file_copy(
-                from_path=from_image_path,
-                to_path=create_image_path
-            )
-
-            if req.cloud_init != None:
-
-                play_source = dict(
-                    hosts = 'all',
-                    gather_facts = 'no',
-                    tasks = [dict(
-                        qemu_img = dict(
-                            dest = create_image_path,
-                            size = f"{device.size_giga_byte}G",
-                            state = "resize"
-                        ),
-                        become = "yes"
-                )])
-
-                res = ansible_manager.run_playbook(book=play_source)
-
-    # Cloud-init
-    if req.cloud_init != None:
-        # iso作成
-        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,req.cloud_init.hostname)
-        cloudinit_manager.custom_user_data(req.cloud_init.userData)
-        iso_path = cloudinit_manager.make_iso()
-
-        # cloud-initのisoを保存するpoolを探す
-        # try:
-        #     query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
-        #     query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
-        #     init_pool_model:StorageModel = query.one()
-        # except:
-        #     raise Exception("cloud-init pool not found")
-
-        # 生成したisoをノードに転送
-        # send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
-        send_path = f"/var/virty/cloud-init/{domain_uuid}.iso"
-        ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
-        ansible_manager.create_dir(path="/var/virty/cloud-init/")
-        ansible_manager.file_copy_to_node(src=iso_path,dest=send_path)
-        editor.domain_cdrom(target=None,path=send_path)
-
-
-    # ノードに接続してlibvirtでXMLを登録
-    node = virtlib.VirtManager(node_model=node)
-    node.domain_define(xml_str=editor.dump_str())
-
-    task.message = f"Virtual machine ({req.name}@{task.user_id}) has been added successfully"
 
 
 @worker_task(key="delete.vm.root")
@@ -368,18 +378,18 @@ def delete_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 
 
 @worker_task(key="patch.vm.power")
-def patch_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    uuid = request.path_param["uuid"]
-    body: PowerStatusForUpdateDomain = PowerStatusForUpdateDomain(**request.body)
+def patch_vm_root(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
+    body = PowerStatusForUpdateDomain.model_validate(req.body)
 
     try:
-        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except:
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
+    except NoResultFound:
         raise Exception("domain not found")
 
     try:
-        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
-    except:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)

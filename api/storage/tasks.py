@@ -1,5 +1,7 @@
 from time import time
 
+from sqlalchemy.orm import Session
+
 from mixin.log import setup_logger
 from module import virtlib, xmllib
 from module.ansiblelib import AnsibleManager
@@ -15,10 +17,8 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="put.storage.list")
-def put_storage_list(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
+def put_storage_list(db: Session, model: TaskModel, req: TaskRequest):
     nodes = db.query(NodeModel).all()
-
     token = time()
 
     for node in nodes:
@@ -58,13 +58,12 @@ def put_storage_list(self: TaskBase, task: TaskModel, request: TaskRequest):
     db.query(StorageModel).filter(StorageModel.update_token!=str(token)).delete()
     db.query(ImageModel).filter(ImageModel.update_token!=str(token)).delete()
     db.commit()
-    task.message = "Storage list updated has been successfull"
+    model.message = "Storage list updated has been successfull"
 
 
 @worker_task(key="post.storage.root")
-def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body = StorageForCreate(**request.body)
+def post_storage_root(db: Session, model: TaskModel, req: TaskRequest):
+    body = StorageForCreate.model_validate(req.body)
 
     try:
         node: NodeModel = db.query(NodeModel).filter(
@@ -77,9 +76,9 @@ def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     editor = xmllib.XmlEditor("static","storage_dir")
     editor.storage_base_edit(name=body.name, path=body.path)
 
-    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
-    ansible_manager.run(
-        playbook_name="pb_make_dir_recurse",
+    am = AnsibleManager(user=node.user_name, domain=node.domain)
+    am.run(
+        playbook_name="commom/make_dir_recurse",
         extravars={"path": body.path}
     )
 
@@ -87,13 +86,12 @@ def post_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_define(xml_str=editor.dump_str())
 
-    task.message = "Storage append has been successfull"
+    model.message = "Storage append has been successfull"
 
 
 @worker_task(key="delete.storage.root")
-def delete_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    uuid = request.path_param["uuid"]
+def delete_storage_root(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
 
     storage:StorageModel = db.query(StorageModel).filter(
         StorageModel.uuid == uuid
@@ -108,4 +106,4 @@ def delete_storage_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db.query(StorageModel).filter(StorageModel.uuid==uuid).delete()
     db.commit()
 
-    task.message = "Storage delete has been successfull"
+    model.message = "Storage delete has been successfull"

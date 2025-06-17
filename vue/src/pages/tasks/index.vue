@@ -6,7 +6,7 @@
       item-value="name" @update:options="loadItems">
 
       <template v-slot:item.status="{ value }">
-        <v-chip :color="getStatusColor(value)" :text="value" variant="flat" size="x-small"></v-chip>
+        <v-chip :color="getStatusColor(value)" :text="value.toUpperCase()" variant="flat" size="x-small"></v-chip>
       </template>
 
       <template v-slot:item.postTime="{ value }">

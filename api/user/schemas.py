@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from mixin.schemas import GetPagination, BaseSchema
+from mixin.schemas import BaseSchema, GetPagination
 
 
 # RFCでスネークケース指定あるやんけ
@@ -45,7 +45,7 @@ class UserPage(BaseSchema):
 
 
 class UserForCreate(BaseSchema):
-    user_id: str
+    username: str
     password: str
 
 
