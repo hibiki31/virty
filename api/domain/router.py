@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -41,10 +41,10 @@ def get_api_domain(
 
     count = query.count()
 
-    query = query.order_by(desc(DomainModel.name))
+    query = query.order_by(DomainModel.name)
     
     if param.limit > 0:
-        query.limit(param.limit).offset(int(param.limit*param.page))
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
     vms = query.all()
 
     return {"count": count, "data": vms}

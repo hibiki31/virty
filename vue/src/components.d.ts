@@ -30,5 +30,6 @@ declare module 'vue' {
     StoragePoolJoinDialog: typeof import('./components/storages/StoragePoolJoinDialog.vue')['default']
     TaskDetailDialog: typeof import('./components/tasks/TaskDetailDialog.vue')['default']
     VMAddDialog: typeof import('./components/vms/VMAddDialog.vue')['default']
+    VMDeleteDialog: typeof import('./components/vms/VMDeleteDialog.vue')['default']
   }
 }

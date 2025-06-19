@@ -2,6 +2,8 @@ import { apiClient } from "@/api";
 import type { paths, components } from "@/api/openapi";
 
 export type bodyPostVM = components["schemas"]["DomainForCreate"];
+export type typeListVM =
+  paths["/api/vms"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export const itemsMemory = [
   { title: "512MB", value: "512" },
@@ -45,7 +47,7 @@ export function openVNC(uuid: string) {
 
 export function getPowerColor(statusCode: number) {
   if (statusCode === 1) return "primary";
-  else if (statusCode === 5) return "grey";
+  else if (statusCode === 5) return "grey-lighten-2";
   else if (statusCode === 7) return "purple";
   else if (statusCode === 10) return "red";
   else if (statusCode === 20) return "purple";

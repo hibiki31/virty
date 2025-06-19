@@ -14,6 +14,18 @@
         <router-link :to="'/vms/' + item.uuid" class="font-mono">{{ item.uuid }}</router-link>
       </template>
 
+      <template v-slot:item.status="{ item }">
+        <v-icon :color="getPowerColor(item.status)">mdi-power</v-icon>
+      </template>
+      <template v-slot:item.memory="{ item }" justify="right">
+        <v-icon left>mdi-memory</v-icon>
+        {{ item.memory / 1024 }} G
+      </template>
+      <template v-slot:item.core="{ item }" justify="right">
+        <v-icon left>mdi-cpu-64-bit</v-icon>
+        {{ item.core }} core
+      </template>
+
     </v-data-table-server>
 
   </v-card>
@@ -30,11 +42,12 @@ import { apiClient } from '@/api'
 import type { paths } from '@/api/openapi'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
+import { getPowerColor } from '@/composables/vm'
 
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(20)
 
 const headers = [
   { title: 'Status', value: 'status' },
@@ -52,14 +65,14 @@ const items = ref<paths['/api/vms']['get']['responses']['200']['content']['appli
   data: [],
 })
 
-function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
+function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
   loading.value = true
   apiClient.GET('/api/vms', {
     params: {
       query: {
         admin: true,
         limit: itemsPerPage,
-        page: page,
+        page: page - 1,
       }
     }
   }).then((res) => {
@@ -81,7 +94,7 @@ const rescan = () => {
 
 
 useReloadListener(() => {
-  loadItems({})
+  loadItems({ page: 1, itemsPerPage: itemsPerPage.value })
 })
 
 </script>
