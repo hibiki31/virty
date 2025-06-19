@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import List
 
 import jwt
@@ -8,16 +8,17 @@ from fastapi.security import (
     OAuth2PasswordRequestForm,
     SecurityScopes,
 )
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from mixin.database import get_db
+from mixin.exception import NoResultFound
 from mixin.log import setup_logger
 from settings import SECRET_KEY
 from user.models import UserModel, UserScopeModel
 
-from .schemas import *
+from .function import get_password_hash, verify_password
+from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 
 logger = setup_logger(__name__)
 
@@ -45,7 +46,7 @@ scopes_list = []
 
 def scopes_list_generator(argd, scope=None):
     for k in sorted(argd.keys(), reverse=False):
-        if scope == None:
+        if scope is None:
             gen_scope = k
         else:
             gen_scope = scope + "." + k
@@ -87,12 +88,6 @@ class CurrentUser(BaseModel):
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 28
 
-# パスワードハッシュ化の設定
-pwd_context = CryptContext(
-    schemes=["bcrypt"], 
-    deprecated="auto"
-)
-
 # oAuth2の設定
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/auth",
@@ -102,7 +97,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -123,8 +118,7 @@ def get_current_user(
             detail="Signature has expired",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    except:
-        # トークンがデコード出来なかった場合は認証失敗
+    except jwt.exceptions.DecodeError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Illegal jwt",
@@ -168,7 +162,7 @@ def api_auth_setup(
     # ユーザ追加
     user_model = UserModel(
         username=model.username, 
-        hashed_password=pwd_context.hash(model.password)
+        hashed_password=get_password_hash(model.password)
     )
 
     db.add(user_model)
@@ -189,10 +183,10 @@ def login_for_access_token(
 
     try:
         user = db.query(UserModel).filter(UserModel.username==form_data.username).one()
-    except:
+    except NoResultFound:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     
-    if not pwd_context.verify(form_data.password, user.hashed_password):
+    if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -1,3 +1,4 @@
+import secrets
 from ipaddress import ip_interface
 from random import randint
 from time import time
@@ -76,6 +77,8 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
     except NoResultFound:
         raise Exception("node not found")
+    
+    
 
     if body.type == "bridge":
         # XMLを定義、設定
@@ -93,6 +96,22 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
             </portgroup>
         </network>
         '''
+    elif body.type == "nat":
+        if body.nat.bridge_name:
+            bridge_name = body.nat.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_nat")
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.nat.address), 
+            netmask=str(body.nat.netmask),
+            start=str(body.nat.dhcp_start),
+            end=str(body.nat.dhcp_end)
+        )
+        xml = editor.dump_str()  
     else:
         raise Exception("Type is incorrect")
 

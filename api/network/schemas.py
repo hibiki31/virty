@@ -1,8 +1,9 @@
 from typing import List, Literal
 
 from pydantic import Field
+from pydantic.networks import IPvAnyAddress
 
-from mixin.schemas import GetPagination, BaseSchema
+from mixin.schemas import BaseSchema, GetPagination
 
 
 class PaseNetworkPortgroup(BaseSchema):
@@ -47,11 +48,19 @@ class NetworkPage(BaseSchema):
     data: List[Network]
     
     
+class NetworkNatForCreate(BaseSchema):
+    bridge_name: str | None = None
+    address: IPvAnyAddress
+    netmask: IPvAnyAddress
+    dhcp_start: IPvAnyAddress
+    dhcp_end: IPvAnyAddress
+
 
 class NetworkForCreate(BaseSchema):
     name: str
     node_name: str
-    type: Literal['bridge', 'ovs'] = Field( description='brdige or ovs')
+    type: Literal['bridge', 'ovs', 'nat'] = Field( description='brdige or ovs')
+    nat: NetworkNatForCreate | None = None
     bridge_device: str | None = None
     
 

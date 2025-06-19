@@ -9,4 +9,5 @@
 # 前回Faileしたテストから実施
 # pytest -v --ff
 
-pytest -v ;  printf '\a'
+# pytest -v --cov=module ;  printf '\a'
+pytest -v  ;  printf '\a'

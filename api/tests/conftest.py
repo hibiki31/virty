@@ -14,15 +14,19 @@ from main import app
 class User(BaseModel):
     username: str
     password: str
+
 class Project(BaseModel):
     name: str
+
 class Server(BaseModel):
     name: str
     domain: str
     username: str
+
 class Storage(BaseModel):
     name: str
     path: str
+    
 class EnvConfig(BaseModel):
     base_url: str
     username: str
@@ -95,7 +99,7 @@ def client(env, gust_client):
     
     return TestClient(app, headers=headers)
 
-def _wait_tasks(resp, client: TestClient) -> str :
+def wait_tasks(resp, client: TestClient) -> str :
     for task in resp.json():
         uuid = task["uuid"]
         counter = 0
@@ -109,12 +113,9 @@ def _wait_tasks(resp, client: TestClient) -> str :
             time.sleep(0.5)
             counter += 0.5
     return "finish"
-            
-@pytest.fixture(scope="session")
-def wait_tasks() -> _wait_tasks:
-    return _wait_tasks
-
 
 pytest_plugins = [
     "tests.fixtures.node",
+    "tests.fixtures.storage",
+    "tests.fixtures.network"
 ]

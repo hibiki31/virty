@@ -323,6 +323,15 @@ class XmlEditor():
         self.xml.find('forward').set('mode', 'bridge')
         self.xml.find('bridge').set('name', bridge)
     
+    def network_nat(self, name, bridge, address,netmask, start ,end):
+        self.xml.find('name').text = name
+        self.xml.find('bridge').set('name', bridge)
+        self.xml.find('ip').set('address', address)
+        self.xml.find('ip').set('netmask', netmask)
+        self.xml.find('ip').find('dhcp').find('range').set('start', start)
+        self.xml.find('ip').find('dhcp').find('range').set('end', end)
+    
+    
     def network_provider(self, name, bridge, address, domain,netmask, start ,end):
         self.xml.find('name').text = name
         self.xml.find('bridge').set('name', bridge)

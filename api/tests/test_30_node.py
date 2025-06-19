@@ -1,8 +1,11 @@
+from fastapi.testclient import TestClient
+
+from tests.conftest import EnvConfig
 from tests.fixtures.node import delete_node, post_node
 
 
-def test_delete(env, client, wait_tasks):
-    res_node = delete_node(env=env, client=client, wait_tasks=wait_tasks)
+def test_delete(env, client):
+    res_node = delete_node(env=env, client=client)
     
     assert res_node.status_code == 200
     assert res_node.json()["count"] == 0
@@ -18,8 +21,8 @@ def test_post_nodes_key(env, client):
     assert res.status_code == 200
 
 
-def test_post_nodes(env, client, wait_tasks):
-    post_node(env, client, wait_tasks)
+def test_post_nodes(env: EnvConfig, client: TestClient):
+    post_node(env, client)
 
 
 # @tester

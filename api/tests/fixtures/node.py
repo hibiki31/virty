@@ -1,21 +1,21 @@
-
 import pytest
+from fastapi.testclient import TestClient
 
 from node.schemas import NodePage
+from tests.conftest import EnvConfig, wait_tasks
 
 
 @pytest.fixture(scope="function")
-def nodes(env, client, wait_tasks):
-    post_node(env, client, wait_tasks)
+def nodes(env, client):
+    post_node(env, client, skipp=True)
 
     res = client.get("/api/nodes")
     yield  NodePage.model_validate(res.json())
     
-    delete_node(env, client, wait_tasks)
+def post_node(env: EnvConfig, client: TestClient, skipp=False):
+    res_node = client.get("/api/nodes")
+    nodes = [ i["name"] for i in res_node.json()["data"] ]
     
-
-
-def post_node(env, client, wait_tasks):
     for server in env.servers:
         req_data = {
             "name": server.name,
@@ -25,13 +25,16 @@ def post_node(env, client, wait_tasks):
             "port": 22,
             "libvirtRole": True
         }
+        if skipp and server.name in nodes:
+            continue
+            
         res = client.post('/api/tasks/nodes', json=req_data)
         assert res.status_code == 200
         
         assert wait_tasks(res, client) == "finish"
 
 
-def delete_node(env, client, wait_tasks):
+def delete_node(env, client):
     res_node = client.get("/api/nodes")
     nodes = [ i["name"] for i in res_node.json()["data"] ]
 

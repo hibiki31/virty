@@ -73,7 +73,7 @@ class TaskManager():
             resource = self.resource,
             object = self.object,
             method = self.method,
-            request = task_request.json(),
+            request = task_request.model_dump_json(),
             message = "Task has been queued"
         ))
         self.db.commit()

@@ -1,35 +1,12 @@
 
+from tests.fixtures.network import create_network, delete_network
 
 
-# @tester
-# def post_network():
-#     nodes_resp = httpx.get(url=f'{BASE_URL}/api/nodes', headers=HEADERS)
-#     print_resp(nodes_resp)
+def test_create_network(env, client, deleted_network):
+    create_network(env, client)
 
-#     for node in nodes_resp.json()["data"]:
-
-#         request_data = {
-#             "name": "test-br",
-#             "nodeName": f"{node['name']}",
-#             "type": "bridge",
-#             "bridgeDevice": "br-test"
-#         }
-#         resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/networks', headers=HEADERS, json=request_data)
-#         print_resp(resp=resp)
-#         wait_tasks(resp)
-
-
-# @tester
-# def delete_network():
-#     resp = httpx.request(method="get", url=f'{BASE_URL}/api/networks', params={"admin":True},headers=HEADERS)
-#     print_resp(resp=resp)
-
-#     for net in resp.json()["data"]:
-#         if net["name"] == "test-br":
-#             resp = httpx.request(method="delete",url=f'{BASE_URL}/api/tasks/networks/{net["uuid"]}', headers=HEADERS)
-#             print_resp(resp=resp)
-#             wait_tasks(resp)
-
+def test_delete_network(env, client, created_network):
+    delete_network(env, client)
 
 # @tester
 # def post_network_ovs():

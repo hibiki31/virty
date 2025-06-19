@@ -1,12 +1,15 @@
-fastapi==0.115.11
-uvicorn==0.34.0
-libvirt-python==11.1.0
-ansible==11.6.0
+# pip install pip-review
+# pip-review
+
+fastapi==0.115.13
+uvicorn==0.34.3
+libvirt-python==11.4.0
+ansible==11.7.0
 ansible-runner==2.4.1 
-SQLAlchemy==2.0.39
-alembic==1.15.1
+SQLAlchemy==2.0.41
+alembic==1.16.2
 PyJWT==2.10.1
-passlib==1.7.4
+bcrypt==4.3.0
 psycopg2-binary==2.9.10
 python-multipart==0.0.20
 httpx==0.28.1

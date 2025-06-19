@@ -37,7 +37,7 @@ def main():
         run_scheduler(task_manager)
         # logger.debug("run_scheduler loop...")
         # print(Engine.pool.status())
-        sleep(3)
+        sleep(0.1)
 
 
 def init_scheduler():

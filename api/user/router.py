@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from auth.router import CurrentUser, get_current_user, pwd_context
+from auth.function import get_password_hash
+from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
 from user.models import UserModel, UserScopeModel
@@ -40,7 +41,7 @@ def post_api_users(
     # ユーザ追加
     user_model = UserModel(
         username=request.username,
-        hashed_password=pwd_context.hash(request.password),
+        hashed_password=get_password_hash(request.password),
     )
 
     db.add(user_model)
