@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import json
 import os
+import signal
 from pprint import pformat
+from typing import Dict
 
 import ansible_runner
 
 from mixin.log import setup_logger
 from mixin.schemas import BaseModel
+from mixin.timestamp import get_timestamp
 from settings import APP_ROOT, DATA_ROOT
 
 logger = setup_logger(__name__)
@@ -26,22 +31,32 @@ class AnsibleManager():
     def run(self, playbook_name:str, extravars={}, timeout=60):
         hosts = f"{self.user}@{self.domain}"
         
-        logger.info(f"Ansible playbook run: {hosts} name={playbook_name} extravars={extravars}")
+        logger.info(f"[Ansible Start] {hosts} name={playbook_name} extravars={extravars}")
         
-        res = ansible_runner.run(
-            timeout=timeout,
-            private_data_dir=f'{DATA_ROOT}/ansible/',
-            inventory={ 'all':{
-                'hosts': hosts
-                }
-            },
-            playbook=self.get_playbook_path(playbook_name),
-            extravars=extravars,
-            host_pattern='all',
-            quiet=True
-        )
+        # Ctrl+CがAnsibleに持っていかれるので対応
+        saved_handlers = _capture_handlers()
+        try:
+            res = ansible_runner.run(
+                timeout=timeout,
+                private_data_dir=f'{DATA_ROOT}/ansible/',
+                inventory={ 'all':{
+                    'hosts': hosts
+                    }
+                },
+                playbook=self.get_playbook_path(playbook_name),
+                extravars=extravars,
+                host_pattern='all',
+                quiet=True
+            )
+        finally:
+            _restore_handlers(saved_handlers)
         
-        os.makedirs(f'{DATA_ROOT}/node/', exist_ok=True)
+        save_path = os.path.join(DATA_ROOT, "node", f'{self.user}@{self.domain}')
+        os.makedirs(save_path, exist_ok=True)
+        with open(os.path.join(save_path, f"{get_timestamp()}_{playbook_name.replace('/','-')}.json"), 'w') as f:
+            json.dump({"status": res.stats, "rc": res.rc, "events": list(res.events)}, f, indent=4)
+        
+        
         runner_on_ok = []
         runner_on_failed = []
         playbook_on_stats = None
@@ -53,15 +68,12 @@ class AnsibleManager():
             
             if event['event'] == 'playbook_on_stats':
                 playbook_on_stats = event['event_data']
-            
-            logger.debug(first_n_lines(pformat(event),10))
-                
+                logger.info(pformat(playbook_on_stats))
+        
+        msg = f"[Ansible Finish] {hosts} name={playbook_name} extravars={extravars} res.rc={res.rc} res.status={res.status}"
         if res.rc == 0:
-            logger.info(f"[Finish] BookName: {playbook_name} ReturnCode: {res.rc} Status: {res.status}")
-            for event_ok in runner_on_ok:
-                logger.info(first_n_lines(pformat(event_ok['event_data'],10)))
+            logger.info(msg)
         else:
-            msg = f"[Finish] BookName: {playbook_name} ReturnCode: {res.rc} Status: {res.status}"
             logger.error(msg)
             exe = Exception(msg)
             exe.add_note("------ addtional info ------")
@@ -70,9 +82,6 @@ class AnsibleManager():
             if runner_on_failed == []:
                 exe.add_note(pformat(res.events))
             raise exe
-        
-        with open(f'{DATA_ROOT}/node/{self.user}@{self.domain}.json', 'w') as f:
-            json.dump({"ok": runner_on_ok, "failed": runner_on_failed, "status": playbook_on_stats}, f, indent=4)
     
         return AnsibleRunResult(status=res.status, rc=res.rc, events_ok=runner_on_ok, events_failed=runner_on_failed, playbook_on_stats=playbook_on_stats)
 
@@ -94,6 +103,24 @@ class AnsibleManager():
         return node_info
 
 
+def _capture_handlers() -> Dict[int, signal.Handlers]:
+    """現在の SIGINT/SIGTERM ハンドラを dict として返す。"""
+    return {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+
+
+def _restore_handlers(handlers: Dict[int, signal.Handlers]) -> None:
+    """保存しておいたハンドラを元に戻す。"""
+    for sig, handler in handlers.items():
+        signal.signal(sig, handler)
+
+
 def first_n_lines(text: str, n: int = 10) -> str:
     # 行区切りで分割し、先頭 n 行だけ取り出して再結合
-    return "\n".join(text.splitlines()[:n])
+    if not isinstance(text, str):
+        text = pformat(text)
+    if len(text.splitlines()) >= n:
+        res = text.splitlines()[:n]
+        res.append(f"..... {len(text.splitlines())} lines of text shortened to {n} lines .....")
+        return "\n".join(res)
+    else:
+        return text

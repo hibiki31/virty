@@ -32,13 +32,14 @@ class TaskBase:
         self.task_func.update(tb.task_func)
     
     def run(self, key, task_uuid):
-        try:
-            with SessionLocal() as db:
-                task_model = db.query(TaskModel).filter(TaskModel.uuid == task_uuid).one()
-                db.commit()
-                return self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
-        except KeyError:
+        if key not in self.task_func:
             raise Exception("Task not found")
+        
+        with SessionLocal() as db:
+            task_model = db.query(TaskModel).filter(TaskModel.uuid == task_uuid).one()
+            db.commit()
+            return self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
+
 
 
 

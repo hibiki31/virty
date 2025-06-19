@@ -1,18 +1,13 @@
-from pprint import pprint
-from module.sshlib import SSHManager
-from mixin.database import SessionLocal
-from sqlalchemy.orm import Session
+from time import sleep
 
-
-from node.models import NodeModel
-
-from domain.tasks import put_vm_list
-
-from module.ansiblelib import AnsibleManager, debug
+from module.ansiblelib import AnsibleManager
 
 
 def main():
-    debug()
+    while True:
+        am = AnsibleManager("akane", "192.168.144.33")
+        am.run("ls", extravars={"ls_dir": "/"})
+        sleep(5)
 
 if __name__ == "__main__":
     main()
