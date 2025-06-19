@@ -1,6 +1,6 @@
 from typing import List
 
-from mixin.schemas import GetPagination, BaseSchema
+from mixin.schemas import BaseSchema, GetPagination
 
 
 class NodeRole(BaseSchema):

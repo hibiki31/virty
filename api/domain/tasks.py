@@ -354,29 +354,19 @@ def post_vm_project(self: TaskBase, task: TaskModel, request: TaskRequest):
     raise Exception("avalilabel node not found")
 
 
-
-
-
 @worker_task(key="delete.vm.root")
-def delete_vm_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    uuid = request.path_param["uuid"]
+def delete_vm_root(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
 
-    try:
-        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except:
-        raise Exception("domain not found")
-
-    try:
-        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
-    except:
-        raise Exception("node not found")
+    domain, node = get_domain(db=db, uuid=uuid)
 
     manager = virtlib.VirtManager(node_model=node)
     manager.domain_destroy(uuid=uuid)
     manager.domain_undefine(uuid)
+    
+    db.delete(domain)
 
-    task.message = f"{domain.name} virtual machine has been deleted successfully"
+    model.message = f"{domain.name} virtual machine has been deleted successfully"
 
 
 @worker_task(key="patch.vm.power")
@@ -384,15 +374,7 @@ def patch_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     uuid = req.path_param["uuid"]
     body = PowerStatusForUpdateDomain.model_validate(req.body)
 
-    try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except NoResultFound:
-        raise Exception("domain not found")
-
-    try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
-    except NoResultFound:
-        raise Exception("node not found")
+    domain, node = get_domain(db=db, uuid=uuid)
 
     manager = virtlib.VirtManager(node_model=node)
 
@@ -401,50 +383,50 @@ def patch_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         manager.domain_poweron(uuid=uuid)
     elif body.status == "off":
         manager.domain_destroy(uuid=uuid)
-    
+        
+    model.message = f"{domain.name} virtual machine has been {body.status}"
+
 
 @worker_task(key="patch.vm.cdrom")
-def patch_vm_cdrom(self: TaskBase, task: TaskModel, request: TaskRequest):
-    uuid = request.path_param["uuid"]
-    body: CdromForUpdateDomain = CdromForUpdateDomain(**request.body)
+def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
+    body = CdromForUpdateDomain.model_validate(req.body)
 
-    try:
-        domain: DomainModel = self.db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except:
-        raise Exception("domain not found")
-
-    try:
-        node: NodeModel = self.db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
-    except:
-        raise Exception("node not found")
+    domain, node = get_domain(db=db, uuid=uuid)
 
     manager = virtlib.VirtManager(node_model=node)
 
-    if body.path == None or body.path == "":
+    if body.path is None or body.path == "":
         manager.domain_cdrom(uuid, body.target)
     else:
         manager.domain_cdrom(uuid, body.target, body.path)
 
 
 @worker_task(key="patch.vm.network")
-def patch_vm_network(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body: NetworkForUpdateDomain = NetworkForUpdateDomain(**request.body)
-    uuid = request.path_param["uuid"]
+def patch_vm_network(db: Session, model: TaskModel, req: TaskRequest):
+    body = NetworkForUpdateDomain.model_validate(req.body)
+    uuid = req.path_param["uuid"]
 
+    domain, node = get_domain(db=db, uuid=uuid)
 
-    domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one_or_none()
-    if domain == None:
-        raise Exception("Domain uuid is not found")
-
-    node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one_or_none()
-    if node == None:
-        raise Exception("Node name is not found")
-
-    net: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == body.network_uuid).one_or_none()
-    if net == None:
+    try:
+        network = db.query(NetworkModel).filter(NetworkModel.uuid == body.network_uuid).one()
+    except NoResultFound:
         raise Exception("Network uuid is not found")
     
-
     manager = virtlib.VirtManager(node_model=node)
-    manager.domain_network(uuid=uuid, network=net.name, port=body.port, mac=body.mac)
+    manager.domain_network(uuid=uuid, network=network.name, port=body.port, mac=body.mac)
+    
+    
+def get_domain(db: Session, uuid):
+    try:
+        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
+    except NoResultFound:
+        raise Exception(f"VM({uuid}) not found")
+
+    try:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
+    except NoResultFound:
+        raise Exception(f"Node({domain.node_name}) not found")
+    
+    return domain, node

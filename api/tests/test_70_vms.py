@@ -1,5 +1,15 @@
 
 
+from tests.fixtures.vm import create_vm, delete_vm
+
+
+def test_delete_vm(env, client, created_vm):
+    delete_vm(env, client)
+
+
+def test_create_vm(env, client, deleted_vm):
+    create_vm(env, client)
+
 # @tester
 # def delete_vm():
 #     resp = httpx.request(method="get", url=f'{BASE_URL}/api/vms', params={"admin":True}, headers=HEADERS)

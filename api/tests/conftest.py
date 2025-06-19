@@ -26,6 +26,14 @@ class Server(BaseModel):
 class Storage(BaseModel):
     name: str
     path: str
+
+class Networks(BaseModel):
+    name: str
+
+class VM(BaseModel):
+    name: str
+    image: str
+    network: str
     
 class EnvConfig(BaseModel):
     base_url: str
@@ -37,6 +45,8 @@ class EnvConfig(BaseModel):
     pub: str
     servers: List[Server]
     storages: List[Storage]
+    networks: List[Networks]
+    vms: List[VM]
     image_url: str
     iso_url: str
 
@@ -117,5 +127,6 @@ def wait_tasks(resp, client: TestClient) -> str :
 pytest_plugins = [
     "tests.fixtures.node",
     "tests.fixtures.storage",
-    "tests.fixtures.network"
+    "tests.fixtures.network",
+    "tests.fixtures.vm",
 ]

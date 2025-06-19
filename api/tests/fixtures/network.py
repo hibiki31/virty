@@ -1,4 +1,3 @@
-from pprint import pprint
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,31 +26,32 @@ def create_network(env: EnvConfig, client: TestClient, skipp=False):
     reload_networks(env, client)
     
     for server in env.servers:
-        req_data = NetworkForCreate(
-            name="test-nat",
-            node_name=server.name,
-            type="nat",
-            nat=NetworkNatForCreate(
-                bridge_name=None,
-                address="192.168.19.254",
-                netmask="255.255.255.0",
-                dhcp_start="192.168.19.1",
-                dhcp_end="192.168.19.200"
-            ),
-            bridge_device=None
-        )
-        
-        
-        # すでにあるか判定
-        res_network = client.get("/api/networks", params={"nameLike": "test-nat", "nodeName": server.name})
-        page = NetworkPage.model_validate(res_network.json())
-        if skipp and page.count == 1:
-            continue
-        
-        res = client.post("/api/tasks/networks", content=req_data.model_dump_json(by_alias=True))
-        pprint(res.json())
-        assert res.status_code == 200
-        assert wait_tasks(res, client) == "finish"
+        for network in env.networks:  
+            req_data = NetworkForCreate(
+                name=network.name,
+                node_name=server.name,
+                type="nat",
+                nat=NetworkNatForCreate(
+                    bridge_name=None,
+                    address="192.168.19.254",
+                    netmask="255.255.255.0",
+                    dhcp_start="192.168.19.1",
+                    dhcp_end="192.168.19.200"
+                ),
+                bridge_device=None
+            )
+            
+            
+            # すでにあるか判定
+            res_network = client.get("/api/networks", params={"nameLike": "test-nat", "nodeNameLike": server.name})
+            page = NetworkPage.model_validate(res_network.json())
+            if skipp and page.count == 1:
+                continue
+            
+            res = client.post("/api/tasks/networks", content=req_data.model_dump_json(by_alias=True))
+
+            assert res.status_code == 200
+            assert wait_tasks(res, client) == "finish"
     
     reload_networks(env, client)
             
@@ -60,7 +60,7 @@ def delete_network(env: EnvConfig, client: TestClient, skipp=False):
     reload_networks(env, client)
     for server in env.servers:
         for network in env.networks:  
-            res_network = client.get("/api/networks", params={"nameLike": network.name, "nodeName": server.name})
+            res_network = client.get("/api/networks", params={"nameLike": network.name, "nodeNameLike": server.name})
             
             page = NetworkPage.model_validate(res_network.json())
             if page.count == 0 and skipp:
