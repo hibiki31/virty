@@ -18,13 +18,13 @@ def test_delete_storage(env, client, wait_tasks):
             assert wait_tasks(res, client) == "finish"
 
 
-def test_post_storage(env, client, wait_tasks):
+def test_post_storage_ok(env, client, wait_tasks):
     for server in env.servers:
         for storage in env.storages:  
             req_data = {
                 "name": storage.name,
                 "nodeName": server.name,
-                "path": storage.name
+                "path": storage.path
             }
             res = client.post('/api/tasks/storages', json=req_data)
             

@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import traceback
 from datetime import datetime
 from time import sleep, time
@@ -19,6 +20,9 @@ logger = setup_logger(__name__)
 
 
 def main():
+    # Ansible runnerがforkしてSessionを破壊しないようにする
+    mp.set_start_method("spawn", force=True)
+    
     task_manager = TaskBase()
     task_manager.include_task(domain_tasks)
     task_manager.include_task(node_tasks)
@@ -31,6 +35,8 @@ def main():
 
     while True:
         run_scheduler(task_manager)
+        # logger.debug("run_scheduler loop...")
+        # print(Engine.pool.status())
         sleep(3)
 
 
@@ -51,21 +57,23 @@ def init_scheduler():
 
 
 def run_scheduler(task_manager: TaskBase):
-    with SessionLocal() as db:
+    init_tasks_uuid = []
+    
+    with SessionLocal.begin() as db:
         tasks = db.query(
             TaskModel
         ).filter(or_(
             TaskModel.status=="init",
             TaskModel.status=="wait"
-        )).order_by(TaskModel.post_time).with_for_update(skip_locked=True).all()
+        )).order_by(TaskModel.post_time).with_for_update().all()
 
         for task in tasks:
             # initだったら実行
             if task.status == "init":
-                exec_task(task=task, task_manager=task_manager, db=db)
-                break
+                init_tasks_uuid.append(task.uuid)
+                continue
             
-            # 以下はWaitタスクの処理
+            # 以下はWaitタスクの処理 ここに入るときはwaitのタスクの場合だからoneでも大丈夫？
             depends_task:TaskModel = db.query(TaskModel).filter(
                 TaskModel.uuid==task.dependence_uuid
                 ).with_for_update().one()
@@ -73,50 +81,61 @@ def run_scheduler(task_manager: TaskBase):
             if depends_task.status == "error" or depends_task.status == "lost":
                 task.status = "error"
                 task.message = "depended task faile"
-                db.commit()
                 logger.error(f"depended task faile {task.uuid} => {task.dependence_uuid}")
-                break
             
 
             # 親タスクが実行中の場合待機
             elif depends_task.status != "finish":
                 logger.info(f"wait depended task. {task.uuid} => {task.dependence_uuid}")
-                break
             
             # 実行可能なタスクは初期化
             elif depends_task.status == "finish" and task.status == "wait":
                 task.status = "init"
-                db.commit()
                 logger.info(f"init depended task {task.uuid} => {task.dependence_uuid}")
-                break
+        db.commit()
+    
+    for i in init_tasks_uuid:
+        exec_task(task_manager=task_manager, task_uuid=i)
+
+
+def exec_task(task_manager: TaskBase, task_uuid: str):
+    with SessionLocal.begin() as db:
+        task = db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
+        task.status = "start"
+        task.start_time = datetime.now().astimezone()
         
-
-
-
-
-def exec_task(task, task_manager:TaskBase,db):
-
-    logger.info(f'start {task.uuid} {task.method}.{task.resource}.{task.object}')
-    task.status = "start"
-    task.start_time = datetime.now().astimezone()
-
-    db.commit()
+        task_key = f"{task.method}.{task.resource}.{task.object}"
+        
+        db.commit()
+    
+    # 測定用は別変数にした
     start_time = time()
 
     try:
-        task_manager.run(key=f"{task.method}.{task.resource}.{task.object}", task_model=task, db=db)
-        task.status = "finish"
-    except Exception as e:
-        task.status = "error"
-        task.message = str(e)
-        logger.error(e, exc_info=True)
-        task.write_log(traceback.format_exc())
-    
-    task.update_time = datetime.now().astimezone()
-    task.run_time = time() - start_time
-    db.commit()
-
+        logger.info(f'Task start: {task_uuid} {task_key}')
+        task_manager.run(key=task_key, task_uuid=task_uuid)
+        logger.info(f"Task finish: {task_uuid} {task_key}")
         
+        with SessionLocal.begin() as db:
+            task = db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
+            task.status = "finish"
+            # 共通
+            task.update_time = datetime.now().astimezone()
+            task.run_time = time() - start_time
+            db.commit()
+            
+    except Exception as e:
+        with SessionLocal.begin() as db:
+            task = db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
+            task.status = "error"
+            task.message = str(e)
+            logger.error(e, exc_info=True)
+            task.write_log(traceback.format_exc())
+
+            # 共通
+            task.update_time = datetime.now().astimezone()
+            task.run_time = time() - start_time
+            db.commit()
 
     
 

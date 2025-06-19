@@ -88,8 +88,10 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
         db.commit()
     db.query(DomainModel).filter(DomainModel.update_token!=str(token)).delete()
     db.commit()
-
+    
     model.message = "VM list updated has been successfull"
+
+
 
 
 @worker_task(key="post.vm.root")
@@ -182,8 +184,8 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
                 to_path=create_image_path
             )
             logger.info(f'{create_image_path}のサイズを変更します')
-            ex_vars = {"create_image_path": create_image_path,  "size_giga_byte": f"{device.size_giga_byte}G"}
-            ansible_manager.run(playbook_name="vms/qemu_image", extravars=ex_vars)
+            ex_vars = {"path": create_image_path,  "size": f"{device.size_giga_byte}G"}
+            ansible_manager.run(playbook_name="vms/qemu_image_resize", extravars=ex_vars)
 
     # Cloud-init
     if req.cloud_init is not None:

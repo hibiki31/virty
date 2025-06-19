@@ -1,23 +1,31 @@
 
+from fastapi.testclient import TestClient
+
+from storage.schemas import StoragePage
 
 
-# @tester
-# def test_image_download():
-#     for server in env["servers"]:
-#         image_download(node_name=server["name"], storage_name="test-cloud", image_url=env["image_url"])
-#         image_download(node_name=server["name"], storage_name="test-iso", image_url=env["iso_url"])
+def test_image_download(env, client, wait_tasks):
+    for server in env.servers:
+        
+        image_download(wait_tasks, node_name=server.name, storage_name="test-cloud", image_url=env.image_url, client=client)
+        # image_download(wait_tasks, node_name=server.name, storage_name="test-iso", image_url=env.iso_url, client=client)
         
 
-# def image_download(node_name, storage_name, image_url):
-#     resp = httpx.request(method="get", url=f'{BASE_URL}/api/storages', headers=HEADERS, params={"nameLike": storage_name, "nodeName": node_name})
-#     print_resp(resp=resp)
+def image_download(wait_tasks, client:TestClient, node_name, storage_name, image_url):    
+    res = client.get('/api/storages', params={"nameLike": storage_name, "nodeName": node_name})
     
-#     req_data={
-#         "storage_uuid": resp.json()["data"][0]["uuid"],
-#         "image_url": image_url
-#     }
-#     resp = httpx.request(method="post",url=f'{BASE_URL}/api/tasks/images/download', headers=HEADERS, json=req_data)
-#     print_resp(resp=resp)
-#     wait_tasks(resp)
+    assert res.status_code == 200
+    res_model = StoragePage.model_validate(res.json())
+    
+    
+    assert res_model.data != []
+    
+    req_data={
+        "storage_uuid": res_model.data[0].uuid,
+        "image_url": image_url
+    }
+    res_images = client.post('/api/tasks/images/download', json=req_data)
+    
+    assert wait_tasks(res_images, client) == "finish"
     
     

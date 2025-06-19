@@ -10,6 +10,13 @@ def test_playbook(env):
     assert am.run(playbook_name="commom/make_dir_recurse", extravars={"path": "/tmp/virty-pytest"})
 
 
+def test_make_dir_recurse(env):
+    server = random.choice(env.servers)
+    
+    am = AnsibleManager(user=server.username, domain=server.domain)
+    assert am.run(playbook_name="commom/make_dir_recurse", extravars={"path": "/var/lib/libvirt/test/unit"})
+
+
 def test_qemu_image(env):
     server = random.choice(env.servers)
 

@@ -34,6 +34,7 @@ class EnvConfig(BaseModel):
     servers: List[Server]
     storages: List[Storage]
     image_url: str
+    iso_url: str
 
 
 @pytest.fixture(scope="session")
@@ -101,10 +102,13 @@ def _wait_tasks(resp, client: TestClient) -> str :
         while True:
             resp = client.request(method="get",url=f'/api/tasks/{uuid}').json()
             # print(f"wait {uuid} {resp['resource']} {resp['object']} {counter}s")
-            if resp["status"] in[ "finish", "error", "lost"] :
+            if resp["status"] in[ "error", "lost"] :
                 return resp["status"]
+            if resp["status"] in[ "finish" ] :
+                break
             time.sleep(0.5)
             counter += 0.5
+    return "finish"
             
 @pytest.fixture(scope="session")
 def wait_tasks() -> _wait_tasks:

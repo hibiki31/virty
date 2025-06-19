@@ -2,5 +2,6 @@
 
 apt-get install -y wget git
 
-pip install ruff
+pip install --upgrade pip
+pip install ruff pytest
 pip install -r /workspaces/api/requirements.txt

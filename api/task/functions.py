@@ -6,6 +6,7 @@ from time import time
 from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
+from mixin.database import SessionLocal
 from mixin.log import setup_logger
 from mixin.schemas import BaseSchema
 from task.models import TaskModel
@@ -30,10 +31,12 @@ class TaskBase:
     def include_task(self, tb):
         self.task_func.update(tb.task_func)
     
-    def run(self, key, task_model, db):
+    def run(self, key, task_uuid):
         try:
-            self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
-                
+            with SessionLocal() as db:
+                task_model = db.query(TaskModel).filter(TaskModel.uuid == task_uuid).one()
+                db.commit()
+                return self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
         except KeyError:
             raise Exception("Task not found")
 

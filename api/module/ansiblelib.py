@@ -23,20 +23,22 @@ class AnsibleManager():
         self.user = user
         self.domain = domain
         
-    def run(self, playbook_name:str, extravars={}):
-        logger.info(f"{playbook_name} {extravars}")
+    def run(self, playbook_name:str, extravars={}, timeout=60):
+        hosts = f"{self.user}@{self.domain}"
         
-
+        logger.info(f"Ansible playbook run: {hosts} name={playbook_name} extravars={extravars}")
+        
         res = ansible_runner.run(
+            timeout=timeout,
             private_data_dir=f'{DATA_ROOT}/ansible/',
             inventory={ 'all':{
-                'hosts': f"{self.user}@{self.domain}"
+                'hosts': hosts
                 }
             },
             playbook=self.get_playbook_path(playbook_name),
             extravars=extravars,
             host_pattern='all',
-            quiet=True,
+            quiet=True
         )
         
         os.makedirs(f'{DATA_ROOT}/node/', exist_ok=True)
@@ -88,7 +90,7 @@ class AnsibleManager():
         except Exception:
             raise Exception("Failed get node information by Ansible")
         
-        logger.info(f'Get node infomation successfull{self.user}@{self.domain}')
+        logger.info(f'Get node infomation successfull {self.user}@{self.domain}')
         return node_info
 
 

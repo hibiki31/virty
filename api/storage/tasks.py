@@ -9,6 +9,7 @@ from node.models import NodeModel
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 
+from .function import is_safe_fullpath
 from .models import ImageModel, StorageModel
 from .schemas import StorageForCreate
 
@@ -77,6 +78,10 @@ def post_storage_root(db: Session, model: TaskModel, req: TaskRequest):
     editor.storage_base_edit(name=body.name, path=body.path)
 
     am = AnsibleManager(user=node.user_name, domain=node.domain)
+    
+    db.close_all()
+    if not is_safe_fullpath(body.path):
+        raise Exception(f"The specified path is not a safe full path. {body.path}")
     am.run(
         playbook_name="commom/make_dir_recurse",
         extravars={"path": body.path}
@@ -86,7 +91,7 @@ def post_storage_root(db: Session, model: TaskModel, req: TaskRequest):
     manager = virtlib.VirtManager(node_model=node)
     manager.storage_define(xml_str=editor.dump_str())
 
-    model.message = "Storage append has been successfull"
+    # model.message = "Storage append has been successfull"
 
 
 @worker_task(key="delete.storage.root")
