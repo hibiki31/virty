@@ -211,7 +211,7 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
             playbook_name="commom/copy_virty_to_node",
             extravars={
                 "src": iso_path,
-                "dst":"/var/virty/cloud-init/"
+                "dst":send_path
         })
         editor.domain_cdrom(target=None,path=send_path)
 
