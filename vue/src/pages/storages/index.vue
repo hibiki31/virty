@@ -17,6 +17,22 @@
         <v-icon color="medium-emphasis" icon="mdi-pencil" size="small"
           @click="stateEditDialog = true; stateEditUUID = item.uuid"></v-icon>
       </template>
+      <template v-slot:item.available="{ item }">
+        <v-progress-linear color="teal-lighten-4" height="20"
+          :model-value="(item.capacity - item.available) / item.capacity * 100">
+          <strong>{{ item.available }}/{{ item.capacity }} GB</strong>
+        </v-progress-linear>
+      </template>
+      <template v-slot:item.overcommit="{ item }">
+        <div class="text-end">
+          <strong v-if='(item.capacityCommit - item.allocationCommit - item.available) > 0' class="text-error">
+            {{ item.capacityCommit - item.allocationCommit - item.available }} GB
+          </strong>
+          <strong v-else class="text-primary">
+            {{ item.capacityCommit - item.allocationCommit - item.available }} GB
+          </strong>
+        </div>
+      </template>
 
     </v-data-table-server>
 
@@ -50,8 +66,6 @@ const headers = [
   { title: 'Name', value: 'name' },
   { title: 'Node', value: 'nodeName' },
   { title: 'UUID', value: 'uuid' },
-  { title: 'Capacity', value: 'capacity' },
-  { title: 'Used', value: 'used' },
   { title: 'Available', value: 'available' },
   { title: 'OverCommit', value: 'overcommit' },
   { title: 'active', value: 'active' },

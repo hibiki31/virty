@@ -5,13 +5,28 @@
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
+      <v-spacer></v-spacer>
+      <v-text-field v-model="query.nameLike" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
-      density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
+      v-model:page="pageState" density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
       <template v-slot:item.uuid="{ item }">
-        <router-link :to="'/vms/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
+        <router-link :to="'/vms/' + item.uuid" class="font-mono">{{ item.uuid }}</router-link>
+      </template>
+
+      <template v-slot:item.status="{ item }">
+        <v-icon :color="getPowerColor(item.status)">mdi-power</v-icon>
+      </template>
+      <template v-slot:item.memory="{ item }" justify="right">
+        <v-icon left>mdi-memory</v-icon>
+        {{ item.memory / 1024 }} G
+      </template>
+      <template v-slot:item.core="{ item }" justify="right">
+        <v-icon left>mdi-cpu-64-bit</v-icon>
+        {{ item.core }} core
       </template>
 
     </v-data-table-server>
@@ -25,16 +40,20 @@ meta:
 </route>
 
 <script lang="ts" setup>
+import type { typeListVM, typeListVMQuery } from '@/composables/vm'
+import { initVMList, getVMList } from '@/composables/vm'
 import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import type { paths } from '@/api/openapi'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
+import { getPowerColor } from '@/composables/vm'
 
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(20)
+const pageState = ref(1)
 
 const headers = [
   { title: 'Status', value: 'status' },
@@ -47,27 +66,21 @@ const headers = [
   { title: 'groupId', value: 'ownerGroupId' }
 ]
 
-const items = ref<paths['/api/vms']['get']['responses']['200']['content']['application/json']>({
-  count: 0,
-  data: [],
+const query = ref<typeListVMQuery>({
+  admin: true,
+  limit: 20,
+  page: 1,
+  nameLike: "",
+  nodeNameLike: "",
 })
 
-function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
-  loading.value = true
-  apiClient.GET('/api/vms', {
-    params: {
-      query: {
-        admin: true,
-        limit: itemsPerPage,
-        page: page,
-      }
-    }
-  }).then((res) => {
-    if (res.data) {
-      items.value = res.data
-    }
-    loading.value = false
-  })
+const items = ref<typeListVM>(initVMList)
+
+async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+  query.value.page = page
+  query.value.limit = itemsPerPage
+
+  await reload()
 }
 
 
@@ -80,8 +93,18 @@ const rescan = () => {
 }
 
 
+async function reload() {
+  loading.value = true
+  items.value = await getVMList(query.value)
+  loading.value = false
+}
+
 useReloadListener(() => {
-  loadItems({})
+  reload()
+})
+
+onMounted(() => {
+  reload()
 })
 
 </script>

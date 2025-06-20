@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
-from module import sshlib
 from module.ansiblelib import AnsibleManager
+from module.paramikolib import ParamikoManager
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 
@@ -15,26 +15,20 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="post.node.root")
-def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body = NodeForCreate(**request.body)
+def post_node_root(db: Session, model: TaskModel, req: TaskRequest):
+    body = NodeForCreate.model_validate(req.body)
     
 
     user = body.user_name
     domain = body.domain
     port = body.port
 
-    ssh_manager = sshlib.SSHManager(user=user, domain=domain, port=port)
-    ssh_manager.add_known_hosts()
-    
+    ssh_manager = ParamikoManager(user=user, domain=domain, port=port)
     ansible_manager = AnsibleManager(user=user, domain=domain)
-    
     node_infomation = ansible_manager.node_infomation()
 
-    print(node_infomation)
-
     ssh_role = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ssh").one_or_none()
-    if ssh_role == None:
+    if ssh_role is None:
         ssh_role = NodeRoleModel(name="ssh")
         db.add(ssh_role)
 
@@ -78,13 +72,12 @@ def post_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db.add(row)
     db.commit()
 
-    task.message = "Node added has been successfull"
+    model.message = "Node added has been successfull"
 
 
 @worker_task(key="delete.node.root")
-def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    node_name = request.path_param["name"]
+def delete_node_root(db: Session, model: TaskModel, req: TaskRequest):
+    node_name = req.path_param["name"]
 
     try:
         db.query(NodeModel).filter(NodeModel.name==node_name).one()
@@ -96,12 +89,11 @@ def delete_node_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     db.query(NodeModel).filter(NodeModel.name==node_name).delete()
     db.commit()
 
-    task.message = "Node delete has been successfull"
+    model.message = "Node delete has been successfull"
 
 @worker_task(key="patch.node.role")
-def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body = NodeRoleForUpdate(**request.body)
+def patch_node_role(db: Session, model: TaskModel, req: TaskRequest):
+    body = NodeRoleForUpdate.model_validate(req.body)
 
     node_name = body.node_name
     add_role_name = body.role_name
@@ -109,13 +101,13 @@ def patch_node_role(self: TaskBase, task: TaskModel, request: TaskRequest):
     node:NodeModel = db.query(NodeModel).filter(NodeModel.name==node_name).one()
 
     if add_role_name == "libvirt":
-        patch_node_role_libvirt(db=db, task=task, node=node)
+        patch_node_role_libvirt(db=db, task=model, node=node)
     elif add_role_name == "ovs":
-        patch_node_role_ovs(db=db, task=task, node=node, request=body)
+        patch_node_role_ovs(db=db, task=model, node=node, request=body)
     elif add_role_name == "vxlan_overlay":
-        patch_node_role_vxlan_overlay(db=db, task=task, node=node, request=body)
+        patch_node_role_vxlan_overlay(db=db, task=model, node=node, request=body)
     
-    task.message = "Node patch has been successfull"
+    model.message = "Node patch has been successfull"
 
 
 # def patch_node_role_vxlan_overlay(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
@@ -152,8 +144,7 @@ def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
         role_model = NodeRoleModel(name="libvirt")
         db.add(role_model)
     
-    ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-    ssh_manager.add_known_hosts()
+    ssh_manager = ParamikoManager(user=node.user_name, domain=node.domain, port=node.port)
 
     node.qemu_version = ssh_manager.get_node_qemu_version()
     node.libvirt_version = ssh_manager.get_node_libvirt_version()

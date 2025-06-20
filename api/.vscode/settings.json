@@ -10,4 +10,8 @@
   "python.analysis.extraPaths" : [
     "/opt/venv/lib/python3.12/site-packages/"
   ],
+  "terminal.integrated.enableVisualBell": true,
+  "accessibility.signals.terminalBell": {
+    "sound": "on"
+  }
 }

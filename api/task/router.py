@@ -3,7 +3,7 @@ import time
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
@@ -39,7 +39,14 @@ def get_tasks(
     if param.method:
         query = query.filter(TaskModel.method==param.method)
     if param.status:
-        query = query.filter(TaskModel.status==param.status)
+        if param.status == "incomplete":
+            query = query.filter(or_(
+                TaskModel.status=="wait",
+                TaskModel.status=="init",
+                TaskModel.status=="start",
+            ))
+        else:
+            query = query.filter(TaskModel.status==param.status)
     
     count = query.count()
 
@@ -88,7 +95,7 @@ def get_tasks_incomplete(
             .filter(TaskModel.status!="finish").all()        
         
         task_count = len(task_model)
-        task_hash = str(hashlib.md5(str([j.uuid for j in task_model]).encode()).hexdigest())
+        task_hash = str(hashlib.md5(str([j.uuid+j.status for j in task_model]).encode()).hexdigest())
         
         if task_hash != hash:
             break

@@ -11,7 +11,7 @@
           name: "{{ packages }}"
         vars:
           packages: 
-            - qemu
+            # - qemu
             - qemu-kvm
             - qemu-utils
             - libvirt-daemon

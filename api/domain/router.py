@@ -1,5 +1,7 @@
+from os.path import join
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -7,9 +9,10 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
 from project.models import ProjectModel
+from settings import DATA_ROOT
 
 from .models import DomainModel
-from .schemas import DomainDetail, DomainForQuery, DomainPage
+from .schemas import DomainDetail, DomainForQuery, DomainPage, DomainXML
 
 app = APIRouter(
     tags=["vms"]
@@ -25,7 +28,7 @@ def get_api_domain(
         db: Session = Depends(get_db),
     ):
 
-    query = db.query(DomainModel).order_by(DomainModel.node_name,DomainModel.name)
+    query = db.query(DomainModel)
 
     if param.admin:
         current_user.verify_scope(scopes=["admin"])
@@ -39,12 +42,11 @@ def get_api_domain(
     if param.node_name_like:
         query = query.filter(DomainModel.node_name.like(f'%{param.node_name_like}%'))
 
+    query = query.order_by(DomainModel.name)
     count = query.count()
-
-    query = query.order_by(desc(DomainModel.name))
     
     if param.limit > 0:
-        query.limit(param.limit).offset(int(param.limit*param.page))
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
     vms = query.all()
 
     return {"count": count, "data": vms}
@@ -62,6 +64,21 @@ def get_api_domain_uuid(
         raise HTTPException(status_code=404, detail="Not found domain")
 
     return domain
+
+
+@app.get("/api/vms/{uuid}/xml",response_model=DomainXML)
+def get_api_vm_uuid_xml(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        uuid:str = None
+    ):
+    try:
+        with open(join(DATA_ROOT, "xml/domain", f"{uuid}.xml")) as f:
+            domain_xml = DomainXML(xml=f.read())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Not found domain")
+
+    return domain_xml
 
 
 @app.get("/api/vms/vnc/{token}", operation_id="get_vnc_address")

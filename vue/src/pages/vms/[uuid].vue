@@ -1,6 +1,7 @@
 <template>
   <div v-if="data">
     <v-card variant="flat">
+      <v-m-delete-dialog v-model="stateDeleteDialog" :item="data"></v-m-delete-dialog>
       <v-card-item>
         <v-card-title>
           <v-icon left class="ma-3" :color="getPowerColor(data.status)">mdi-power-standby</v-icon>
@@ -26,7 +27,7 @@
         <v-btn small class="ma-2" color="primary" @click="openVNC(data.uuid)" :disabled="data.vncPort === -1">
           <v-icon left>mdi-console</v-icon>Console
         </v-btn>
-        <v-btn small dark class="ma-2" color="error">
+        <v-btn small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
           <v-icon left>mdi-delete</v-icon>Delete
         </v-btn>
       </v-card-actions>
@@ -129,9 +130,8 @@
                       <td>{{ itemDisk.source }}</td>
                       <td>{{ itemDisk.target }}</td>
                       <td>
-                        <v-btn v-if="itemDisk.device == 'cdrom'" icon v-on:click="openCDRomDialog(itemDisk.target)">
-                          <v-icon>mdi-pen</v-icon>
-                        </v-btn>
+                        <v-icon v-if="itemDisk.device == 'cdrom'"
+                          @click="openCDRomDialog(itemDisk.target)">mdi-pencil</v-icon>
                       </td>
                     </tr>
                   </tbody>
@@ -156,10 +156,10 @@ import { useReloadListener } from '@/composables/trigger';
 
 import { vmPowerOff, vmPowerOn, openVNC, getPowerColor } from '@/composables/vm';
 
-
-
 type typeVM = paths['/api/vms/{uuid}']['get']['responses']['200']['content']['application/json']
 const data = ref<typeVM>()
+
+const stateDeleteDialog = ref(false)
 
 function reload() {
   console.debug("vm detail reload")

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from auth.router import CurrentUser, get_current_user, pwd_context
+from auth.function import get_password_hash
+from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
 from user.models import UserModel, UserScopeModel
@@ -25,13 +26,13 @@ def post_api_users(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
     ):
-    if request.user_id == "":
+    if request.username == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Blanks are not allowed in id",
         )
 
-    if db.query(UserModel).filter(UserModel.username==request.user_id).one_or_none():
+    if db.query(UserModel).filter(UserModel.username==request.username).one_or_none():
         raise HTTPException(
             status_code=400,
             detail="User already exists",
@@ -39,8 +40,8 @@ def post_api_users(
 
     # ユーザ追加
     user_model = UserModel(
-        username=request.user_id,
-        hashed_password=pwd_context.hash(request.password),
+        username=request.username,
+        hashed_password=get_password_hash(request.password),
     )
 
     db.add(user_model)

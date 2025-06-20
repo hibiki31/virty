@@ -1,31 +1,32 @@
 <template>
   <v-dialog width="400" v-model="model">
-    <v-card>
-      <v-form ref="nodeAddForm">
-        <v-card-title>Register node</v-card-title>
-        <v-card-text>
-          <v-text-field v-model="postData.name" label="Name"
-            :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
+    <v-card title="Register Node">
+      <v-card-text>
+        <v-form>
+          <v-text-field variant="outlined" density="comfortable" v-model="postData.name" label="Name"
+            :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
             counter="64"></v-text-field>
-          <v-text-field v-model="postData.userName" label="User" :rules="[required]"></v-text-field>
-          <v-text-field v-model="postData.domain" label="IP or Doain" :rules="[required]"></v-text-field>
-          <v-text-field v-model="postData.port" label="Port" :rules="[$required, $intValueRestrictions]"
-            counter="64"></v-text-field>
-          <v-text-field v-model="postData.description" label="Descriptions" counter="128"></v-text-field>
-          <v-checkbox v-model="postData.libvirtRole" label='Provisioning as kvm host'></v-checkbox>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="addNode">Register</v-btn>
-        </v-card-actions>
-      </v-form>
+          <v-text-field variant="outlined" density="comfortable" v-model="postData.userName" label="User"
+            :rules="[r.required]"></v-text-field>
+          <v-text-field variant="outlined" density="comfortable" v-model="postData.domain" label="IP or Doain"
+            :rules="[r.required]"></v-text-field>
+          <v-text-field variant="outlined" density="comfortable" v-model="postData.port" label="Port"
+            :rules="[r.required, r.portTCP]"></v-text-field>
+          <v-text-field variant="outlined" density="comfortable" v-model="postData.description" label="Descriptions"
+            counter="128"></v-text-field>
+          <v-checkbox color="primary" density="comfortable" v-model="postData.libvirtRole"
+            label='Provisioning as kvm host'></v-checkbox>
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="primary" @click="addNode">Register</v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup>
-
-
+import * as r from '@/composables/rules';
 import { reactive, ref } from 'vue';
 import { defineProps, defineModel } from 'vue'
 import { apiClient } from '@/api';
@@ -39,8 +40,8 @@ const postData = reactive({
   name: '',
   userName: '',
   domain: '',
-  port: 0,
-  description: '',
+  port: 22,
+  description: 'KVM Node',
   libvirtRole: true
 })
 

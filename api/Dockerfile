@@ -1,4 +1,4 @@
-FROM python:3.11-bullseye
+FROM python:3.12-bullseye
 
 WORKDIR /opt/app
 ENV PATH $PATH:/root/.local/bin/:/opt/venv/bin/

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Literal
 
-from mixin.schemas import GetPagination, BaseSchema
+from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
 
 
@@ -70,6 +70,9 @@ class DomainDetail(Domain):
     node: Node
 
 
+class DomainXML(BaseSchema):
+    xml: str
+
 class DomainBase(BaseSchema):
     uuid: str
 
@@ -115,7 +118,7 @@ class PowerStatusForUpdateDomain(BaseSchema):
 
 class CdromForUpdateDomain(BaseSchema):
     path: str  | None = None
-    target: str  | None = None
+    target: str
 
 
 class DomainDetailXmlInterface(BaseSchema):

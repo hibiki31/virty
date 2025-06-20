@@ -5,9 +5,12 @@
 
     <v-spacer></v-spacer>
 
-    <v-progress-circular indeterminate color="error" v-show="taskCount > 0" size="24"></v-progress-circular>
+    <v-switch v-model="enableAutoReload" hide-details color="error" class="pa-6" hint="Enable auto relaod"></v-switch>
 
-    <v-btn variant="text" icon="mdi-logout-variant" class="ml-5" @click="logout"></v-btn>
+    <v-progress-circular indeterminate color="error" v-if="taskCount > 0" size="24"></v-progress-circular>
+    <v-progress-circular color="error" v-else size="24"></v-progress-circular>
+
+    <v-btn variant="text" icon="mdi-logout-variant" class="" @click="logout"></v-btn>
   </v-app-bar>
 </template>
 
@@ -32,6 +35,7 @@ const emit = defineEmits(['getVideo'])
 const taskChecking = ref(false)
 const taskCount = ref(0)
 const taskHash = ref('')
+const enableAutoReload = ref(true)
 
 const logout = async () => {
   removeAuth()
@@ -66,7 +70,7 @@ const taskCheck = async () => {
       taskHash.value = res.data.hash
 
       // リロードをトリガーする条件
-      if (taskCount.value > res.data.count) {
+      if ((taskCount.value > res.data.count) && enableAutoReload.value) {
         notify("info", "Realod", "Reloading due to task completion")
         setTimeout(() => (state.trigger()), 100)
       }

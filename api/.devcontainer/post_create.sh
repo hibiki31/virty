@@ -1,8 +1,6 @@
 #!/bin/bash
 
-git config --global --add safe.directory /workspaces
-
 apt-get install -y wget git
 
-pip install ruff
-pip install -r /workspaces/api/requirements.txt
+pip install --upgrade pip
+pip install ruff pytest pip-review pytest-cov

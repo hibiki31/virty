@@ -24,3 +24,10 @@ export async function getNode() {
     return initNodeList;
   }
 }
+
+export function getNodeStatusColor(statusCode: string | number) {
+  if (statusCode === 10) return "primary";
+  else if (statusCode === "init") return "grey lighten-1";
+  else if (statusCode === "error") return "red";
+  else return "yellow";
+}

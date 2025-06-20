@@ -10,6 +10,16 @@
       <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error" size="small">LEAVE</v-btn>
     </v-card-actions>
     <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
+      <template v-slot:item.name="{ item }">
+        <router-link :to="'/nodes/' + item.name" class="font-mono">{{ item.name }}</router-link>
+      </template>
+      <template v-slot:item.status="{ item }">
+        <v-icon left class="ma-3" :color="getNodeStatusColor(item.status)">mdi-power-standby</v-icon>
+      </template>
+      <template v-slot:item.roles="{ item }">
+        <v-chip v-for="role in item.roles" :text="role.roleName" variant="flat" color="primary" size="x-small"
+          class="ma-1"></v-chip>
+      </template>
     </v-data-table>
   </v-card>
 </template>
@@ -23,6 +33,7 @@ meta:
 import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import type { paths } from '@/api/openapi'
+import { getNodeStatusColor } from '@/composables/nodes'
 
 const dialogAdd = ref(false)
 const dialogKey = ref(false)

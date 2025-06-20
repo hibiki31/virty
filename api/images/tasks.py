@@ -1,6 +1,8 @@
 import os
 from urllib.parse import urlparse
 
+from sqlalchemy.orm import Session
+
 from mixin.log import setup_logger
 from module.ansiblelib import AnsibleManager
 from node.models import NodeModel
@@ -15,9 +17,9 @@ logger = setup_logger(__name__)
 
 
 @worker_task(key="post.image.download")
-def post_image_download(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body = ImageDownloadForCreate(**request.body)
+def post_image_download(db: Session, model: TaskModel, req: TaskRequest):
+
+    body = ImageDownloadForCreate.model_validate(req.body)
     
     storage_model = db.query(StorageModel).filter(StorageModel.uuid==body.storage_uuid).one()
     node_model = db.query(NodeModel).filter(NodeModel.name==storage_model.node_name).one()
@@ -27,7 +29,14 @@ def post_image_download(self: TaskBase, task: TaskModel, request: TaskRequest):
     url_filename = os.path.basename(url_parse.path)
     save_file_path = os.path.join(storage_model.path, url_filename)
     
-    ansible_manager = AnsibleManager(user=node_model.user_name, domain=node_model.domain)
-    ansible_manager.run_playbook_file(yaml="pb_wget", extra_vars=[{"url": body.image_url, "dest": save_file_path}])
+    
+    
+    am = AnsibleManager(user=node_model.user_name, domain=node_model.domain)
+    db.close_all()
+    
+    am.run(
+        playbook_name="pb_wget",
+        extravars={"url": body.image_url, "dest": save_file_path}
+    )
     
     return f"save {body.image_url}"

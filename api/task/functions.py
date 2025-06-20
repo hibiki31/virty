@@ -4,7 +4,6 @@ from datetime import datetime
 from time import time
 
 from fastapi import BackgroundTasks
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from mixin.database import SessionLocal
@@ -18,7 +17,6 @@ logger = setup_logger(__name__)
 class TaskBase:
     def __init__(self):
         self.task_func = {}
-        self.db = SessionLocal()
 
     def __call__(self, key):
         def receive_func(f):
@@ -33,13 +31,15 @@ class TaskBase:
     def include_task(self, tb):
         self.task_func.update(tb.task_func)
     
-    def run(self, key, task_model):
-        request = TaskRequest(**json.loads(task_model.request))
-
-        try:
-            self.task_func[key](self, task_model, request)
-        except KeyError:
+    def run(self, key, task_uuid):
+        if key not in self.task_func:
             raise Exception("Task not found")
+        
+        with SessionLocal() as db:
+            task_model = db.query(TaskModel).filter(TaskModel.uuid == task_uuid).one()
+            db.commit()
+            return self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
+
 
 
 
@@ -73,7 +73,7 @@ class TaskManager():
             resource = self.resource,
             object = self.object,
             method = self.method,
-            request = task_request.json(),
+            request = task_request.model_dump_json(),
             message = "Task has been queued"
         ))
         self.db.commit()

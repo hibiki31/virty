@@ -1,9 +1,9 @@
----
 - hosts: all
+  gather_facts: no
   become: yes
   tasks:
     - name: directory created
-      file:
+      ansible.builtin.file:
         path: "{{ path }}"
         state: directory
         mode: "775"

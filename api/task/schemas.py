@@ -13,7 +13,7 @@ class TaskBase(BaseSchema):
     update_time: datetime | None = None
     user_id: str | None = None
     status: str | None = None
-    resource: str | None = None
+    resource: str
     object: str
     method: str
     dependence_uuid: str | None = None

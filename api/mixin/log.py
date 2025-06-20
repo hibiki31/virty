@@ -1,6 +1,8 @@
 import logging
-from settings import DATA_ROOT
 
+from rich.logging import RichHandler
+
+from settings import DATA_ROOT
 
 # logging.basicConfig()
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
@@ -20,9 +22,11 @@ def setup_logger(name, logfile=f'{DATA_ROOT}/api.log'):
     # fh_info.setFormatter(fh_info_formatter)
 
     # コンソール出力設定
-    ch = logging.StreamHandler()
-    ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
-    ch.setFormatter(ch_formatter)
+    # ch = logging.StreamHandler()
+    # ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
+    # ch.setFormatter(ch_formatter)
+    ch = RichHandler()
+  
 
     # logger.addHandler(fh)
     # logger.addHandler(fh_info)

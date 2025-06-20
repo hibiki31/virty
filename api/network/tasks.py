@@ -1,38 +1,33 @@
-from json import loads
-from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-from node.models import NodeModel
-
-from mixin.log import setup_logger
-
-from module import virtlib
-from module import xmllib
-from module.ovslib import OVSManager
-from module import sshlib
-
-from task.functions import TaskBase, TaskRequest
-
-from time import time
-from random import randint
-
+import secrets
 from ipaddress import ip_interface
-import httpx
+from random import randint
+from time import time
 
+import httpx
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
+
+from mixin.log import setup_logger
+from module import virtlib, xmllib
+from node.models import NodeModel
+from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
+
+from .models import NetworkModel, NetworkPortgroupModel
+from .schemas import (
+    NetworkForCreate,
+    NetworkOVSForCreate,
+    NetworkProviderForCreate,
+    PostVXLANInternal,
+)
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
 @worker_task(key="put.network.list")
-def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
-
-    nodes = self.db.query(NodeModel).all()
-
+def put_network_list(db: Session, model: TaskModel, req: TaskRequest):
+    nodes = db.query(NodeModel).all()
     token = str(time())
 
     for node in nodes:
@@ -42,7 +37,6 @@ def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
         manager = virtlib.VirtManager(node_model=node)
 
         for network in manager.network_data():
-            network:PaseNetwork
             merge_model = NetworkModel(
                 uuid = network.uuid,
                 name = network.name,
@@ -51,7 +45,7 @@ def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
                 update_token = token,
                 node_name = node.name,
             )
-            self.db.merge(merge_model)
+            db.merge(merge_model)
             for port in network.portgroups:
                 port_model = NetworkPortgroupModel(
                     network_uuid = network.uuid, 
@@ -60,30 +54,31 @@ def put_network_list(self: TaskBase, task: TaskModel, reqest: TaskRequest):
                     vlan_id=port.vlan_id,
                     is_default=port.is_default
                 )
-                self.db.merge(port_model)
-            self.db.commit()
-        self.db.query(NetworkPortgroupModel).filter(
+                db.merge(port_model)
+            db.commit()
+        db.query(NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==network.uuid, 
             NetworkPortgroupModel.update_token!=token
         ).delete()
-        self.db.query(NetworkModel).filter(
+        db.query(NetworkModel).filter(
             NetworkModel.node_name==node.name,
             NetworkModel.update_token!=token
         ).delete()
         
-        self.db.commit()
-    task.message = "Network list updated has been successfull"
+        db.commit()
+    model.message = "Network list updated has been successfull"
 
 
 @worker_task(key="post.network.root")
-def post_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body: NetworkForCreate = NetworkForCreate(**request.body)
+def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
+    body = NetworkForCreate.model_validate(req.body)
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
+    
+    
 
     if body.type == "bridge":
         # XMLを定義、設定
@@ -101,6 +96,39 @@ def post_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
             </portgroup>
         </network>
         '''
+    elif body.type == "nat":
+        if body.nat.bridge_name:
+            bridge_name = body.nat.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_nat")
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.nat.address), 
+            netmask=str(body.nat.netmask),
+            start=str(body.nat.dhcp_start),
+            end=str(body.nat.dhcp_end)
+        )
+        xml = editor.dump_str()
+    elif body.type == "route":
+        if body.route.bridge_name:
+            bridge_name = body.route.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_route")
+        # 内容同じだからNAT|ROUTE
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.route.address), 
+            netmask=str(body.route.netmask),
+            start=str(body.route.dhcp_start),
+            end=str(body.route.dhcp_end)
+        )
+        xml = editor.dump_str()
     else:
         raise Exception("Type is incorrect")
 
@@ -108,22 +136,21 @@ def post_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_define(xml_str=xml)
 
-    task.message = "Network add has been successfull"
+    model.message = "Network add has been successfull"
 
 
 @worker_task(key="delete.network.root")
-def delete_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    uuid = request.path_param["uuid"]
+def delete_network_root(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == uuid).one()
-    except:
+    except NoResultFound:
         raise Exception("network not found")
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
@@ -131,18 +158,18 @@ def delete_network_root(self: TaskBase, task: TaskModel, request: TaskRequest):
 
 
 @worker_task(key="post.network.ovs")
-def post_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body: NetworkOVSForCreate = NetworkOVSForCreate(**request.body)
-    network_uuid = request.path_param["uuid"]
+def post_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
+
+    body = NetworkOVSForCreate.model_validate(req.body)
+    network_uuid = req.path_param["uuid"]
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
-    except:
+    except NoResultFound:
         raise Exception("network not found")
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
@@ -150,31 +177,30 @@ def post_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
     
 
 @worker_task(key="delete.network.ovs")
-def delete_network_ovs(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    network_uuid = request.path_param["uuid"]
-    ovs_name = request.path_param["name"]
+def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
+    network_uuid = req.path_param["uuid"]
+    ovs_name = req.path_param["name"]
 
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
-        port: NetworkPortgroupModel = db.query(
+        db.query(
             NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==network_uuid
             ).filter(NetworkPortgroupModel.name==ovs_name).one()
-    except:
+    except NoResultFound:
         raise Exception("network not found")
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
     manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
     
 
-
-def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: PostVXLANInternal = PostVXLANInternal(**model.request)
+@worker_task(key="post.network.vxlan")
+def post_network_vxlan_internal(db: Session, model: TaskModel, req: TaskRequest):
+    body = PostVXLANInternal.model_validate(req.body)
 
     nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
 
@@ -189,9 +215,8 @@ def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel
 
 
 @worker_task(key="post.network.provider")
-def post_network_provider(self: TaskBase, task: TaskModel, request: TaskRequest):
-    db = self.db
-    body: NetworkProvider = NetworkProvider(**request.body)
+def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
+    body = NetworkProviderForCreate.model_validate(req)
     
     vni = randint(1,2**24)
     # VNIの16新数ゼロ梅

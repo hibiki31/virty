@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from settings import SQLALCHEMY_DATABASE_URL
 
 
@@ -26,6 +26,9 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -35,7 +38,8 @@ def get_db_url():
 
 
 Engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True, pool_recycle=60,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=Engine)

@@ -1,20 +1,57 @@
 <template>
   <v-card>
-    <task-detail-dialog :text="taskError" v-model="detailDialog"></task-detail-dialog>
-    <v-data-table :headers="headers" :items="list.data" :items-per-page="10">
+    <task-detail-dialog v-model="stateDetailDialog" :item="dataDetailDaalog"></task-detail-dialog>
+    <v-card-title class="d-flex align-center pe-2">
+      <v-icon icon="mdi-checkbox-multiple-marked-outline"></v-icon> &nbsp;
+      Task List
+
+      <v-spacer></v-spacer>
+      <v-select density="compact" clearable label="Status" v-model="query.status" @update:model-value="reload"
+        :items="['finish', 'error', 'init', 'wait', 'incomplete']" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable label="Resouce" v-model="query.resource" @update:model-value="reload"
+        :items="['vm', 'network', 'node', 'storage']" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable label="Method" v-model="query.method" @update:model-value="reload"
+        :items="['post', 'put', 'delete', 'patch']" variant="solo" width="1"></v-select>
+
+    </v-card-title>
+    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
+      v-model:page="pageState" :items-per-page-options="itemsPerPAgeOption" density="comfortable"
+      :items-length="items.count" :loading="loading" item-value="name" @update:options="loadItems">
+
       <template v-slot:item.status="{ value }">
-        <v-chip :border="`${getStatusColor(value)} thin opacity-25`" :color="getStatusColor(value)" :text="value"
-          size="small"></v-chip>
+        <v-chip :color="getStatusColor(value)" :text="value.toUpperCase()" variant="flat" size="x-small"></v-chip>
       </template>
+
       <template v-slot:item.postTime="{ value }">
         {{ toJST(value) }}
       </template>
 
       <template v-slot:item.actions="{ item }">
-        <v-icon color="medium-emphasis" icon="mdi-pencil" size="small"
-          @click="detailDialog = true; taskError = item.log || ''"></v-icon>
+        <v-icon color="medium-emphasis" icon="mdi-dots-horizontal-circle-outline" size="small"
+          @click="dataDetailDaalog = item; stateDetailDialog = true"></v-icon>
       </template>
-    </v-data-table>
+
+      <template v-slot:item.runTime="{ value }">
+        <div class="text-end">
+          {{ toFixedTow(value) }}s
+        </div>
+      </template>
+
+      <template v-slot:item.uuid="{ value }">
+        <div class="font-mono">{{ value }}</div>
+      </template>
+
+      <template v-slot:item.resource="{ item }">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ props }">
+            <v-icon v-bind="props" :color="getMethodColor(item.method)">{{ getResourceIcon(item.resource) }}</v-icon>
+          </template>
+          <span>Json Param: {{ item.request }}</span>
+        </v-tooltip>
+        <span class="ml-3">{{ item.method }}.{{ item.resource }}.{{ item.object }}</span>
+      </template>
+
+    </v-data-table-server>
   </v-card>
 </template>
 
@@ -24,117 +61,58 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { apiClient } from '@/api'
+import type { typeListTask, typeListTaskQuery } from '@/composables/task'
 
-import type { paths } from '@/api/openapi'
-
-import { format, parse, parseISO } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
+import { ref, onMounted } from 'vue'
 import { useReloadListener } from '@/composables/trigger'
 
-const taskError = ref('')
-const detailDialog = ref(false)
+import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'
+import { itemsPerPAgeOption } from '@/composables/table'
 
-const list = ref<paths['/api/tasks']['get']['responses']['200']['content']['application/json']>({
-  count: 0,
-  data: [],
+const loading = ref(false)
+const stateDetailDialog = ref(false)
+const dataDetailDaalog = ref<typeListTask["data"][0]>()
+const pageState = ref(1)
+
+const query = ref<NonNullable<typeListTaskQuery>>({
+  admin: true,
+  limit: 20,
+  page: 1,
+  status: "",
+  method: "",
+  resource: "",
+  object: ""
 })
-
 
 
 let headers = [
   { title: 'Status', value: 'status' },
   { title: 'PostTime', value: 'postTime' },
-  { title: 'Request', value: 'resource' },
-  { title: 'Method', value: 'method' },
   { title: 'userId', value: 'userId' },
+  { title: 'Request', value: 'resource' },
   { title: 'ID', value: 'uuid' },
   { title: 'TunTime', value: 'runTime' },
   { title: 'Actions', value: 'actions' }
 ]
 
-// const methodTransration = (method) => {
-//   switch (method) {
-//     case 'add': return 'POST';
-//     case 'update': return 'PUT';
-//     case 'delete': return 'DELETE';
-//     case 'cahnge': return 'PATH';
-//   }
-// }
 
-// const copyClipBoard = (text) => {
-//   this.$copyText(text).then(function (e) {
-//     console.log(e);
-//   }, function (e) {
-//     console.log(e);
-//   });
-// }
-
-// const copyClipBoardCurl = (item) => {
-//   const comand = `curl -X '${this.methodTransration(item.method)}' \\
-// '${location.protocol}//${location.host}/api/${item.resource}/${item.object}' \\
-// -H 'accept: application/json' \\
-// -H 'Authorization: Bearer ${this.$store.state.userData.token}' \\
-// -d '${JSON.stringify(item.request)}'`;
-//   this.$copyText(comand).then(function (e) {
-//     console.log(e);
-//   }, function (e) {
-//     console.log(e);
-//   });
-// }
+const items = ref<typeListTask>({
+  count: 0,
+  data: [],
+})
 
 
+async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+  query.value.page = page
+  query.value.limit = itemsPerPage
 
-// const openTaskDeleteDialog = () => {
-//   this.$refs.taskDeleteDialog.openDialog();
-// }
-
-
-const getStatusColor = (statusCode: string) => {
-  if (statusCode === 'finish') return 'primary';
-  else if (statusCode === 'init') return 'grey lighten-1';
-  else if (statusCode === 'error') return 'error';
-  else return 'yellow';
+  await reload()
 }
 
-// const getMethodColor = (statusCode) => {
-//   if (statusCode === 'post') return 'success';
-//   else if (statusCode === 'put') return 'primary';
-//   else if (statusCode === 'delete') return 'error';
-//   else return 'yellow';
-// }
-// const getResourceIcon = (resource) => {
-//   if (resource === 'vm') return 'mdi-cube-outline';
-//   else if (resource === 'node') return 'mdi-server';
-//   else if (resource === 'storage') return 'mdi-database';
-//   else if (resource === 'network') return 'mdi-wan';
-//   else return 'mdi-help-rhombus';
-// }
-
-const toJST = (val: string) => {
-  return format(parseISO(val), 'yyyy-MM-dd HH:mm', { locale: ja })
-}
-
-const toFixedTow = (val: number) => {
-  if (isFinite(val)) {
-    return Number(val).toFixed(2);
-  }
-  return 0;
-}
-
-function reload() {
-  apiClient.GET('/api/tasks', {
-    params: {
-      query: {
-        admin: true,
-        limit: 100,
-      }
-    }
-  }).then((res) => {
-    if (res.data) {
-      list.value = res.data
-    }
-  })
+async function reload() {
+  loading.value = true
+  items.value = await getTaskList(query.value)
+  loading.value = false
 }
 
 useReloadListener(() => {
@@ -144,7 +122,4 @@ useReloadListener(() => {
 onMounted(() => {
   reload()
 })
-
-
-
 </script>

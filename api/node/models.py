@@ -1,8 +1,7 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, JSON
+from sqlalchemy import JSON, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from mixin.database import Base, Engine
 
-from storage.models import StorageModel
+from mixin.database import Base
 
 
 class NodeModel(Base):

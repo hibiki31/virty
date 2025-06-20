@@ -23,17 +23,17 @@ class XmlEditor():
             file, dom, net, str
         """
         if type == "static":
-            os.chdir = APP_ROOT
+            os.chdir(APP_ROOT)
             tree = ET.parse(APP_ROOT + '/static/xml/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "domain":
-            os.chdir = APP_ROOT
+            os.chdir(APP_ROOT)
             tree = ET.parse(APP_ROOT + '/data/xml/domain/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
         elif type == "network":
-            os.chdir = APP_ROOT
+            os.chdir(APP_ROOT)
             tree = ET.parse(APP_ROOT + '/data/xml/network/'+ obj +'.xml') 
             root = tree.getroot()
             self.xml = root
@@ -307,7 +307,7 @@ class XmlEditor():
 
     def dump_file(self,type):
         xml_dir = APP_ROOT + '/data/xml/' +type+ '/'
-        os.chdir = APP_ROOT
+        os.chdir(APP_ROOT)
         os.makedirs(xml_dir, exist_ok=True)
         xml_uuid = self.xml.find('uuid').text
         ET.ElementTree(self.xml).write(xml_dir + xml_uuid + '.xml')
@@ -322,6 +322,15 @@ class XmlEditor():
         self.xml.find('name').text = name
         self.xml.find('forward').set('mode', 'bridge')
         self.xml.find('bridge').set('name', bridge)
+    
+    def network_nat(self, name, bridge, address,netmask, start ,end):
+        self.xml.find('name').text = name
+        self.xml.find('bridge').set('name', bridge)
+        self.xml.find('ip').set('address', address)
+        self.xml.find('ip').set('netmask', netmask)
+        self.xml.find('ip').find('dhcp').find('range').set('start', start)
+        self.xml.find('ip').find('dhcp').find('range').set('end', end)
+    
     
     def network_provider(self, name, bridge, address, domain,netmask, start ,end):
         self.xml.find('name').text = name

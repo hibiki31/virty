@@ -42,16 +42,16 @@ class Storage(BaseSchema):
     uuid: str
     status: int
     active: bool
-    available: int | None = None
-    capacity: int | None = None
+    available: int 
+    capacity: int 
     node_name: str
     node: Node
     auto_start: bool
     path: str | None = None
     meta_data: StorageMetadata | None = None
     update_token:str | None = None
-    allocation_commit: int | None = None
-    capacity_commit: int | None = None
+    allocation_commit: int = 0
+    capacity_commit: int = 0
     
 
 class StoragePage(BaseSchema):

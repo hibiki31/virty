@@ -1,20 +1,14 @@
-from time import sleep
-from fastapi import APIRouter, Depends, Request, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
+
+from auth.router import CurrentUser, get_current_user
+from mixin.database import get_db
+from mixin.log import setup_logger
+from task.functions import TaskManager
+from task.schemas import Task
 
 from .models import *
 from .schemas import *
-
-from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import Task
-from task.functions import TaskManager
-from node.models import NodeModel
-from mixin.database import get_db
-from mixin.log import setup_logger
-from mixin.exception import notfound_exception
-
 
 app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
