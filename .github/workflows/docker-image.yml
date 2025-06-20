@@ -26,7 +26,7 @@ jobs:
       - name: Build test vue
         uses: docker/build-push-action@v6
         with:
-          context: ./vue
+          context: .vue
           push: false
           cache-from: type=gha
           cache-to: type=gha
@@ -34,7 +34,7 @@ jobs:
       - name: Build test api
         uses: docker/build-push-action@v6
         with:
-          context: ./api
+          context: .api
           push: false
           cache-from: type=gha
           cache-to: type=gha
