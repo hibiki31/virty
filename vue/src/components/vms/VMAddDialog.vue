@@ -107,6 +107,7 @@ import { ref, defineModel, onMounted } from 'vue';
 import * as r from '@/composables/rules';
 
 import { itemsCPU, itemsMemory } from '@/composables/vm'
+import type { bodyPostVM } from '@/composables/vm';
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 
@@ -116,11 +117,11 @@ import { initNetworkList, getNetworkList } from '@/composables/network';
 import type { typeListStorage } from '@/composables/storage';
 import { initStorageList, getStorageList } from '@/composables/storage';
 
-import type { typeListImage } from '@/composables/image';
+import type { typeListImage, typeListImageQuery } from '@/composables/image';
 import { initImageList, getImageList } from '@/composables/image';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
-import type { bodyPostVM } from '@/composables/vm';
+
 
 const useCloudInit = ref(true)
 
@@ -202,10 +203,16 @@ function deleteInterface(index: number) {
 }
 
 onMounted(async () => {
+  const query: typeListImageQuery = {
+    admin: true,
+    limit: 999999,
+    page: 1,
+  }
+
   itemsNodes.value = await getNode()
   itemsNetworks.value = await getNetworkList()
   itemsStorages.value = await getStorageList()
-  itemsImages.value = await getImageList(99999, 1)
+  itemsImages.value = await getImageList(query)
 })
 
 function checkOVS(networkName: string) {

@@ -11,7 +11,18 @@ def nodes(env, client):
 
     res = client.get("/api/nodes")
     yield  NodePage.model_validate(res.json())
-    
+
+
+@pytest.fixture(scope="module")
+def installed_sshkeys(env, client):
+    req_data = {
+        "privateKey": env.key,
+        "publicKey": env.pub,
+    }
+    res = client.post("/api/nodes/key", json=req_data)
+    assert res.status_code == 200
+
+
 def post_node(env: EnvConfig, client: TestClient, skipp=False):
     res_node = client.get("/api/nodes")
     nodes = [ i["name"] for i in res_node.json()["data"] ]

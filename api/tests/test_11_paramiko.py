@@ -3,7 +3,7 @@ import random
 from module.paramikolib import ParamikoManager
 
 
-def test_get_info(env):
+def test_get_info(env, installed_sshkeys):
     server = random.choice(env.servers)
     
     pm = ParamikoManager(user=server.username, domain=server.domain, port=22)
@@ -20,7 +20,7 @@ def test_get_info(env):
     print(core, memory, cpu_gen, os_like, os_name, os_version, qemu_version, libvirt_version)
     
 
-def test_get_copy_node_to_node(env):
+def test_get_copy_node_to_node(env, installed_sshkeys):
     if len(env.servers) < 2:
         return
     

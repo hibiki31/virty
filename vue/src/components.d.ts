@@ -11,7 +11,6 @@ declare module 'vue' {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
     DomainCDRomDialog: typeof import('./components/vms/DomainCDRomDialog.vue')['default']
-    DomainDeleteDialog: typeof import('./components/vms/DomainDeleteDialog.vue')['default']
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
     DomainNetworkChange: typeof import('./components/vms/DomainNetworkChange.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
