@@ -15,7 +15,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            hibiki31/virty-proxy
+            hibiki31/virty-vue
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -41,7 +41,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./proxy
+          context: ./vue
           cache-from: type=gha
           cache-to: type=gha
           push: ${{ github.event_name != 'pull_request' }}
