@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
@@ -6,7 +6,6 @@ from domain.models import DomainDriveModel, DomainModel
 from flavor.models import FlavorModel
 from mixin.database import get_db
 from mixin.log import setup_logger
-from module.sshlib import SSHManager
 from node.models import NodeModel
 from storage.models import ImageModel, StorageMetadataModel, StorageModel
 from task.functions import TaskManager
@@ -18,7 +17,6 @@ from .schemas import (
     ImageForQuery,
     ImageForUpdateImageFlavor,
     ImagePage,
-    ImageSCP,
 )
 
 app = APIRouter()
@@ -118,30 +116,6 @@ def patch_api_images(
         ImageModel.path==req.path
         ).one()
     return res
-
-
-@app.put("/api/images/scp", tags=["images"], operation_id="scp_image")
-def put_api_images_scp(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request_model: ImageSCP = None
-    ):
-
-    to_node = db.query(NodeModel).filter(NodeModel.name==request_model.to_node_name).one()
-    from_node = db.query(NodeModel).filter(NodeModel.name==request_model.from_node_name).one()
-
-
-    sshl = SSHManager("user","domain","port")
-    sshl.scp_other_node(
-        to_node=to_node,
-        from_node=from_node,
-        to_path=request_model.to_file_path,
-        from_path=request_model.from_file_path
-    )
-
-
-    return True
 
 
 @app.post("/api/tasks/images/download", tags=["images-task"], operation_id="download_image")

@@ -1,3 +1,4 @@
+import os
 import re
 from time import time
 
@@ -5,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
-from module import cloudinitlib, sshlib, virtlib, xmllib
+from module import cloudinitlib, virtlib, xmllib
 from module.ansiblelib import AnsibleManager
 from network.models import (
     NetworkModel,
@@ -136,45 +137,37 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     
     # ブロックデバイス
     for device, device_name in zip(req.disks, img_device_names):
-        # 型定義
         device: DomainForCreateDisk
-        # 作成先のプールを参照
+
         try:
             new_pool = db.query(StorageModel).filter(
                 StorageModel.uuid==device.save_pool_uuid
                 ).one()
         except NoResultFound:
             raise Exception("request storage pool uuid not found")
-        # ファイル名決めてる
+
         create_image_path = f'{new_pool.path}/{model.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
-        # XMLに追加
         editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
 
-        # 新規ディスクの場合
+
         if device.type == "empty":
-            # 空のディスク作成
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-            ssh_manager.qemu_create(
-                size_giga_byte=device.size_giga_byte,
-                path=create_image_path
-            )
-        # 既存ディスクのコピー
+            ex_vars = {"path": create_image_path,  "size": f"{device.size_giga_byte}G"}
+            ansible_manager.run(playbook_name="vms/qemu_image_create", extravars=ex_vars)
+
         elif device.type == "copy":
-            # コピー元のプール情報参照
             try:
                 pool_model:StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device.original_pool_uuid).one()
             except NoResultFound:
                 raise Exception("request src pool uuid not found")
-            pool_path = pool_model.path
-            file_name = device.original_name
-            from_image_path = pool_path + '/' + file_name
 
-            logger.info(f'{from_image_path}を{create_image_path}へコピーします')
-            ssh_manager = sshlib.SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-            ssh_manager.file_copy(
-                from_path=from_image_path,
-                to_path=create_image_path
-            )
+            from_image_path = os.path.join(pool_model.path, device.original_name)
+            
+            ex_vars = {
+                "src": from_image_path,
+                "dst": create_image_path,
+            }
+            ansible_manager.run(playbook_name="commom/copy_node_internal", extravars=ex_vars)
+            
             logger.info(f'{create_image_path}のサイズを変更します')
             ex_vars = {"path": create_image_path,  "size": f"{device.size_giga_byte}G"}
             ansible_manager.run(playbook_name="vms/qemu_image_resize", extravars=ex_vars)

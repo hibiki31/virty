@@ -1,6 +1,5 @@
 import os
 import subprocess
-from typing import List
 
 from cryptography.hazmat.primitives import serialization
 from fastapi import APIRouter, Depends, status
@@ -10,16 +9,14 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import HTTPException, raise_forbidden
 from mixin.log import setup_logger
-from module.sshlib import SSHManager
+from module.paramikolib import ParamikoManager
 
 from .funcstion import delete_ssh_keys
 from .models import NodeModel
 from .schemas import (
     Node,
     NodeForQuery,
-    NodeInterface,
-    NodeInterfaceIpv4Info,
-    NodeInterfaceIpv6Info,
+    NodeInfo,
     NodePage,
     SSHKeyPair,
     SSHPublicKey,
@@ -151,7 +148,7 @@ def get_node_name_facts(
     return node.ansible_facts
 
 
-@app.get("/{name}/network",response_model=List[NodeInterface])
+@app.get("/{name}/info",response_model=NodeInfo)
 def get_node_name_network(
         name: str,
         current_user: CurrentUser = Depends(get_current_user),
@@ -163,41 +160,19 @@ def get_node_name_network(
     if node is None:
         raise HTTPException(status_code=404, detail="Node not found")
     
-
-
-    ssh_manager = SSHManager(user=node.user_name, domain=node.domain, port=node.port)
-    interfaces = ssh_manager.run_cmd_json(["ip", "-j", "a"])
-
-    res = []
-
-    for i in interfaces:
-        tmp = NodeInterface(
-            ifname = i["ifname"],
-            operstate = i["operstate"],
-            mtu = i["mtu"],
-            master = i["master"] if ("master" in i) else None,
-            link_type = i["link_type"],
-            mac_address = i["address"] if ("address" in i) else None,
-            ipv4_info = [],
-            ipv6_info = [],
-        )
-        for j in i["addr_info"]:
-            if j["family"] == "inet6":
-                tmp.ipv6_info.append(
-                    NodeInterfaceIpv6Info(
-                        address=j["local"],
-                        prefixlen=j["prefixlen"]
-                    )
-                )
-            if j["family"] == "inet4":
-                tmp.ipv6_info.append(
-                    NodeInterfaceIpv4Info(
-                        address=j["local"],
-                        prefixlen=j["prefixlen"],
-                        label=j["label"]
-                    )
-                )
-        res.append(tmp)
+    ssh_manager = ParamikoManager(user=node.user_name, domain=node.domain, port=node.port)
+    
+    
+    res = NodeInfo(
+        ip_address = ssh_manager.run_cmd("ip a").stdout,
+        ip_route   = ssh_manager.run_cmd("ip r").stdout,
+        ip_neigh   = ssh_manager.run_cmd("ip neigh").stdout,
+        df_h       = ssh_manager.run_cmd("df -h").stdout,
+        lsblk      = ssh_manager.run_cmd("lsblk").stdout,
+        uptime     = ssh_manager.run_cmd("uptime -p").stdout,
+        free       = ssh_manager.run_cmd("free -h").stdout,
+        top        = ssh_manager.run_cmd("top -b -n 1|head -n 20").stdout
+    )
 
     return res
 

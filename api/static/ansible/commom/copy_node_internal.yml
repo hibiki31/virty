@@ -9,3 +9,4 @@
         owner: root
         group: root
         mode: 0644
+        remote_src: yes

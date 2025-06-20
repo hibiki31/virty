@@ -65,6 +65,17 @@ class NodeInterface(BaseSchema):
     ipv6_info: List[NodeInterfaceIpv6Info]
 
 
+class NodeInfo(BaseSchema):
+    ip_address: str
+    ip_route: str
+    ip_neigh: str
+    df_h: str
+    lsblk: str
+    uptime: str
+    free: str
+    top: str
+
+
 class SSHKeyPair(BaseSchema):
     private_key: str | None = None
     public_key: str| None = None
