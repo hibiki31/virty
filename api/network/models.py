@@ -5,7 +5,7 @@ from mixin.database import Base
 
 associations_networks_pools = Table('associations_networks_pools', Base.metadata,
     Column('pool_id', Integer, ForeignKey('networks_pools.id', onupdate='CASCADE', ondelete='CASCADE')),
-    Column('port_network_uuid', String),
+    Column('port_network_uuid', String, ForeignKey('networks.uuid', onupdate='CASCADE', ondelete='CASCADE')),
     Column('port_name', String),
     ForeignKeyConstraint(['port_network_uuid', 'port_name'], ['networks_portgroups.network_uuid', 'networks_portgroups.name']),
 )
@@ -30,7 +30,7 @@ class NetworkModel(Base):
     update_token = Column(String)
     ip = Column(String)
     mac = Column(String)
-    portgroups = relationship('NetworkPortgroupModel')
+    portgroups = relationship('NetworkPortgroupModel', viewonly=True)
 
 
 class NetworkPortgroupModel(Base):

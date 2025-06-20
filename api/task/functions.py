@@ -1,83 +1,85 @@
-import uuid
 import json
-
-from time import time
+import uuid
 from datetime import datetime
+from time import time
 
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
+from sqlalchemy.orm import Session
 
-from task.models import TaskModel
+from mixin.database import SessionLocal
 from mixin.log import setup_logger
-
+from mixin.schemas import BaseSchema
+from task.models import TaskModel
+from task.schemas import TaskRequest
 
 logger = setup_logger(__name__)
 
+class TaskBase:
+    def __init__(self):
+        self.task_func = {}
+
+    def __call__(self, key):
+        def receive_func(f):
+            logger.info(f"register {key} {f}")
+            self.task_func[key] = f
+
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs)
+            return wrapper
+        return receive_func
+    
+    def include_task(self, tb):
+        self.task_func.update(tb.task_func)
+    
+    def run(self, key, task_uuid):
+        if key not in self.task_func:
+            raise Exception("Task not found")
+        
+        with SessionLocal() as db:
+            task_model = db.query(TaskModel).filter(TaskModel.uuid == task_uuid).one()
+            db.commit()
+            return self.task_func[key](db=db, model=task_model, req=TaskRequest(**json.loads(task_model.request)))
+
+
+
 
 class TaskManager():
-    def __init__(self, db:Session, bg: BackgroundTasks=None):
+    def __init__(self, db:Session):
         self.db = db
-        self.bg = bg
-    
+
     def select(self, method, resource, object):
         self.method = method
         self.resource = resource
         self.object = object
     
-    def commit(self, user, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
+    def commit(
+            self, user, req=None, 
+            body: BaseSchema=BaseSchema(), param={}, dep_uuid=None
+        ):
+        status = "wait" if dep_uuid else "init"
         task_uuid = str(uuid.uuid4())
+
+        url = None if dep_uuid else req.url._url
+
+        task_request = TaskRequest(url=url, path_param=param, body=body)
 
         self.db.add(TaskModel(
             uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
+            post_time = datetime.now().astimezone(),
+            run_time = None,
             user_id = user.id,
             status = status,
-            dependence_uuid = dependence_uuid,
+            dependence_uuid = dep_uuid,
             resource = self.resource,
             object = self.object,
             method = self.method,
-            request = request.json(),
+            request = task_request.model_dump_json(),
             message = "Task has been queued"
         ))
         self.db.commit()
 
         self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        if self.bg:
-            self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        else:
-            task_runner(db=self.db, bg=self.bg, task=self.model)
-    
-    def folk(self, task:TaskModel, dependence_uuid=None, request: BaseModel= BaseModel()):
-        status = "wait" if dependence_uuid else "init"
-        status = status if self.bg else "start"
-        task_uuid = str(uuid.uuid4())
-
-        self.db.add(TaskModel(
-            uuid = task_uuid,
-            post_time = datetime.now(),
-            run_time = 0,
-            user_id = task.user_id,
-            status = status,
-            dependence_uuid = dependence_uuid,
-            resource = self.resource,
-            object = self.object,
-            method = self.method,
-            request = request.json(),
-            message = "Task has been queued"
-        ))
-        self.db.commit()
-
-        self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
-
-        if self.bg:
-            self.bg.add_task(task_scheduler,db=self.db, bg=self.bg)
-        else:
-            task_runner(db=self.db, bg=self.bg, task=self.model)
-
+       
 
 def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
     tasks = db.query(
@@ -107,17 +109,17 @@ def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
     for task in tasks:
         # 依存先のuuidが実在するかチェック
         try:
-            if task.dependence_uuid == None:
+            if task.dependence_uuid is None:
                 raise Exception()
             depends_task:TaskModel = db.query(TaskModel)\
                 .filter(TaskModel.uuid==task.dependence_uuid)\
                 .with_lockmode('update').one()
-        except:
+        except FileNotFoundError:
             task.status = "error"
             task.message = "not found depended task"
             db.merge(task)
             db.commit()
-            logger.error(f"not found depended task {task.uuid} => {task.dependence_uuid}")
+            logger.error(f"depended task notfund {task.uuid} => {task.dependence_uuid}")
             continue
   
         # 親タスクが死んだ場合エラーで停止
@@ -158,11 +160,3 @@ def task_runner(db:Session, bg: BackgroundTasks, task: TaskModel):
 
     task.run_time = time() - start_time
     db.commit()
-
-
-
-from project.tasks import *
-from domain.tasks import *
-from node.tasks import *
-from network.tasks import *
-from storage.tasks import *

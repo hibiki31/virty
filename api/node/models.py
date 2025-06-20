@@ -1,10 +1,7 @@
-from math import fabs
-from pydantic import Json
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, JSON
+from sqlalchemy import JSON, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from mixin.database import Base, Engine
 
-from storage.models import StorageModel
+from mixin.database import Base
 
 
 class NodeModel(Base):
@@ -24,16 +21,17 @@ class NodeModel(Base):
     qemu_version = Column(String)
     libvirt_version = Column(String)
     storages = relationship('StorageModel', uselist=True, lazy=False, backref="node")
-    roles = relationship("AssociationNodeToRole", back_populates="node")
+    ansible_facts = Column(JSON)
+    roles = relationship("AssociationNodeToRoleModel", back_populates="node")
 
 
 class NodeRoleModel(Base):
     __tablename__ = "nodesrole"
     name = Column(String, primary_key=True, index=True)
-    nodes = relationship("AssociationNodeToRole", back_populates="role")
+    nodes = relationship("AssociationNodeToRoleModel", back_populates="role")
 
 
-class AssociationNodeToRole(Base):
+class AssociationNodeToRoleModel(Base):
     __tablename__ = 'association_node_to_role'
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     role_name = Column(String, ForeignKey('nodesrole.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -42,7 +40,7 @@ class AssociationNodeToRole(Base):
     node = relationship("NodeModel", back_populates="roles")
 
 
-class AssociationPoolsCpu(Base):
+class AssociationPoolsCpuModel(Base):
     __tablename__ = 'association_pools_cpu'
     pool_id = Column(Integer, ForeignKey('pools_cpu.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -50,8 +48,8 @@ class AssociationPoolsCpu(Base):
     nodes = relationship("NodeModel", lazy=False)
 
 
-class PoolCpu(Base):
+class PoolCpuModel(Base):
     __tablename__ = "pools_cpu"
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String)
-    nodes = relationship("AssociationPoolsCpu", lazy=False)
+    nodes = relationship("AssociationPoolsCpuModel", lazy=False)

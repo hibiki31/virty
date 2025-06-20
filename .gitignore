@@ -1,2 +1,10 @@
-/docker-compose.yml
+/compose.yml
+/data/
 .DS_Store
+/.env
+feature/main.bin
+feature/ansible_hosts.ini
+feature/dev.sh
+/compose.yaml
+__pycache__
+/.pnpm-store/

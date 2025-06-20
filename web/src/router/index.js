@@ -12,6 +12,7 @@ import Empty from '../views/EmptyView.vue';
 import Develop from '../views/Develop.vue';
 import UserList from '../views/UserList.vue';
 import NetworkDetail from '@/views/NetworkDetail';
+import NodeDetail from '@/views/NodeDetail';
 
 import ListRouter from '@/router/listRouter.js';
 
@@ -23,6 +24,14 @@ const routes = [
     path: '/vm',
     name: 'VMList',
     component: VMList,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/nodes/:name',
+    name: 'NodeDetail',
+    component: NodeDetail,
     meta: {
       requiresAuth: true
     }

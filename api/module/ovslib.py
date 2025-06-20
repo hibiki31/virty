@@ -1,10 +1,6 @@
-from os import remove
-import random
-from click import command
-from ryu.lib.ovs import vsctl
+# from ryu.lib.ovs import vsctl
 
 from mixin.log import setup_logger
-from node.models import NodeModel
 
 import socket
 import json
@@ -81,7 +77,7 @@ class OVSManager():
     
     def ovs_add_br(self, bridge):
         self.ovs_run('add-br', (bridge,))
-        self.ovs_run('set',('Bridge', bridge, 'stp_enable=true'))
+        self.ovs_run('set',('Bridge', bridge, 'stp_enable=true', ))
     
     def ovs_add_vxlan(self, bridge, remote, key):
         ip_hex = str(hex(int(ipaddress.ip_address(remote))))

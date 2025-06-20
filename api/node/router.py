@@ -1,125 +1,208 @@
-from os import name
-from fastapi import APIRouter, Depends, BackgroundTasks, Request
-from sqlalchemy import true
+import os
+import subprocess
+
+from cryptography.hazmat.primitives import serialization
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from .models import *
-from .schemas import *
-
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import TaskSelect
-from task.functions import TaskManager
 from mixin.database import get_db
+from mixin.exception import HTTPException, raise_forbidden
 from mixin.log import setup_logger
+from module.paramikolib import ParamikoManager
 
-from node.models import NodeModel
+from .funcstion import delete_ssh_keys
+from .models import NodeModel
+from .schemas import (
+    Node,
+    NodeForQuery,
+    NodeInfo,
+    NodePage,
+    SSHKeyPair,
+    SSHPublicKey,
+)
 
-
-app = APIRouter()
+app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.post("/api/nodes", tags=["node"], response_model=TaskSelect)
-def post_api_nodes(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: NodeInsert = None
-    ):
-    # ノード追加タスク
-    task = TaskManager(db=db, bg=bg)
-    task.select(method="post", resource="node", object="root")
-    task.commit(request=request, user=current_user)
-
-    dependence_uuid = task.model.uuid
-
-    if request.libvirt_role:
-        libvirt_request = NodeRolePatch(node_name=request.name, role_name="libvirt")
-        libvirt_task = TaskManager(db=db, bg=bg)
-        libvirt_task.select(method="patch", resource="node", object="role")
-        libvirt_task.commit(request=libvirt_request, user=current_user, dependence_uuid=dependence_uuid)
-        dependence_uuid = libvirt_task.model.uuid
-
-
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "vm", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "network", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    post_task = TaskManager(db=db, bg=bg)
-    post_task.select("put", "storage", "list")
-    post_task.commit(user=current_user, dependence_uuid=dependence_uuid)
-
-    return task.model
-
-
-@app.get("/api/nodes", tags=["node"],response_model=List[GetNode])
+@app.get("", response_model=NodePage, operation_id="get_nodes")
 def get_api_nodes(
+        param: NodeForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
-
-    return db.query(NodeModel).all()
-
-
-@app.delete("/api/nodes", tags=["node"])
-def delete_api_nodes(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        node: NodeDelete = None,
-    ):
     
-    db.query(AssociationNodeToRole).filter(AssociationNodeToRole.node_name==node.name).delete()
-    db.query(AssociationPoolsCpu).filter(AssociationPoolsCpu.node_name==node.name).delete()
-    db.commit()
-    db.query(NodeModel).filter(NodeModel.name==node.name).delete()
-    db.commit()
+    query = db.query(NodeModel)
+    if param.name_like:
+        query = query.filter(NodeModel.name.like(f'%{param.name_like}%'))
+    
+    count = query.count()
+    if param.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit * param.page))
+
+
+    return {"count": count, "data": query.all()}
+
+
+@app.post("/key", operation_id="update_ssh_key_pair")
+def post_ssh_key_pair(
+        model: SSHKeyPair,
+        current_user: CurrentUser = Depends(get_current_user)
+    ):
+    if not current_user.verify_scope(scopes=["admin"]):
+        raise_forbidden()
+    
+    if model.generate:
+        delete_ssh_keys()
+        
+        cmd = [
+            "ssh-keygen",
+            "-t", "ed25519",
+            "-f", "/root/.ssh/id_ed25519",
+            "-N", "",
+            "-q"
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error("Key generation failed:", e)
+            raise e
+            
+    else:
+        os.makedirs('/root/.ssh/', exist_ok=True)
+        
+        try:
+            private_key = serialization.load_ssh_private_key(model.private_key.encode(), password=None)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+        
+        key_type = type(private_key).__name__
+        if "RSA" in key_type:
+            key_name = "id_rsa"
+        elif "Ed25519" in key_type:
+            key_name = "id_ed25519"
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+        
+        delete_ssh_keys()
+        
+        with open(f"/root/.ssh/{key_name}", "w") as f:
+            f.write(model.private_key.rstrip('\r\n') + '\n')
+        with open(f"/root/.ssh/{key_name}.pub", "w") as f:
+            f.write(model.public_key)
+        
+        os.chmod('/root/.ssh/', 0o700)
+        os.chmod(f"/root/.ssh/{key_name}", 0o600)
+        os.chmod(f"/root/.ssh/{key_name}.pub", 0o600)
+
+    return {}
+
+
+@app.get("/key", response_model=SSHPublicKey, operation_id="get_ssh_key_pair")
+def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
+    home = os.path.expanduser("~")
+    keys = {
+        "id_rsa.pub": os.path.join(home, ".ssh", "id_rsa.pub"),
+        "id_ed25519.pub": os.path.join(home, ".ssh", "id_ed25519.pub"),
+    }
+
+    for name, path in keys.items():
+        if os.path.isfile(path):
+            pub_key_path = path
+        else:
+            pub_key_path = path
+    
+    with open(pub_key_path) as f:
+        public_key = f.read()
+
+    return SSHPublicKey(public_key=public_key)
+
+
+@app.get("/{name}", response_model=Node, operation_id="get_node")
+def get_api_node(
+        name: str,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    node = db.query(NodeModel).filter(NodeModel.name==name).one_or_none()
+    if node is None:
+        raise HTTPException(status_code=404, detail="node is not found")
 
     return node
 
 
-@app.patch("/api/nodes/role", tags=["node"], response_model=TaskSelect)
-def patch_api_node_role(
-        model: NodeRolePatch,
-        bg: BackgroundTasks,
+@app.get("/{name}/facts")
+def get_node_name_facts(
+        name: str,
         current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('patch', 'node', 'role')
-    task.commit(user=current_user,request=model)
+
+    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
     
-    return task.model
+    if node is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    return node.ansible_facts
 
 
-@app.get("/api/nodes/pools", tags=["node"])
-def get_api_nodes_pools(
-        db: Session = Depends(get_db)
-    ):
-
-    return db.query(PoolCpu).all()
-
-
-@app.post("/api/nodes/pools", tags=["node"])
-def post_api_nodes_pools(
-        model: NodeBase,
+@app.get("/{name}/info",response_model=NodeInfo)
+def get_node_name_network(
+        name: str,
+        current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
     ):
-    pool_model = PoolCpu(name=model.name)
-    db.add(pool_model)
-    db.commit()
-    return True
 
-@app.patch("/api/nodes/pools", tags=["node"])
-def patch_api_nodes_pools(
-        model: PatchNodePool,
-        db: Session = Depends(get_db),
-    ):
-    ass = AssociationPoolsCpu(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
-    db.add(ass)
-    db.commit()
-    return True
+    node:NodeModel = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
+    
+    if node is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+    
+    ssh_manager = ParamikoManager(user=node.user_name, domain=node.domain, port=node.port)
+    
+    
+    res = NodeInfo(
+        ip_address = ssh_manager.run_cmd("ip a").stdout,
+        ip_route   = ssh_manager.run_cmd("ip r").stdout,
+        ip_neigh   = ssh_manager.run_cmd("ip neigh").stdout,
+        df_h       = ssh_manager.run_cmd("df -h").stdout,
+        lsblk      = ssh_manager.run_cmd("lsblk").stdout,
+        uptime     = ssh_manager.run_cmd("uptime -p").stdout,
+        free       = ssh_manager.run_cmd("free -h").stdout,
+        top        = ssh_manager.run_cmd("top -b -n 1|head -n 20").stdout
+    )
+
+    return res
+
+
+
+# @app.get("/nodes/pools", tags=["nodes"])
+# def get_api_nodes_pools(
+#         db: Session = Depends(get_db)
+#     ):
+
+#     return db.query(PoolCpuModel).all()
+
+
+# @app.post("/nodes/pools", tags=["nodes"])
+# def post_api_nodes_pools(
+#         model: NodeBase,
+#         db: Session = Depends(get_db),
+#     ):
+#     pool_model = PoolCpuModel(name=model.name)
+#     db.add(pool_model)
+#     db.commit()
+#     return True
+
+
+# @app.patch("/nodes/pools", tags=["nodes"])
+# def patch_api_nodes_pools(
+#         model: NodePoolForUpdate,
+#         db: Session = Depends(get_db),
+#     ):
+#     ass = AssociationPoolsCpuModel(pool_id=model.pool_id, node_name=model.node_name, core=model.core)
+#     db.add(ass)
+#     db.commit()
+#     return True

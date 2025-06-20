@@ -1,7 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
-from sqlalchemy.orm import relationship
-
-from network.models import NetworkPoolModel
+from sqlalchemy import Boolean, Column, Integer, String
 
 from mixin.database import Base
 

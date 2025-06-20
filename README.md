@@ -15,15 +15,18 @@ The author is not responsible for any damage caused by the use of this software.
 ### Quick Start
 
 Nothing needs to be edited.
-Start with Docker-compose and connect to localhost:8765.
+Start with Docker compose and connect to localhost:8765.
+
+This can be done on the host that will be the hypervisor, or on the laptop at hand.
 
 ```
 mkdir virty
 cd virty
-wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml
-mv docker-compose.example.yml docker-compose.yml
-docker-compose up -d
+wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml -O docker-compose.yml
+docker compose up -d
 ```
+
+Once activated, access http://localhost:8765 with a web browser.
 
 ### Preparation of managed nodes
 
@@ -52,6 +55,11 @@ ssh-copy-id user@host
 
 #### Configuration
 
+This example has only one nic.
+It is recommended to do this from the Console since the network is usually disconnected once.
+
+<img src="https://user-images.githubusercontent.com/35087924/179314489-b8a5e48b-368a-4274-b3ef-9ec67810805c.png" width="800px"/>
+
 | name               | value            |
 | ---------------------- | ------------- |
 | Bridge name               | ovs-br0       |
@@ -68,25 +76,25 @@ sudo apt install openvswitch-common openvswitch-switch
 sudo systemctl status openvswitch-switch.service
 ```
 
-#### Package (CentOS)
-
-```bash
-yum install -y openvswitch python-openvswitch
-systemctl start openvswitch
-systemctl enable openvswitch
-```
-
 #### Creating Bridges
 
+If you have only one interface and SSH, you can switch IPs by devising the following. If you want to configure Vlan or other settings, you need to connect further commands.
+
 ```bash
-ovs-vsctl add-br ovs-br0
-ovs-vsctl add-port ovs-br0 eth0
-ovs-vsctl set port ovs-br0 tag=200
-ovs-vsctl set port eth0 tag=100 vlan_mode=native-untagged
+sudo ovs-vsctl add-port ovs-br0 eth0 ; sudo netplan apply
+```
+
+Setting Example
+
+```bash
+sudo ovs-vsctl add-br ovs-br0
+sudo ovs-vsctl add-port ovs-br0 eth0
+sudo ovs-vsctl set port ovs-br0 tag=200 # Not required if vlan is not used
+sudo ovs-vsctl set port eth0 tag=100 vlan_mode=native-untagged # Not required if vlan is not used
 ovs-vsctl show
 ```
 
-#### Configure IP (Ubuntu)
+Netplan Example
 
 ```yaml
 network:
@@ -102,6 +110,9 @@ network:
         addresses: [ 192.168.200.254 ]
   version: 2
 ```
+
+
+
 
 ### Backup
 

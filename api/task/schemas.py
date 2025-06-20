@@ -1,39 +1,55 @@
-from fastapi_camelcase import CamelModel
-from pydantic import BaseModel, ValidationError, validator
-from typing import List, Optional
 from datetime import datetime
+from typing import Any, List
 
-from task.models import TaskModel
+from pydantic import Json
+
+from mixin.schemas import BaseSchema, GetPagination
 
 
-import json
-
-
-class TaskBase(CamelModel):
-    post_time: datetime = None
-    run_time: float = None
-    user_id: str = None
-    status: str = None
-    resource: str = None
-    object: str = None
-    method: str = None
-    dependence_uuid: str = None
-    request: dict = None
-    message: str = None
-
-    class Config:
-        orm_mode  =  True
+class TaskBase(BaseSchema):
+    post_time: datetime | None = None
+    run_time: float | None = None
+    start_time: datetime | None = None
+    update_time: datetime | None = None
+    user_id: str | None = None
+    status: str | None = None
+    resource: str
+    object: str
+    method: str
+    dependence_uuid: str | None = None
+    request: Json | None = None
+    result: dict | None = None
+    message: str | None = None
+    log: str | None = None
     
 
-class TaskInsert(TaskBase):
+class TaskForCreate(TaskBase):
     pass
 
 
-class TaskSelect(TaskBase):
-    uuid: str = None
+class TaskForQuery(GetPagination):
+    resource: str | None = None
+    object: str | None = None
+    method: str | None = None
+    status: str | None = None
 
-    @validator('request', pre=True)
-    def json_to_dic(cls, v, values, **kwargs):
-        if type(v) == str:
-            return dict(json.loads(v))
-        return v
+
+class Task(TaskBase):
+    uuid: str | None = None
+
+
+class TaskPage(BaseSchema):
+    count: int
+    data: List[Task]
+
+
+class TaskRequest(BaseSchema):
+    url: str | None = None
+    path_param: Any
+    body: Any
+
+
+class TaskIncomplete(BaseSchema):
+    hash: str
+    count: int
+    uuids: List[str]

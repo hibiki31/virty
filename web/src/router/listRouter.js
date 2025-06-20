@@ -58,7 +58,7 @@ export default {
       }
     },
     {
-      path: '/node',
+      path: '/nodes',
       name: 'NodeList',
       component: NodeList,
       meta: {

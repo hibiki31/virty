@@ -1,36 +1,15 @@
-from fastapi_camelcase import CamelModel
-from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import List
+
+from mixin.schemas import BaseSchema, GetPagination
 
 
-class NodeBase(CamelModel):
-    name: str
-
-
-class NodeDelete(NodeBase):
-    pass
-
-
-class NodeInsert(NodeBase):
-    description: str
-    domain: str
-    user_name: str
-    port: int
-    libvirt_role: bool
-
-
-class PatchNodePool(CamelModel):
-    pool_id:int
-    node_name:str
-    core: int
-
-class GetNodeRole(CamelModel):
+class NodeRole(BaseSchema):
     role_name: str
-    extra_json: dict = None
-    class Config:
-        orm_mode  =  True
+    extra_json: dict | None = None
+    
 
-class GetNode(CamelModel):
+
+class Node(BaseSchema):
     name: str
     description: str
     domain: str
@@ -43,13 +22,87 @@ class GetNode(CamelModel):
     os_name: str
     os_version: str
     status: int
-    qemu_version: str = None
-    libvirt_version: str = None
-    roles: List[GetNodeRole]
-    class Config:
-        orm_mode  =  True
+    qemu_version: str | None = None
+    libvirt_version: str | None = None
+    roles: List[NodeRole]
+    
 
-class NodeRolePatch(CamelModel):
+
+class NodePage(BaseSchema):
+    count: int
+    data: List[Node]
+
+
+class NodeForQuery(GetPagination):
+    name_like: str | None = None
+
+
+class NodeRoleForUpdate(BaseSchema):
     node_name: str
     role_name: str
-    extra_json: dict = None
+    extra_json: dict | None = None
+
+
+class NodeInterfaceIpv4Info(BaseSchema):
+    address: str
+    prefixlen: int
+    label: str
+
+
+class NodeInterfaceIpv6Info(BaseSchema):
+    address: str
+    prefixlen: int
+
+
+class NodeInterface(BaseSchema):
+    ifname: str
+    operstate: str
+    mtu: int
+    master: str | None = None
+    link_type: str
+    mac_address: str | None = None
+    ipv4_info: List[NodeInterfaceIpv4Info]
+    ipv6_info: List[NodeInterfaceIpv6Info]
+
+
+class NodeInfo(BaseSchema):
+    ip_address: str
+    ip_route: str
+    ip_neigh: str
+    df_h: str
+    lsblk: str
+    uptime: str
+    free: str
+    top: str
+
+
+class SSHKeyPair(BaseSchema):
+    private_key: str | None = None
+    public_key: str| None = None
+    generate: bool | None = None
+
+
+class SSHPublicKey(BaseSchema):
+    public_key: str
+
+
+class NodeBase(BaseSchema):
+    name: str
+
+
+class NodeForDelete(NodeBase):
+    pass
+
+
+class NodeForCreate(NodeBase):
+    description: str
+    domain: str
+    user_name: str
+    port: int
+    libvirt_role: bool
+
+
+class NodePoolForUpdate(BaseSchema):
+    pool_id:int
+    node_name:str
+    core: int

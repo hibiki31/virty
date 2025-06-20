@@ -1,0 +1,9 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: qemuimage
+      qemu_img: 
+        dest: '{{ path }}'
+        size: '{{ size }}'
+        state: 'create'

@@ -1,28 +1,46 @@
-from fastapi_camelcase import CamelModel
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import Any, List
 
-from user.schemas import UserBase
+from mixin.schemas import BaseSchema, GetPagination
 
 
-class ProjectBase(CamelModel):
+class ProjectBase(BaseSchema):
     id: str
     name: str
-    class Config:
-        orm_mode = True
+    
 
-class PostProject(CamelModel):
+class ProjectForCreate(BaseSchema):
     project_name: str
     user_ids: List[str]
 
 
-class DeleteProject(CamelModel):
+class ProjectForDelete(BaseSchema):
     id: str
 
 
-class ProjectPatch(CamelModel):
+class ProjectForUpdate(BaseSchema):
     project_id: str
     user_id: str
 
-class ProjectSelect(ProjectBase):
-    users: List[UserBase]
+
+class ProjectUser(BaseSchema):
+    username: str
+
+
+class ProjectForQuery(GetPagination):
+    name_like: str | None = None
+
+
+class Project(ProjectBase):
+    memory_g: int
+    core: int
+    storage_capacity_g: int
+    users: List[ProjectUser]
+    used_memory_g: int
+    used_core: int
+    network_pools: Any
+    storage_pools: Any
+
+
+class ProjectPage(BaseSchema):
+    count: int
+    data: List[Project]

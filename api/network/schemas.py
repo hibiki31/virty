@@ -1,106 +1,140 @@
-from datetime import datetime
-from typing import Any, List, Optional
-import uuid
-from pydantic import BaseModel
+from typing import List, Literal
 
-from fastapi_camelcase import CamelModel
+from pydantic.networks import IPvAnyAddress
+
+from mixin.schemas import BaseSchema, GetPagination
 
 
-class PaseNetworkPortgroup(CamelModel):
+class PaseNetworkPortgroup(BaseSchema):
     name: str
-    vlan_id: str = None
+    vlan_id: str | None = None
     is_default: bool
-    class Config:
-        orm_mode  =  True
+    
 
 
 class NetworkPortgroup(PaseNetworkPortgroup):
     pass
 
 
-class PaseNetwork(CamelModel):
+class PaseNetwork(BaseSchema):
     name: str
     uuid: str
     type: str
-    dhcp: bool = None
-    description: str = None
-    active: bool = None
-    bridge: str = None
-    auto_start: bool = None
+    dhcp: bool | None = None
+    description: str | None = None
+    active: bool | None = None
+    bridge: str | None = None
+    auto_start: bool | None = None
     portgroups: List[NetworkPortgroup]
-    class Config:
-        orm_mode  =  True
+    
 
 
-class GetNetwork(PaseNetwork):
+class Network(PaseNetwork):
     node_name: str
-    description: str = None
-    update_token: str = None
-    class Config:
-        orm_mode  =  True
+    description: str | None = None
+    update_token: str | None = None
+    
 
 
-class NetworkInsert(CamelModel):
+class NetworkForQuery(GetPagination):
+    name_like: str | None = None
+    node_name_like: str | None = None
+    type: str | None = None
+
+
+class NetworkPage(BaseSchema):
+    count: int
+    data: List[Network]
+    
+    
+class NetworkNatForCreate(BaseSchema):
+    bridge_name: str | None = None
+    address: IPvAnyAddress
+    netmask: IPvAnyAddress
+    dhcp_start: IPvAnyAddress
+    dhcp_end: IPvAnyAddress
+
+class NetworkRouteForCreate(BaseSchema):
+    bridge_name: str | None = None
+    address: IPvAnyAddress
+    netmask: IPvAnyAddress
+    dhcp_start: IPvAnyAddress
+    dhcp_end: IPvAnyAddress
+
+class NetworkForCreate(BaseSchema):
     name: str
     node_name: str
-    type: str
-    bridge_device: str = None
-    class Config:
-        orm_mode  =  True
+    type: Literal['bridge', 'ovs', 'nat', 'route']
+    nat: NetworkNatForCreate | None = None
+    route: NetworkRouteForCreate | None = None
+    bridge_device: str | None = None
+    
 
-class NetworkDelete(CamelModel):
+class NetworkForDelete(BaseSchema):
     uuid: str
+    
 
-class NetworkOVSAdd(CamelModel):
+
+class NetworkOVSForCreate(BaseSchema):
     default: bool
+    name: str
+    vlan_id: int | None = None
+    
+
+
+class NetworkProviderForCreate(BaseSchema):
+    name: str | None = None
+    dns_domain: str | None = None
+    network_address: str | None = None
+    network_prefix: str | None = None
+    gateway_address: str | None = None
+    dhcp_start: str | None = None
+    dhcp_end: str | None = None
+    network_node: str | None = None
+    
+
+class NetworkXML(BaseSchema):
+    xml: str 
+
+
+class NetworkOVSForDelete(BaseSchema):
     uuid: str
     name: str
-    vlan_id: int = None
-    class Config:
-        orm_mode  =  True
-
-class NetworkOVSDelete(CamelModel):
-    uuid: str
-    name: str
-    class Config:
-        orm_mode  =  True
+    
 
 
-class PostNetworkPool(CamelModel):
+class NetworkPoolForCreate(BaseSchema):
     name: str
 
 
-class PatchNetworkPool(CamelModel):
+class NetworkPoolForUpdate(BaseSchema):
     pool_id: int
     network_uuid: str
-    port_name:str = None
+    port_name:str | None = None
 
 
-class GetNEtworkPoolNetworksNetwork(CamelModel):
+class NetworkForNetworkPool(BaseSchema):
     name: str
     uuid: str
     node_name: str
     bridge: str
     type: str
-    class Config:
-        orm_mode  =  True
+    
 
 
-class GetNetworkPoolPort(CamelModel):
+class NetworkPoolPort(BaseSchema):
     name: str= None
-    vlan_id: int = None
-    network: GetNEtworkPoolNetworksNetwork
-    class Config:
-        orm_mode  =  True
+    vlan_id: int | None = None
+    network: NetworkForNetworkPool
+    
 
 
-class GetNetworkPool(CamelModel):
-    id: int = None
-    name: str = None
-    networks: List[GetNEtworkPoolNetworksNetwork] = None
-    ports: List[GetNetworkPoolPort] = None
-    class Config:
-        orm_mode  =  True
+class NetworkPool(BaseSchema):
+    id: int | None = None
+    name: str | None = None
+    networks: List[NetworkForNetworkPool] | None = None
+    ports: List[NetworkPoolPort] | None = None
+    
 
-class PostVXLANInternal(CamelModel):
+class PostVXLANInternal(BaseSchema):
     project_id: str

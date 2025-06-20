@@ -1,45 +1,63 @@
-from asyncio.log import logger
-from fastapi import APIRouter, Depends, HTTPException
-from starlette.websockets import WebSocket
-from starlette.requests import Request
-from starlette.endpoints import WebSocketEndpoint
-from starlette.routing import Route, WebSocketRoute
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, true
-from mixin.database import get_db
-from auth.router import get_current_user, CurrentUser
-
-from .models import *
-from .schemas import *
-
-import time
 import hashlib
+import time
+from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
+
+from auth.router import CurrentUser, get_current_user
+from mixin.database import get_db
+from task.models import TaskModel
+from task.schemas import Task, TaskForQuery, TaskIncomplete, TaskPage
 
 app = APIRouter(
-    prefix="/api/tasks",
+    prefix="/api",
     tags=["tasks"]
 )
 
 
-@app.get("", response_model=List[TaskSelect])
+@app.get("/tasks", response_model=TaskPage, operation_id="get_tasks")
 def get_tasks(
+        param: TaskForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        admin: bool = False
+        admin: bool = False,
     ):
+
+    query = db.query(TaskModel)
+
     if admin:
         current_user.verify_scope(["admin.tasks"])
-        task = db.query(TaskModel).order_by(desc(TaskModel.post_time)).all()
     else:
-        task = db.query(TaskModel)\
-            .filter(TaskModel.user_id==current_user.id)\
-            .order_by(desc(TaskModel.post_time)).all()
+        query.filter(TaskModel.user_id==current_user.id)
+
+    if param.resource:
+        query = query.filter(TaskModel.resource==param.resource)
+    if param.object:
+        query = query.filter(TaskModel.object==param.object)
+    if param.method:
+        query = query.filter(TaskModel.method==param.method)
+    if param.status:
+        if param.status == "incomplete":
+            query = query.filter(or_(
+                TaskModel.status=="wait",
+                TaskModel.status=="init",
+                TaskModel.status=="start",
+            ))
+        else:
+            query = query.filter(TaskModel.status==param.status)
     
-    return task
+    count = query.count()
+
+    query = query.order_by(desc(TaskModel.post_time))
+    if param.limit > 0:
+        task = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    
+    return { "count": count, "data": task }
 
 
-@app.delete("", response_model=List[TaskSelect])
+@app.delete("/tasks/", response_model=List[Task], operation_id="delete_tasks")
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -52,35 +70,48 @@ def delete_tasks(
     return model
 
 
-@app.get("/incomplete")
+@app.get("/tasks/incomplete", response_model=TaskIncomplete, operation_id="get_incomplete_tasks")
 def get_tasks_incomplete(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        update_hash: str = None,
+        hash: str = None,
         admin: bool = False
     ):
 
     task_hash = None
     task_count = 0
+    task_model = None
 
     if admin:
         current_user.verify_scope(["admin.tasks"])
  
     for i in range(0,20):
-        if admin:
-            task = db.query(TaskModel)\
-                .filter(TaskModel.status!="error")\
-                .filter(TaskModel.status!="finish").all()
-        else:
-            task = db.query(TaskModel)\
-                .filter(TaskModel.user_id==current_user.id)\
-                .filter(TaskModel.status!="error")\
-                .filter(TaskModel.status!="finish").all()
+        query = db.query(TaskModel)
+        if not admin:
+            query = query.filter(TaskModel.user_id==current_user.id)
+    
+        task_model = query.filter(TaskModel.status!="error")\
+            .filter(TaskModel.status!="lost")\
+            .filter(TaskModel.status!="finish").all()        
         
-        task_count = len(task)
-        task_hash = str(hashlib.md5(str([i.uuid for i in task]).encode()).hexdigest())
-        if task_hash != update_hash:
-            return {"task_hash": task_hash, "task_count": task_count}
-        time.sleep(0.5)
+        task_count = len(task_model)
+        task_hash = str(hashlib.md5(str([j.uuid+j.status for j in task_model]).encode()).hexdigest())
+        
+        if task_hash != hash:
+            break
+        time.sleep(0.5)       
 
-    return {"task_hash": task_hash, "task_count": task_count}
+    return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
+
+
+@app.get("/tasks/{uuid}", response_model=Task, operation_id="get_task")
+def get_task_uuid(
+        uuid: str,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+    task = db.query(TaskModel).filter(TaskModel.uuid==uuid).one_or_none()
+    if task is None:
+        raise HTTPException(status_code=404, detail="task uuid not found")
+    
+    return task

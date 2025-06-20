@@ -54,7 +54,7 @@ export default {
         { text: 'Pool', value: 'storage.name' },
         { text: 'Capacity', value: 'capacity' },
         { text: 'Allocation', value: 'allocation' },
-        { text: 'Domain Name', value: 'domainName' },
+        { text: 'Domain Name', value: 'domain.name' },
         { text: 'Flavor Name', value: 'flavor.name' },
         { text: 'Path', value: 'path' },
         { text: 'Actions', value: 'actions' }

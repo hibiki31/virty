@@ -14,7 +14,7 @@ class StorageModel(Base):
     active = Column(Boolean)
     auto_start = Column(Boolean)
     status = Column(Integer)
-    images = relationship('ImageModel')
+    images = relationship('ImageModel', viewonly=True)
     update_token = Column(String)
     meta_data = relationship('StorageMetadataModel', uselist=False, backref="storages")
     allocation_commit = 0
@@ -31,7 +31,7 @@ class StorageMetadataModel(Base):
     rool = Column(String) # iso, img, cloud-init, template
 
 
-class AssociationStoragePool(Base):
+class AssociationStoragePoolModel(Base):
     __tablename__ = 'associations_storages_pools'
     pool_id = Column(Integer, ForeignKey('storages_pools.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
     storage_uuid = Column(String, ForeignKey('storages.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
@@ -43,7 +43,7 @@ class StoragePoolModel(Base):
     __tablename__ = "storages_pools"
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String)
-    storages = relationship("AssociationStoragePool", lazy=False)
+    storages = relationship("AssociationStoragePoolModel", lazy=False)
 
 
 class ImageModel(Base):
@@ -53,7 +53,8 @@ class ImageModel(Base):
     storage = relationship("StorageModel", uselist=False)
     capacity = Column(Integer)
     allocation = Column(Integer)
+    domain_uuid = Column(String, nullable=True)
     path = Column(String, primary_key=True)
     update_token = Column(String)
     flavor_id = Column(Integer, ForeignKey('flavors.id', onupdate='CASCADE', ondelete='SET NULL'))
-    flavor = relationship("FlavorModel")
+    flavor = relationship("FlavorModel", lazy=False)

@@ -2,7 +2,7 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>Add Flavor</v-card-title>
+          <v-card-title>Create Flavor</v-card-title>
           <v-card-text>
             <v-text-field
               v-model="postData.name"

@@ -1,0 +1,10 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: directory created
+      ansible.builtin.file:
+        path: "{{ path }}"
+        state: directory
+        mode: "775"
+        recurse: yes

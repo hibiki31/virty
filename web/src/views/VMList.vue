@@ -41,7 +41,16 @@
           :loading="this.reloadLoading"
           v-if="this.$store.state.userData.adminMode"
         >
-          <v-icon left>mdi-cached</v-icon>Reload
+          <v-icon left>mdi-cached</v-icon>Reload List
+        </v-btn>
+        <v-btn
+          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
+          small
+          dark
+          class="ma-2"
+          color="primary"
+        >
+          <v-icon left>mdi-server-plus</v-icon>CREATE VM
         </v-btn>
         <v-btn
           v-on:click="this.openDomainAddDialog"
@@ -51,16 +60,8 @@
           color="primary"
           v-if="this.$store.state.userData.adminMode"
         >
-          <v-icon left>mdi-server-plus</v-icon>ADD
-        </v-btn>
-        <v-btn
-          v-on:click="$refs.domainAddTicketsDialog.openDialog()"
-          small
-          dark
-          class="ma-2"
-          color="primary"
-        >
-          <v-icon left>mdi-server-plus</v-icon>CREATE
+
+          <v-icon left>mdi-server-plus</v-icon>CREATE VM Administration MODE
         </v-btn>
       </v-card-actions>
       <v-data-table
@@ -96,14 +97,14 @@
           <span>{{ item.ownerUserId === null ? "" : item.ownerUserId }}</span>
         </template>
 
-        <template v-slot:[`item.ownerGroupId`]="{ item }" justify="right">
+        <template v-slot:[`item.ownerProject`]="{ item }" justify="right">
           <v-icon
             left
             v-on:click="$refs.domainGroupPut.openDialog(item)"
-            :color="item.ownerGroupId === null ? '' : 'primary'"
+            :color="item.ownerProjectId === null ? '' : 'primary'"
             >mdi-account</v-icon
           >
-          <span>{{ item.ownerGroupId === null ? "" : item.ownerGroupId }}</span>
+          <span>{{ item.ownerProject === null ? "" : item.ownerProject.name }}</span>
         </template>
 
         <template v-slot:[`item.status`]="{ item }">
@@ -172,13 +173,13 @@ export default {
       selectUserId: '',
       headers: [
         { text: 'Status', value: 'status' },
-        { text: 'name', value: 'name' },
-        { text: 'node', value: 'nodeName' },
+        { text: 'Name', value: 'name' },
+        { text: 'Node', value: 'nodeName' },
         { text: 'UUID', value: 'uuid' },
         { text: 'RAM', value: 'memory' },
         { text: 'CPU', value: 'core' },
-        { text: 'userId', value: 'ownerUserId' },
-        { text: 'groupId', value: 'ownerGroupId' }
+        { text: 'UserID', value: 'ownerUserId' },
+        { text: 'ProjectID', value: 'ownerProject' }
       ],
       user: [],
       projects: []

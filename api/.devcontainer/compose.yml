@@ -1,0 +1,39 @@
+services:
+  app:
+    build: ../
+    ports:
+      - 0.0.0.0:7799:7799
+    volumes:
+      - "../../:/workspaces:cached"
+      - virty-develop-ssh-key:/root/.ssh
+    command: sleep infinity
+    environment:
+      PYTHONPATH: /workspaces/api
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - virty-postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mydatabase
+      POSTGRES_PASSWORD: password
+  
+  pgadmin4:
+    image: dpage/pgadmin4:9.4
+    ports:
+      - 0.0.0.0:8080:80
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./config/servers.json:/pgadmin4/servers.json
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    depends_on:
+      - db
+
+volumes:
+  virty-postgres-data:
+  virty-develop-ssh-key:
+  pgadmin-data:

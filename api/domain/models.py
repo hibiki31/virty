@@ -1,6 +1,7 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from mixin.database import Base, Engine
+
+from mixin.database import Base
 
 
 class DomainModel(Base):
@@ -16,6 +17,9 @@ class DomainModel(Base):
     vnc_port = Column(String)
     vnc_password = Column(String)
     
+    # Cache
+    storage_used = Column(Integer, default=0)
+
     # One to Many
     interfaces = relationship('DomainInterfaceModel')
     drives = relationship('DomainDriveModel')
@@ -24,11 +28,9 @@ class DomainModel(Base):
     node = relationship('NodeModel')
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     owner_user = relationship("UserModel")
-    owner_user_id = Column(String, ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'))
+    owner_user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'))
     owner_project = relationship("ProjectModel")
     owner_project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
-    issuance_id = Column(Integer, ForeignKey('issuances.id', onupdate='CASCADE', ondelete='SET NULL'))
-
 
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"

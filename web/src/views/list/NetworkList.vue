@@ -13,15 +13,15 @@
         class="ma-2"
         color="primary"
       >
-        <v-icon left>mdi-cached</v-icon>Reload
+        <v-icon left>mdi-cached</v-icon>Reload list
       </v-btn>
       <!-- 追加ボタン -->
       <v-btn v-on:click="this.openNetworkAddDialog" small class="ma-2" color="primary">
-        <v-icon left>mdi-server-plus</v-icon>Add
+        <v-icon left>mdi-server-plus</v-icon>register network
       </v-btn>
       <!-- 削除ボタン -->
       <v-btn v-on:click="openNetworkDeleteDialog" small dark class="ma-2" color="error">
-        <v-icon left>mdi-server-remove</v-icon>Delete
+        <v-icon left>mdi-server-remove</v-icon>deletion network
       </v-btn>
     </v-card-actions>
     <v-data-table
@@ -43,14 +43,14 @@
         >
       </template>
        <template v-slot:[`item.actions`]="{ item }" justify="right">
-          <v-icon v-on:click="$refs.networkPortJoinDialog.openDialog(item)" small left>mdi-server-plus</v-icon>
+          <v-btn text v-on:click="$refs.networkPortJoinDialog.openDialog(item)" small left>Add pool</v-btn>
       </template>
     </v-data-table>
   </v-card>
     <v-card class="mt-4">
     <v-card-actions>
        <v-btn v-on:click="$refs.networkPortAddDialog.openDialog()" small class="ma-2" color="primary">
-          <v-icon left>mdi-server-plus</v-icon>ADD
+          <v-icon left>mdi-server-plus</v-icon>CREATE Network Pool
         </v-btn>
     </v-card-actions>
     <v-data-table

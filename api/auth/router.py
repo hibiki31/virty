@@ -1,28 +1,32 @@
-import jwt
-import os
+from datetime import UTC, datetime, timedelta
+from typing import List
 
-from datetime import datetime, timedelta
-from typing import List, Optional
-from passlib.context import CryptContext
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
+    SecurityScopes,
+)
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Security, HTTPException, status, BackgroundTasks
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
 from sqlalchemy.orm import Session
 
-from mixin.log import setup_logger
 from mixin.database import get_db
-from settings import SECRET_KEY, API_VERSION
+from mixin.exception import NoResultFound
+from mixin.log import setup_logger
+from settings import SECRET_KEY
+from user.models import UserModel, UserScopeModel
 
-from .schemas import *
-from user.models import UserModel, UserScope
-from task.functions import TaskManager
-from project.schemas import PostProject
+from .function import get_password_hash, verify_password
+from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 
 logger = setup_logger(__name__)
+
+
 app = APIRouter(
-    prefix="/api/auth",
-    tags=["auth"]
+    prefix="/api/auth"
 )
+
 
 scopes_dict = {
     "admin": {
@@ -36,11 +40,13 @@ scopes_dict = {
     }
 }
 
+
 scopes_list = []
+
 
 def scopes_list_generator(argd, scope=None):
     for k in sorted(argd.keys(), reverse=False):
-        if scope == None:
+        if scope is None:
             gen_scope = k
         else:
             gen_scope = scope + "." + k
@@ -50,7 +56,6 @@ def scopes_list_generator(argd, scope=None):
     return scopes_list
 
 scopes_list_generator(scopes_dict)
-
 
 
 class CurrentUser(BaseModel):
@@ -83,21 +88,16 @@ class CurrentUser(BaseModel):
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 28
 
-# パスワードハッシュ化の設定
-pwd_context = CryptContext(
-    schemes=["bcrypt"], 
-    deprecated="auto"
-)
 # oAuth2の設定
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="api/auth",
+    tokenUrl="/api/auth",
     auto_error=False,
     scopes={"admin": "Have all authority", "user": "User authority"},
 )
 
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -118,8 +118,7 @@ def get_current_user(
             detail="Signature has expired",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    except:
-        # トークンがデコード出来なかった場合は認証失敗
+    except jwt.exceptions.DecodeError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Illegal jwt",
@@ -142,44 +141,15 @@ def get_current_user(
     return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-
-@app.post("", response_model=TokenRFC6749Response, tags=["auth"])
-def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: Session = Depends(get_db)
-    ):
-
-    try:
-        user = db.query(UserModel).filter(UserModel.id==form_data.username).one()
-    except:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-    
-    if not pwd_context.verify(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={
-            "sub": user.id,
-            # "scopes": form_data.scopes,
-            "scopes": [i.name for i in list(user.scopes)],
-            "projects": [i.id for i in list(user.projects)]
-            },
-        expires_delta=access_token_expires,
-    )
-    return {"access_token": access_token, "token_type": "Bearer"}
-
-
-@app.post("/setup", tags=["auth"])
+@app.post("/setup", tags=["auth"], operation_id="setup")
 def api_auth_setup(
-        model: Setup, 
-        bg: BackgroundTasks,
+        model: SetupRequest, 
         db: Session = Depends(get_db)
     ):
-    if model.user_id == "":
+    if model.username == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Blanks are not allowed in id"
+            detail="Blanks are not allowed in username"
         )
 
     # ユーザがいる場合はセットアップ済みなのでイジェクト
@@ -191,70 +161,49 @@ def api_auth_setup(
 
     # ユーザ追加
     user_model = UserModel(
-        id=model.user_id, 
-        hashed_password=pwd_context.hash(model.password)
+        username=model.username, 
+        hashed_password=get_password_hash(model.password)
     )
 
     db.add(user_model)
 
-    db.add(UserScope(user_id=user_model.id,name="admin"))
-    db.add(UserScope(user_id=user_model.id,name="user"))
+    db.add(UserScopeModel(user_id=user_model.username,name="admin"))
+    db.add(UserScopeModel(user_id=user_model.username,name="user"))
 
     db.commit()
-
-    project_reqeust = PostProject(project_name='default', user_ids=[model.user_id])
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'project', 'root')
-    task.commit(user=user_model, request=project_reqeust)
 
     return model
 
 
-@app.get("/version")
-def get_version(
+@app.post("", response_model=TokenRFC6749Response, tags=["auth"], operation_id="login")
+def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
     ):
-    initialized = (not db.query(UserModel).all() == [])
 
-    return {"initialized": initialized, "version": API_VERSION}
+    try:
+        user = db.query(UserModel).filter(UserModel.username==form_data.username).one()
+    except NoResultFound:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            # "scopes": form_data.scopes,
+            "scopes": [i.name for i in list(user.scopes)],
+            "projects": [i.id for i in list(user.projects)]
+            },
+        expires_delta=access_token_expires,
+    )
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.get("/validate", tags=["auth"])
+@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse, operation_id="validate_token")
 def read_auth_validate(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):
     return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}
-
-
-
-@app.get("/key", tags=["auth"])
-def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
-    private_key = ""
-    publick_key = ""
-    try: 
-        with open("/root/.ssh/id_rsa") as f:
-            private_key = f.read()
-        with open("/root/.ssh/id_rsa.pub") as f:
-            publick_key = f.read()
-    except:
-        pass
-
-    return {"private_key": private_key, "publick_key": publick_key}
-
-@app.post("/key")
-def post_ssh_key_pair(
-        model: SSHKeyPair,
-        current_user: CurrentUser = Depends(get_current_user)
-    ):
-    os.makedirs('/root/.ssh/', exist_ok=True)
-    
-    with open("/root/.ssh/id_rsa", "w") as f:
-        f.write(model.key.rstrip('\r\n') + '\n')
-    with open("/root/.ssh/id_rsa.pub", "w") as f:
-        f.write(model.pub)
-    
-    os.chmod('/root/.ssh/', 0o700)
-    os.chmod('/root/.ssh/id_rsa', 0o600)
-    os.chmod('/root/.ssh/id_rsa.pub', 0o600)
-
-    return {}

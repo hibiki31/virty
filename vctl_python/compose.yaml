@@ -1,0 +1,8 @@
+version: "3.7"
+services:
+  ubuntu:
+    build: .
+    command: sleep infinity
+    volumes:
+      - ./:/opt/app
+      - ../pylib:/opt/lib

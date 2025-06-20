@@ -5,30 +5,21 @@
       - name: apt update
         apt:
           update_cache: yes
-
-      - name: apt upgrade
-        apt:
-          upgrade: yes
   
-      - name: Install qemu
+      - name: Install libvirt qemu
         apt:
           name: "{{ packages }}"
         vars:
           packages: 
-            - qemu
+            # - qemu
             - qemu-kvm
             - qemu-utils
-       
-      - name: Install libvirt
-        apt:
-          name: "{{ packages }}"
-        vars:
-          packages: 
             - libvirt-daemon
             - libvirt-clients
             - libvirt-dev
             - bridge-utils
             - virt-manager
+            - rsync
 
       - name: restart libvirtd
         systemd:

@@ -3,8 +3,8 @@
   <TaskDeleteDialog ref="taskDeleteDialog" @reload="reload"/>
   <v-card>
     <v-card-actions>
-      <v-btn v-on:click="this.openTaskDeleteDialog" small dark class="ma-2" color="error">
-        <v-icon left>mdi-server-remove</v-icon>Delete
+      <v-btn v-on:click="this.openTaskDeleteDialog" small dark class="ma-2" color="error" v-if="false">
+        <v-icon left>mdi-server-remove</v-icon>delete task
       </v-btn>
     </v-card-actions>
     <v-data-table

@@ -1,16 +1,23 @@
-FROM python:3.10-buster
+FROM python:3.12-bullseye
 
-RUN apt update -y && apt install -y \
-    make gcc wget openssh-client openssh-server \
-    genisoimage rsync \
-    libvirt-clients libvirt-dev
+WORKDIR /opt/app
+ENV PATH $PATH:/root/.local/bin/:/opt/venv/bin/
+
+RUN apt-get update -y
+RUN apt-get install -y \
+    make \
+    gcc \
+    openssh-client \
+    openssh-server \
+    genisoimage \
+    rsync \
+    libvirt-clients \
+    libvirt-dev
 
 COPY ./requirements.txt /tmp/
-RUN /usr/local/bin/python -m pip install --upgrade pip && pip3 install -r /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
 
-RUN mkdir -p /opt/app && mkdir -p /opt/data
-COPY . /opt/app
-WORKDIR /opt/app
+COPY . .
 
 EXPOSE 8000
 

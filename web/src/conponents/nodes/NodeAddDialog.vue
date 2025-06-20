@@ -2,7 +2,7 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="nodeAddForm">
-          <v-card-title>Join node</v-card-title>
+          <v-card-title>Register node</v-card-title>
           <v-card-text>
             <v-text-field
               v-model="postData.name"
@@ -21,7 +21,6 @@
             <v-text-field
               v-model="postData.description"
               label="Descriptions"
-              :rules="[$required]"
               counter="128"
             ></v-text-field>
             <v-checkbox
@@ -31,7 +30,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" v-on:click="runMethod">JOIN</v-btn>
+            <v-btn color="primary" v-on:click="runMethod">Register</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -66,7 +65,7 @@ export default {
       }
       axios.request({
         method: 'post',
-        url: '/api/nodes',
+        url: '/api/tasks/nodes',
         data: this.postData
       })
         .then(res => {

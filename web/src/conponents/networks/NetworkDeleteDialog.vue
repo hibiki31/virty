@@ -2,6 +2,7 @@
 <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="networkDeleteForm">
+          <v-card-title>Deletion Netwrok</v-card-title>
         <v-card-text>Running VMs will not be affected.</v-card-text>
         <v-card-text>
           <v-select
@@ -22,7 +23,7 @@
         </v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" dark v-on:click="runMethod">LEAVE</v-btn>
+            <v-btn color="error" dark v-on:click="runMethod">deletion</v-btn>
         </v-card-actions>
         </v-form>
       </v-card>

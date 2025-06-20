@@ -1,74 +1,57 @@
-from time import sleep
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from os.path import join
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from .models import *
-from .schemas import *
-
 from auth.router import CurrentUser, get_current_user
-from task.models import TaskModel
-from task.schemas import TaskSelect
-from task.functions import TaskManager
-from node.models import NodeModel
 from mixin.database import get_db
+from mixin.exception import raise_notfound
 from mixin.log import setup_logger
-from mixin.exception import notfound_exception
+from settings import DATA_ROOT
 
-from module import virtlib
+from .models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
+from .schemas import (
+    Network,
+    NetworkForQuery,
+    NetworkPage,
+    NetworkPool,
+    NetworkPoolForCreate,
+    NetworkPoolForUpdate,
+    NetworkXML,
+)
 
-
-app = APIRouter()
+app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
 
 
-@app.get("/api/networks", tags=["network"], response_model=List[GetNetwork])
+@app.get("", response_model=NetworkPage, operation_id="get_networks")
 def get_api_networks(
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    return db.query(NetworkModel).all()
-
-
-@app.put("/api/networks", tags=["network"])
-def put_api_networks(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('put', 'network', 'list')
-    task.commit(user=current_user)
-   
-    return task.model
-
-@app.post("/api/networks", tags=["network"], response_model=TaskSelect)
-def post_api_storage(
-        bg: BackgroundTasks,
+        param: NetworkForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: NetworkInsert = None
     ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('post', 'network', 'root')
-    task.commit(user=current_user, request=request)
+    
+    query = db.query(NetworkModel)
+    
+    if param.name_like:
+        query = query.filter(NetworkModel.name.like(f'%{param.name_like}%'))
+    
+    if param.node_name_like:
+        query = query.filter(NetworkModel.node_name.like(f'%{param.node_name_like}%'))
+    
+    if param.type:
+        query = query.filter(NetworkModel.type==param.type)
+    
+    count = query.count()
+    if param.limit > 0:
+        query = query.limit(param.limit).offset(int(param.limit*param.page))
+    
+    return { "count": count, "data": query.all() }
 
-    return task.model
 
-@app.delete("/api/networks", tags=["network"], response_model=TaskSelect)
-def post_api_storage(
-        bg: BackgroundTasks,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        request: NetworkDelete = None
-    ):
-    task = TaskManager(db=db, bg=bg)
-    task.select('delete', 'network', 'root')
-    task.commit(user=current_user, request=request)
-
-    return task.model
-
-@app.get("/api/networks/pools", tags=["network"], response_model=List[GetNetworkPool])
+@app.get("/pools", response_model=List[NetworkPool], operation_id="get_network_pools")
 def get_api_networks_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -77,9 +60,9 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/api/networks/pools", tags=["network"])
+@app.post("/pools", operation_id="create_network_pool")
 def post_api_networks_pools(
-        model: PostNetworkPool,
+        model: NetworkPoolForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -89,9 +72,9 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/api/networks/pools", tags=["network"])
+@app.patch("/pools", operation_id="update_network_pool")
 def patch_api_networks_pools(
-        model: PatchNetworkPool,
+        model: NetworkPoolForUpdate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -107,53 +90,50 @@ def patch_api_networks_pools(
     db.commit()
     return True
 
-@app.get("/api/networks/{uuid}", tags=["network"], response_model=GetNetwork)
+
+@app.delete("/pools/{id}", operation_id="delete_network_pool")
+def delete_pools_uuid(
+        id: int,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+    cu.verify_scope(["admin.network.pools"])
+
+    net_pool = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==id).one_or_none()
+    
+    if net_pool == None:
+        raise HTTPException(status_code=404, detail="network pool is not found")
+    
+    db.delete(net_pool)
+    db.commit()
+
+    return {"detail": "success"}
+
+
+@app.get("/{uuid}", response_model=Network, operation_id="get_network")
 def get_api_networks_uuid(
-        uuid:str,
+        uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
     ):
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
     except NoResultFound:
-        raise notfound_exception()
+        raise_notfound(detial=f"Network not found: {uuid}")
 
     return network
 
-@app.post("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
+
+@app.get("/{uuid}/xml",response_model=NetworkXML)
+def get_api_vm_uuid_xml(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request: NetworkOVSAdd = None,
+        uuid:str = None
     ):
+    try:
+        with open(join(DATA_ROOT, "xml/network", f"{uuid}.xml")) as f:
+            domain_xml = NetworkXML(xml=f.read())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Not found domain")
 
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('post', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return main_task.model
-
-@app.delete("/api/networks/ovs", tags=["network"], response_model=TaskSelect)
-def post_api_networks_uuid_ovs(
-        bg: BackgroundTasks,
-        request: NetworkOVSDelete,
-        db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
-    ):
-
-    main_task = TaskManager(db=db, bg=bg)
-    main_task.select('delete', 'network', 'ovs')
-    main_task.commit(user=current_user, request=request)
-
-    reload_task = TaskManager(db=db, bg=bg)
-    reload_task.select('put', 'network', 'list')
-    reload_task.commit(user=current_user, dependence_uuid=main_task.model.uuid)
-
-    return main_task.model
-
-
+    return domain_xml

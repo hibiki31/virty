@@ -1,0 +1,6 @@
+nuitka
+httpx
+typer
+tabulate
+attrs
+python-dateutil

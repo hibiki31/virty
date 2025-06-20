@@ -1,28 +1,33 @@
-from json import loads
-from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
-from mixin.log import setup_logger
-
-from .models import *
-from .schemas import *
-from task.models import TaskModel
-from node.models import NodeModel
-
-from mixin.log import setup_logger
-
-from module import virtlib
-from module import xmllib
-from module.ovslib import OVSManager
-
+import secrets
+from ipaddress import ip_interface
+from random import randint
 from time import time
 
+import httpx
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
+from mixin.log import setup_logger
+from module import virtlib, xmllib
+from node.models import NodeModel
+from task.functions import TaskBase, TaskRequest
+from task.models import TaskModel
+
+from .models import NetworkModel, NetworkPortgroupModel
+from .schemas import (
+    NetworkForCreate,
+    NetworkOVSForCreate,
+    NetworkProviderForCreate,
+    PostVXLANInternal,
+)
+
+worker_task = TaskBase()
 logger = setup_logger(__name__)
 
 
-def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
+@worker_task(key="put.network.list")
+def put_network_list(db: Session, model: TaskModel, req: TaskRequest):
     nodes = db.query(NodeModel).all()
-
     token = str(time())
 
     for node in nodes:
@@ -32,7 +37,6 @@ def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
         manager = virtlib.VirtManager(node_model=node)
 
         for network in manager.network_data():
-            network:PaseNetwork
             merge_model = NetworkModel(
                 uuid = network.uuid,
                 name = network.name,
@@ -62,32 +66,69 @@ def put_network_list(db:Session, bg: BackgroundTasks, task: TaskModel):
         ).delete()
         
         db.commit()
-    task.message = "Network list updated has been successfull"
+    model.message = "Network list updated has been successfull"
 
-def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkInsert = NetworkInsert(**loads(task.request))
+
+@worker_task(key="post.network.root")
+def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
+    body = NetworkForCreate.model_validate(req.body)
 
     try:
-        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == request.node_name).one()
-    except:
+        node: NodeModel = db.query(NodeModel).filter(NodeModel.name == body.node_name).one()
+    except NoResultFound:
         raise Exception("node not found")
+    
+    
 
-    if request.type == "bridge":
+    if body.type == "bridge":
         # XMLを定義、設定
         editor = xmllib.XmlEditor("static","net_bridge")
-        editor.network_bridge_edit(name=request.name, bridge=request.bridge_device)
+        editor.network_bridge_edit(name=body.name, bridge=body.bridge_device)
         xml = editor.dump_str()
-    elif request.type == "ovs":
+    elif body.type == "ovs":
         xml = f'''
         <network>
-            <name>{request.name}</name>
+            <name>{body.name}</name>
             <forward mode="bridge" />
-            <bridge name="{request.bridge_device}" />
+            <bridge name="{body.bridge_device}" />
             <virtualport type="openvswitch" />
             <portgroup name="untag" default="yes">
             </portgroup>
         </network>
         '''
+    elif body.type == "nat":
+        if body.nat.bridge_name:
+            bridge_name = body.nat.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_nat")
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.nat.address), 
+            netmask=str(body.nat.netmask),
+            start=str(body.nat.dhcp_start),
+            end=str(body.nat.dhcp_end)
+        )
+        xml = editor.dump_str()
+    elif body.type == "route":
+        if body.route.bridge_name:
+            bridge_name = body.route.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_route")
+        # 内容同じだからNAT|ROUTE
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.route.address), 
+            netmask=str(body.route.netmask),
+            start=str(body.route.dhcp_start),
+            end=str(body.route.dhcp_end)
+        )
+        xml = editor.dump_str()
     else:
         raise Exception("Type is incorrect")
 
@@ -95,63 +136,71 @@ def post_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
     manager = virtlib.VirtManager(node_model=node)
     manager.network_define(xml_str=xml)
 
-    put_network_list(db=db, bg=bg,task=TaskModel())
+    model.message = "Network add has been successfull"
 
 
-def delete_network_root(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkDelete = NetworkDelete(**loads(task.request))
+@worker_task(key="delete.network.root")
+def delete_network_root(db: Session, model: TaskModel, req: TaskRequest):
+    uuid = req.path_param["uuid"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
-    except:
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == uuid).one()
+    except NoResultFound:
         raise Exception("network not found")
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_undefine(request.uuid)
-
-    put_network_list(db=db, bg=bg,task=TaskModel())
+    manager.network_undefine(uuid)    
 
 
-def post_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSAdd = NetworkOVSAdd(**loads(task.request))
+@worker_task(key="post.network.ovs")
+def post_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
+
+    body = NetworkOVSForCreate.model_validate(req.body)
+    network_uuid = req.path_param["uuid"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
-    except:
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
+    except NoResultFound:
         raise Exception("network not found")
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_add(uuid=network.uuid, name=request.name, vlan=request.vlan_id)
+    manager.network_ovs_add(uuid=network.uuid, name=body.name, vlan=body.vlan_id)
     
 
-def delete_network_ovs(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: NetworkOVSDelete = NetworkOVSDelete(**loads(task.request))
+@worker_task(key="delete.network.ovs")
+def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
+    network_uuid = req.path_param["uuid"]
+    ovs_name = req.path_param["name"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == request.uuid).one()
-    except:
+        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
+        db.query(
+            NetworkPortgroupModel).filter(
+            NetworkPortgroupModel.network_uuid==network_uuid
+            ).filter(NetworkPortgroupModel.name==ovs_name).one()
+    except NoResultFound:
         raise Exception("network not found")
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == network.node_name).one()
-    except:
+    except NoResultFound:
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_delete(uuid=network.uuid, name=request.name)
+    manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
     
 
-
-def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel):
-    request: PostVXLANInternal = PostVXLANInternal(**model.request)
+@worker_task(key="post.network.vxlan")
+def post_network_vxlan_internal(db: Session, model: TaskModel, req: TaskRequest):
+    body = PostVXLANInternal.model_validate(req.body)
 
     nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
 
@@ -165,3 +214,71 @@ def post_network_vxlan_internal(db:Session, bg: BackgroundTasks, task: TaskModel
     return model
 
 
+@worker_task(key="post.network.provider")
+def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
+    body = NetworkProviderForCreate.model_validate(req)
+    
+    vni = randint(1,2**24)
+    # VNIの16新数ゼロ梅
+    # 4桁:接頭辞 vbr-
+    # 6桁:VNI 24bit
+    # 4桁:ノード識別子 AXYZ
+    net_id = str('{:06x}'.format(vni))
+    gw_ip = ip_interface(f"{body.gateway_address}/{body.network_prefix}")
+
+    # Network Node
+    network_node:NodeModel = db.query(NodeModel).filter(NodeModel.name==body.network_node).one()
+    editor = xmllib.XmlEditor("static","net_provider")
+    editor.network_provider(
+        name=f'vbr-{net_id}', bridge=f'vbr-{net_id}',
+        address=str(gw_ip.ip),
+        netmask=str(gw_ip.netmask),
+        domain=str(body.dns_domain),
+        start=body.dhcp_start,
+        end=body.dhcp_end
+        )
+    xml = editor.dump_str()
+   
+    # ソイや！
+    manager = virtlib.VirtManager(node_model=network_node)
+    manager.network_define(xml_str=xml)
+
+    
+    nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="vxlan_overlay")).order_by(NodeModel.name).all()
+
+    find_role = lambda i: [ j for j in i if j.role_name=="vxlan_overlay"][0]
+
+    # Network node to Worker node
+    counter = 0
+    for node in nodes:
+        if node.name == body.network_node:
+            continue
+        node: NodeModel
+        node_extra = find_role(node.roles).extra_json
+
+        req_data = {
+            "vni": vni,
+            "node_id": counter,
+            "remote_ip": node_extra['local_ip']
+        }
+        resp = httpx.post(url=f'http://{network_node.domain}:8766/vxlan', json=req_data)
+        logger.info(resp)
+        counter += 1
+
+    # Worker node to Network node
+    for node in nodes:
+        if node.name == body.network_node:
+            continue
+        editor = xmllib.XmlEditor("static","net_internal")
+        editor.network_internal(name=f'vbr-{net_id}')
+        xml = editor.dump_str()
+    
+        manager = virtlib.VirtManager(node_model=node)
+        manager.network_define(xml_str=xml)
+        req_data = {
+            "vni": vni,
+            "node_id": 0,
+            "remote_ip": node_extra['network_node_ip']
+        }
+        resp = httpx.post(url=f'http://{node.domain}:8766/vxlan', json=req_data)
+        logger.info(resp)

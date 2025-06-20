@@ -2,11 +2,13 @@
  <v-dialog width="400" v-model="dialogState">
       <v-card>
         <v-form ref="networkAddForm">
-          <v-card-title>Add Netwrok</v-card-title>
+          <v-card-title>Register Netwrok</v-card-title>
           <v-card-text>
+            You can register a bridge that has already been created on the host.
+            For example, Linux-bridge or OVS-bridge.
             <v-text-field
               v-model="postData.name"
-              label="Name"
+              label="Display name on virty"
               :rules="[$required, $limitLength64, $characterRestrictions, $firstCharacterRestrictions]"
               counter="64"
             ></v-text-field>
