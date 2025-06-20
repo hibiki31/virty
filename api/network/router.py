@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import notfound_exception
+from mixin.exception import raise_notfound
 from mixin.log import setup_logger
 from settings import DATA_ROOT
 
@@ -119,7 +119,7 @@ def get_api_networks_uuid(
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
     except NoResultFound:
-        raise notfound_exception(msg="Network not found")
+        raise_notfound(detial=f"Network not found: {uuid}")
 
     return network
 

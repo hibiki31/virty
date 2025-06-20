@@ -1,46 +1,35 @@
-import base64
+import os
+
 import paramiko
-import pprint
 
-def main():
-    get_data = ssh_pass_code(
-        host = "192.168",
-        user = "",
-        password = "",
-        command = "ip a"
-    )
-    pprint.pprint(get_data)
 
-def ssh_pass_code(host, user, password, command):
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=host, username=user,password=password )
-
-    channel = client.get_transport().open_session()
-    channel.exec_command(command)
-
-    # 標準出力
-    # バッファーは1kb
-    get_std = b''
-    for i in range(1,10):
-        buff = channel.recv(1024)
-        if buff == b'':
-            break
-        get_std += buff
-    get_std = get_std.decode().splitlines()
-
-    get_err =b''
-    for i in range(1,10):
-        buff = channel.recv_stderr(1024)
-        if buff == b'':
-            break
-        get_err += buff
+class ParamikoManager():
+    def __init__(self, user, domain, port):
+        self.user = user
+        self.domain = domain
+        self.port = port
+        self.client = paramiko.SSHClient()
+        
+        key_path = os.path.expanduser("~/.ssh/id_rsa")
+        private_key = paramiko.RSAKey.from_private_key_file(key_path)
+        print(user,domain)
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.connect(hostname=domain, username=user, port=port, pkey=private_key)
+        
     
-    get_err = get_err.decode().splitlines()
+    def sample_ls(self):
+        stdin, stdout, stderr = self.client.exec_command("ls -l")
+        print("コマンド出力:")
+        for line in stdout:
+            print(line.strip())
 
-    code = int(channel.recv_exit_status())
-    client.close()
-    return [code, get_std, get_err]
+        print("エラー出力:")
+        for line in stderr:
+            print(line.strip())
 
-if __name__ == "__main__":
-    main()
+    def close(self):
+        self.client.close()
+        print("リソースを解放しました")
+
+    def __del__(self):
+        self.close()

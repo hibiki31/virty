@@ -10,4 +10,4 @@
 # pytest -v --ff
 
 # pytest -v --cov=module ;  printf '\a'
-pytest -v  ;  printf '\a'
+pytest -v -x ;  printf '\a'

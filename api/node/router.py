@@ -1,15 +1,18 @@
-from os import chmod, makedirs
+import os
+import subprocess
 from typing import List
 
-from fastapi import APIRouter, Depends
+from cryptography.hazmat.primitives import serialization
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import HTTPException
+from mixin.exception import HTTPException, raise_forbidden
 from mixin.log import setup_logger
 from module.sshlib import SSHManager
 
+from .funcstion import delete_ssh_keys
 from .models import NodeModel
 from .schemas import (
     Node,
@@ -19,6 +22,7 @@ from .schemas import (
     NodeInterfaceIpv6Info,
     NodePage,
     SSHKeyPair,
+    SSHPublicKey,
 )
 
 app = APIRouter(prefix="/api/nodes", tags=["nodes"])
@@ -49,33 +53,73 @@ def post_ssh_key_pair(
         model: SSHKeyPair,
         current_user: CurrentUser = Depends(get_current_user)
     ):
-    makedirs('/root/.ssh/', exist_ok=True)
+    if not current_user.verify_scope(scopes=["admin"]):
+        raise_forbidden()
     
-    with open("/root/.ssh/id_rsa", "w") as f:
-        f.write(model.private_key.rstrip('\r\n') + '\n')
-    with open("/root/.ssh/id_rsa.pub", "w") as f:
-        f.write(model.public_key)
-    
-    chmod('/root/.ssh/', 0o700)
-    chmod('/root/.ssh/id_rsa', 0o600)
-    chmod('/root/.ssh/id_rsa.pub', 0o600)
+    if model.generate:
+        delete_ssh_keys()
+        
+        cmd = [
+            "ssh-keygen",
+            "-t", "ed25519",
+            "-f", "/root/.ssh/id_ed25519",
+            "-N", "",
+            "-q"
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error("Key generation failed:", e)
+            raise e
+            
+    else:
+        os.makedirs('/root/.ssh/', exist_ok=True)
+        
+        try:
+            private_key = serialization.load_ssh_private_key(model.private_key.encode(), password=None)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+        
+        key_type = type(private_key).__name__
+        if "RSA" in key_type:
+            key_name = "id_rsa"
+        elif "Ed25519" in key_type:
+            key_name = "id_ed25519"
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+        
+        delete_ssh_keys()
+        
+        with open(f"/root/.ssh/{key_name}", "w") as f:
+            f.write(model.private_key.rstrip('\r\n') + '\n')
+        with open(f"/root/.ssh/{key_name}.pub", "w") as f:
+            f.write(model.public_key)
+        
+        os.chmod('/root/.ssh/', 0o700)
+        os.chmod(f"/root/.ssh/{key_name}", 0o600)
+        os.chmod(f"/root/.ssh/{key_name}.pub", 0o600)
 
     return {}
 
 
-@app.get("/key", response_model=SSHKeyPair, operation_id="get_ssh_key_pair")
+@app.get("/key", response_model=SSHPublicKey, operation_id="get_ssh_key_pair")
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
-    private_key = ""
-    public_key = ""
-    try: 
-        with open("/root/.ssh/id_rsa") as f:
-            private_key = f.read()
-        with open("/root/.ssh/id_rsa.pub") as f:
-            public_key = f.read()
-    except FileNotFoundError:
-        pass
+    home = os.path.expanduser("~")
+    keys = {
+        "id_rsa.pub": os.path.join(home, ".ssh", "id_rsa.pub"),
+        "id_ed25519.pub": os.path.join(home, ".ssh", "id_ed25519.pub"),
+    }
 
-    return SSHKeyPair(private_key=private_key, public_key=public_key)
+    for name, path in keys.items():
+        if os.path.isfile(path):
+            pub_key_path = path
+        else:
+            pub_key_path = path
+    
+    with open(pub_key_path) as f:
+        public_key = f.read()
+
+    return SSHPublicKey(public_key=public_key)
 
 
 @app.get("/{name}", response_model=Node, operation_id="get_node")

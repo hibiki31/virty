@@ -66,7 +66,12 @@ class NodeInterface(BaseSchema):
 
 
 class SSHKeyPair(BaseSchema):
-    private_key: str
+    private_key: str | None = None
+    public_key: str| None = None
+    generate: bool | None = None
+
+
+class SSHPublicKey(BaseSchema):
     public_key: str
 
 

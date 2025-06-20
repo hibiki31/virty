@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import NoResultFound, notfound_exception
+from mixin.exception import NoResultFound, raise_notfound
 from mixin.log import setup_logger
 from network.models import NetworkModel
 from project.models import ProjectModel
@@ -201,7 +201,7 @@ def path_vms_project(
         vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
     except NoResultFound:
-        raise notfound_exception(msg="not found vm or group")
+        raise_notfound(detail="Not found vm or group")
     
     vm.owner_project_id = request.project_id
     db.commit()

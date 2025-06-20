@@ -11,13 +11,20 @@ def test_delete(env, client):
     assert res_node.json()["count"] == 0
 
 
+def test_key_generate(env, client):
+    req_data = {
+        "generate": True
+    }
+    res = client.post("/api/nodes/key", json=req_data)
+    assert res.status_code == 200
+
+
 def test_post_nodes_key(env, client):
     req_data = {
         "privateKey": env.key,
         "publicKey": env.pub,
     }
     res = client.post("/api/nodes/key", json=req_data)
-    
     assert res.status_code == 200
 
 
