@@ -1,7 +1,6 @@
 # Virty
 
-[![Docker Image CI](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml/badge.svg)](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml)
-[![Docker publish api](https://github.com/hibiki31/virty/actions/workflows/docker-publish-api.yml/badge.svg)](https://github.com/hibiki31/virty/actions/workflows/docker-publish-api.yml)
+[![Docker build test](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml/badge.svg)](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml)
 
 KVM management web application for low cost and immediate deployment.
 Manage nodes with SSH access using Libvirt-API, Ansible, etc.
