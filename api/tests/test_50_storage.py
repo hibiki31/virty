@@ -35,4 +35,4 @@ def test_change_metadata(env, client, created_storage):
             )
         else:
             continue
-        client.patch("/api/storage", data=req_data.model_dump_json(by_alias=True))
+        client.patch("/api/storage", content=req_data.model_dump_json(by_alias=True))

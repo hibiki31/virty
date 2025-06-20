@@ -23,6 +23,7 @@ declare module 'vue-router/auto-routes' {
     '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
     '/networks/': RouteRecordInfo<'/networks/', '/networks', Record<never, never>, Record<never, never>>,
     '/nodes/': RouteRecordInfo<'/nodes/', '/nodes', Record<never, never>, Record<never, never>>,
+    '/nodes/[name]': RouteRecordInfo<'/nodes/[name]', '/nodes/:name', { name: ParamValue<true> }, { name: ParamValue<false> }>,
     '/storages/': RouteRecordInfo<'/storages/', '/storages', Record<never, never>, Record<never, never>>,
     '/tasks/': RouteRecordInfo<'/tasks/', '/tasks', Record<never, never>, Record<never, never>>,
     '/vms/': RouteRecordInfo<'/vms/', '/vms', Record<never, never>, Record<never, never>>,

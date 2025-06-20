@@ -10,6 +10,9 @@
       <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error" size="small">LEAVE</v-btn>
     </v-card-actions>
     <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
+      <template v-slot:item.name="{ item }">
+        <router-link :to="'/nodes/' + item.name" class="font-mono">{{ item.name }}</router-link>
+      </template>
     </v-data-table>
   </v-card>
 </template>

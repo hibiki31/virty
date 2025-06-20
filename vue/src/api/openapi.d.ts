@@ -192,7 +192,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/nodes/{name}/network": {
+    "/api/nodes/{name}/info": {
         parameters: {
             query?: never;
             header?: never;
@@ -200,7 +200,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Node Name Network */
-        get: operations["get_node_name_network_api_nodes__name__network_get"];
+        get: operations["get_node_name_network_api_nodes__name__info_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -286,6 +286,23 @@ export interface paths {
         };
         /** Get Api Domain Uuid */
         get: operations["get_vm"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vms/{uuid}/xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Api Vm Uuid Xml */
+        get: operations["get_api_vm_uuid_xml_api_vms__uuid__xml_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -549,23 +566,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/images/scp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Put Api Images Scp */
-        put: operations["scp_image"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/tasks/images/download": {
         parameters: {
             query?: never;
@@ -645,6 +645,23 @@ export interface paths {
         };
         /** Get Api Networks Uuid */
         get: operations["get_network"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/networks/{uuid}/xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Api Vm Uuid Xml */
+        get: operations["get_api_vm_uuid_xml_api_networks__uuid__xml_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -934,7 +951,10 @@ export interface components {
             grant_type?: string | null;
             /** Username */
             username: string;
-            /** Password */
+            /**
+             * Password
+             * Format: password
+             */
             password: string;
             /**
              * Scope
@@ -943,7 +963,10 @@ export interface components {
             scope: string;
             /** Client Id */
             client_id?: string | null;
-            /** Client Secret */
+            /**
+             * Client Secret
+             * Format: password
+             */
             client_secret?: string | null;
         };
         /** CdromForUpdateDomain */
@@ -951,7 +974,7 @@ export interface components {
             /** Path */
             path?: string | null;
             /** Target */
-            target?: string | null;
+            target: string;
         };
         /** CloudInitInsert */
         CloudInitInsert: {
@@ -1115,6 +1138,11 @@ export interface components {
             /** Projectid */
             projectId: string;
         };
+        /** DomainXML */
+        DomainXML: {
+            /** Xml */
+            xml: string;
+        };
         /** Flavor */
         Flavor: {
             /** Name */
@@ -1213,17 +1241,6 @@ export interface components {
             /** Data */
             data: components["schemas"]["Image"][];
         };
-        /** ImageSCP */
-        ImageSCP: {
-            /** Fromnodename */
-            fromNodeName: string;
-            /** Tonodename */
-            toNodeName: string;
-            /** Fromfilepath */
-            fromFilePath: string;
-            /** Tofilepath */
-            toFilePath: string;
-        };
         /** Network */
         Network: {
             /** Name */
@@ -1257,10 +1274,11 @@ export interface components {
             nodeName: string;
             /**
              * Type
-             * @description brdige or ovs
              * @enum {string}
              */
-            type: "bridge" | "ovs";
+            type: "bridge" | "ovs" | "nat" | "route";
+            nat?: components["schemas"]["NetworkNatForCreate"] | null;
+            route?: components["schemas"]["NetworkRouteForCreate"] | null;
             /** Bridgedevice */
             bridgeDevice?: string | null;
         };
@@ -1285,6 +1303,31 @@ export interface components {
             networkUuid: string;
             /** Port */
             port?: string | null;
+        };
+        /** NetworkNatForCreate */
+        NetworkNatForCreate: {
+            /** Bridgename */
+            bridgeName?: string | null;
+            /**
+             * Address
+             * Format: ipvanyaddress
+             */
+            address: string;
+            /**
+             * Netmask
+             * Format: ipvanyaddress
+             */
+            netmask: string;
+            /**
+             * Dhcpstart
+             * Format: ipvanyaddress
+             */
+            dhcpStart: string;
+            /**
+             * Dhcpend
+             * Format: ipvanyaddress
+             */
+            dhcpEnd: string;
         };
         /** NetworkOVSForCreate */
         NetworkOVSForCreate: {
@@ -1363,6 +1406,36 @@ export interface components {
             /** Networknode */
             networkNode?: string | null;
         };
+        /** NetworkRouteForCreate */
+        NetworkRouteForCreate: {
+            /** Bridgename */
+            bridgeName?: string | null;
+            /**
+             * Address
+             * Format: ipvanyaddress
+             */
+            address: string;
+            /**
+             * Netmask
+             * Format: ipvanyaddress
+             */
+            netmask: string;
+            /**
+             * Dhcpstart
+             * Format: ipvanyaddress
+             */
+            dhcpStart: string;
+            /**
+             * Dhcpend
+             * Format: ipvanyaddress
+             */
+            dhcpEnd: string;
+        };
+        /** NetworkXML */
+        NetworkXML: {
+            /** Xml */
+            xml: string;
+        };
         /** Node */
         Node: {
             /** Name */
@@ -1411,40 +1484,24 @@ export interface components {
             /** Libvirtrole */
             libvirtRole: boolean;
         };
-        /** NodeInterface */
-        NodeInterface: {
-            /** Ifname */
-            ifname: string;
-            /** Operstate */
-            operstate: string;
-            /** Mtu */
-            mtu: number;
-            /** Master */
-            master?: string | null;
-            /** Linktype */
-            linkType: string;
-            /** Macaddress */
-            macAddress?: string | null;
-            /** Ipv4Info */
-            ipv4Info: components["schemas"]["NodeInterfaceIpv4Info"][];
-            /** Ipv6Info */
-            ipv6Info: components["schemas"]["NodeInterfaceIpv6Info"][];
-        };
-        /** NodeInterfaceIpv4Info */
-        NodeInterfaceIpv4Info: {
-            /** Address */
-            address: string;
-            /** Prefixlen */
-            prefixlen: number;
-            /** Label */
-            label: string;
-        };
-        /** NodeInterfaceIpv6Info */
-        NodeInterfaceIpv6Info: {
-            /** Address */
-            address: string;
-            /** Prefixlen */
-            prefixlen: number;
+        /** NodeInfo */
+        NodeInfo: {
+            /** Ipaddress */
+            ipAddress: string;
+            /** Iproute */
+            ipRoute: string;
+            /** Ipneigh */
+            ipNeigh: string;
+            /** Dfh */
+            dfH: string;
+            /** Lsblk */
+            lsblk: string;
+            /** Uptime */
+            uptime: string;
+            /** Free */
+            free: string;
+            /** Top */
+            top: string;
         };
         /** NodePage */
         NodePage: {
@@ -1530,7 +1587,14 @@ export interface components {
         /** SSHKeyPair */
         SSHKeyPair: {
             /** Privatekey */
-            privateKey: string;
+            privateKey?: string | null;
+            /** Publickey */
+            publicKey?: string | null;
+            /** Generate */
+            generate?: boolean | null;
+        };
+        /** SSHPublicKey */
+        SSHPublicKey: {
             /** Publickey */
             publicKey: string;
         };
@@ -1726,8 +1790,8 @@ export interface components {
         };
         /** UserForCreate */
         UserForCreate: {
-            /** Userid */
-            userId: string;
+            /** Username */
+            username: string;
             /** Password */
             password: string;
         };
@@ -2028,7 +2092,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SSHKeyPair"];
+                    "application/json": components["schemas"]["SSHPublicKey"];
                 };
             };
         };
@@ -2128,7 +2192,7 @@ export interface operations {
             };
         };
     };
-    get_node_name_network_api_nodes__name__network_get: {
+    get_node_name_network_api_nodes__name__info_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2145,7 +2209,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NodeInterface"][];
+                    "application/json": components["schemas"]["NodeInfo"];
                 };
             };
             /** @description Validation Error */
@@ -2322,6 +2386,37 @@ export interface operations {
             };
         };
     };
+    get_api_vm_uuid_xml_api_vms__uuid__xml_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainXML"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_vnc_address: {
         parameters: {
             query?: never;
@@ -2481,7 +2576,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["CdromForUpdateDomain"];
             };
@@ -2915,39 +3010,6 @@ export interface operations {
             };
         };
     };
-    scp_image: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["ImageSCP"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     download_image: {
         parameters: {
             query?: never;
@@ -3152,6 +3214,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Network"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_api_vm_uuid_xml_api_networks__uuid__xml_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkXML"];
                 };
             };
             /** @description Validation Error */
