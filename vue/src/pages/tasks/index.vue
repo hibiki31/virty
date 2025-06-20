@@ -1,7 +1,20 @@
 <template>
   <v-card>
     <task-detail-dialog v-model="stateDetailDialog" :item="dataDetailDaalog"></task-detail-dialog>
-    <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
+    <v-card-title class="d-flex align-center pe-2">
+      <v-icon icon="mdi-checkbox-multiple-marked-outline"></v-icon> &nbsp;
+      Task List
+
+      <v-spacer></v-spacer>
+      <v-select density="compact" clearable label="Status" v-model="query.status" @update:model-value="reload"
+        :items="['finish', 'error', 'init', 'wait', 'incomplete']" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable label="Resouce" v-model="query.resource" @update:model-value="reload"
+        :items="['vm', 'network', 'node', 'storage']" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable label="Method" v-model="query.method" @update:model-value="reload"
+        :items="['post', 'put', 'delete', 'patch']" variant="solo" width="1"></v-select>
+
+    </v-card-title>
+    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       v-model:page="pageState" :items-per-page-options="itemsPerPAgeOption" density="comfortable"
       :items-length="items.count" :loading="loading" item-value="name" @update:options="loadItems">
 
@@ -48,7 +61,7 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import type { typeListTask } from '@/composables/task'
+import type { typeListTask, typeListTaskQuery } from '@/composables/task'
 
 import { ref, onMounted } from 'vue'
 import { useReloadListener } from '@/composables/trigger'
@@ -57,13 +70,19 @@ import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getReso
 import { itemsPerPAgeOption } from '@/composables/table'
 
 const loading = ref(false)
-const stateCreateDialog = ref(false)
 const stateDetailDialog = ref(false)
 const dataDetailDaalog = ref<typeListTask["data"][0]>()
-const itemsPerPage = ref(20)
 const pageState = ref(1)
 
-const taskError = ref('')
+const query = ref<NonNullable<typeListTaskQuery>>({
+  admin: true,
+  limit: 20,
+  page: 1,
+  status: "",
+  method: "",
+  resource: "",
+  object: ""
+})
 
 
 let headers = [
@@ -84,13 +103,16 @@ const items = ref<typeListTask>({
 
 
 async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
-  loading.value = true
-  items.value = await getTaskList(itemsPerPage, page)
-  loading.value = false
+  query.value.page = page
+  query.value.limit = itemsPerPage
+
+  await reload()
 }
 
 async function reload() {
-  await loadItems({ page: pageState.value, itemsPerPage: itemsPerPage.value })
+  loading.value = true
+  items.value = await getTaskList(query.value)
+  loading.value = false
 }
 
 useReloadListener(() => {

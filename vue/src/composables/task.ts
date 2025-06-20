@@ -7,19 +7,20 @@ import { ja } from "date-fns/locale/ja";
 export type typeListTask =
   paths["/api/tasks"]["get"]["responses"]["200"]["content"]["application/json"];
 
+export type typeListTaskQuery = NonNullable<
+  paths["/api/tasks"]["get"]["parameters"]["query"]
+>;
+
 export const initTaskList: typeListTask = {
   count: 0,
   data: [],
 };
 
-export async function getTaskList(limit = 20, page = 1) {
+export async function getTaskList(query: typeListTaskQuery) {
+  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/tasks", {
     params: {
-      query: {
-        page: page - 1,
-        admin: true,
-        limit: limit,
-      },
+      query: query,
     },
   });
   if (res.data) {

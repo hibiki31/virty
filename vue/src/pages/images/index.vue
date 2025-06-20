@@ -4,12 +4,14 @@
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
+      <v-spacer></v-spacer>
+      <v-text-field v-model="query.nameLike" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
-    <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
+    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       :items-per-page-options="itemsPerPAgeOption" density="comfortable" :items-length="items.count" :loading="loading"
       item-value="name" @update:options="loadItems">
     </v-data-table-server>
-
   </v-card>
 </template>
 
@@ -19,7 +21,7 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import type { typeListImage } from '@/composables/image'
+import type { typeListImage, typeListImageQuery } from '@/composables/image'
 
 import { ref, onMounted } from 'vue'
 import { useReloadListener } from '@/composables/trigger'
@@ -33,7 +35,17 @@ import { itemsPerPAgeOption } from '@/composables/table'
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
-const itemsPerPage = ref(20)
+
+const query = ref<typeListImageQuery>({
+  admin: true,
+  limit: 20,
+  page: 1,
+  nodeName: "",
+  nameLike: "",
+  name: "",
+  rool: "",
+
+})
 
 const headers = [
   { title: 'Name', value: 'name' },
@@ -51,12 +63,10 @@ const items = ref<typeListImage>(initImageList)
 
 
 async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
-  loading.value = true
+  query.value.page = page
+  query.value.limit = itemsPerPage
 
-  const res = await getImageList(itemsPerPage, page)
-  items.value = res
-
-  loading.value = false
+  await reload()
 }
 
 
@@ -70,7 +80,9 @@ const rescan = () => {
 
 
 async function reload() {
-  await loadItems({ page: 1, itemsPerPage: itemsPerPage.value })
+  loading.value = true
+  items.value = await getImageList(query.value)
+  loading.value = false
 }
 
 useReloadListener(() => {

@@ -4,6 +4,14 @@ import type { paths, components } from "@/api/openapi";
 export type bodyPostVM = components["schemas"]["DomainForCreate"];
 export type typeListVM =
   paths["/api/vms"]["get"]["responses"]["200"]["content"]["application/json"];
+export type typeListVMQuery = NonNullable<
+  paths["/api/vms"]["get"]["parameters"]["query"]
+>;
+
+export const initVMList: typeListVM = {
+  count: 0,
+  data: [],
+};
 
 export const itemsMemory = [
   { title: "512MB", value: "512" },
@@ -24,6 +32,20 @@ export const itemsCPU = [
   { title: "16 Core", value: "16" },
   { title: "24 Core", value: "24" },
 ];
+
+export async function getVMList(query: typeListVMQuery) {
+  query.page = (query.page || 1) - 1;
+  const res = await apiClient.GET("/api/vms", {
+    params: {
+      query: query,
+    },
+  });
+  if (res.data) {
+    return res.data;
+  } else {
+    return initVMList;
+  }
+}
 
 export function vmPowerOff(uuid: string) {
   apiClient.PATCH("/api/tasks/vms/{uuid}/power", {

@@ -5,6 +5,9 @@
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
+      <v-spacer></v-spacer>
+      <v-text-field v-model="query.nameLike" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
       v-model:page="pageState" density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
@@ -37,6 +40,8 @@ meta:
 </route>
 
 <script lang="ts" setup>
+import type { typeListVM, typeListVMQuery } from '@/composables/vm'
+import { initVMList, getVMList } from '@/composables/vm'
 import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import type { paths } from '@/api/openapi'
@@ -61,27 +66,21 @@ const headers = [
   { title: 'groupId', value: 'ownerGroupId' }
 ]
 
-const items = ref<paths['/api/vms']['get']['responses']['200']['content']['application/json']>({
-  count: 0,
-  data: [],
+const query = ref<typeListVMQuery>({
+  admin: true,
+  limit: 20,
+  page: 1,
+  nameLike: "",
+  nodeNameLike: "",
 })
 
-function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
-  loading.value = true
-  apiClient.GET('/api/vms', {
-    params: {
-      query: {
-        admin: true,
-        limit: itemsPerPage,
-        page: page - 1,
-      }
-    }
-  }).then((res) => {
-    if (res.data) {
-      items.value = res.data
-    }
-    loading.value = false
-  })
+const items = ref<typeListVM>(initVMList)
+
+async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+  query.value.page = page
+  query.value.limit = itemsPerPage
+
+  await reload()
 }
 
 
@@ -94,8 +93,18 @@ const rescan = () => {
 }
 
 
+async function reload() {
+  loading.value = true
+  items.value = await getVMList(query.value)
+  loading.value = false
+}
+
 useReloadListener(() => {
-  loadItems({ page: pageState.value, itemsPerPage: itemsPerPage.value })
+  reload()
+})
+
+onMounted(() => {
+  reload()
 })
 
 </script>
