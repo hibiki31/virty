@@ -30,13 +30,20 @@ def create_network(env: EnvConfig, client: TestClient, skipp=False):
             req_data = NetworkForCreate(
                 name=network.name,
                 node_name=server.name,
-                type="nat",
+                type=network.type,
                 nat=NetworkNatForCreate(
                     bridge_name=None,
                     address="192.168.19.254",
                     netmask="255.255.255.0",
                     dhcp_start="192.168.19.1",
                     dhcp_end="192.168.19.200"
+                ),
+                route=NetworkNatForCreate(
+                    bridge_name=None,
+                    address="192.168.21.254",
+                    netmask="255.255.255.0",
+                    dhcp_start="192.168.21.1",
+                    dhcp_end="192.168.21.200"
                 ),
                 bridge_device=None
             )

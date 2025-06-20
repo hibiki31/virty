@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 import traceback
 from datetime import datetime
 from time import sleep, time
@@ -13,6 +14,7 @@ from models import TaskModel
 from network.tasks import worker_task as network_tasks
 from node.tasks import worker_task as node_tasks
 from project.tasks import worker_task as project_tasks
+from settings import DATA_ROOT
 from storage.tasks import worker_task as storage_tasks
 from task.functions import TaskBase
 
@@ -22,6 +24,9 @@ logger = setup_logger(__name__)
 def main():
     # Ansible runnerがforkしてSessionを破壊しないようにする
     mp.set_start_method("spawn", force=True)
+    
+    ansible_private_path = os.path.join(DATA_ROOT, "ansible")
+    os.makedirs(ansible_private_path, exist_ok=True)
     
     task_manager = TaskBase()
     task_manager.include_task(domain_tasks)

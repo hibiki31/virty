@@ -28,7 +28,7 @@ class AnsibleManager():
         self.user = user
         self.domain = domain
         
-    def run(self, playbook_name:str, extravars={}, timeout=60):
+    def run(self, playbook_name:str, extravars={}, timeout=900):
         hosts = f"{self.user}@{self.domain}"
         
         logger.info(f"[Ansible Start] {hosts} name={playbook_name} extravars={extravars}")
@@ -46,7 +46,7 @@ class AnsibleManager():
                 playbook=self.get_playbook_path(playbook_name),
                 extravars=extravars,
                 host_pattern='all',
-                quiet=True
+                quiet=True,
             )
         finally:
             _restore_handlers(saved_handlers)

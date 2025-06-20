@@ -29,6 +29,7 @@ class Storage(BaseModel):
 
 class Networks(BaseModel):
     name: str
+    type: str
 
 class VM(BaseModel):
     name: str

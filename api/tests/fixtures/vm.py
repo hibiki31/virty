@@ -1,4 +1,3 @@
-from pprint import pprint
 
 import pytest
 from fastapi.testclient import TestClient
@@ -78,7 +77,7 @@ ssh_authorized_keys:
         
             # すでにあるか判定
             res_vm = client.get("/api/vms", params={"nameLike": f"{vm.name}-{server.name}", "nodeNameLike": server.name, "admin": True})
-            pprint(res_vm.json())
+            # pprint(res_vm.json())
             page = DomainPage.model_validate(res_vm.json())
             if skipp and page.count >= 1:
                 continue
@@ -94,7 +93,7 @@ def delete_vm(env: EnvConfig, client: TestClient, skipp=False):
     for server in env.servers:
         for vm in env.vms:
             res_vm = client.get("/api/vms", params={"nameLike": f"{vm.name}-{server.name}", "nodeNameLike": server.name, "admin": True})
-            pprint(res_vm.json())
+            # pprint(res_vm.json())
             
             page = DomainPage.model_validate(res_vm.json())
             if page.count == 0 and skipp:

@@ -88,7 +88,7 @@ def get_tasks_incomplete(
             .filter(TaskModel.status!="finish").all()        
         
         task_count = len(task_model)
-        task_hash = str(hashlib.md5(str([j.uuid for j in task_model]).encode()).hexdigest())
+        task_hash = str(hashlib.md5(str([j.uuid+j.status for j in task_model]).encode()).hexdigest())
         
         if task_hash != hash:
             break

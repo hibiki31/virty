@@ -111,7 +111,24 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
             start=str(body.nat.dhcp_start),
             end=str(body.nat.dhcp_end)
         )
-        xml = editor.dump_str()  
+        xml = editor.dump_str()
+    elif body.type == "route":
+        if body.route.bridge_name:
+            bridge_name = body.route.bridge_name
+        else:
+            bridge_name = f"v-{secrets.token_hex(4)}"
+            
+        editor = xmllib.XmlEditor("static","net_route")
+        # 内容同じだからNAT|ROUTE
+        editor.network_nat(
+            name=body.name, 
+            bridge=bridge_name, 
+            address=str(body.route.address), 
+            netmask=str(body.route.netmask),
+            start=str(body.route.dhcp_start),
+            end=str(body.route.dhcp_end)
+        )
+        xml = editor.dump_str()
     else:
         raise Exception("Type is incorrect")
 

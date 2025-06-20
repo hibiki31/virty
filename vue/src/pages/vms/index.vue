@@ -7,7 +7,7 @@
         @click="stateCreateDialog = true">CREATE</v-btn>
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
-      density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
+      v-model:page="pageState" density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
       <template v-slot:item.uuid="{ item }">
@@ -48,6 +48,7 @@ import { getPowerColor } from '@/composables/vm'
 const loading = ref(false)
 const stateCreateDialog = ref(false)
 const itemsPerPage = ref(20)
+const pageState = ref(1)
 
 const headers = [
   { title: 'Status', value: 'status' },
@@ -94,7 +95,7 @@ const rescan = () => {
 
 
 useReloadListener(() => {
-  loadItems({ page: 1, itemsPerPage: itemsPerPage.value })
+  loadItems({ page: pageState.value, itemsPerPage: itemsPerPage.value })
 })
 
 </script>

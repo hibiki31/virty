@@ -1,17 +1,25 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import notfound_exception
+from mixin.exception import NoResultFound, notfound_exception
 from mixin.log import setup_logger
 from network.models import NetworkModel
 from project.models import ProjectModel
 from task.functions import TaskManager
 from task.schemas import Task
 
-from .models import *
-from .schemas import *
+from .models import DomainModel
+from .schemas import (
+    CdromForUpdateDomain,
+    DomainForCreate,
+    DomainProjectForUpdate,
+    NetworkForUpdateDomain,
+    PowerStatusForUpdateDomain,
+)
 
 app = APIRouter(
     tags=["vms-task"],
@@ -94,13 +102,15 @@ def patch_api_tasks_vms_uuid_power(
 
     return [task.model]
 
+
 @app.patch("/{uuid}/cdrom", response_model=List[Task], operation_id="control_vm_cdrom")
 def patch_api_tasks_vms_uuid_cdrom(
         uuid: str,
         req: Request,
+        body: CdromForUpdateDomain,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: CdromForUpdateDomain = None,
+
     ):
     """
     umount
@@ -116,9 +126,9 @@ def patch_api_tasks_vms_uuid_cdrom(
 
     task_vm_list = TaskManager(db=db)
     task_vm_list.select('put', 'vm', 'list')
-    task_vm_list.commit(user=cu, dep_uuid=task.model.uuid)
+    task_vm_list.commit(user=cu, req=req, body=body,dep_uuid=task.model.uuid)
 
-    return [task.model]
+    return [task.model, task_vm_list.model]
 
 
 # @app.patch("/name")
@@ -190,7 +200,7 @@ def path_vms_project(
     try:
         vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
-    except:
+    except NoResultFound:
         raise notfound_exception(msg="not found vm or group")
     
     vm.owner_project_id = request.project_id
@@ -215,11 +225,11 @@ def patch_api_vm_network(
 
     
     vm = db.query(DomainModel).filter(DomainModel.uuid==uuid).one_or_none()
-    if vm == None:
+    if vm is None:
         raise HTTPException(status_code=404, detail="domain not found")
     
     net = db.query(NetworkModel).filter(NetworkModel.uuid==body.network_uuid).one_or_none()
-    if net == None:
+    if net is None:
         raise HTTPException(status_code=400, detail="network uuid is worng")
 
     # タスクを追加

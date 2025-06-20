@@ -1,8 +1,6 @@
 import re
-from json import loads
 from time import time
 
-from sqlalchemy import func, nullsfirst
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -11,17 +9,11 @@ from module import cloudinitlib, sshlib, virtlib, xmllib
 from module.ansiblelib import AnsibleManager
 from network.models import (
     NetworkModel,
-    NetworkPoolModel,
-    NetworkPortgroupModel,
-    associations_networks,
-    associations_networks_pools,
 )
 from node.models import NodeModel
 from storage.models import (
-    AssociationStoragePoolModel,
     ImageModel,
     StorageModel,
-    StoragePoolModel,
 )
 from task.functions import TaskBase
 from task.models import TaskModel
@@ -222,136 +214,6 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
     model.message = f"Virtual machine ({req.name}@{model.user_id}) has been added successfully"
     logger.info('task終了')
-
-
-
-
-@worker_task(key="post.vm.project")
-def post_vm_project(self: TaskBase, task: TaskModel, request: TaskRequest):
-    req = DomainTicketForCreate(**loads(task.request))
-    issuance_model = db.query(IssuanceModel).filter(IssuanceModel.id==req.issuance_id).one()
-
-    # メモリのアサインが少ない順で行く
-    nodes = db.query(
-        NodeModel.name.label('node_name'),
-        func.sum(DomainModel.memory).label('memory'),
-    ).outerjoin(DomainModel).group_by(NodeModel.name).order_by(
-        nullsfirst(func.sum(DomainModel.memory).asc())
-    ).all()
-    
-    found_node = False
-
-    for node in nodes:
-        logger.debug(f'{node.node_name} commit memory: {node.memory}')
-
-        flavor_image_model = db.query(ImageModel).filter(
-            ImageModel.flavor_id==req.flavor_id,
-            StorageModel.node_name==node.node_name
-        ).outerjoin(StorageModel).first()
-        # flavorがnodeにないため次へ
-        if flavor_image_model == None:
-            logger.debug(f'{node.node_name} not found flavor {req.flavor_id}')
-            continue
-
-        logger.debug(f'{node.node_name} has flavor {req.flavor_id}')
-
-        storage_pool = db.query(StorageModel).filter(
-            StoragePoolModel.id==req.storage_pool_id,
-            StorageModel.node_name==node.node_name
-        ).outerjoin(
-            AssociationStoragePoolModel
-        ).outerjoin(
-            StoragePoolModel
-        ).first()
-
-        if storage_pool == None:
-            logger.debug(f'{node.node_name} not found {storage_pool.name} in pool {req.storage_pool_id}')
-            continue
-        
-        logger.debug(f'{node.node_name} has {storage_pool.name} in pool {req.storage_pool_id}')
-
-        network_models = {}
-        network_notfound_flag = False
-
-        for net_pool_id in req.interfaces:
-            network_model = db.query(NetworkModel).filter(
-                NetworkPoolModel.id==net_pool_id.id,
-                NetworkModel.node_name==node.node_name
-            ).outerjoin(
-                associations_networks
-            ).outerjoin(
-                NetworkPoolModel
-            ).first()
-
-            port_model = db.query(NetworkPortgroupModel).filter(
-                NetworkPoolModel.id==net_pool_id.id,
-                NetworkPortgroupModel.network.has(node_name=node.node_name)
-            ).outerjoin(
-                associations_networks_pools
-            ).outerjoin(
-                NetworkPoolModel
-            ).first()
-
-            if network_model != None:
-                logger.debug(f'{node.node_name} has {network_model.name} in pool {net_pool_id.id}')
-                network_models[net_pool_id.id] = network_model
-            elif port_model != None:
-                logger.debug(f'{node.node_name} has {port_model.network.name} port {port_model.name} in pool {net_pool_id.id}')
-                network_models[net_pool_id.id] = port_model           
-            else:
-                network_notfound_flag = True
-                logger.debug(f'{node.node_name} not found {net_pool_id.id}')
-                break 
-        if network_notfound_flag:
-            continue
-
-        logger.debug(network_models)
-
-        logger.info(f'{node.node_name} is scheduling pass !! ')
-
-        ## 情報がそろった
-
-        disk = DomainForCreateDisk(
-            type="copy",
-            save_pool_uuid=storage_pool.uuid,
-            original_pool_uuid=flavor_image_model.storage_uuid,
-            original_name=flavor_image_model.name,
-            size_giga_byte=req.flavor_size_g
-        )
-
-        interfaces = []
-
-        for i in req.interfaces:
-            if  isinstance(network_models[i.id], NetworkModel):
-                interfaces.append(DomainForCreateInterface(
-                type="network",
-                mac=i.mac,
-                network_name=network_models[i.id].name,
-                port=None
-                ))
-            elif isinstance(network_models[i.id], NetworkPortgroupModel):
-                interfaces.append(DomainForCreateInterface(
-                type="network",
-                mac=i.mac,
-                network_name=network_models[i.id].network.name,
-                port=network_models[i.id].name
-                ))
-            else:
-                raise Exception("Network class not found")
-
-        res = DomainForCreate(
-            type="ticket",
-            name=req.name,
-            node_name=node.node_name,
-            memory_mega_byte=req.memory,
-            cpu=req.core,
-            disks=[disk],
-            interface=interfaces,
-            cloud_init=req.cloud_init
-        )
-        return res
-
-    raise Exception("avalilabel node not found")
 
 
 @worker_task(key="delete.vm.root")

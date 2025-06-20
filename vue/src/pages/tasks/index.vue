@@ -2,8 +2,8 @@
   <v-card>
     <task-detail-dialog v-model="stateDetailDialog" :item="dataDetailDaalog"></task-detail-dialog>
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
-      :items-per-page-options="itemsPerPAgeOption" density="comfortable" :items-length="items.count" :loading="loading"
-      item-value="name" @update:options="loadItems">
+      v-model:page="pageState" :items-per-page-options="itemsPerPAgeOption" density="comfortable"
+      :items-length="items.count" :loading="loading" item-value="name" @update:options="loadItems">
 
       <template v-slot:item.status="{ value }">
         <v-chip :color="getStatusColor(value)" :text="value.toUpperCase()" variant="flat" size="x-small"></v-chip>
@@ -61,6 +61,7 @@ const stateCreateDialog = ref(false)
 const stateDetailDialog = ref(false)
 const dataDetailDaalog = ref<typeListTask["data"][0]>()
 const itemsPerPage = ref(20)
+const pageState = ref(1)
 
 const taskError = ref('')
 
@@ -89,7 +90,7 @@ async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
 }
 
 async function reload() {
-  await loadItems({ page: 1, itemsPerPage: itemsPerPage.value })
+  await loadItems({ page: pageState.value, itemsPerPage: itemsPerPage.value })
 }
 
 useReloadListener(() => {

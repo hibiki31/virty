@@ -1,3 +1,4 @@
+from os.path import join
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +9,7 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import notfound_exception
 from mixin.log import setup_logger
+from settings import DATA_ROOT
 
 from .models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
 from .schemas import (
@@ -17,6 +19,7 @@ from .schemas import (
     NetworkPool,
     NetworkPoolForCreate,
     NetworkPoolForUpdate,
+    NetworkXML,
 )
 
 app = APIRouter(prefix="/api/networks", tags=["networks"])
@@ -119,3 +122,18 @@ def get_api_networks_uuid(
         raise notfound_exception(msg="Network not found")
 
     return network
+
+
+@app.get("/{uuid}/xml",response_model=NetworkXML)
+def get_api_vm_uuid_xml(
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        uuid:str = None
+    ):
+    try:
+        with open(join(DATA_ROOT, "xml/network", f"{uuid}.xml")) as f:
+            domain_xml = NetworkXML(xml=f.read())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Not found domain")
+
+    return domain_xml

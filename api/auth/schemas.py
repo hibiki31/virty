@@ -1,6 +1,9 @@
 from typing import List, Optional
+
 from pydantic import BaseModel
+
 from mixin.schemas import BaseSchema
+
 
 # RFCでスネークケース指定あるやんけ
 class TokenRFC6749Response(BaseModel):
