@@ -52,6 +52,10 @@
                 :items="itemsImages.data.filter(x => x.storageUuid === disk.originalPoolUuid)" :rules="[r.required]"
                 item-title="name" item-value="name" v-model="disk.originalName"></v-select>
             </v-col>
+            <v-col cols="12" md="6" v-if="disk.type === 'empty'">
+              <p class="text-body-2">After creating the VM, you can attach the iso to the CDROM on the details page.
+              </p>
+            </v-col>
           </v-row>
           <v-divider class="pt-5"></v-divider>
           <!-- ネットワーク -->

@@ -1616,9 +1616,9 @@ export interface components {
             /** Active */
             active: boolean;
             /** Available */
-            available?: number | null;
+            available: number;
             /** Capacity */
-            capacity?: number | null;
+            capacity: number;
             /** Nodename */
             nodeName: string;
             node: components["schemas"]["Node"];
@@ -1629,10 +1629,16 @@ export interface components {
             metaData?: components["schemas"]["StorageMetadata"] | null;
             /** Updatetoken */
             updateToken?: string | null;
-            /** Allocationcommit */
-            allocationCommit?: number | null;
-            /** Capacitycommit */
-            capacityCommit?: number | null;
+            /**
+             * Allocationcommit
+             * @default 0
+             */
+            allocationCommit: number;
+            /**
+             * Capacitycommit
+             * @default 0
+             */
+            capacityCommit: number;
         };
         /** StorageContainerForStoragePool */
         StorageContainerForStoragePool: {
