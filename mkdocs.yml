@@ -1,20 +1,21 @@
 site_name: Vrity Document
+copyright: "&copy; 2019-2025 hibiki31"
 
 theme:
   name: material
+  language: 'ja'
   palette:
     primary: teal
   font:
     text: Noto Sans JP
-    code: Inconsolata
+    code: Roboto Mono
 repo_url: https://github.com/hibiki31/virty
 repo_name: hibiki31/virty
 markdown_extensions:
   - pymdownx.highlight:
-      use_pygments: true
-      noclasses: true
-      pygments_style: monokai
-      linenums: true
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
@@ -27,7 +28,5 @@ extra:
       link: /
       lang: ja
   generator: false
-
-
-site_name: Virty Docs
-copyright: "&copy; 2019-2025 hibiki31"
+  search:
+    language: 'jp'
