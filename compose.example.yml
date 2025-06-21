@@ -1,39 +1,47 @@
-version: "3"
 services:
   api:
-    image: hibiki131/virty-api:latest
-    hostname: virty-api
+    image: hibiki31/virty-api
     volumes:
-      - ./data/app:/opt/data
-      - ./data/key:/root/.ssh/
+      - api-data:/opt/data
+      - api-key:/root/.ssh/
     environment:
       APP_ROOT: "/opt/app"
       DATA_ROOT: "/opt/data"
-      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@virty-db:5432/mydatabase"
+      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
-  web:
-    hostname: virty-web
-    image: hibiki131/virty-web:latest
+  worker:
+    image: hibiki31/virty-api
     volumes:
-      - ./data/nginx:/var/log/nginx/
-    ports:
+      - api-data:/opt/data
+      - api-key:/root/.ssh/
+    environment:
+      APP_ROOT: "/opt/app"
+      DATA_ROOT: "/opt/data"
+      SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
+    restart: always
+    command: python3 /opt/app/worker.py
+  vue:
+    image: hibiki31/virty-vue
+    ports: 
       - 0.0.0.0:8765:80
     restart: always
+    environment:
+      VITE_API_BASE_URL: ""
+  proxy:
+    image: hibiki31/virty-proxy
+    restart: always
+    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
   db:
-    hostname: virty-db
     image: postgres:latest
     volumes:
-      - virty-postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
     restart: unless-stopped
-  proxy:
-    hostname: virty-proxy
-    image: hibiki131/virty-proxy:latest
-    restart: always
-    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://virty-api:8000/api/vms/vnc/%s" 5999
 
 volumes:
-  virty-postgres-data:
+  postgres-data:
+  api-data:
+  api-key:
