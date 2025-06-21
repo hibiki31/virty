@@ -1,5 +1,5 @@
 ---
-title: Netbox
+title: 最小構成
 ---
 
 
