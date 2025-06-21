@@ -1,11 +1,11 @@
+import re
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from mixin.schemas import BaseSchema, GetPagination
 
 
-# RFCでスネークケース指定あるやんけ
 class TokenRFC6749Response(BaseModel):
     access_token: str
     token_type: str
@@ -43,10 +43,26 @@ class UserPage(BaseSchema):
     count: int
     data:List[User]
 
-
 class UserForCreate(BaseSchema):
-    username: str
-    password: str
+    username: str = Field(
+        min_length=3,
+        max_length=30,
+        pattern=r"^[A-Za-z][A-Za-z0-9_-]*$"
+    )
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+        pattern=r'^[^\s]+$'
+    )
+    
+    @field_validator('password')
+    def strong_password(cls, v: str) -> str:
+        categories = sum(
+            bool(re.search(p, v)) for p in (r'[a-z]', r'[A-Z]', r'\d', r'[^A-Za-z0-9]')
+        )
+        if categories < 4:
+            raise ValueError('Password must contain lower-case, upper-case, digit and symbol')
+        return v
 
 
 class UserInDB(UserBase):
@@ -54,8 +70,7 @@ class UserInDB(UserBase):
 
 
 class UserResponse(BaseSchema):
-    user_id: str
-    hashed_password: str
+    username: str
 
 
 class GroupForUpdate(BaseSchema):

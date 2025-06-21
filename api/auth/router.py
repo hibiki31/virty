@@ -16,6 +16,7 @@ from mixin.exception import NoResultFound
 from mixin.log import setup_logger
 from settings import SECRET_KEY
 from user.models import UserModel, UserScopeModel
+from user.schemas import UserResponse
 
 from .function import get_password_hash, verify_password
 from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
@@ -141,38 +142,33 @@ def get_current_user(
     return CurrentUser(id=user_id, token=token, scopes=scopes)
 
 
-@app.post("/setup", tags=["auth"], operation_id="setup")
+@app.post(
+    "/setup", 
+    tags=["auth"], 
+    response_model=UserResponse, 
+    status_code=status.HTTP_201_CREATED,
+)
 def api_auth_setup(
         model: SetupRequest, 
-        db: Session = Depends(get_db)
-    ):
-    if model.username == "":
+        db: Session = Depends(get_db),
+):
+    if db.query(UserModel).count():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Blanks are not allowed in username"
-        )
-
-    # ユーザがいる場合はセットアップ済みなのでイジェクト
-    if not db.query(UserModel).all() == []:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Already initialized"
         )
-
-    # ユーザ追加
-    user_model = UserModel(
-        username=model.username, 
+    user = UserModel(
+        username=model.username,
         hashed_password=get_password_hash(model.password)
     )
-
-    db.add(user_model)
-
-    db.add(UserScopeModel(user_id=user_model.username,name="admin"))
-    db.add(UserScopeModel(user_id=user_model.username,name="user"))
-
+    db.add_all([
+        user,
+        UserScopeModel(user_id=model.username, name="admin"),
+        UserScopeModel(user_id=model.username, name="user")
+    ])
     db.commit()
 
-    return model
+    return user
 
 
 @app.post("", response_model=TokenRFC6749Response, tags=["auth"], operation_id="login")

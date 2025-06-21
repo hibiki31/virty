@@ -130,4 +130,5 @@ pytest_plugins = [
     "tests.fixtures.storage",
     "tests.fixtures.network",
     "tests.fixtures.vm",
+    "tests.fixtures.setup"
 ]
