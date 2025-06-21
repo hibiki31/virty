@@ -56,3 +56,6 @@ nav:
     - example/frr.md
     - example/tailscale.md
     - example/netbox.md
+  - Dev:
+    - dev/repo.md
+    - dev/reference.md
