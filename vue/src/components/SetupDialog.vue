@@ -1,7 +1,7 @@
 <template>
   <v-dialog width="400" v-model="dialogState" persistent>
     <v-card>
-      <v-container>
+      <v-form ref="formRef" @submit.prevent="commit">
         <v-card-title>Setup Virty</v-card-title>
         <v-card-text>
           Create an administrative user.
@@ -13,44 +13,57 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" v-on:click="commit">Setup</v-btn>
+          <v-btn color="primary" type="submit" :loading="loading">Setup</v-btn>
         </v-card-actions>
-      </v-container>
+      </v-form>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { asyncSleep } from '@/composables/sleep'
 import notify from '@/composables/notify'
-import { useAuthStore } from '@/stores/auth'
 import { apiClient } from '@/api'
-import { getCookie, removeCookie, setCookie } from 'typescript-cookie'
+import { asyncSleep } from '@/composables/sleep';
+
 import * as r from '@/composables/rules';
 
-const showPassword = ref(false)
 const dialogState = ref(false)
 const postData = ref({
   username: '',
   password: ''
 })
 
-async function commit() {
-  apiClient.POST("/api/auth/setup", { body: postData.value }).then((res) => {
-    if (res.response.ok) {
-      notify("success", "Setup successful")
-    } else if (res.error) {
+const loading = ref(false)
 
-    }
-  })
+
+async function commit(event: Promise<{ valid: boolean }>) {
+  loading.value = true
+
+  if (!(await event).valid) {
+    return
+  }
+
+  const res = await apiClient.POST("/api/auth/setup", { body: postData.value })
+  await asyncSleep(1000)
+
+  loading.value = false
+
+  if (res.response.ok) {
+    notify("success", "Setup successful")
+    await asyncSleep(500)
+    await reload()
+  } else if (res.error) {
+    notify("error", "Failed Setup", res.error)
+  }
+
+
 }
 
 async function reload() {
   apiClient.GET("/api/version").then((res) => {
     if (res.data) {
-      dialogState.value = res.data.initialized
+      dialogState.value = !res.data.initialized
     }
   })
 }
