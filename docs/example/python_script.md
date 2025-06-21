@@ -4,7 +4,10 @@ title: Python Scirpts
 
 ## 概要
 
-PythonスクリプトからVirty APIを叩いてVMを一気に作成するTipsです。ノードの追加、ストレージの追加、ネットワークの追加などが完了しており、ダッシュボードからVMが作れる状態を想定しています。[最小構成](setup/minimum.md)
+PythonスクリプトからVirty APIを叩いてVMを一気に作成するTipsです。ノードの追加、ストレージの追加、ネットワークの追加などが完了しており、ダッシュボードからVMが作れる状態を想定しています。[最小構成](/setup/minimum.md)
+
+
+## VMの一括作成
 
 ```python
 import requests
