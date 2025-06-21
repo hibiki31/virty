@@ -45,11 +45,11 @@ extra:
     provider: google
     property: G-XNFL4J0WNY
 nav:
-  - home: index.md
-  - seup:
-    - minimum.md
-    - vlan.md
-    - ceph.md
+  - Home: index.md
+  - Setup:
+    - setup/minimum.md
+    - setup/vlan.md
+    - setup/ceph.md
   - example:
-    - frr-vxlan.md
-    - vmcreate_python_script.md
+    - example/frr-vxlan.md
+    - example/python_script.md

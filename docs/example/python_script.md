@@ -1,5 +1,5 @@
 ---
-title: Pythonスクリプトで自動化
+title: Python Scirpts
 ---
 
 ## 概要

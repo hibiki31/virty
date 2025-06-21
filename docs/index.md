@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Home
 
 Virtyは、低コスト運用を目的とした、KVM管理WEBアプリケーションです。Virtyはコントローラとして、SSH経由でLibvirt-API、Ansibleを実行してノードを管理します。
