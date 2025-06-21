@@ -1,1 +1,15 @@
 site_name: Vrity Document
+
+theme:
+  name: material
+  palette:
+    primary: teal
+repo_url: https://github.com/hibiki31/virty
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
