@@ -1,14 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
-from task.functions import TaskManager
-from task.schemas import Task
 
 from .models import (
     AssociationStoragePoolModel,
@@ -19,7 +17,6 @@ from .models import (
 )
 from .schemas import (
     Storage,
-    StorageForCreate,
     StorageForQuery,
     StorageMetadataForUpdate,
     StoragePage,
@@ -28,12 +25,12 @@ from .schemas import (
     StoragePoolForUpdate,
 )
 
-app = APIRouter()
+app = APIRouter(prefix="/api/storages", tags=["storages"])
 logger = setup_logger(__name__)
 
 
-@app.get("/api/storages", tags=["storages"], response_model=StoragePage, operation_id="get_storages")
-def get_api_storages(
+@app.get("", response_model=StoragePage)
+def get_storages(
         param: StorageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -77,8 +74,8 @@ def get_api_storages(
     return {"count": count, "data": res}
 
 
-@app.patch("/api/storages", tags=["storages"], operation_id="update_storage_metadata")
-def post_api_storage(
+@app.patch("")
+def update_storage_metadata(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: StorageMetadataForUpdate = None
@@ -88,8 +85,8 @@ def post_api_storage(
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 
 
-@app.get("/api/storages/pools", tags=["storages"], response_model=List[StoragePool], operation_id="get_storage_pools")
-def get_api_storages_pools(
+@app.get("/pools", response_model=List[StoragePool])
+def get_storage_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -97,8 +94,8 @@ def get_api_storages_pools(
     return db.query(StoragePoolModel).all()
 
 
-@app.post("/api/storages/pools", tags=["storages"], operation_id="create_storage_pool")
-def post_api_storages_pools(
+@app.post("/pools")
+def create_storage_pool(
         request_model: StoragePoolForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -113,8 +110,8 @@ def post_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.patch("/api/storages/pools", tags=["storages"], operation_id="update_storage_pool")
-def patch_api_storages_pools(
+@app.patch("/pools")
+def update_storage_pool(
         request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -128,8 +125,8 @@ def patch_api_storages_pools(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.get("/api/storages/{uuid}", tags=["storages"], response_model=Storage, operation_id="get_storage")
-def get_api_storages_uuid(
+@app.get("/{uuid}", response_model=Storage)
+def get_storage(
         uuid: str,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -162,35 +159,3 @@ def get_api_storages_uuid(
     return res
 
 
-@app.post("/api/tasks/storages", tags=["storages-task"], response_model=List[Task], operation_id="create_storage")
-def post_tasks_api_storage(
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-        body: StorageForCreate = None
-    ):
-
-    task = TaskManager(db=db)
-    task.select(method='post', resource='storage', object='root')
-    task.commit(user=cu, req=req, body=body)
-
-    task_put_list = TaskManager(db=db)
-    task_put_list.select('put', 'storage', 'list')
-    task_put_list.commit(user=cu, req=req)
-
-    return [task.model, task_put_list.model]
-
-
-@app.delete("/api/tasks/storages/{uuid}", tags=["storages-task"], response_model=List[Task], operation_id="delete_storage")
-def delete_api_storages(
-        uuid: str,
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-
-    task = TaskManager(db=db)
-    task.select(method='delete', resource='storage', object='root')
-    task.commit(user=cu, req=req, param={"uuid": uuid})
-
-    return [task.model]

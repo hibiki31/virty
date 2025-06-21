@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.routing import APIRoute
 
 from auth.router import app as auth_router
 from domain.router import app as domain_router
@@ -8,6 +9,7 @@ from domain.router_task import app as domain_task_router
 from exporter.router import app as exporter_router
 from flavor.router import app as flavor_router
 from images.router import app as image_router
+from images.router_task import app as image_task_router
 from mixin.log import setup_logger
 from mixin.router import app as mixin_router
 from network.router import app as network_router
@@ -15,12 +17,26 @@ from network.router_task import app as network_task_router
 from node.router import app as node_router
 from node.router_task import app as node_task_router
 from project.router import app as project_router
+from project.router_task import app as project_task_router
 from settings import API_VERSION
 from storage.router import app as storage_router
+from storage.router_task import app as storage_task_router
 from task.router import app as task_router
 from user.router import app as user_router
 
 logger = setup_logger(__name__)
+
+
+def use_route_names_as_operation_ids(app: FastAPI) -> None:
+    """
+    Simplify operation IDs so that generated API clients have simpler function
+    names.
+
+    Should be called only after all routes have been added.
+    """
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            route.operation_id = route.name  # in this case, 'read_items'
 
 
 tags_metadata = [
@@ -70,16 +86,19 @@ app.include_router(node_task_router)
 app.include_router(domain_router)
 app.include_router(domain_task_router)
 app.include_router(storage_router)
+app.include_router(storage_task_router)
 app.include_router(image_router)
+app.include_router(image_task_router)
 app.include_router(network_router)
 app.include_router(network_task_router)
 app.include_router(user_router)
 app.include_router(project_router)
+app.include_router(project_task_router)
 app.include_router(flavor_router)
 app.include_router(exporter_router)
 app.include_router(mixin_router)
 
-
+use_route_names_as_operation_ids(app)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=7799, reload=True)

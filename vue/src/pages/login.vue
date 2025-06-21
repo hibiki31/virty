@@ -1,4 +1,5 @@
 <template>
+  <setup-dialog></setup-dialog>
   <v-container class="fill-height" fluid v-if="auth.$state.tokenValidated && !auth.$state.authed">
     <v-row justify="center">
       <v-col cols="12" sm="8" md="4">

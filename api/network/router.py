@@ -26,8 +26,8 @@ app = APIRouter(prefix="/api/networks", tags=["networks"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=NetworkPage, operation_id="get_networks")
-def get_api_networks(
+@app.get("", response_model=NetworkPage)
+def get_networks(
         param: NetworkForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -51,8 +51,8 @@ def get_api_networks(
     return { "count": count, "data": query.all() }
 
 
-@app.get("/pools", response_model=List[NetworkPool], operation_id="get_network_pools")
-def get_api_networks_pools(
+@app.get("/pools", response_model=List[NetworkPool])
+def get_network_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -60,8 +60,8 @@ def get_api_networks_pools(
     return db.query(NetworkPoolModel).all()
 
 
-@app.post("/pools", operation_id="create_network_pool")
-def post_api_networks_pools(
+@app.post("/pools")
+def create_network_pool(
         model: NetworkPoolForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -72,8 +72,8 @@ def post_api_networks_pools(
     return True
 
 
-@app.patch("/pools", operation_id="update_network_pool")
-def patch_api_networks_pools(
+@app.patch("/pools")
+def update_network_pool(
         model: NetworkPoolForUpdate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
@@ -91,8 +91,8 @@ def patch_api_networks_pools(
     return True
 
 
-@app.delete("/pools/{id}", operation_id="delete_network_pool")
-def delete_pools_uuid(
+@app.delete("/pools/{id}")
+def delete_network_pool(
         id: int,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -110,8 +110,8 @@ def delete_pools_uuid(
     return {"detail": "success"}
 
 
-@app.get("/{uuid}", response_model=Network, operation_id="get_network")
-def get_api_networks_uuid(
+@app.get("/{uuid}", response_model=Network)
+def get_network(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -125,7 +125,7 @@ def get_api_networks_uuid(
 
 
 @app.get("/{uuid}/xml",response_model=NetworkXML)
-def get_api_vm_uuid_xml(
+def get_network_xml(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = None

@@ -21,11 +21,12 @@ This can be done on the host that will be the hypervisor, or on the laptop at ha
 ```
 mkdir virty
 cd virty
-wget https://raw.githubusercontent.com/hibiki31/virty/master/docker-compose.example.yml -O docker-compose.yml
+wget https://raw.githubusercontent.com/hibiki31/virty/refs/heads/master/compose.example.yml -O compose.yml
 docker compose up -d
 ```
 
 Once activated, access http://localhost:8765 with a web browser.
+
 
 ### Preparation of managed nodes
 

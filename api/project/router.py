@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -9,22 +9,18 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from project.models import ProjectModel
 from project.schemas import (
-    ProjectForCreate,
     ProjectForQuery,
     ProjectForUpdate,
     ProjectPage,
 )
-from task.functions import TaskManager
 from user.models import UserModel
 
+app = APIRouter(prefix="/api/projects", tags=["projects"])
 logger = setup_logger(__name__)
-app = APIRouter(
-    tags=["projects"],
-)
 
 
-@app.get("/api/projects", response_model=ProjectPage, operation_id="get_projects")
-def get_api_projects(
+@app.get("", response_model=ProjectPage)
+def get_projects(
         param: ProjectForQuery = Depends(),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
@@ -65,38 +61,10 @@ def get_api_projects(
         })
 
     return {"count": count, "data": res}
-
-
-@app.post("/api/tasks/projects", operation_id="create_project")
-def post_api_projects(
-        body: ProjectForCreate,
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    task = TaskManager(db=db)
-    task.select(method='post', resource='project', object='root')
-    task.commit(user=cu, req=req, body=body)
-
-    return [task.model]
-
-
-@app.delete("/api/tasks/projects/{project_id}", operation_id="delete_project")
-def delete_api_projects(
-        project_id: str,
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    task = TaskManager(db=db)
-    task.select(method='delete', resource='project', object='root')
-    task.commit(user=cu, req=req, param={"project_id": project_id})
-
-    return [task.model]
     
 
-@app.put("/api/projects", operation_id="update_project")
-def put_api_projects(
+@app.put("")
+def update_project(
         request: ProjectForUpdate, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)

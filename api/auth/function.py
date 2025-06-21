@@ -12,4 +12,4 @@ def get_password_hash(password):
     return bcrypt.hashpw(
         bytes(password, encoding="utf-8"),
         bcrypt.gensalt(),
-    )
+    ).decode("utf-8")

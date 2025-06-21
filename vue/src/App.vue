@@ -1,5 +1,5 @@
 <template>
-  <notifications position="bottom right" width="290px">
+  <notifications position="bottom right" width="290px" class="pb-8">
     <template #body="props">
       <v-alert :type="props.item.type" class="text-caption ma-1" density="compact" border="start" variant="text"
         style="background-color: white"><v-alert-title class="text-subtitle-2">{{ props.item.title }}</v-alert-title>

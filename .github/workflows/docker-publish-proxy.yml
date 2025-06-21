@@ -1,4 +1,4 @@
-name: Docker build test
+name: Publish Docker image Poxy
 
 on:
   push:

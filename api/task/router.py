@@ -12,12 +12,12 @@ from task.models import TaskModel
 from task.schemas import Task, TaskForQuery, TaskIncomplete, TaskPage
 
 app = APIRouter(
-    prefix="/api",
+    prefix="/api/tasks",
     tags=["tasks"]
 )
 
 
-@app.get("/tasks", response_model=TaskPage, operation_id="get_tasks")
+@app.get("", response_model=TaskPage)
 def get_tasks(
         param: TaskForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
@@ -57,7 +57,7 @@ def get_tasks(
     return { "count": count, "data": task }
 
 
-@app.delete("/tasks/", response_model=List[Task], operation_id="delete_tasks")
+@app.delete("", response_model=List[Task])
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -70,8 +70,8 @@ def delete_tasks(
     return model
 
 
-@app.get("/tasks/incomplete", response_model=TaskIncomplete, operation_id="get_incomplete_tasks")
-def get_tasks_incomplete(
+@app.get("/incomplete", response_model=TaskIncomplete)
+def get_incomplete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         hash: str = None,
@@ -104,8 +104,8 @@ def get_tasks_incomplete(
     return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
 
 
-@app.get("/tasks/{uuid}", response_model=Task, operation_id="get_task")
-def get_task_uuid(
+@app.get("/{uuid}", response_model=Task)
+def get_task(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
