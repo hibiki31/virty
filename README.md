@@ -1,6 +1,8 @@
 # Virty
 
 [![Docker build test](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml/badge.svg)](https://github.com/hibiki31/virty/actions/workflows/docker-image.yml)
+[![Static Badge](https://img.shields.io/badge/Docs-%E6%97%A5%E6%9C%AC%E8%AA%9E-blue?style=flat&logo=github&label=Docs&color=blue)
+](https://hibiki31.github.io/virty/)
 
 KVM management web application for low cost and immediate deployment.
 Manage nodes with SSH access using Libvirt-API, Ansible, etc.
