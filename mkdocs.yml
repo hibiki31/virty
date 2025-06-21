@@ -4,12 +4,30 @@ theme:
   name: material
   palette:
     primary: teal
+  font:
+    text: Noto Sans JP
+    code: Inconsolata
 repo_url: https://github.com/hibiki31/virty
+repo_name: hibiki31/virty
 markdown_extensions:
   - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
+      use_pygments: true
+      noclasses: true
+      pygments_style: monokai
+      linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: true
+extra:
+  alternate:
+    - name: Japanese
+      link: /
+      lang: ja
+  generator: false
+
+
+site_name: Virty Docs
+copyright: "&copy; 2019-2025 hibiki31"
