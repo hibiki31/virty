@@ -929,8 +929,8 @@ export interface components {
             /** Username */
             username: string;
         };
-        /** Body_login_api_auth_post */
-        Body_login_api_auth_post: {
+        /** Body_login */
+        Body_login: {
             /** Grant Type */
             grant_type?: string | null;
             /** Username */
@@ -1994,7 +1994,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_auth_post"];
+                "application/x-www-form-urlencoded": components["schemas"]["Body_login"];
             };
         };
         responses: {

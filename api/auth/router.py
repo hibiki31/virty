@@ -168,7 +168,10 @@ def api_auth_setup(
     return user
 
 
-@app.post("", response_model=TokenRFC6749Response)
+## 恐らくFastAPIの仕様でform_dataは明示的にOperationID指定しないとBodyスキーマの名前が自動生成されたものになってしまう。
+# "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_auth_post"];
+# "application/x-www-form-urlencoded": components["schemas"]["Body_login"];
+@app.post("", response_model=TokenRFC6749Response, operation_id="login")
 def login(
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
