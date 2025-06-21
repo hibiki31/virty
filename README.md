@@ -7,6 +7,8 @@ Manage nodes with SSH access using Libvirt-API, Ansible, etc.
 
 Nodes are Linux with SSH connectivity and provisioning can be done through the UI.
 
+<img width="1436" alt="2025-06-22 3 00 45" src="https://github.com/user-attachments/assets/1417a191-df4d-43a3-9f27-2d527a1d7b0c" />
+
 ### Disclaimer
 
 The author is not responsible for any damage caused by the use of this software.
