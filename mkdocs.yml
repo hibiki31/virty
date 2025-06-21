@@ -50,6 +50,9 @@ nav:
     - setup/minimum.md
     - setup/vlan.md
     - setup/ceph.md
-  - example:
-    - example/frr-vxlan.md
+  - Example:
     - example/python_script.md
+    - example/frr-vxlan.md
+    - example/frr.md
+    - example/tailscale.md
+    - example/netbox.md
