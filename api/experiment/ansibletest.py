@@ -1,13 +1,13 @@
-from ansible import context
-from ansible.cli import CLI
-from ansible.module_utils.common.collections import ImmutableDict
-from ansible.executor.playbook_executor import PlaybookExecutor
-from ansible.parsing.dataloader import DataLoader
-from ansible.inventory.manager import InventoryManager
-from ansible.vars.manager import VariableManager
-from ansible.plugins.callback import CallbackBase
 import json
 
+from ansible import context
+from ansible.cli import CLI
+from ansible.executor.playbook_executor import PlaybookExecutor
+from ansible.inventory.manager import InventoryManager
+from ansible.module_utils.common.collections import ImmutableDict
+from ansible.parsing.dataloader import DataLoader
+from ansible.plugins.callback import CallbackBase
+from ansible.vars.manager import VariableManager
 
 loader = DataLoader()
 
@@ -42,7 +42,7 @@ class ResultCallback(CallbackBase):
 results_callback = ResultCallback()
 
 context.CLIARGS = ImmutableDict(tags={}, listtags=False, listtasks=False, listhosts=False, syntax=False, connection='ssh',
-                    module_path=None, forks=100, remote_user='tmcit', private_key_file=None,
+                    module_path=None, forks=100, remote_user='', private_key_file=None,
                     ssh_common_args=None, ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True,
                     become_method='Sudo', become_user='root', verbosity=True, check=False, start_at_task=None, stdout_callback=results_callback)
 

@@ -9,19 +9,16 @@ from user.models import UserModel, UserScopeModel
 from user.schemas import TokenData, UserForCreate, UserForQuery, UserPage
 
 logger = setup_logger(__name__)
-app = APIRouter(
-    prefix="/api",
-    tags=["users"],
-)
+app = APIRouter(prefix="/api/users", tags=["users"])
 
 
-@app.get("/users/me", response_model=TokenData, operation_id="get_current_user")
-def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
+@app.get("/me", response_model=TokenData)
+def get_current_user(current_user: CurrentUser = Depends(get_current_user)):
     return current_user
 
 
-@app.post("/users", operation_id="create_user")
-def post_api_users(
+@app.post("")
+def create_user(
         request: UserForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
@@ -52,8 +49,8 @@ def post_api_users(
     return user_model
 
 
-@app.get("/users", response_model=UserPage, operation_id="get_users")
-def get_api_users(
+@app.get("", response_model=UserPage)
+def get_users(
         param: UserForQuery = Depends(),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
@@ -70,7 +67,7 @@ def get_api_users(
     return {"count": count, "data": query.all()}
 
 
-@app.delete("/users/{username}", operation_id="delete_user")
+@app.delete("/{username}")
 def delete_user(
         username: str,
         db: Session = Depends(get_db),

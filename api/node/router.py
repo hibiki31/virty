@@ -26,8 +26,8 @@ app = APIRouter(prefix="/api/nodes", tags=["nodes"])
 logger = setup_logger(__name__)
 
 
-@app.get("", response_model=NodePage, operation_id="get_nodes")
-def get_api_nodes(
+@app.get("", response_model=NodePage)
+def get_nodes(
         param: NodeForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -45,8 +45,8 @@ def get_api_nodes(
     return {"count": count, "data": query.all()}
 
 
-@app.post("/key", operation_id="update_ssh_key_pair")
-def post_ssh_key_pair(
+@app.post("/key")
+def create_ssh_key_pair(
         model: SSHKeyPair,
         current_user: CurrentUser = Depends(get_current_user)
     ):
@@ -99,7 +99,7 @@ def post_ssh_key_pair(
     return {}
 
 
-@app.get("/key", response_model=SSHPublicKey, operation_id="get_ssh_key_pair")
+@app.get("/key", response_model=SSHPublicKey)
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     home = os.path.expanduser("~")
     keys = {
@@ -119,8 +119,8 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     return SSHPublicKey(public_key=public_key)
 
 
-@app.get("/{name}", response_model=Node, operation_id="get_node")
-def get_api_node(
+@app.get("/{name}", response_model=Node)
+def get_node(
         name: str,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -134,7 +134,7 @@ def get_api_node(
 
 
 @app.get("/{name}/facts")
-def get_node_name_facts(
+def get_node_facts(
         name: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -149,7 +149,7 @@ def get_node_name_facts(
 
 
 @app.get("/{name}/info",response_model=NodeInfo)
-def get_node_name_network(
+def get_node_info(
         name: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),

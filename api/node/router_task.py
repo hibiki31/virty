@@ -16,8 +16,8 @@ app = APIRouter(prefix="/api/tasks/nodes", tags=["nodes-task"])
 logger = setup_logger(__name__)
 
 
-@app.post("", response_model=List[Task], operation_id="create_node")
-def post_tasks_nodes(
+@app.post("", response_model=List[Task])
+def create_node(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -57,8 +57,8 @@ def post_tasks_nodes(
     return res_task
 
 
-@app.delete("/{name}", response_model=List[Task], operation_id="delete_node")
-def delete_tasks_nodes_name(
+@app.delete("/{name}", response_model=List[Task])
+def delete_node(
         name: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -72,8 +72,8 @@ def delete_tasks_nodes_name(
     return [task.model]
 
 
-@app.patch("/roles", response_model=Task, operation_id="update_node_role")
-def patch_api_node_role(
+@app.patch("/roles", response_model=Task)
+def update_node_role(
         body: NodeRoleForUpdate,
         req: Request,
         current_user: CurrentUser = Depends(get_current_user),

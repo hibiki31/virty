@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
@@ -8,23 +8,21 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from node.models import NodeModel
 from storage.models import ImageModel, StorageMetadataModel, StorageModel
-from task.functions import TaskManager
 
 from .schemas import (
     Image,
     ImageDomain,
-    ImageDownloadForCreate,
     ImageForQuery,
     ImageForUpdateImageFlavor,
     ImagePage,
 )
 
-app = APIRouter()
+app = APIRouter(prefix="/api/images", tags=["images"])
 logger = setup_logger(__name__)
 
 
-@app.get("/api/images", tags=["images"], response_model=ImagePage, operation_id="get_images")
-def get_api_images(
+@app.get("", response_model=ImagePage)
+def get_images(
         param: ImageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -84,21 +82,8 @@ def get_api_images(
     return {"count": count, "data": res}
 
 
-@app.put("/api/tasks/images", tags=["images-task"], operation_id="refresh_images")
-def put_api_images(
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    task = TaskManager(db=db)
-    task.select(method='put', resource='storage', object='list')
-    task.commit(user=cu, req=req)
-
-    return [task.model]
-
-
-@app.patch("/api/images", tags=["images"], operation_id="update_image_flavor")
-def patch_api_images(
+@app.patch("")
+def update_image_flavor(
         req: ImageForUpdateImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -117,17 +102,3 @@ def patch_api_images(
         ).one()
     return res
 
-
-@app.post("/api/tasks/images/download", tags=["images-task"], operation_id="download_image")
-def post_image_download(
-        req: Request,
-        body: ImageDownloadForCreate,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-
-    task = TaskManager(db=db)
-    task.select(method='post', resource='image', object='download')
-    task.commit(user=cu, req=req, body=body)
-
-    return [task.model]

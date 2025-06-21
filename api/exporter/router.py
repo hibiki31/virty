@@ -1,24 +1,17 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import PlainTextResponse
-
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from domain.models import DomainModel
-
-
 from mixin.database import get_db
 from task.models import TaskModel
 
-
-app = APIRouter(
-    prefix="/api/metrics",
-    tags=["metrics"],
-)
+app = APIRouter(prefix="/api/metrics", tags=["metrics"])
 
 
-@app.get("", response_class=PlainTextResponse, operation_id="get_metrics")
-def exporter_get(
+@app.get("", response_class=PlainTextResponse)
+def get_metrics(
         db: Session = Depends(get_db)
     ):
     vm_metric = db.query(

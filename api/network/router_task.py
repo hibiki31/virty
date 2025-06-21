@@ -14,8 +14,8 @@ app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
 
 
-@app.put("", response_model=List[Task], operation_id="refresh_networks")
-def put_api_networks(
+@app.put("", response_model=List[Task])
+def refresh_networks(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -28,8 +28,8 @@ def put_api_networks(
     return [task.model]
 
 
-@app.post("", response_model=List[Task], operation_id="create_network")
-def post_api_storage(
+@app.post("", response_model=List[Task])
+def create_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -48,8 +48,8 @@ def post_api_storage(
     return [ task.model, task_put_list.model ]
 
 
-@app.post("/{uuid}/ovs", response_model=List[Task], operation_id="create_network_ovs")
-def post_uuid_ovs(
+@app.post("/{uuid}/ovs", response_model=List[Task])
+def create_network_ovs(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
@@ -69,7 +69,7 @@ def post_uuid_ovs(
 
 
 @app.post("/providers", response_model=List[Task])
-def post_uuid_ovs(
+def create_network_providers(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -83,8 +83,8 @@ def post_uuid_ovs(
     return [ task.model ]
 
 
-@app.delete("/{uuid}/ovs/{name}", response_model=List[Task], operation_id="delete_network_ovs")
-def post_api_networks_uuid_ovs(
+@app.delete("/{uuid}/ovs/{name}", response_model=List[Task])
+def delete_network_ovs(
         uuid: str,
         name: str,
         req: Request,
@@ -112,8 +112,8 @@ def post_api_networks_uuid_ovs(
     return [ task.model, task_put_list.model ]
 
 
-@app.delete("/{uuid}", response_model=List[Task], operation_id="delete_network")
-def delete_api_storage(
+@app.delete("/{uuid}", response_model=List[Task])
+def delete_network(
         uuid: str,
         req: Request,
         cu: CurrentUser = Depends(get_current_user),

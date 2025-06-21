@@ -14,15 +14,13 @@ from settings import DATA_ROOT
 from .models import DomainModel
 from .schemas import DomainDetail, DomainForQuery, DomainPage, DomainXML
 
-app = APIRouter(
-    tags=["vms"]
-)
+app = APIRouter(prefix="/api/vms", tags=["vms"])
 
 logger = setup_logger(__name__)
 
 
-@app.get("/api/vms",response_model=DomainPage, operation_id="get_vms")
-def get_api_domain(
+@app.get("",response_model=DomainPage)
+def get_vms(
         param: DomainForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -52,8 +50,8 @@ def get_api_domain(
     return {"count": count, "data": vms}
 
 
-@app.get("/api/vms/{uuid}",response_model=DomainDetail, operation_id="get_vm")
-def get_api_domain_uuid(
+@app.get("/{uuid}",response_model=DomainDetail, operation_id="get_vm")
+def get_vm(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = None
@@ -66,8 +64,8 @@ def get_api_domain_uuid(
     return domain
 
 
-@app.get("/api/vms/{uuid}/xml",response_model=DomainXML)
-def get_api_vm_uuid_xml(
+@app.get("/{uuid}/xml",response_model=DomainXML)
+def get_vm_xml(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         uuid:str = None
@@ -81,8 +79,8 @@ def get_api_vm_uuid_xml(
     return domain_xml
 
 
-@app.get("/api/vms/vnc/{token}", operation_id="get_vnc_address")
-def get_api_domain_vnc_token(
+@app.get("/vnc/{token}")
+def get_vnc_address(
         token: str,
         db: Session = Depends(get_db),
     ):

@@ -9,14 +9,11 @@ from .models import FlavorModel
 from .schemas import Flavor, FlavorForCreate, FlavorForQuery, FlavorPage
 
 logger = setup_logger(__name__)
-app = APIRouter(
-    prefix="/api/flavors",
-    tags=["flavors"],
-)
+app = APIRouter(prefix="/api/flavors", tags=["flavors"])
 
 
-@app.post("", operation_id="create_flavor")
-def post_api_flavors(
+@app.post("")
+def create_flavor(
         request_model: FlavorForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -34,8 +31,8 @@ def post_api_flavors(
     return db.query(FlavorModel).filter(FlavorModel.id==flavor_model.id).all()
 
 
-@app.get("", response_model=FlavorPage, operation_id="get_flavors")
-def get_api_flavors(
+@app.get("", response_model=FlavorPage)
+def get_flavors(
         param: FlavorForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
@@ -53,8 +50,8 @@ def get_api_flavors(
     return {"count": count, "data": query.all()}
 
 
-@app.delete("/{flavor_id}", response_model=Flavor, operation_id="delete_flavor")
-def delete_flavors(
+@app.delete("/{flavor_id}", response_model=Flavor)
+def delete_flavor(
         flavor_id: int,
         eq: Request,
         cu: CurrentUser = Depends(get_current_user),

@@ -24,9 +24,7 @@ from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 logger = setup_logger(__name__)
 
 
-app = APIRouter(
-    prefix="/api/auth"
-)
+app = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 scopes_dict = {
@@ -144,7 +142,6 @@ def get_current_user(
 
 @app.post(
     "/setup", 
-    tags=["auth"], 
     response_model=UserResponse, 
     status_code=status.HTTP_201_CREATED,
 )
@@ -171,8 +168,8 @@ def api_auth_setup(
     return user
 
 
-@app.post("", response_model=TokenRFC6749Response, tags=["auth"], operation_id="login")
-def login_for_access_token(
+@app.post("", response_model=TokenRFC6749Response)
+def login(
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
     ):
@@ -198,8 +195,8 @@ def login_for_access_token(
     return {"access_token": access_token, "token_type": "Bearer"}
 
 
-@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse, operation_id="validate_token")
-def read_auth_validate(
+@app.get("/validate", tags=["auth"], response_model=AuthValidateResponse)
+def validate_token(
         current_user: CurrentUser = Security(get_current_user, scopes=["user"])
     ):
     return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}

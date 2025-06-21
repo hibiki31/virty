@@ -41,8 +41,8 @@ async function commit() {
   apiClient.POST("/api/auth/setup", { body: postData.value }).then((res) => {
     if (res.response.ok) {
       notify("success", "Setup successful")
-    } else {
-      notify("error", "known value")
+    } else if (res.error) {
+
     }
   })
 }

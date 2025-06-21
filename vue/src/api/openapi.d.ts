@@ -15,22 +15,6 @@ export interface paths {
         get: operations["get_tasks"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tasks/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
         /** Delete Tasks */
         delete: operations["delete_tasks"];
         options?: never;
@@ -45,7 +29,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Tasks Incomplete */
+        /** Get Incomplete Tasks */
         get: operations["get_incomplete_tasks"];
         put?: never;
         post?: never;
@@ -62,7 +46,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Task Uuid */
+        /** Get Task */
         get: operations["get_task"];
         put?: never;
         post?: never;
@@ -82,7 +66,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Api Auth Setup */
-        post: operations["setup"];
+        post: operations["api_auth_setup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -98,7 +82,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login For Access Token */
+        /** Login */
         post: operations["login"];
         delete?: never;
         options?: never;
@@ -113,7 +97,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read Auth Validate */
+        /** Validate Token */
         get: operations["validate_token"];
         put?: never;
         post?: never;
@@ -130,7 +114,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Nodes */
+        /** Get Nodes */
         get: operations["get_nodes"];
         put?: never;
         post?: never;
@@ -150,8 +134,8 @@ export interface paths {
         /** Get Ssh Key Pair */
         get: operations["get_ssh_key_pair"];
         put?: never;
-        /** Post Ssh Key Pair */
-        post: operations["update_ssh_key_pair"];
+        /** Create Ssh Key Pair */
+        post: operations["create_ssh_key_pair"];
         delete?: never;
         options?: never;
         head?: never;
@@ -165,7 +149,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Node */
+        /** Get Node */
         get: operations["get_node"];
         put?: never;
         post?: never;
@@ -182,8 +166,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Node Name Facts */
-        get: operations["get_node_name_facts_api_nodes__name__facts_get"];
+        /** Get Node Facts */
+        get: operations["get_node_facts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -199,8 +183,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Node Name Network */
-        get: operations["get_node_name_network_api_nodes__name__info_get"];
+        /** Get Node Info */
+        get: operations["get_node_info"];
         put?: never;
         post?: never;
         delete?: never;
@@ -218,7 +202,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Tasks Nodes */
+        /** Create Node */
         post: operations["create_node"];
         delete?: never;
         options?: never;
@@ -236,7 +220,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Tasks Nodes Name */
+        /** Delete Node */
         delete: operations["delete_node"];
         options?: never;
         head?: never;
@@ -256,7 +240,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Api Node Role */
+        /** Update Node Role */
         patch: operations["update_node_role"];
         trace?: never;
     };
@@ -267,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Domain */
+        /** Get Vms */
         get: operations["get_vms"];
         put?: never;
         post?: never;
@@ -284,7 +268,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Domain Uuid */
+        /** Get Vm */
         get: operations["get_vm"];
         put?: never;
         post?: never;
@@ -301,8 +285,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Vm Uuid Xml */
-        get: operations["get_api_vm_uuid_xml_api_vms__uuid__xml_get"];
+        /** Get Vm Xml */
+        get: operations["get_vm_xml"];
         put?: never;
         post?: never;
         delete?: never;
@@ -318,7 +302,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Domain Vnc Token */
+        /** Get Vnc Address */
         get: operations["get_vnc_address"];
         put?: never;
         post?: never;
@@ -336,9 +320,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Publish Task To Update Vm List */
+        /** Refresh Vms */
         put: operations["refresh_vms"];
-        /** Post Api Vms */
+        /** Create Vm */
         post: operations["create_vm"];
         delete?: never;
         options?: never;
@@ -356,7 +340,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Api Domains */
+        /** Delete Vm */
         delete: operations["delete_vm"];
         options?: never;
         head?: never;
@@ -376,7 +360,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Api Tasks Vms Uuid Power */
+        /** Update Vm Power Status */
         patch: operations["update_vm_power_status"];
         trace?: never;
     };
@@ -394,7 +378,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Patch Api Tasks Vms Uuid Cdrom
+         * Control Vm Cdrom
          * @description umount
          *     - path = null
          *
@@ -404,7 +388,7 @@ export interface paths {
         patch: operations["control_vm_cdrom"];
         trace?: never;
     };
-    "/api/tasks/vms/project": {
+    "/api/tasks/vms/{uuid}/project": {
         parameters: {
             query?: never;
             header?: never;
@@ -417,8 +401,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Path Vms Project */
-        patch: operations["path_vms_project_api_tasks_vms_project_patch"];
+        /** Update Vm Project */
+        patch: operations["update_vm_project"];
         trace?: never;
     };
     "/api/tasks/vms/{uuid}/network": {
@@ -435,7 +419,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Patch Api Vm Network
+         * Update Vm Network
          * @description **Power off required**
          *
          *     Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on 'network' network type
@@ -450,14 +434,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Storages */
+        /** Get Storages */
         get: operations["get_storages"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Post Api Storage */
+        /** Update Storage Metadata */
         patch: operations["update_storage_metadata"];
         trace?: never;
     };
@@ -468,15 +452,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Storages Pools */
+        /** Get Storage Pools */
         get: operations["get_storage_pools"];
         put?: never;
-        /** Post Api Storages Pools */
+        /** Create Storage Pool */
         post: operations["create_storage_pool"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Api Storages Pools */
+        /** Update Storage Pool */
         patch: operations["update_storage_pool"];
         trace?: never;
     };
@@ -487,7 +471,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Storages Uuid */
+        /** Get Storage */
         get: operations["get_storage"];
         put?: never;
         post?: never;
@@ -506,7 +490,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Tasks Api Storage */
+        /** Create Storage */
         post: operations["create_storage"];
         delete?: never;
         options?: never;
@@ -524,7 +508,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Api Storages */
+        /** Delete Storage */
         delete: operations["delete_storage"];
         options?: never;
         head?: never;
@@ -538,14 +522,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Images */
+        /** Get Images */
         get: operations["get_images"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Api Images */
+        /** Update Image Flavor */
         patch: operations["update_image_flavor"];
         trace?: never;
     };
@@ -557,7 +541,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Put Api Images */
+        /** Refresh Images */
         put: operations["refresh_images"];
         post?: never;
         delete?: never;
@@ -575,7 +559,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Image Download */
+        /** Download Image */
         post: operations["download_image"];
         delete?: never;
         options?: never;
@@ -590,7 +574,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Networks */
+        /** Get Networks */
         get: operations["get_networks"];
         put?: never;
         post?: never;
@@ -607,15 +591,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Networks Pools */
+        /** Get Network Pools */
         get: operations["get_network_pools"];
         put?: never;
-        /** Post Api Networks Pools */
+        /** Create Network Pool */
         post: operations["create_network_pool"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Api Networks Pools */
+        /** Update Network Pool */
         patch: operations["update_network_pool"];
         trace?: never;
     };
@@ -629,7 +613,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Pools Uuid */
+        /** Delete Network Pool */
         delete: operations["delete_network_pool"];
         options?: never;
         head?: never;
@@ -643,7 +627,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Networks Uuid */
+        /** Get Network */
         get: operations["get_network"];
         put?: never;
         post?: never;
@@ -660,8 +644,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Vm Uuid Xml */
-        get: operations["get_api_vm_uuid_xml_api_networks__uuid__xml_get"];
+        /** Get Network Xml */
+        get: operations["get_network_xml"];
         put?: never;
         post?: never;
         delete?: never;
@@ -678,9 +662,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Put Api Networks */
+        /** Refresh Networks */
         put: operations["refresh_networks"];
-        /** Post Api Storage */
+        /** Create Network */
         post: operations["create_network"];
         delete?: never;
         options?: never;
@@ -697,7 +681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Uuid Ovs */
+        /** Create Network Ovs */
         post: operations["create_network_ovs"];
         delete?: never;
         options?: never;
@@ -714,8 +698,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Uuid Ovs */
-        post: operations["post_uuid_ovs_api_tasks_networks_providers_post"];
+        /** Create Network Providers */
+        post: operations["create_network_providers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -732,7 +716,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Post Api Networks Uuid Ovs */
+        /** Delete Network Ovs */
         delete: operations["delete_network_ovs"];
         options?: never;
         head?: never;
@@ -749,7 +733,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Api Storage */
+        /** Delete Network */
         delete: operations["delete_network"];
         options?: never;
         head?: never;
@@ -763,7 +747,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read Users Me */
+        /** Get Current User */
         get: operations["get_current_user"];
         put?: never;
         post?: never;
@@ -780,10 +764,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Users */
+        /** Get Users */
         get: operations["get_users"];
         put?: never;
-        /** Post Api Users */
+        /** Create User */
         post: operations["create_user"];
         delete?: never;
         options?: never;
@@ -815,9 +799,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Projects */
+        /** Get Projects */
         get: operations["get_projects"];
-        /** Put Api Projects */
+        /** Update Project */
         put: operations["update_project"];
         post?: never;
         delete?: never;
@@ -835,7 +819,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Api Projects */
+        /** Create Project */
         post: operations["create_project"];
         delete?: never;
         options?: never;
@@ -853,7 +837,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Api Projects */
+        /** Delete Project */
         delete: operations["delete_project"];
         options?: never;
         head?: never;
@@ -867,10 +851,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Api Flavors */
+        /** Get Flavors */
         get: operations["get_flavors"];
         put?: never;
-        /** Post Api Flavors */
+        /** Create Flavor */
         post: operations["create_flavor"];
         delete?: never;
         options?: never;
@@ -888,7 +872,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Flavors */
+        /** Delete Flavor */
         delete: operations["delete_flavor"];
         options?: never;
         head?: never;
@@ -902,7 +886,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Exporter Get */
+        /** Get Metrics */
         get: operations["get_metrics"];
         put?: never;
         post?: never;
@@ -945,8 +929,8 @@ export interface components {
             /** Username */
             username: string;
         };
-        /** Body_login */
-        Body_login: {
+        /** Body_login_api_auth_post */
+        Body_login_api_auth_post: {
             /** Grant Type */
             grant_type?: string | null;
             /** Username */
@@ -1813,6 +1797,11 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** UserResponse */
+        UserResponse: {
+            /** Username */
+            username: string;
+        };
         /** UserScope */
         UserScope: {
             /** Name */
@@ -1963,7 +1952,7 @@ export interface operations {
             };
         };
     };
-    setup: {
+    api_auth_setup: {
         parameters: {
             query?: never;
             header?: never;
@@ -1977,12 +1966,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["UserResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2005,7 +1994,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_login"];
+                "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_auth_post"];
             };
         };
         responses: {
@@ -2103,7 +2092,7 @@ export interface operations {
             };
         };
     };
-    update_ssh_key_pair: {
+    create_ssh_key_pair: {
         parameters: {
             query?: never;
             header?: never;
@@ -2167,7 +2156,7 @@ export interface operations {
             };
         };
     };
-    get_node_name_facts_api_nodes__name__facts_get: {
+    get_node_facts: {
         parameters: {
             query?: never;
             header?: never;
@@ -2198,7 +2187,7 @@ export interface operations {
             };
         };
     };
-    get_node_name_network_api_nodes__name__info_get: {
+    get_node_info: {
         parameters: {
             query?: never;
             header?: never;
@@ -2392,7 +2381,7 @@ export interface operations {
             };
         };
     };
-    get_api_vm_uuid_xml_api_vms__uuid__xml_get: {
+    get_vm_xml: {
         parameters: {
             query?: never;
             header?: never;
@@ -2608,11 +2597,13 @@ export interface operations {
             };
         };
     };
-    path_vms_project_api_tasks_vms_project_patch: {
+    update_vm_project: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                uuid: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3233,7 +3224,7 @@ export interface operations {
             };
         };
     };
-    get_api_vm_uuid_xml_api_networks__uuid__xml_get: {
+    get_network_xml: {
         parameters: {
             query?: never;
             header?: never;
@@ -3352,7 +3343,7 @@ export interface operations {
             };
         };
     };
-    post_uuid_ovs_api_tasks_networks_providers_post: {
+    create_network_providers: {
         parameters: {
             query?: never;
             header?: never;
