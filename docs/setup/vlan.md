@@ -102,6 +102,26 @@ network:
   version: 2
 ```
 
+!!! waring
+    MACアドレスの一致ルールなどが書いてあると失敗するので注意
+    ```yaml
+    network:
+        version: 2
+        ethernets:
+            ens3:
+            match:
+                macaddress: "00:16:3e:2c:c8:2e"
+            dhcp4: true
+            dhcp6: true
+            set-name: "ens3"
+    ```
+
+netplanの設定確認(構文チェック)
+
+```bash
+sudo netplan generate
+```
+
 先に実施できるコマンドを実行
 
 ```bash

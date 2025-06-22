@@ -62,7 +62,7 @@ ssh-copy-id user@host
 This example has only one nic.
 It is recommended to do this from the Console since the network is usually disconnected once.
 
-<img src="https://user-images.githubusercontent.com/35087924/179314489-b8a5e48b-368a-4274-b3ef-9ec67810805c.png" width="800px"/>
+![構成図](./docs/asset/ovs_config.svg)
 
 | name               | value            |
 | ---------------------- | ------------- |
