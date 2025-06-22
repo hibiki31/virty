@@ -6,7 +6,7 @@ Open vSwitchを利用して、VMにダッシュボードからVLANを設定で�
 
 ノードのNICが1つのケースで、管理用（ホストにSSHしたりVirtyへアクセスしたり）としても使っている想定です。
 
-![構成図](../asset/ovs_config.svg)
+![構成図](../asset/ovs_config_2.svg)
 
 今回の設定値は以下の通りです。
 
