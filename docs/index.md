@@ -7,7 +7,7 @@ hide:
 
 Virtyは、低コストでの運用を目的としたKVM管理用のWebアプリケーションです。コントローラとして、SSH経由でLibvirt APIやAnsibleを実行し、ノードの管理を行います。SSH接続が可能なLinuxノードに対して、Webダッシュボードからプロビジョニングを実施できます。
 
-<img width="1436" alt="スクリーンショット 2025-06-22 3 00 45" src="https://github.com/user-attachments/assets/f6d7e081-f327-4cfb-8d5a-9dbeaf274c7d" />
+![メインイメージ](https://github.com/user-attachments/assets/f6d7e081-f327-4cfb-8d5a-9dbeaf274c7d)
 
 <a href="https://github.com/hibiki31/virty/wiki/Preview-Image-v5" target="_blank">他のプレビューイメージ(v5.0.0)</a>
 
@@ -36,7 +36,7 @@ docker compose up -d
 
 ## コンセプト
 
-もともとは主催するコンテストや講義で利用する提供VMのキックに利用していたコードを、オープンソース化しました。
+もともとは、主催するコンテストや講義で提供するVMの作成に利用していたコードを、オープンソースとして公開しました。
 
 1. 仮想マシンの利用者、管理者、両方が利用しやすいWEBダッシュボード
 2. すぐに立てて、すぐに壊せる、雑に扱っても壊れないコントローラ
