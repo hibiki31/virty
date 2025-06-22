@@ -16,7 +16,7 @@ Open vSwitchを利用して、VMにダッシュボードからVLANを設定で�
 | Physical interface | eth0          |
 | Native VLAN            | 100           |
 | VLAN to Host IP       | 200           |
-| IP                     | 192.168.200.1 |
+| Host IP                     | 192.168.200.1 |
 
 !!! note
     わかりやすくするため、Native VLANやホスト用VLANの値を設定しています。普通に両方1のケースのほうが多いと思います。
@@ -102,7 +102,7 @@ network:
   version: 2
 ```
 
-!!! waring
+!!! warning
     MACアドレスの一致ルールなどが書いてあると失敗するので注意
     ```yaml
     network:
