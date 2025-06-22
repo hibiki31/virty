@@ -1,5 +1,5 @@
 ---
-title: opt. Open vSwitch(VLAN)
+title: Open vSwitch(VLAN)
 ---
 
 !!! note

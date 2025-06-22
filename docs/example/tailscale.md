@@ -1,4 +1,4 @@
-# Tailscale subnet router
+# Tailscale
 
 Tailscale subnet routerと連携し、Virtyで作成したNWにアクセスできるようにします。
 
@@ -30,12 +30,14 @@ sudo tailscale set --advertise-routes=192.168.0.0/24,10.0.0.0/16
 
 virtyダッシュボードで`route`モードのネットワークを作成します。以上でTailscaleネットワークを経由したアクセスが可能になります。
 
-!!! waring
+!!! warning
     アクセスができない場合は、ノードのファイアウォール、Tailscale ACLをご確認ください。
 
-## 作成したネットワークからインターネット等に接続したい場合
+## インターネット接続
 
-!!! waring
+現時点では、tailscaleネットワーク経由でVMにアクセス可能ですが、VMはインターネットに出れません。Routeing/NATの2種類でVMにインターネット接続を提供できます。
+
+!!! warning
     ネットワーク同士の接続など、Linuxのネットワーク、ファイアウォールを考慮して適切に設定してください。
 
 ### Routing
