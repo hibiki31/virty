@@ -2,7 +2,12 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from network.schemas import NetworkForCreate, NetworkNatForCreate, NetworkPage
+from network.schemas import (
+    NetworkDHCPForCreate,
+    NetworkForCreate,
+    NetworkIPForCreate,
+    NetworkPage,
+)
 from tests.conftest import EnvConfig, wait_tasks
 
 
@@ -27,33 +32,20 @@ def create_network(env: EnvConfig, client: TestClient, skipp=False):
     
     for server in env.servers:
         for network in env.networks:  
-            req_data = NetworkForCreate(
-                name=network.name,
-                node_name=server.name,
-                type=network.type,
-                nat=NetworkNatForCreate(
-                    bridge_name=None,
-                    address="192.168.19.254",
-                    netmask="255.255.255.0",
-                    dhcp_start="192.168.19.1",
-                    dhcp_end="192.168.19.200"
-                ),
-                route=NetworkNatForCreate(
-                    bridge_name=None,
-                    address="192.168.21.254",
-                    netmask="255.255.255.0",
-                    dhcp_start="192.168.21.1",
-                    dhcp_end="192.168.21.200"
-                ),
-                bridge_device=None
-            )
-            
-            
             # すでにあるか判定
-            res_network = client.get("/api/networks", params={"nameLike": "test-nat", "nodeNameLike": server.name})
+            res_network = client.get("/api/networks", params={"nameLike": network.name, "nodeNameLike": server.name})
             page = NetworkPage.model_validate(res_network.json())
             if skipp and page.count == 1:
                 continue
+            
+            req_data = NetworkForCreate(
+                name=network.name,
+                node_name=server.name,
+                forward_mode=network.type,
+                ip=NetworkIPForCreate(address=f"192.168.{int(network.octet)}.254", netmask="255.255.255.0"),
+                dhcp=NetworkDHCPForCreate(start=f"192.168.{int(network.octet)}.1", end=f"192.168.{int(network.octet)}.200"),
+                bridge_name=None
+            )
             
             res = client.post("/api/tasks/networks", content=req_data.model_dump_json(by_alias=True))
 

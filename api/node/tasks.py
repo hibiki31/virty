@@ -32,23 +32,6 @@ def post_node_root(db: Session, model: TaskModel, req: TaskRequest):
         ssh_role = NodeRoleModel(name="ssh")
         db.add(ssh_role)
 
-    # row = NodeModel(
-    #     name = request.name,
-    #     domain = domain,
-    #     description = request.description,
-    #     user_name = user,
-    #     port = port,
-    #     core = node_infomation["result"]["ansible_facts"]["ansible_processor_nproc"],
-    #     memory = int(float(node_infomation["result"]["ansible_facts"]["ansible_memtotal_mb"])/1024),
-    #     cpu_gen = node_infomation["result"]["ansible_facts"]["ansible_processor"][2],
-    #     os_like = node_infomation["result"]["ansible_facts"]["ansible_os_family"],
-    #     os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
-    #     os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
-    #     status = 10,
-    #     ansible_facts = node_infomation,
-    #     qemu_version = None,
-    #     libvirt_version = None,
-    # )
     row = NodeModel(
         name = body.name,
         domain = domain,

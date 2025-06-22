@@ -45,29 +45,24 @@ class NetworkForQuery(GetPagination):
 class NetworkPage(BaseSchema):
     count: int
     data: List[Network]
-    
-    
-class NetworkNatForCreate(BaseSchema):
-    bridge_name: str | None = None
-    address: IPvAnyAddress
-    netmask: IPvAnyAddress
-    dhcp_start: IPvAnyAddress
-    dhcp_end: IPvAnyAddress
 
-class NetworkRouteForCreate(BaseSchema):
-    bridge_name: str | None = None
+class NetworkDHCPForCreate(BaseSchema):
+    start: IPvAnyAddress
+    end: IPvAnyAddress
+
+class NetworkIPForCreate(BaseSchema):
     address: IPvAnyAddress
     netmask: IPvAnyAddress
-    dhcp_start: IPvAnyAddress
-    dhcp_end: IPvAnyAddress
 
 class NetworkForCreate(BaseSchema):
     name: str
     node_name: str
-    type: Literal['bridge', 'ovs', 'nat', 'route']
-    nat: NetworkNatForCreate | None = None
-    route: NetworkRouteForCreate | None = None
-    bridge_device: str | None = None
+    title: str | None = None
+    description: str | None = None
+    forward_mode: Literal[ 'bridge', 'ovs', 'nat', 'route', 'isorated']
+    bridge_name: str | None = None
+    dhcp: NetworkDHCPForCreate | None = None
+    ip: NetworkIPForCreate | None = None
     
 
 class NetworkForDelete(BaseSchema):

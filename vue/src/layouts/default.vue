@@ -1,13 +1,10 @@
 <template>
+  <MainAppBer></MainAppBer>
+  <MainNavigation />
   <v-main>
-    <div>
-      <MainAppBer></MainAppBer>
-      <MainNavigation />
-      <router-view class="ma-4" />
-      <AppFooter />
-    </div>
+    <router-view class="ma-4" />
   </v-main>
-
+  <AppFooter />
 </template>
 
 <script lang="ts" setup>

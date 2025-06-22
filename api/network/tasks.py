@@ -78,59 +78,31 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
     
+    editor = xmllib.XmlEditor("static","net_base")
     
+    if not body.bridge_name:
+        body.bridge_name = f"v-{secrets.token_hex(4)}"
 
-    if body.type == "bridge":
-        # XMLを定義、設定
-        editor = xmllib.XmlEditor("static","net_bridge")
-        editor.network_bridge_edit(name=body.name, bridge=body.bridge_device)
-        xml = editor.dump_str()
-    elif body.type == "ovs":
-        xml = f'''
-        <network>
-            <name>{body.name}</name>
-            <forward mode="bridge" />
-            <bridge name="{body.bridge_device}" />
-            <virtualport type="openvswitch" />
-            <portgroup name="untag" default="yes">
-            </portgroup>
-        </network>
-        '''
-    elif body.type == "nat":
-        if body.nat.bridge_name:
-            bridge_name = body.nat.bridge_name
-        else:
-            bridge_name = f"v-{secrets.token_hex(4)}"
-            
-        editor = xmllib.XmlEditor("static","net_nat")
-        editor.network_nat(
-            name=body.name, 
-            bridge=bridge_name, 
-            address=str(body.nat.address), 
-            netmask=str(body.nat.netmask),
-            start=str(body.nat.dhcp_start),
-            end=str(body.nat.dhcp_end)
-        )
-        xml = editor.dump_str()
-    elif body.type == "route":
-        if body.route.bridge_name:
-            bridge_name = body.route.bridge_name
-        else:
-            bridge_name = f"v-{secrets.token_hex(4)}"
-            
-        editor = xmllib.XmlEditor("static","net_route")
-        # 内容同じだからNAT|ROUTE
-        editor.network_nat(
-            name=body.name, 
-            bridge=bridge_name, 
-            address=str(body.route.address), 
-            netmask=str(body.route.netmask),
-            start=str(body.route.dhcp_start),
-            end=str(body.route.dhcp_end)
-        )
-        xml = editor.dump_str()
+    editor.network_base(name=body.name, bridge=body.bridge_name)
+
+    if body.forward_mode == "isorated":
+        editor.network_forward(None)
+    elif body.forward_mode == "ovs":
+        editor.network_ovs()
+        editor.network_forward("brdige")
     else:
-        raise Exception("Type is incorrect")
+        editor.network_forward(body.forward_mode)
+    
+    if body.ip:
+        editor.network_ip(address=str(body.ip.address), netmask=str(body.ip.netmask))
+        if body.dhcp:
+            editor.network_dhcp(start=str(body.dhcp.start), end=str(body.dhcp.end))
+        else:
+            editor.network_dhcp_delete()
+    else:
+        editor.network_ip_delete()
+
+    xml = editor.dump_str()
 
     # ソイや！
     manager = virtlib.VirtManager(node_model=node)

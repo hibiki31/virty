@@ -74,6 +74,8 @@ class NodeInfo(BaseSchema):
     uptime: str
     free: str
     top: str
+    iptables: str
+    iptables_nat: str
 
 
 class SSHKeyPair(BaseSchema):

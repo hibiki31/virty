@@ -104,7 +104,6 @@ useReloadListener(() => {
 })
 
 onMounted(() => {
-  reload()
 })
 
 </script>
