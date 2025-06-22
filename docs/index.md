@@ -33,3 +33,4 @@ docker compose up -d
 
 3. ブラウザで、`http://localhost:8765`または、`http://IP:8765`へアクセス　※デフォルトで0.0.0.0が許可されています
 
+詳細は[最小構成での構築](/setup/minimum.md)をご確認ください。
