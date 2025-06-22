@@ -57,5 +57,6 @@ nav:
     - example/tailscale.md
     - example/netbox.md
   - Dev:
+    - dev/version.md
     - dev/repo.md
     - dev/reference.md

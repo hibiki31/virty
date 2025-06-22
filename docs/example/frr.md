@@ -1,5 +1,5 @@
 ---
-title: FRRoouting BGP
+title: FRRouting BGP
 ---
 
 FRRoutingを使用してVM用サブネットをBGP広告する

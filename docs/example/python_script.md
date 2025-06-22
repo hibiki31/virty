@@ -1,10 +1,9 @@
 ---
 title: Python Scirpts
 ---
+# Python Scirpts
 
-## 概要
-
-PythonスクリプトからVirty APIを叩いてVMを一気に作成するTipsです。ノードの追加、ストレージの追加、ネットワークの追加などが完了しており、ダッシュボードからVMが作れる状態を想定しています。[最小構成](/setup/minimum.md)
+PythonスクリプトからVirty APIを叩いてVMを一気に作成するTipsです。ノードの追加、ストレージの追加、ネットワークの追加などが完了しており、ダッシュボードからVMが作れる状態を想定しています。[最小構成](/virty/setup/minimum/)
 
 
 ## VMの一括作成
@@ -116,6 +115,68 @@ runcmd:
     print(f"CreateVM: {res.status_code}")
 
 
+
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "ja",
+    "authorization": f"Bearer {TOKEN}",
+}
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## VMの一括削除
+
+```bash
+import requests
+
+BASE_URL = 'http://localhost:8765'
+TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+
+def main():
+    deletion_match = "test-"
+    
+    vms = requests.get(f"{BASE_URL}/api/vms?admin=true",headers=HEADERS).json()
+    
+    for vm in vms["data"]:
+        if deletion_match in vm["name"]:
+            print("Delete VM: ",vm["uuid"], vm["name"])
+
+            delete_uuid = vm["uuid"]
+            requests.delete(f'{BASE_URL}/api/tasks/vms/{delete_uuid}', headers=HEADERS)
+
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "ja",
+    "authorization": f"Bearer {TOKEN}",
+}
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## VMの一括ON
+
+```python
+import requests
+
+BASE_URL = 'http://localhost:8765'
+TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+
+def main():
+    poweron_match = "-"
+    
+    vms = requests.get(f"{BASE_URL}/api/vms?admin=true",headers=HEADERS).json()
+    
+    for vm in vms["data"]:
+        if poweron_match in vm["name"]:
+            res = requests.patch(f'{BASE_URL}/api/tasks/vms/{vm["uuid"]}/power', headers=HEADERS, json={"status": "on"})
+            print("PowerON VM: ", res.status_code, vm["uuid"], vm["name"])
 
 HEADERS = {
     "accept": "application/json, text/plain, */*",
