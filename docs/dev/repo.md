@@ -1,12 +1,10 @@
----
-title: Repo
----
+# リポジトリ履歴
 
-#### コンセプトコードの削除
+## コンセプトコードの削除
 
 https://github.com/hibiki31/virty/pull/133/files
 
-だいたいv5.0.1まではある。Exampleスクリプトを除き。
+v5.0.1のタイミングでコードを整理
 
 - [Exampleスクリプト](https://github.com/hibiki31/virty/tree/c3a3101c5b258338859da0eacb1f5a87fb7c6b07)
 - [Agent (go)](https://github.com/hibiki31/virty/tree/v5.0.1/agent)

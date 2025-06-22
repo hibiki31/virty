@@ -1,5 +1,5 @@
 ---
-title: opt. Ceph Storage
+title: Ceph Storage
 ---
 
 !!! note

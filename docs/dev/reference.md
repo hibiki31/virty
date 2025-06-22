@@ -1,6 +1,4 @@
----
-title: Reference
----
+# Reference
 
 ## API
 
