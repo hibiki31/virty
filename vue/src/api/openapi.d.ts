@@ -1601,12 +1601,12 @@ export interface components {
              * Allocationcommit
              * @default 0
              */
-            allocationCommit: number;
+            allocationCommit: number | null;
             /**
              * Capacitycommit
              * @default 0
              */
-            capacityCommit: number;
+            capacityCommit: number | null;
         };
         /** StorageContainerForStoragePool */
         StorageContainerForStoragePool: {

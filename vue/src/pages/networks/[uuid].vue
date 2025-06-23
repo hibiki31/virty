@@ -19,7 +19,7 @@
         </v-card-actions>
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6" md="6" lg="3">
+            <v-col cols="12" sm="6" md="6" lg="4">
               <v-card prepend-icon="mdi-cube-outline" title="Spec">
                 <v-table class="text-caption" density="compact">
                   <tbody align="right">
@@ -31,11 +31,17 @@
                 </v-table>
               </v-card>
             </v-col>
+            <v-col>
+              <v-card prepend-icon="mdi-xml" title="Info">
+                <v-card-text>
+                  <div v-for="item in getInfoList()">
+                    <p class="text-h6 pt-3">{{ item.title }}</p>
+                    <code-feild :text="item.value" type="XML" :loading="!item.value"></code-feild>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
           </v-row>
-          <div v-for="item in getInfoList()">
-            <p class="text-h6 pt-3">{{ item.title }}</p>
-            <code-feild :text="item.value" type="XML" :loading="!item.value"></code-feild>
-          </div>
         </v-card-text>
       </v-card-item>
     </v-card>
@@ -45,19 +51,13 @@
 <script lang="ts" setup>
 import { useRouter, useRoute } from 'vue-router';
 import { apiClient } from '@/api';
-import type { paths } from '@/api/openapi'
-const router = useRouter()
+import type { schemas } from '@/composables/schemas';
 const route = useRoute()
 import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
 
-import { getNodeStatusColor } from '@/composables/nodes'
-
-type typeNetwork = paths['/api/networks/{uuid}']['get']['responses']['200']['content']['application/json']
-type typeNetworkInfo = paths['/api/networks/{uuid}/xml']['get']['responses']['200']['content']['application/json']
-
-const data = ref<typeNetwork>()
-const dataInfo = ref<typeNetworkInfo>()
+const data = ref<schemas['Network']>()
+const dataXML = ref<schemas['NetworkXML']>()
 
 const stateDeleteDialog = ref(false)
 
@@ -80,57 +80,11 @@ function reload() {
       }
     }).then((res) => {
       if (res.data) {
-        dataInfo.value = res.data
+        dataXML.value = res.data
       }
     })
 
   }
-}
-
-
-
-function openCDRomDialog(target: string | null | undefined) {
-  // this.$refs.domainCDRomDialog.openDialog(target, this.data.uuid, this.data.node.name);
-}
-function openDeleteDialog() {
-  // this.$refs.domainDeleteDialog.openDialog(this.data.uuid);
-}
-
-
-
-function memoryChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/memory', { uuid: this.$route.params.uuid, memory: this.memoryValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change memory task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-function cpuChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/cpu', { uuid: this.$route.params.uuid, cpu: this.cpuValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change cpu task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
 }
 
 function getSpecList() {
@@ -146,9 +100,9 @@ function getSpecList() {
 }
 
 function getInfoList() {
-  if (dataInfo) {
+  if (dataXML.value) {
     return [
-      { title: "xml", value: dataInfo.value?.xml }
+      { title: "XML", value: dataXML.value.xml }
     ]
   }
 }

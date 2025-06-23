@@ -83,7 +83,6 @@ async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
   await reload()
 }
 
-
 const rescan = () => {
   apiClient.PUT('/api/tasks/vms').then((res) => {
     if (res.data) {
@@ -91,7 +90,6 @@ const rescan = () => {
     }
   })
 }
-
 
 async function reload() {
   loading.value = true

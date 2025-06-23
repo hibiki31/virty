@@ -31,8 +31,7 @@ import { defineProps, defineModel } from 'vue'
 import { apiClient } from '@/api';
 import notify, { notifyTask } from '@/composables/notify';
 import { asyncSleep } from '@/composables/sleep';
-import { itemsCPU } from '@/composables/vm';
-const router = useRouter()
+
 
 const model = defineModel({ default: false })
 const props = defineProps({
@@ -60,7 +59,7 @@ async function submit(event: Promise<{ valid: boolean }>) {
       model.value = false
     }
     if (res.error) {
-      notify('error', 'Delete VM failed', res.error)
+      notify('error', 'Delete Node failed', res.error)
     }
     loading.value = false
   }

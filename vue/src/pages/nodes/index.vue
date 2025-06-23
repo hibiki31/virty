@@ -8,7 +8,6 @@
         @click="dialogKey = true">KEY</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="dialogAdd = true">JOIN</v-btn>
-      <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error" size="small">LEAVE</v-btn>
     </v-card-actions>
     <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
       <template v-slot:item.name="{ item }">

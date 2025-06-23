@@ -1,5 +1,7 @@
 from typing import List
 
+from pydantic import field_validator
+
 from flavor.schemas import Flavor
 from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
@@ -50,8 +52,11 @@ class Storage(BaseSchema):
     path: str | None = None
     meta_data: StorageMetadata | None = None
     update_token:str | None = None
-    allocation_commit: int = 0
-    capacity_commit: int = 0
+    allocation_commit: int| None = 0
+    capacity_commit: int| None = 0
+    @field_validator("allocation_commit", "capacity_commit")
+    def none_to_zero(cls, v):
+        return 0 if v is None else v
     
 
 class StoragePage(BaseSchema):

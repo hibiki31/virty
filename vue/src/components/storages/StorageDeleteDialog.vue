@@ -1,71 +1,67 @@
 <template>
-<v-dialog
-      v-model="dialogState"
-      persistent
-      max-width="290"
-    >
-      <v-card>
+  <v-dialog v-model="model" max-width="400">
+    <v-card>
+      <v-form ref="formRef" @submit.prevent="submit">
         <v-card-title class="headline">
-        Delete the storage
+          Delete Storage
         </v-card-title>
-        <v-card-text>Delete a {{this.item.name}} of {{this.item.nodeName}}. Data will remain and VM will not be affected.</v-card-text>
+        <v-card-text>
+          Are you sure you want to delete the storage?
+          <v-checkbox density="comfortable" :label="'Delete ' + props.item?.name" :rules="[r.requiredCheckbox]"
+            color="error"></v-checkbox>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="success"
-            text
-            @click="dialogState = false"
-          >
-            chancel
+          <v-btn color="success" text @click="model = false">
+            Cancel
           </v-btn>
-          <v-btn
-            color="error"
-            text
-            @click="runMethod()"
-          >
-            delete
+          <v-btn :loading="loading" color="error" text type="submit">
+            Delete
           </v-btn>
         </v-card-actions>
-      </v-card>
-    </v-dialog>
+      </v-form>
+    </v-card>
+  </v-dialog>
 </template>
 
-<script>
-import axios from '@/axios/index';
+<script setup lang="ts">
+import type { schemas } from '@/composables/schemas';
+import * as r from '@/composables/rules';
+import { defineProps, defineModel } from 'vue'
+import { apiClient } from '@/api';
+import notify, { notifyTask } from '@/composables/notify';
+import { asyncSleep } from '@/composables/sleep';
 
-export default {
-  name: 'storageDeleteDialog',
-  data: function() {
-    return {
-      dialogState: false,
-      item: {},
-      postData: {
-        uuid: '',
-        nodeName: ''
-      }
-    };
-  },
-  methods: {
-    openDialog(item) {
-      this.dialogState = true;
-      this.item = item;
-      this.postData.uuid = this.item.uuid;
-      this.postData.nodeName = this.item.nodeName;
-    },
-    runMethod() {
-      axios.request({
-        method: 'delete',
-        url: '/api/storages',
-        data: this.postData
-      })
-        .then(res => {
-          this.$_pushNotice('Please wait for task to complete', 'success');
-        })
-        .catch(error => {
-          this.$_pushNotice(error.response.data.detail, 'error');
-        });
-      this.dialogState = false;
-    }
+
+const model = defineModel({ default: false })
+const props = defineProps({
+  item: {
+    type: Object as PropType<schemas['Storage']>,
+    required: false,
   }
-};
+})
+
+const loading = ref(false)
+
+
+async function submit(event: Promise<{ valid: boolean }>) {
+  if (!(await event).valid) {
+    return
+  }
+
+  if (props.item) {
+    loading.value = true
+    const res = await apiClient.DELETE('/api/tasks/storages/{uuid}', { params: { path: { uuid: props.item.uuid } } })
+    await asyncSleep(800)
+
+    if (res.data) {
+      notifyTask(res.data[0].uuid)
+      model.value = false
+    }
+    if (res.error) {
+      notify('error', 'Delete Storage failed', res.error)
+    }
+    loading.value = false
+  }
+}
 </script>
