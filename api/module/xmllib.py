@@ -326,21 +326,21 @@ class XmlEditor():
         if forward:
             self.xml.find('forward').set('mode', forward)
         else:
-            self.xml.find('forward').remove()
+            self.xml.remove(self.xml.find('forward'))
     
     def network_ip(self, address, netmask):
         self.xml.find('ip').set('address', address)
         self.xml.find('ip').set('netmask', netmask)
         
     def network_ip_delete(self):
-        self.xml.find('ip').remove()
+        self.xml.remove(self.xml.find('ip'))
     
     def network_dhcp(self, start ,end):
         self.xml.find('ip').find('dhcp').find('range').set('start', start)
         self.xml.find('ip').find('dhcp').find('range').set('end', end)
     
     def network_dhcp_delete(self):
-        self.xml.find('ip').find('dhcp').remove()
+        self.xml.find('ip').remove(self.xml.find('ip').find('dhcp'))
     
     def network_ovs(self):
         virtualport = ET.SubElement(self.xml, 'virtualport')

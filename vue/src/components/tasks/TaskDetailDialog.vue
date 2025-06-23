@@ -14,23 +14,15 @@
       </v-card-item>
 
       <v-card-text>
+        <p class="text-h6">Request</p>
+        <code-feild :text="JSON.stringify(props.item.request, null, 2)" type="JSON" :loading="false"></code-feild>
+
         <p class="text-h6">Message</p>
-        <v-card color="grey-darken-3">
-          <v-card-text>
-            <div class="font-mono text-caption">
-              {{ props.item.message }}
-            </div>
-          </v-card-text>
-        </v-card>
+        <code-feild :text="props.item.message" type="TEXT" :loading="false"></code-feild>
+
         <v-divider></v-divider>
         <p class="text-h6">Log</p>
-        <v-card color="grey-darken-3">
-          <v-card-text>
-            <div class="font-mono text-caption" style="white-space: pre;">
-              {{ props.item.log }}
-            </div>
-          </v-card-text>
-        </v-card>
+        <code-feild :text="props.item.log" type="TEXT" :loading="false"></code-feild>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -50,5 +42,4 @@ const props = defineProps({
     required: false,
   }
 })
-
 </script>

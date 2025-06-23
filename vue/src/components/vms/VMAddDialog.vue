@@ -275,30 +275,3 @@ function checkOVS(networkName: string) {
 //   },
 
 </script>
-
-<style>
-.v-textarea textarea {
-  line-height: 1.1rem !important;
-  font-family: monospace, serif;
-}
-
-.theme--dark.v-stepper {
-  background: #1E1E1E !important;
-}
-
-.v-stepper__step {
-  padding: 15px !important;
-}
-
-.v-stepper__header {
-  height: 50px !important;
-}
-
-.form-box {
-  min-height: 300px;
-}
-
-.v-stepper__label {
-  text-shadow: 0px 0px 0px #1E1E1E !important;
-}
-</style>

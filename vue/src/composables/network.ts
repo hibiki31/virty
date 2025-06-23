@@ -1,11 +1,12 @@
 import { apiClient } from "@/api";
-import type { paths } from "@/api/openapi";
+import type { paths, components } from "@/api/openapi";
 
 export type typeListNetwork =
   paths["/api/networks"]["get"]["responses"]["200"]["content"]["application/json"];
 export type typeListNetworkQuery = NonNullable<
   paths["/api/networks"]["get"]["parameters"]["query"]
 >;
+export type typeCreateNetwork = components["schemas"]["NetworkForCreate"];
 
 export const initNetworkList: typeListNetwork = {
   count: 0,

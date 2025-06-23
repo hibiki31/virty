@@ -89,7 +89,7 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
         editor.network_forward(None)
     elif body.forward_mode == "ovs":
         editor.network_ovs()
-        editor.network_forward("brdige")
+        editor.network_forward("bridge")
     else:
         editor.network_forward(body.forward_mode)
     

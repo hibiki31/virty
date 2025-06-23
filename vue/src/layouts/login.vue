@@ -8,5 +8,5 @@
 </template>
 
 <script lang="ts" setup>
-console.debug("login layout loaded")
+// console.debug("login layout loaded")
 </script>

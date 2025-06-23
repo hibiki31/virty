@@ -59,7 +59,7 @@
                 <tbody align="right">
                   <tr>
                     <th>Name:</th>
-                    <td>{{ data.node.name }}</td>
+                    <td>{{ data.nodeName }}</td>
                   </tr>
                   <tr>
                     <th>Node IP:</th>
@@ -138,6 +138,19 @@
                 </template>
               </v-table>
             </v-card>
+            <v-card class="mt-5">
+              <v-card-title class="subheading font-weight-bold">
+                <v-icon>mdi-xml</v-icon>XML
+              </v-card-title>
+              <v-expansion-panels>
+                <v-expansion-panel>
+                  <v-expansion-panel-title></v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <code-feild :text="dataXML?.xml" type="XML" :loading="false" class="ma-5"></code-feild>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
+            </v-card>
           </v-col>
         </v-row>
       </v-card-text>
@@ -146,35 +159,41 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
-import type { paths } from '@/api/openapi'
-const router = useRouter()
 const route = useRoute()
 import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
-
+import type { schemas } from '@/composables/schemas';
 import { vmPowerOff, vmPowerOn, openVNC, getPowerColor } from '@/composables/vm';
 
-type typeVM = paths['/api/vms/{uuid}']['get']['responses']['200']['content']['application/json']
-const data = ref<typeVM>()
+const data = ref<schemas['DomainDetail']>()
+const dataXML = ref<schemas['DomainXML']>()
 
 const stateDeleteDialog = ref(false)
 
-function reload() {
+async function reload() {
   console.debug("vm detail reload")
   if ('uuid' in route.params) {
     console.debug(route.params.uuid)
-    apiClient.GET('/api/vms/{uuid}', {
+    const res = await apiClient.GET('/api/vms/{uuid}', {
       params: {
         path: { uuid: route.params.uuid }
       }
-    }).then((res) => {
-      if (res.data) {
-        data.value = res.data
-        window.document.title = `Virty - ${res.data.name}`
+    })
+    if (res.data) {
+      data.value = res.data
+      window.document.title = `Virty - ${res.data.name}`
+    }
+
+    const resXML = await apiClient.GET('/api/vms/{uuid}/xml', {
+      params: {
+        path: { uuid: route.params.uuid }
       }
     })
+    if (resXML.data) {
+      dataXML.value = resXML.data
+    }
   }
 }
 

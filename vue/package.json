@@ -18,6 +18,7 @@
     "@mdi/font": "7.4.47",
     "date-fns": "^4.1.0",
     "highlight.js": "^11.11.1",
+    "ipaddr.js": "^2.2.0",
     "jwt-decode": "^4.0.0",
     "openapi-fetch": "^0.14.0",
     "typescript-cookie": "^1.0.6",

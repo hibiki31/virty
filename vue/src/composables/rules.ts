@@ -1,3 +1,5 @@
+import * as ipaddr from "ipaddr.js";
+
 // 必須
 export const required = (value: string) => !!value || "Required.";
 
@@ -30,3 +32,6 @@ export const firstCharacterRestrictions = (value: string) => {
   const regex = /^[A-Za-z].*/;
   return regex.test(value) || "Can use first character A-Z, a-z";
 };
+
+export const isValidIp = (value: string) =>
+  ipaddr.isValid(value) || "Invalid IP format";

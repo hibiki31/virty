@@ -31,7 +31,6 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     loginSuccess(token: string) {
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log(decoded);
       this.token = token;
       this.username = decoded.sub;
       this.scopes = decoded.scopes;

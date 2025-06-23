@@ -37,7 +37,7 @@ router.isReady().then(() => {
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
 
-  console.debug("authed: ", auth.authed, "from: ", from.name, "to: ", to.name);
+  // console.debug("authed: ", auth.authed, "from: ", from.name, "to: ", to.name);
 
   // ログインしているのにログインページに行く場合
   if (auth.authed && to.name === "/login") {

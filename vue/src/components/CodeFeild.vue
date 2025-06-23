@@ -1,17 +1,19 @@
 <template>
   <v-card :loading="loading ? 'white' : false" loa>
-    <highlightjs :code="props.text || ''" :language="props.type"></highlightjs>
+    <highlightjs :code="props.text || ''" :language='props.type' class="my-highlight"></highlightjs>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import { defineProps } from 'vue';
-
 const props = defineProps<{
-  text: string | undefined,
+  text: string | undefined | null,
   type: string,
-  loading: boolean
+  loading: boolean,
 }>()
-
-
 </script>
+
+<style scoped>
+.my-highlight :deep(.hljs) {
+  font-size: 13px;
+}
+</style>
