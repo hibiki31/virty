@@ -35,3 +35,5 @@ export const firstCharacterRestrictions = (value: string) => {
 
 export const isValidIp = (value: string) =>
   ipaddr.isValid(value) || "Invalid IP format";
+
+export const requiredCheckbox = (value: boolean) => value || "Required Ceckbox";

@@ -34,11 +34,11 @@ function notify(
   });
 }
 
-export function notifyTask(uuid: string) {
+export function notifyTask(uuid: string | undefined | null) {
   baseNotify({
     type: "success",
     title: "Task has been queued",
-    text: uuid,
+    text: uuid || "",
   });
 }
 
