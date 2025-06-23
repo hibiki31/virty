@@ -42,8 +42,8 @@ def create_network(env: EnvConfig, client: TestClient, skipp=False):
                 name=network.name,
                 node_name=server.name,
                 forward_mode=network.type,
-                ip=NetworkIPForCreate(address=f"192.168.{int(network.octet)}.254", netmask="255.255.255.0"),
-                dhcp=NetworkDHCPForCreate(start=f"192.168.{int(network.octet)}.1", end=f"192.168.{int(network.octet)}.200"),
+                ip=NetworkIPForCreate(address=f"10.144.{int(network.octet)}.254", netmask="255.255.255.0"),
+                dhcp=NetworkDHCPForCreate(start=f"10.144.{int(network.octet)}.1", end=f"10.144.{int(network.octet)}.200"),
                 bridge_name=None
             )
             

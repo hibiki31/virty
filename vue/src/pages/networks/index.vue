@@ -10,7 +10,7 @@
       @update:options="loadItems">
 
       <template v-slot:item.uuid="{ item }">
-        <router-link :to="'/vms/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
+        <router-link :to="'/networks/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
       </template>
 
     </v-data-table-server>

@@ -1250,21 +1250,38 @@ export interface components {
             /** Updatetoken */
             updateToken?: string | null;
         };
+        /** NetworkDHCPForCreate */
+        NetworkDHCPForCreate: {
+            /**
+             * Start
+             * Format: ipvanyaddress
+             */
+            start: string;
+            /**
+             * End
+             * Format: ipvanyaddress
+             */
+            end: string;
+        };
         /** NetworkForCreate */
         NetworkForCreate: {
             /** Name */
             name: string;
             /** Nodename */
             nodeName: string;
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
             /**
-             * Type
+             * Forwardmode
              * @enum {string}
              */
-            type: "bridge" | "ovs" | "nat" | "route";
-            nat?: components["schemas"]["NetworkNatForCreate"] | null;
-            route?: components["schemas"]["NetworkRouteForCreate"] | null;
-            /** Bridgedevice */
-            bridgeDevice?: string | null;
+            forwardMode: "bridge" | "ovs" | "nat" | "route" | "isorated";
+            /** Bridgename */
+            bridgeName?: string | null;
+            dhcp?: components["schemas"]["NetworkDHCPForCreate"] | null;
+            ip?: components["schemas"]["NetworkIPForCreate"] | null;
         };
         /** NetworkForNetworkPool */
         NetworkForNetworkPool: {
@@ -1288,10 +1305,8 @@ export interface components {
             /** Port */
             port?: string | null;
         };
-        /** NetworkNatForCreate */
-        NetworkNatForCreate: {
-            /** Bridgename */
-            bridgeName?: string | null;
+        /** NetworkIPForCreate */
+        NetworkIPForCreate: {
             /**
              * Address
              * Format: ipvanyaddress
@@ -1302,16 +1317,6 @@ export interface components {
              * Format: ipvanyaddress
              */
             netmask: string;
-            /**
-             * Dhcpstart
-             * Format: ipvanyaddress
-             */
-            dhcpStart: string;
-            /**
-             * Dhcpend
-             * Format: ipvanyaddress
-             */
-            dhcpEnd: string;
         };
         /** NetworkOVSForCreate */
         NetworkOVSForCreate: {
@@ -1390,31 +1395,6 @@ export interface components {
             /** Networknode */
             networkNode?: string | null;
         };
-        /** NetworkRouteForCreate */
-        NetworkRouteForCreate: {
-            /** Bridgename */
-            bridgeName?: string | null;
-            /**
-             * Address
-             * Format: ipvanyaddress
-             */
-            address: string;
-            /**
-             * Netmask
-             * Format: ipvanyaddress
-             */
-            netmask: string;
-            /**
-             * Dhcpstart
-             * Format: ipvanyaddress
-             */
-            dhcpStart: string;
-            /**
-             * Dhcpend
-             * Format: ipvanyaddress
-             */
-            dhcpEnd: string;
-        };
         /** NetworkXML */
         NetworkXML: {
             /** Xml */
@@ -1486,6 +1466,10 @@ export interface components {
             free: string;
             /** Top */
             top: string;
+            /** Iptables */
+            iptables: string;
+            /** Iptablesnat */
+            iptablesNat: string;
         };
         /** NodePage */
         NodePage: {
