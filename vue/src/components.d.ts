@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    CodeFeild: typeof import('./components/CodeFeild.vue')['default']
     DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
     DomainCDRomDialog: typeof import('./components/vms/DomainCDRomDialog.vue')['default']
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
@@ -16,6 +17,7 @@ declare module 'vue' {
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
+    NetworkAddDialog: typeof import('./components/networks/NetworkAddDialog.vue')['default']
     NetworkDeleteDialog: typeof import('./components/networks/NetworkDeleteDialog.vue')['default']
     NodeAddDialog: typeof import('./components/nodes/NodeAddDialog.vue')['default']
     NodeDeleteDialog: typeof import('./components/nodes/NodeDeleteDialog.vue')['default']

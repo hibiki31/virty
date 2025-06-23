@@ -34,13 +34,7 @@
           </v-row>
           <div v-for="item in getInfoList()">
             <p class="text-h6 pt-3">{{ item.title }}</p>
-            <v-card color="grey-darken-3" :loading="!item.value">
-              <v-card-text>
-                <div class="font-mono text-caption" style="white-space: pre;">
-                  {{ item.value }}
-                </div>
-              </v-card-text>
-            </v-card>
+            <code-feild :text="item.value" type="XML" :loading="!item.value"></code-feild>
           </div>
         </v-card-text>
       </v-card-item>

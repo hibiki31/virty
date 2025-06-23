@@ -1,5 +1,6 @@
 <template>
   <v-card>
+    <network-add-dialog v-model="stateCreateDialog"></network-add-dialog>
     <v-card-actions>
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"

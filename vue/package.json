@@ -13,9 +13,11 @@
   },
   "dependencies": {
     "@fontsource/roboto": "5.2.5",
+    "@highlightjs/vue-plugin": "^2.1.0",
     "@kyvg/vue3-notification": "^3.4.1",
     "@mdi/font": "7.4.47",
     "date-fns": "^4.1.0",
+    "highlight.js": "^11.11.1",
     "jwt-decode": "^4.0.0",
     "openapi-fetch": "^0.14.0",
     "typescript-cookie": "^1.0.6",

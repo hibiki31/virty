@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 export const useStateStore = defineStore("state", () => {
   const pageIndex = ref(1);
-  const showSideDrawer = ref(true);
+  const showSideDrawer = ref<boolean | undefined>(undefined);
   const reloadTrigger = ref(false);
 
   function trigger() {

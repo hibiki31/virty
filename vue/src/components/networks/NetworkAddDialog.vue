@@ -25,7 +25,6 @@
             </v-col>
           </v-row>
           <v-divider class="pt-5"></v-divider>
-
           <!-- ストレージ -->
           <v-row v-for="disk in postData.disks">
             <v-col cols="12" md="2">
@@ -111,7 +110,7 @@ import type { bodyPostVM } from '@/composables/vm';
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 
-import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network';
+import type { typeListNetwork } from '@/composables/network';
 import { initNetworkList, getNetworkList } from '@/composables/network';
 
 import type { typeListStorage } from '@/composables/storage';
@@ -203,21 +202,7 @@ function deleteInterface(index: number) {
 }
 
 onMounted(async () => {
-  const queryImage: typeListImageQuery = {
-    admin: true,
-    limit: 999999,
-    page: 1,
-  }
-  const queryNetwork: typeListNetworkQuery = {
-    admin: true,
-    limit: 999999,
-    page: 1,
-  }
-
   itemsNodes.value = await getNode()
-  itemsNetworks.value = await getNetworkList(queryNetwork)
-  itemsStorages.value = await getStorageList()
-  itemsImages.value = await getImageList(queryImage)
 })
 
 function checkOVS(networkName: string) {

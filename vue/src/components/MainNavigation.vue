@@ -1,6 +1,7 @@
 <template>
-  <v-navigation-drawer v-model="store.showSideDrawer">
+  <v-navigation-drawer v-model="state.showSideDrawer">
     <v-list density="compact" nav class="primary--text text--primary">
+      <v-list-item prepend-icon="mdi-view-dashboard" title="Home" :to="{ name: '/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-cube-outline" title="VM" :to="{ name: '/vms/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-server" title="Node" :to="{ name: '/nodes/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-database" title="Storage" :to="{ name: '/storages/' }"></v-list-item>
@@ -29,9 +30,8 @@
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 import notify from '@/composables/notify'
-
 const apiURL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL + "/api" : "/api"
-const store = useStateStore()
+const state = useStateStore()
 const auth = useAuthStore()
 
 async function copyToken() {

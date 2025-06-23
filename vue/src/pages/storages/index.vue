@@ -47,7 +47,6 @@ meta:
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
-import type { paths } from '@/api/openapi'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
 
@@ -75,10 +74,7 @@ const headers = [
   { title: 'Actions', value: 'actions' }
 ]
 
-const items = ref<typeListStorage>({
-  count: 0,
-  data: [],
-})
+const items = ref<typeListStorage>(initStorageList)
 
 
 const rescan = () => {
