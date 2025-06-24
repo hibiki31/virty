@@ -1,8 +1,8 @@
 <template>
   <v-dialog width="900" v-model="dialogState" color="black">
-    <v-card title="Create VM">
-      <v-card-text>
-        <v-form ref="formRef" @submit.prevent="submit">
+    <v-form ref="formRef" @submit.prevent="submit">
+      <v-card title="Create VM">
+        <v-card-text>
           <!-- 基本 -->
           <v-row cols="12">
             <v-col>
@@ -90,14 +90,13 @@
             <v-textarea variant="outlined" density="comfortable" clearable class="text-caption" auto-grow
               v-model="postData.cloudInit.userData" clear-icon="mdi-close-circle" label="User-data"></v-textarea>
           </div>
-        </v-form>
-      </v-card-text>
-      <v-divider></v-divider>
-
-      <v-card-actions>
-        <v-btn color="primary" class="mr-2" type="submit" :loading="loading">CREATE</v-btn>
-      </v-card-actions>
-    </v-card>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-btn color="primary" class="mr-2" type="submit" :loading="loading">CREATE</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-form>
   </v-dialog>
 
 </template>
