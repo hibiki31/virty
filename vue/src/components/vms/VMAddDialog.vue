@@ -12,8 +12,8 @@
                 @change="() => { if (postData.cloudInit) { postData.cloudInit.hostname = postData.name } }"></v-text-field>
             </v-col>
             <v-col md="2">
-              <v-select variant="outlined" density="comfortable" label="Memory" :items="itemsMemory"
-                :rules="[r.required]" v-model="postData.memoryMegaByte"></v-select>
+              <v-select variant="outlined" density="comfortable" label="Memory" :items="itemsMemory" item-title="title"
+                item-value="value" :rules="[r.required]" v-model="postData.memoryMegaByte"></v-select>
             </v-col>
             <v-col md="2">
               <v-select variant="outlined" density="comfortable" label="CPU" :items="itemsCPU" :rules="[r.required]"
@@ -114,13 +114,14 @@ import { initNodeList, getNode } from '@/composables/nodes';
 import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network';
 import { initNetworkList, getNetworkList } from '@/composables/network';
 
-import type { typeListStorage } from '@/composables/storage';
+import type { typeListStorageQuery } from '@/composables/storage';
 import { initStorageList, getStorageList } from '@/composables/storage';
 
 import type { typeListImage, typeListImageQuery } from '@/composables/image';
 import { initImageList, getImageList } from '@/composables/image';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
+import type { schemas } from '@/composables/schemas';
 
 
 const useCloudInit = ref(true)
@@ -129,14 +130,14 @@ const dialogState = defineModel({ default: false })
 
 const itemsNodes = ref<typeListNode>(initNodeList)
 const itemsNetworks = ref<typeListNetwork>(initNetworkList)
-const itemsStorages = ref<typeListStorage>(initStorageList)
+const itemsStorages = ref<schemas['StoragePage']>(initStorageList)
 const itemsImages = ref<typeListImage>(initImageList)
 
 const postData = reactive<bodyPostVM>({
   type: 'manual',
   name: '',
   nodeName: '',
-  memoryMegaByte: 512,
+  memoryMegaByte: 8192,
   cpu: 2,
   disks: [
     {
@@ -213,10 +214,15 @@ onMounted(async () => {
     limit: 999999,
     page: 1,
   }
+  const queryStorage: typeListStorageQuery = {
+    admin: true,
+    limit: 999999,
+    page: 1,
+  }
 
   itemsNodes.value = await getNode()
   itemsNetworks.value = await getNetworkList(queryNetwork)
-  itemsStorages.value = await getStorageList()
+  itemsStorages.value = await getStorageList(queryStorage)
   itemsImages.value = await getImageList(queryImage)
 })
 
