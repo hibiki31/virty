@@ -80,7 +80,6 @@
 
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
-import { ref, defineModel, onMounted } from 'vue';
 
 import * as r from '@/composables/rules';
 

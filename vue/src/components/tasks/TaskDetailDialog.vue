@@ -30,7 +30,6 @@
 
 <script setup lang="ts">
 import type { typeListTask } from '@/composables/task'
-import { defineModel } from 'vue'
 import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'
 
 

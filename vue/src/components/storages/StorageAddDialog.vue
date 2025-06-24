@@ -28,7 +28,6 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineModel, onMounted, defineProps } from 'vue';
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';

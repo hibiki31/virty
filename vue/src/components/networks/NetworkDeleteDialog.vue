@@ -20,8 +20,6 @@
 
 <script setup lang="ts">
 import type { typeListNetwork } from '@/composables/network';
-import { ref } from 'vue';
-import { defineProps, defineModel } from 'vue'
 import { apiClient } from '@/api';
 import { useNotification } from '@kyvg/vue3-notification'
 import { asyncSleep } from '@/composables/sleep';

@@ -20,7 +20,6 @@
 
 <script setup lang="ts">
 import type { schemas } from '@/composables/schemas';
-import { defineProps, defineModel } from 'vue'
 import { apiClient } from '@/api';
 import notify from '@/composables/notify';
 import { asyncSleep } from '@/composables/sleep';

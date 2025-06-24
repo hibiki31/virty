@@ -23,7 +23,6 @@ meta:
 <script lang="ts" setup>
 import type { typeListImage, typeListImageQuery } from '@/composables/image'
 
-import { ref, onMounted } from 'vue'
 import { useReloadListener } from '@/composables/trigger'
 
 import { apiClient } from '@/api'

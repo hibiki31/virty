@@ -38,7 +38,6 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'

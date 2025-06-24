@@ -24,7 +24,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineModel, onMounted } from 'vue';
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';

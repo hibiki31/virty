@@ -63,7 +63,6 @@ meta:
 <script lang="ts" setup>
 import type { typeListTask, typeListTaskQuery } from '@/composables/task'
 
-import { ref, onMounted } from 'vue'
 import { useReloadListener } from '@/composables/trigger'
 
 import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'

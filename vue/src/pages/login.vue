@@ -33,7 +33,6 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { asyncSleep } from '@/composables/sleep'
 import { useNotification } from '@kyvg/vue3-notification'

@@ -42,7 +42,6 @@ import { apiClient } from '@/api';
 import type { paths } from '@/api/openapi'
 const router = useRouter()
 const route = useRoute()
-import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
 
 import { getNodeStatusColor } from '@/composables/nodes'

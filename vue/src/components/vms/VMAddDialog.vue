@@ -2,7 +2,7 @@
   <v-dialog width="900" v-model="dialogState" color="black">
     <v-card title="Create VM">
       <v-card-text>
-        <v-form class="form-box">
+        <v-form ref="formRef" @submit.prevent="submit">
           <!-- 基本 -->
           <v-row cols="12">
             <v-col>
@@ -95,7 +95,7 @@
       <v-divider></v-divider>
 
       <v-card-actions>
-        <v-btn color="primary" class="mr-2" @click="submit">CREATE</v-btn>
+        <v-btn color="primary" class="mr-2" type="submit" :loading="loading">CREATE</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -103,7 +103,6 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineModel, onMounted } from 'vue';
 import * as r from '@/composables/rules';
 
 import { itemsCPU, itemsMemory } from '@/composables/vm'
@@ -122,10 +121,12 @@ import { initImageList, getImageList } from '@/composables/image';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
 import type { schemas } from '@/composables/schemas';
+import { asyncSleep } from '@/composables/sleep';
 
 
 const useCloudInit = ref(true)
 
+const loading = ref(false)
 const dialogState = defineModel({ default: false })
 
 const itemsNodes = ref<typeListNode>(initNodeList)
@@ -159,14 +160,24 @@ const postData = reactive<bodyPostVM>({
   cloudInit: null
 })
 
-function submit() {
+async function submit(event: Promise<{ valid: boolean }>) {
+  if (!(await event).valid) {
+    return
+  }
 
-  apiClient.POST('/api/tasks/vms', { body: postData }).then(res => {
-    if (res.data) {
-      notifyTask(res.data[0].uuid || "")
-      dialogState.value = false
-    }
-  })
+  const res = await apiClient.POST('/api/tasks/vms', { body: postData })
+
+  if (res.data) {
+    notifyTask(res.data[0].uuid || "")
+    dialogState.value = false
+  }
+
+  asyncSleep(500)
+  if (res.data) {
+    notifyTask(res.data[0].uuid || "")
+    dialogState.value = false
+  }
+  loading.value = false
 }
 
 function togleCloudInit(value: any) {
@@ -234,17 +245,6 @@ function checkOVS(networkName: string) {
 }
 
 
-// export default {
-//   name: 'NodeAddDialog',
-//   data: function () {
-//     return {
-//       networkDetail: [],
-//     };
-//   },
-//   methods: {
-//     openDialog() {
-//       this.dialogState = true;
-//     },
 //     checkOVS(networkName) {
 //       const net = this.itemsNetworks.filter(x => x.nodeName === this.postData.nodeName && x.name === networkName);
 //       if (net.length === 1) {

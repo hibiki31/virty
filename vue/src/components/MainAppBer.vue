@@ -22,7 +22,6 @@ import { useRouter } from 'vue-router'
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 
-import { defineEmits, ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
 

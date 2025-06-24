@@ -162,7 +162,6 @@
 import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
 const route = useRoute()
-import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
 import type { schemas } from '@/composables/schemas';
 import { vmPowerOff, vmPowerOn, openVNC, getPowerColor } from '@/composables/vm';

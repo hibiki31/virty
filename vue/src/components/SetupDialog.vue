@@ -21,7 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import notify from '@/composables/notify'
 import { apiClient } from '@/api'
 import { asyncSleep } from '@/composables/sleep';

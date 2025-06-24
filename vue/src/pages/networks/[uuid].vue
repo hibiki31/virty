@@ -53,7 +53,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { apiClient } from '@/api';
 import type { schemas } from '@/composables/schemas';
 const route = useRoute()
-import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
 
 const data = ref<schemas['Network']>()
