@@ -60,7 +60,7 @@ const taskCheck = async () => {
     const res = await apiClient.GET('/api/tasks/incomplete', {
       params: {
         query: {
-          hash: taskHash.value,
+          referenceHash: taskHash.value,
           admin: true
         }
       }

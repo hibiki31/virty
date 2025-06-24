@@ -48,6 +48,9 @@ class TaskRequest(BaseSchema):
     path_param: Any
     body: Any
 
+class TaskIncompleteForQuery(BaseSchema):
+    reference_hash: str | None = None
+    admin: bool | None = None
 
 class TaskIncomplete(BaseSchema):
     hash: str

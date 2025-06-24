@@ -14,11 +14,11 @@
       </v-card-item>
 
       <v-card-text>
-        <p class="text-h6">Request</p>
-        <code-feild :text="JSON.stringify(props.item.request, null, 2)" type="JSON" :loading="false"></code-feild>
-
         <p class="text-h6">Message</p>
         <code-feild :text="props.item.message" type="TEXT" :loading="false"></code-feild>
+
+        <p class="text-h6">Request</p>
+        <code-feild :text="JSON.stringify(props.item.request, null, 2)" type="json" :loading="false"></code-feild>
 
         <v-divider></v-divider>
         <p class="text-h6">Log</p>

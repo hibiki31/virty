@@ -154,8 +154,8 @@ def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
     ovs_name = req.path_param["name"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
-        db.query(
+        network = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
+        port = db.query(
             NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==network_uuid
             ).filter(NetworkPortgroupModel.name==ovs_name).one()
@@ -167,7 +167,14 @@ def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
+    try:
+        manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
+    except virtlib.LibvirtPortNotfound:
+        pass
+    
+    model.message = "Port is already deleted"
+    db.delete(port)
+    db.commit()
     
 
 @worker_task(key="post.network.vxlan")

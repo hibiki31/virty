@@ -12,6 +12,9 @@ from storage.schemas import PaseStorage
 
 logger = setup_logger(__name__)
 
+class LibvirtPortNotfound(Exception):
+    pass
+
 class VirtManager():
     def __init__(self,node_model:NodeModel):
         conn_ip = f'{node_model.user_name}@{node_model.domain}'
@@ -193,7 +196,6 @@ class VirtManager():
             pass
         net.undefine()
 
-    
     def network_ovs_add(self, uuid, name, vlan):
         net = self.node.networkLookupByUUIDString(uuid)
         xml = f'''
@@ -207,40 +209,30 @@ class VirtManager():
         # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
         # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
         # parentIndex: 1先頭, -1適当末尾
-        res = net.update(command=3,section=9, xml=xml, parentIndex=1)
-        if res == -1:
-            raise Exception("An error occurred after updating the network with libvirt")
-
-
-    def network_ovs_add(self, uuid, name, vlan):
-        net = self.node.networkLookupByUUIDString(uuid)
-        xml = f'''
-        <portgroup name="{name}">
-            <vlan>
-            <tag id="{str(vlan)}" />
-            </vlan>
-        </portgroup>
-        '''
-        # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
-        # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
-        # parentIndex: 1先頭, -1適当末尾
-        # 新しいlibvirtでセクションとコマンドが逆のバグが直った
-        # https://github.com/digitalocean/go-libvirt/pull/148#issue-1234093981
-        # 6.0.0では逆、少なくとも8.0.0で直ってる
-        if self.lib_version < 8000000:
-            res = net.update(command=3,section=9, xml=xml, parentIndex=1)
-        else:
-            res = net.update(command=9,section=3, xml=xml, parentIndex=1)
-        if res == -1:
-            raise Exception("An error occurred after updating the network with libvirt")
+        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1)
+        logger.info(res)
 
 
     def network_ovs_delete(self, uuid, name):
         net = self.node.networkLookupByUUIDString(uuid)
         editor = XmlEditor(type="str",obj=net.XMLDesc())
         xml = editor.network_ovs_find(name=name)
+        if xml is None:
+            raise LibvirtPortNotfound(f"Port is alredy deleted {uuid}, {name}")
 
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        res = net.update(command=2, section=9, xml=xml, parentIndex=1, flags=0)
+        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=0)
         logger.info(res)
+    
+    def network_update(self, net, command, section, xml, parentIndex, flags=0):
+        # 新しいlibvirtでセクションとコマンドが逆のバグが直った
+        # https://github.com/digitalocean/go-libvirt/pull/148#issue-1234093981
+        # 6.0.0では逆、少なくとも8.0.0で直ってる
+        if self.lib_version == 10000000:
+            res = net.update(command=section,section=command, xml=xml, parentIndex=parentIndex, flags=flags)
+        else:
+            res = net.update(command=command,section=section, xml=xml, parentIndex=parentIndex, flags=flags)
+        if res == -1:
+            raise Exception("An error occurred after updating the network with libvirt")
+
+        return res

@@ -1876,8 +1876,8 @@ export interface operations {
     get_incomplete_tasks: {
         parameters: {
             query?: {
-                hash?: string;
-                admin?: boolean;
+                referenceHash?: string | null;
+                admin?: boolean | null;
             };
             header?: never;
             path?: never;

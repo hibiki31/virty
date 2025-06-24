@@ -40,7 +40,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in data.portgroups" :key="item.name">
+                  <tr v-for="item in sortedPortgroups" :key="item.name">
                     <td>{{ item.name }}</td>
                     <td>{{ item.vlanId }}</td>
                     <td>{{ item.isDefault ? "YES" : "" }}</td>
@@ -119,6 +119,10 @@ const uuidTasks = ref<string[]>([])
 
 const stateDeleteDialog = ref(false)
 
+const sortedPortgroups = computed(() =>
+  [...data.value?.portgroups || []].sort((a, b) => Number(a.vlanId || 0) - Number(b.vlanId || 0)) // 昇順
+)
+
 function reload() {
   if ('uuid' in route.params) {
     apiClient.GET('/api/networks/{uuid}', {
@@ -180,6 +184,8 @@ async function submitPort(event: Promise<{ valid: boolean }>) {
     },
     body: addVlan.value
   })
+
+
   if (res.data) {
     uuidTasks.value.push(
       ...res.data.flatMap(task =>
@@ -187,7 +193,7 @@ async function submitPort(event: Promise<{ valid: boolean }>) {
       ),
     )
   }
-  await asyncSleep(1000)
+  asyncSleep(300)
   loading.value = false
 }
 
