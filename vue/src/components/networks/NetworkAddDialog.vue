@@ -81,8 +81,6 @@
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
 
-import * as r from '@/composables/rules';
-
 import { getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';

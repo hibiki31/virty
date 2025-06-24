@@ -26,7 +26,6 @@
 
 <script setup lang="ts">
 import type { schemas } from '@/composables/schemas';
-import * as r from '@/composables/rules';
 import { apiClient } from '@/api';
 import notify, { notifyTask } from '@/composables/notify';
 import { asyncSleep } from '@/composables/sleep';

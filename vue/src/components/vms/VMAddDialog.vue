@@ -102,7 +102,6 @@
 </template>
 
 <script lang="ts" setup>
-import * as r from '@/composables/rules';
 
 import { itemsCPU, itemsMemory } from '@/composables/vm'
 import type { bodyPostVM } from '@/composables/vm';

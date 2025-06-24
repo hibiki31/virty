@@ -25,8 +25,6 @@ import notify from '@/composables/notify'
 import { apiClient } from '@/api'
 import { asyncSleep } from '@/composables/sleep';
 
-import * as r from '@/composables/rules';
-
 const dialogState = ref(false)
 const postData = ref({
   username: '',

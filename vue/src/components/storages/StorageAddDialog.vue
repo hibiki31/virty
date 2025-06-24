@@ -32,7 +32,6 @@ import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
-import * as r from '@/composables/rules';
 
 const dialogState = defineModel({ default: false })
 

@@ -12,6 +12,13 @@
     </v-list>
     <v-divider></v-divider>
     <v-list class="primary--text text--primary" nav>
+      <v-chip class="ma-2" label size="x-small">
+        <v-icon icon="mdi-monitor" start></v-icon>
+        {{ breakPoint.toUpperCase() }}
+      </v-chip>
+    </v-list>
+    <v-divider></v-divider>
+    <v-list class="primary--text text--primary" nav>
       <a class="d-inline-block mx-2 social-link" :href="apiURL" rel="noopener noreferrer" target="_blank">
         <v-icon icon="mdi-api" size="30" />
       </a>
@@ -23,6 +30,7 @@
         <v-icon icon="mdi-code-json" size="24" />
       </a>
     </v-list>
+    <v-divider></v-divider>
   </v-navigation-drawer>
 </template>
 
@@ -33,7 +41,14 @@ import notify from '@/composables/notify'
 const apiURL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL + "/api" : "/api"
 const state = useStateStore()
 const auth = useAuthStore()
+import { useDisplay } from 'vuetify'
 
+function useBreakpoint() {
+  const display = useDisplay()
+  return computed(() => display.name.value as 'xs' | 'sm' | 'md' | 'lg' | 'xl')
+}
+
+const breakPoint = useBreakpoint()
 async function copyToken() {
   await navigator.clipboard.writeText(auth.token)
   notify("success", "Copied the JWT token", "Use it from a Python script")

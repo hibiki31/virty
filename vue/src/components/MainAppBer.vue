@@ -67,6 +67,7 @@ const taskCheck = async () => {
     })
     if (res.data) {
       taskHash.value = res.data.hash
+      state.task_uuids = res.data.uuids
 
       // リロードをトリガーする条件
       if ((taskCount.value > res.data.count) && enableAutoReload.value) {
