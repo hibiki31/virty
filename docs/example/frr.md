@@ -1,4 +1,4 @@
-# title: FRRouting BGP
+# FRRouting BGP
 
 
 FRRoutingを使用してVM用サブネットをBGP広告する

@@ -7,6 +7,7 @@
 ## WEB
 
 1. [サービスのアイコン](https://simpleicons.org/?q=github)
+2. [コードハイライト](https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md?plain=1#L231)
 
 ### MkDocs
 
