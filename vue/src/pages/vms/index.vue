@@ -84,7 +84,7 @@ async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
 const rescan = () => {
   apiClient.PUT('/api/tasks/vms').then((res) => {
     if (res.data) {
-      notify("success", "The task has been queued.", res.data[0].uuid || "")
+      notify("success", "The task has been queued.", res.data[0].uuid)
     }
   })
 }

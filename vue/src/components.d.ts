@@ -14,6 +14,7 @@ declare module 'vue' {
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
     DomainNetworkChange: typeof import('./components/vms/DomainNetworkChange.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
+    ImageDeleteDialog: typeof import('./components/images/ImageDeleteDialog.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
     NetworkAddDialog: typeof import('./components/networks/NetworkAddDialog.vue')['default']

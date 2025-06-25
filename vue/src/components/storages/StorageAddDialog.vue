@@ -48,7 +48,7 @@ async function submit(event: Promise<{ valid: boolean }>) {
   }
   apiClient.POST('/api/tasks/storages', { body: postData }).then((res) => {
     if (res.data) {
-      notifyTask(res.data[0].uuid || "")
+      notifyTask(res.data[0].uuid)
     }
   })
 }

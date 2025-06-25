@@ -4,7 +4,9 @@ from urllib.parse import urlparse
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
+from models import ImageModel
 from module.ansiblelib import AnsibleManager
+from module.virtlib import VirtManager
 from node.models import NodeModel
 from storage.models import StorageModel
 from task.functions import TaskBase, TaskRequest
@@ -40,3 +42,20 @@ def post_image_download(db: Session, model: TaskModel, req: TaskRequest):
     )
     
     return f"save {body.image_url}"
+
+
+@worker_task(key="delete.image.root")
+def delete_image_root(db: Session, model: TaskModel, req: TaskRequest):
+    storage_uuid = req.path_param["uuid"]
+    image_name = req.path_param["name"]
+    
+    storage_model = db.query(StorageModel).filter(StorageModel.uuid==storage_uuid).one()
+    node_model = db.query(NodeModel).filter(NodeModel.name==storage_model.node_name).one()
+    
+    virt = VirtManager(node_model=node_model)
+    virt.image_delete(storage_uuid=storage_uuid, image_name=image_name, secure=False)
+    
+    db.query(ImageModel).filter(ImageModel.storage_uuid==storage_uuid, ImageModel.name==image_name).delete()
+    db.commit()
+    
+    model.message = f"Successfly Delete image: {node_model.name} -> {storage_model.name} -> {image_name}"

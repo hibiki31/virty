@@ -515,6 +515,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tasks/storages/{uuid}/images/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Image */
+        delete: operations["delete_image"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/images": {
         parameters: {
             query?: never;
@@ -1176,7 +1193,7 @@ export interface components {
             /** Name */
             name: string;
             /** Storageuuid */
-            storageUuid?: string | null;
+            storageUuid: string;
             /** Capacity */
             capacity: number;
             storage: components["schemas"]["Storage"];
@@ -1715,7 +1732,7 @@ export interface components {
             /** Log */
             log?: string | null;
             /** Uuid */
-            uuid?: string | null;
+            uuid: string;
         };
         /** TaskIncomplete */
         TaskIncomplete: {
@@ -2902,6 +2919,38 @@ export interface operations {
             };
         };
     };
+    delete_image: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_images: {
         parameters: {
             query?: {
@@ -2988,7 +3037,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
         };

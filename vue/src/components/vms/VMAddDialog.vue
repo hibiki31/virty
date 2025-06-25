@@ -165,13 +165,13 @@ async function submit(event: Promise<{ valid: boolean }>) {
   const res = await apiClient.POST('/api/tasks/vms', { body: postData })
 
   if (res.data) {
-    notifyTask(res.data[0].uuid || "")
+    notifyTask(res.data[0].uuid)
     dialogState.value = false
   }
 
   asyncSleep(500)
   if (res.data) {
-    notifyTask(res.data[0].uuid || "")
+    notifyTask(res.data[0].uuid)
     dialogState.value = false
   }
   loading.value = false

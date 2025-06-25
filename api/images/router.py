@@ -56,7 +56,7 @@ def get_images(
         query = query.filter(StorageMetadataModel.rool==param.rool)
 
     res = []
-    
+    query = query.order_by(ImageModel.name)
     count = query.count()
     if param.limit > 0:
         query = query.limit(param.limit).offset(int(param.limit*param.page))

@@ -78,6 +78,16 @@ class VirtManager():
         
         return storage
 
+    def image_delete(self, storage_uuid, image_name, secure:bool = False):
+        pool = self.node.storagePoolLookupByUUIDString(storage_uuid)
+        pool.refresh(0)
+        vol = pool.storageVolLookupByName(image_name)
+        
+        if secure:
+            vol.delete(flags=libvirt.VIR_STORAGE_VOL_DELETE_ZEROED)
+        else:
+            vol.delete(flags=libvirt.VIR_STORAGE_VOL_DELETE_NORMAL)
+
 
     def network_data(self) -> list[PaseNetwork]:
         networks = self.node.listAllNetworks()

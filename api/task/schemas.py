@@ -21,26 +21,22 @@ class TaskBase(BaseSchema):
     result: dict | None = None
     message: str | None = None
     log: str | None = None
-    
 
 class TaskForCreate(TaskBase):
     pass
 
+class Task(TaskBase):
+    uuid: str
+
+class TaskPage(BaseSchema):
+    count: int
+    data: List[Task]
 
 class TaskForQuery(GetPagination):
     resource: str | None = None
     object: str | None = None
     method: str | None = None
     status: str | None = None
-
-
-class Task(TaskBase):
-    uuid: str | None = None
-
-
-class TaskPage(BaseSchema):
-    count: int
-    data: List[Task]
 
 
 class TaskRequest(BaseSchema):
