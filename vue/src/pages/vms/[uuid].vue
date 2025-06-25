@@ -2,6 +2,7 @@
   <div v-if="data">
     <v-card variant="flat">
       <v-m-delete-dialog v-model="stateDeleteDialog" :item="data"></v-m-delete-dialog>
+      <v-m-cdrom-change v-model="stateCdromDialog" :item="data" :target="deleteTarget"></v-m-cdrom-change>
       <v-card-item>
         <v-card-title>
           <v-icon left class="ma-3" :color="getPowerColor(data.status)">mdi-power-standby</v-icon>
@@ -131,7 +132,7 @@
                       <td>{{ itemDisk.target }}</td>
                       <td>
                         <v-icon v-if="itemDisk.device == 'cdrom'"
-                          @click="openCDRomDialog(itemDisk.target)">mdi-pencil</v-icon>
+                          @click="deleteTarget = itemDisk.target || ''; stateCdromDialog = true">mdi-pencil</v-icon>
                       </td>
                     </tr>
                   </tbody>
@@ -170,6 +171,8 @@ const data = ref<schemas['DomainDetail']>()
 const dataXML = ref<schemas['DomainXML']>()
 
 const stateDeleteDialog = ref(false)
+const stateCdromDialog = ref(false)
+const deleteTarget = ref("")
 
 async function reload() {
   console.debug("vm detail reload")

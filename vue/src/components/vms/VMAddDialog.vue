@@ -62,17 +62,16 @@
           <v-row v-for="(nic, index) in postData.interface" :key="index">
             <v-col cols="12" md="3">
               <v-select variant="outlined" density="comfortable" :items="[{ title: 'Network', value: 'network' }]"
-                :rules="[r.required]" v-model="nic.type" label="Network Type"></v-select>
+                hide-details :rules="[r.required]" v-model="nic.type" label="Network Type"></v-select>
             </v-col>
             <v-col cols="12" md="3">
               <v-select variant="outlined" density="comfortable"
-                :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-title="name"
-                item-value="uuid" :rules="[r.required]" v-model="nic.networkUuid" label="Network"
-                @change="getNetworkDetail()"></v-select>
+                :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-title="name" hide-details
+                item-value="uuid" :rules="[r.required]" v-model="nic.networkUuid" label="Network"></v-select>
             </v-col>
             <v-col cols="12" md="3" v-if="checkOVS(nic.networkUuid)">
-              <v-select :loading="nic.port === null" :items="[]" item-title="name" item-value="" :rules="[r.required]"
-                label="Port"></v-select>
+              <v-select variant="outlined" density="comfortable" :items="itemsPort(nic.networkUuid)" item-text="name"
+                hide-details item-value="" :rules="[r.required]" v-model="nic.port" label="Port"></v-select>
             </v-col>
             <v-col><v-btn variant="text" size="small" class="mt-1" @click="deleteInterface(index)"
                 icon="mdi-minus-circle-outline"></v-btn></v-col>
@@ -141,7 +140,7 @@ const postData = reactive<bodyPostVM>({
   disks: [
     {
       type: 'empty',
-      savePoolUuid: 'default',
+      savePoolUuid: '',
       originalPoolUuid: null,
       originalName: null,
       sizeGigaByte: 32
@@ -152,7 +151,7 @@ const postData = reactive<bodyPostVM>({
       type: 'network',
       mac: null,
       networkUuid: '',
-      port: null
+      port: '' as string | null
     }
   ],
   cloudInit: null
@@ -195,9 +194,15 @@ ssh_authorized_keys:
   }
 }
 
+function itemsPort(networkUuid: string) {
+  const net = itemsNetworks.value.data
+    .filter(n => n.nodeName === postData.nodeName && n.uuid === networkUuid)
 
-function getNetworkDetail() {
-  //       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
+  if (net[0]) {
+    return net[0].portgroups.map(p => ({ title: p.name, value: p.vlanId }))
+  } else {
+    return []
+  }
 }
 
 function addInterface() {
@@ -235,47 +240,11 @@ onMounted(async () => {
   itemsImages.value = await getImageList(queryImage)
 })
 
-function checkOVS(networkName: string) {
-  const net = itemsNetworks.value.data.filter(x => x.nodeName === postData.nodeName && x.name === networkName);
-  if (net.length === 1) {
-    return (net[0].type === 'openvswitch');
-  }
+
+function checkOVS(networkUuid: string): boolean {
+  const net = itemsNetworks.value.data
+    .filter(n => n.nodeName === postData.nodeName && n.uuid === networkUuid)
+
+  return net.length === 1 && net[0].type === 'openvswitch'
 }
-
-
-//     checkOVS(networkName) {
-//       const net = this.itemsNetworks.filter(x => x.nodeName === this.postData.nodeName && x.name === networkName);
-//       if (net.length === 1) {
-//         return (net[0].type === 'openvswitch');
-//       }
-//     },
-//     returnUUID(networkName) {
-//       const net = this.itemsNetworks.filter(x => x.nodeName === this.postData.nodeName && x.name === networkName);
-//       if (net.length === 1) {
-//         return net[0].uuid;
-//       }
-//     },
-//     getNetworkDetail(uuid, nic) {
-//       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
-//     },
-//
-//     runMethod() {
-//       if (!this.useCloudInit) {
-//         this.postData.cloudInit = null;
-//       }
-//       axios.request({
-//         method: 'post',
-//         url: '/api/vms',
-//         data: this.postData
-//       })
-//         .then(res => {
-//           this.$_pushNotice('Please wait for task to complete', 'success');
-//           this.dialogState = false;
-//         })
-//         .catch(error => {
-//           this.$_pushNotice(error.response.data.detail, 'error');
-//         });
-//     }
-//   },
-
 </script>

@@ -11,7 +11,6 @@ declare module 'vue' {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     CodeFeild: typeof import('./components/CodeFeild.vue')['default']
     DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
-    DomainCDRomDialog: typeof import('./components/vms/DomainCDRomDialog.vue')['default']
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
     DomainNetworkChange: typeof import('./components/vms/DomainNetworkChange.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
@@ -33,6 +32,7 @@ declare module 'vue' {
     StoragePoolJoinDialog: typeof import('./components/storages/StoragePoolJoinDialog.vue')['default']
     TaskDetailDialog: typeof import('./components/tasks/TaskDetailDialog.vue')['default']
     VMAddDialog: typeof import('./components/vms/VMAddDialog.vue')['default']
+    VMCdromChange: typeof import('./components/vms/VMCdromChange.vue')['default']
     VMDeleteDialog: typeof import('./components/vms/VMDeleteDialog.vue')['default']
   }
 }
