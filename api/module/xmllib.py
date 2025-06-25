@@ -243,14 +243,15 @@ class XmlEditor():
                 continue
             interface.set('type','network')
             interface.find('source').set('network', network)
-            try:
-                interface.find('source').attrib.pop("portid", None)
-                interface.find('source').attrib.pop("bridge", None)
-                interface.remove(interface.find('virtualport'))
-            except:
-                pass
-
-            if port != None:
+            
+            if port is None:
+                source_elem = interface.find("source")
+                if source_elem is not None:
+                    source_elem.attrib.pop("portgroup", None)
+                virtual_port_elem = interface.find('virtualport')
+                if virtual_port_elem is not None:
+                    interface.remove(virtual_port_elem)
+            else:
                 interface.find('source').set('portgroup', port)
             return ET.tostring(interface).decode()
 

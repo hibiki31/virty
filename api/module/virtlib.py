@@ -158,10 +158,12 @@ class VirtManager():
 
         xml = XmlEditor(type="str",obj=domain.XMLDesc())
         xml = xml.domain_network(mac=mac,network=network,port=port)
-        try:
-            domain.updateDeviceFlags(xml)
-        except libvirt.libvirtError as e:
-            raise Exception("Cannot switch the OVS while the VM is running" + str(e))      
+        
+        # Flagが0 CURRENT, 1 LIVEだとVM停止すると元に戻る
+        domain.updateDeviceFlags(xml,flags=0)
+        # 2 CONFIGも同時に変更して、永続化＋ライブ更新を入れている
+        domain.updateDeviceFlags(xml,flags=2)
+        
         
 
     def storage_define(self,xml_str):
@@ -208,8 +210,9 @@ class VirtManager():
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
         # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
         # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
-        # parentIndex: 1先頭, -1適当末尾
-        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1)
+        # parentIndex: 1先頭, -1適当末尾 
+        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1, flags=1) #LIVE
+        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1, flags=2) #CONFIG
         logger.info(res)
 
 
@@ -221,7 +224,8 @@ class VirtManager():
             raise LibvirtPortNotfound(f"Port is alredy deleted {uuid}, {name}")
 
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=0)
+        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=1) #LIVE
+        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=2) #CONFIG
         logger.info(res)
     
     def network_update(self, net, command, section, xml, parentIndex, flags=0):

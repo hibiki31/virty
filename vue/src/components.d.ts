@@ -34,5 +34,6 @@ declare module 'vue' {
     VMAddDialog: typeof import('./components/vms/VMAddDialog.vue')['default']
     VMCdromChange: typeof import('./components/vms/VMCdromChange.vue')['default']
     VMDeleteDialog: typeof import('./components/vms/VMDeleteDialog.vue')['default']
+    VMNetworkChange: typeof import('./components/vms/VMNetworkChange.vue')['default']
   }
 }

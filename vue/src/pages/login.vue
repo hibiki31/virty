@@ -1,28 +1,22 @@
 <template>
-  <div>
+  <div v-if="auth.$state.tokenValidated && !auth.$state.authed">
     <setup-dialog></setup-dialog>
-    <v-container class="fill-height" fluid v-if="auth.$state.tokenValidated && !auth.$state.authed">
-      <v-row justify="center">
-        <v-col cols="12" sm="8" md="4">
-          <v-card>
-            <v-toolbar color="primary" dark>
-              <v-toolbar-title>Login</v-toolbar-title>
-              <v-spacer></v-spacer>
-            </v-toolbar>
-            <v-card-text>
-              <v-text-field v-model="username" label="ID" prepend-icon="mdi-account" required type="text"
-                variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
-              <v-text-field v-model="password" label="Password" prepend-icon="mdi-lock" required type="password"
-                variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn depressed color="primary" type="submit" :loading="isLoadingLogin" @click="login">Login</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+    <v-card class="mx-auto" max-width="400">
+      <v-toolbar color="primary" dark>
+        <v-toolbar-title>Login</v-toolbar-title>
+        <v-spacer></v-spacer>
+      </v-toolbar>
+      <v-card-text>
+        <v-text-field v-model="username" label="ID" prepend-icon="mdi-account" required type="text" variant="underlined"
+          density="compact" @keydown.enter="login"></v-text-field>
+        <v-text-field v-model="password" label="Password" prepend-icon="mdi-lock" required type="password"
+          variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn depressed color="primary" type="submit" :loading="isLoadingLogin" @click="login">Login</v-btn>
+      </v-card-actions>
+    </v-card>
   </div>
 </template>
 

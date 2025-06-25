@@ -2,6 +2,7 @@
   <div v-if="data">
     <v-card variant="flat">
       <v-m-delete-dialog v-model="stateDeleteDialog" :item="data"></v-m-delete-dialog>
+      <v-m-network-change v-model="stateNetworkDialog" :item="data" :mac="changeMac"></v-m-network-change>
       <v-m-cdrom-change v-model="stateCdromDialog" :item="data" :target="deleteTarget"></v-m-cdrom-change>
       <v-card-item>
         <v-card-title>
@@ -102,7 +103,7 @@
                       <td>{{ item.port }}</td>
                       <td>{{ item.target }}</td>
                       <td>
-                        <v-icon @click="">mdi-pencil</v-icon>
+                        <v-icon @click="changeMac = item.mac || ''; stateNetworkDialog = true">mdi-pencil</v-icon>
                       </td>
                     </tr>
                   </tbody>
@@ -172,7 +173,9 @@ const dataXML = ref<schemas['DomainXML']>()
 
 const stateDeleteDialog = ref(false)
 const stateCdromDialog = ref(false)
+const stateNetworkDialog = ref(false)
 const deleteTarget = ref("")
+const changeMac = ref("")
 
 async function reload() {
   console.debug("vm detail reload")
