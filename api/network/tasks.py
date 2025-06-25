@@ -1,4 +1,3 @@
-import secrets
 from ipaddress import ip_interface
 from random import randint
 from time import time
@@ -9,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
 from module import virtlib, xmllib
+from network.create import create_network
 from node.models import NodeModel
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
@@ -78,63 +78,10 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
     
-    
-
-    if body.type == "bridge":
-        # XMLを定義、設定
-        editor = xmllib.XmlEditor("static","net_bridge")
-        editor.network_bridge_edit(name=body.name, bridge=body.bridge_device)
-        xml = editor.dump_str()
-    elif body.type == "ovs":
-        xml = f'''
-        <network>
-            <name>{body.name}</name>
-            <forward mode="bridge" />
-            <bridge name="{body.bridge_device}" />
-            <virtualport type="openvswitch" />
-            <portgroup name="untag" default="yes">
-            </portgroup>
-        </network>
-        '''
-    elif body.type == "nat":
-        if body.nat.bridge_name:
-            bridge_name = body.nat.bridge_name
-        else:
-            bridge_name = f"v-{secrets.token_hex(4)}"
-            
-        editor = xmllib.XmlEditor("static","net_nat")
-        editor.network_nat(
-            name=body.name, 
-            bridge=bridge_name, 
-            address=str(body.nat.address), 
-            netmask=str(body.nat.netmask),
-            start=str(body.nat.dhcp_start),
-            end=str(body.nat.dhcp_end)
+    create_network(
+        body=body,
+        node=node
         )
-        xml = editor.dump_str()
-    elif body.type == "route":
-        if body.route.bridge_name:
-            bridge_name = body.route.bridge_name
-        else:
-            bridge_name = f"v-{secrets.token_hex(4)}"
-            
-        editor = xmllib.XmlEditor("static","net_route")
-        # 内容同じだからNAT|ROUTE
-        editor.network_nat(
-            name=body.name, 
-            bridge=bridge_name, 
-            address=str(body.route.address), 
-            netmask=str(body.route.netmask),
-            start=str(body.route.dhcp_start),
-            end=str(body.route.dhcp_end)
-        )
-        xml = editor.dump_str()
-    else:
-        raise Exception("Type is incorrect")
-
-    # ソイや！
-    manager = virtlib.VirtManager(node_model=node)
-    manager.network_define(xml_str=xml)
 
     model.message = "Network add has been successfull"
 
@@ -182,8 +129,8 @@ def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
     ovs_name = req.path_param["name"]
 
     try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
-        db.query(
+        network = db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).one()
+        port = db.query(
             NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==network_uuid
             ).filter(NetworkPortgroupModel.name==ovs_name).one()
@@ -195,7 +142,14 @@ def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
         raise Exception("node not found")
 
     manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
+    try:
+        manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
+    except virtlib.LibvirtPortNotfound:
+        pass
+    
+    model.message = "Port is already deleted"
+    db.delete(port)
+    db.commit()
     
 
 @worker_task(key="post.network.vxlan")

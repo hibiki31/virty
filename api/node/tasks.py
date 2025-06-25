@@ -1,9 +1,15 @@
+import os
+
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
 from module.ansiblelib import AnsibleManager
 from module.paramikolib import ParamikoManager
+from module.virtlib import NetworkAlreadyExistsError, StoragePoolAlreadyExistsError
+from network.create import create_network
+from network.schemas import NetworkDHCPForCreate, NetworkForCreate, NetworkIPForCreate
+from storage.create import create_storage
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 
@@ -32,23 +38,6 @@ def post_node_root(db: Session, model: TaskModel, req: TaskRequest):
         ssh_role = NodeRoleModel(name="ssh")
         db.add(ssh_role)
 
-    # row = NodeModel(
-    #     name = request.name,
-    #     domain = domain,
-    #     description = request.description,
-    #     user_name = user,
-    #     port = port,
-    #     core = node_infomation["result"]["ansible_facts"]["ansible_processor_nproc"],
-    #     memory = int(float(node_infomation["result"]["ansible_facts"]["ansible_memtotal_mb"])/1024),
-    #     cpu_gen = node_infomation["result"]["ansible_facts"]["ansible_processor"][2],
-    #     os_like = node_infomation["result"]["ansible_facts"]["ansible_os_family"],
-    #     os_name = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["id"],
-    #     os_version = node_infomation["result"]["ansible_facts"]["ansible_lsb"]["release"],
-    #     status = 10,
-    #     ansible_facts = node_infomation,
-    #     qemu_version = None,
-    #     libvirt_version = None,
-    # )
     row = NodeModel(
         name = body.name,
         domain = domain,
@@ -98,14 +87,37 @@ def patch_node_role(db: Session, model: TaskModel, req: TaskRequest):
     node_name = body.node_name
     add_role_name = body.role_name
     
-    node:NodeModel = db.query(NodeModel).filter(NodeModel.name==node_name).one()
+    node = db.query(NodeModel).filter(NodeModel.name==node_name).one()
 
     if add_role_name == "libvirt":
         patch_node_role_libvirt(db=db, task=model, node=node)
     elif add_role_name == "ovs":
         patch_node_role_ovs(db=db, task=model, node=node, request=body)
-    elif add_role_name == "vxlan_overlay":
-        patch_node_role_vxlan_overlay(db=db, task=model, node=node, request=body)
+    # elif add_role_name == "vxlan_overlay":
+    #     patch_node_role_vxlan_overlay(db=db, task=model, node=node, request=body)
+    
+    for i in ["virty-vm-image", "virty-installer-iso", "virty-template-image"]:
+        try:
+            create_storage(
+                storage_name=i,
+                storage_path=os.path.join("/var/virty/", i),
+                node=node
+            )
+        except StoragePoolAlreadyExistsError:
+            logger.info(f'Skip {node.name} {os.path.join("/var/virty/", i)}')
+    
+    network_body = NetworkForCreate(
+        name="virty-nat",
+        node_name=node.name,
+        forward_mode='nat',
+        dhcp=NetworkDHCPForCreate(start="192.168.177.1", end="192.168.177.200"),
+        ip=NetworkIPForCreate(address="192.168.177.254", netmask="255.255.255.0")
+    )
+    
+    try:
+        create_network(body=network_body, node=node)
+    except NetworkAlreadyExistsError:
+        logger.info(f'Skip {node.name} "virty-net')
     
     model.message = "Node patch has been successfull"
 

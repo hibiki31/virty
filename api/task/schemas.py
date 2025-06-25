@@ -21,11 +21,16 @@ class TaskBase(BaseSchema):
     result: dict | None = None
     message: str | None = None
     log: str | None = None
-    
 
 class TaskForCreate(TaskBase):
     pass
 
+class Task(TaskBase):
+    uuid: str
+
+class TaskPage(BaseSchema):
+    count: int
+    data: List[Task]
 
 class TaskForQuery(GetPagination):
     resource: str | None = None
@@ -34,20 +39,14 @@ class TaskForQuery(GetPagination):
     status: str | None = None
 
 
-class Task(TaskBase):
-    uuid: str | None = None
-
-
-class TaskPage(BaseSchema):
-    count: int
-    data: List[Task]
-
-
 class TaskRequest(BaseSchema):
     url: str | None = None
     path_param: Any
     body: Any
 
+class TaskIncompleteForQuery(BaseSchema):
+    reference_hash: str | None = None
+    admin: bool | None = None
 
 class TaskIncomplete(BaseSchema):
     hash: str

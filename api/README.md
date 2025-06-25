@@ -15,6 +15,8 @@ pip-review
 
 ```
 source dev_completion.sh 
+datamodel-codegen --url http://localhost:7799/api/openapi.json --output model.py
+docker run --rm koxudaxi/datamodel-code-generator --url http://localhost:8765/api/openapi.json --output model.py
 ```
 
 

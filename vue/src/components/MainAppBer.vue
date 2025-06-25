@@ -22,7 +22,6 @@ import { useRouter } from 'vue-router'
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 
-import { defineEmits, ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
 
@@ -61,13 +60,14 @@ const taskCheck = async () => {
     const res = await apiClient.GET('/api/tasks/incomplete', {
       params: {
         query: {
-          hash: taskHash.value,
+          referenceHash: taskHash.value,
           admin: true
         }
       }
     })
     if (res.data) {
       taskHash.value = res.data.hash
+      state.task_uuids = res.data.uuids
 
       // リロードをトリガーする条件
       if ((taskCount.value > res.data.count) && enableAutoReload.value) {

@@ -1,5 +1,11 @@
 <template>
-  <HelloWorld />
+  <v-card>
+    <v-card-title>
+      Dashboard
+    </v-card-title>
+    <v-card>
+    </v-card>
+  </v-card>
 </template>
 
 <route lang="yaml">

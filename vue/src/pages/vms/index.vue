@@ -42,9 +42,7 @@ meta:
 <script lang="ts" setup>
 import type { typeListVM, typeListVMQuery } from '@/composables/vm'
 import { initVMList, getVMList } from '@/composables/vm'
-import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
-import type { paths } from '@/api/openapi'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
 import { getPowerColor } from '@/composables/vm'
@@ -83,15 +81,13 @@ async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
   await reload()
 }
 
-
 const rescan = () => {
   apiClient.PUT('/api/tasks/vms').then((res) => {
     if (res.data) {
-      notify("success", "The task has been queued.", res.data[0].uuid || "")
+      notify("success", "The task has been queued.", res.data[0].uuid)
     }
   })
 }
-
 
 async function reload() {
   loading.value = true
@@ -104,7 +100,6 @@ useReloadListener(() => {
 })
 
 onMounted(() => {
-  reload()
 })
 
 </script>

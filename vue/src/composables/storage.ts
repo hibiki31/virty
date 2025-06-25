@@ -1,21 +1,29 @@
 import { apiClient } from "@/api";
+import type { schemas } from "./schemas";
 import type { paths } from "@/api/openapi";
 
-export type typeListStorage =
-  paths["/api/storages"]["get"]["responses"]["200"]["content"]["application/json"];
+export type typeListStorageQuery = NonNullable<
+  paths["/api/storages"]["get"]["parameters"]["query"]
+>;
 
-export const initStorageList: typeListStorage = {
+export const initStorageList: schemas["StoragePage"] = {
   count: 0,
   data: [],
 };
 
-export async function getStorageList() {
+export function getAvailableColoer(capa: number, available: number) {
+  const userd = ((capa - available) / capa) * 100;
+
+  if (userd > 80) return "pink-lighten-2";
+  else if (userd > 50) return "yellow-lighten-2";
+  else return "teal-lighten-4";
+}
+
+export async function getStorageList(query: typeListStorageQuery) {
+  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/storages", {
     params: {
-      query: {
-        admin: true,
-        limit: 100,
-      },
+      query: query,
     },
   });
   if (res.data) {

@@ -164,14 +164,17 @@ def get_node_info(
     
     
     res = NodeInfo(
-        ip_address = ssh_manager.run_cmd("ip a").stdout,
-        ip_route   = ssh_manager.run_cmd("ip r").stdout,
-        ip_neigh   = ssh_manager.run_cmd("ip neigh").stdout,
-        df_h       = ssh_manager.run_cmd("df -h").stdout,
-        lsblk      = ssh_manager.run_cmd("lsblk").stdout,
-        uptime     = ssh_manager.run_cmd("uptime -p").stdout,
-        free       = ssh_manager.run_cmd("free -h").stdout,
-        top        = ssh_manager.run_cmd("top -b -n 1|head -n 20").stdout
+        ip_address     = ssh_manager.run_cmd("ip a").stdout,
+        ip_route       = ssh_manager.run_cmd("ip r").stdout,
+        ip_neigh       = ssh_manager.run_cmd("ip neigh").stdout,
+        df_h           = ssh_manager.run_cmd("df -h").stdout,
+        lsblk          = ssh_manager.run_cmd("lsblk").stdout,
+        uptime         = ssh_manager.run_cmd("uptime -p").stdout,
+        free           = ssh_manager.run_cmd("free -h").stdout,
+        top            = ssh_manager.run_cmd("top -b -n 1|head -n 20").stdout,
+        iptables_nat   = ssh_manager.run_cmd("sudo iptables -L -t nat").stdout,
+        iptables       = ssh_manager.run_cmd("sudo iptables -L").stdout,
+        netplan_get    = ssh_manager.run_cmd("sudo netplan get").stdout,
     )
 
     return res

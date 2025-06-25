@@ -49,3 +49,19 @@ def delete_storage(
     task.commit(user=cu, req=req, param={"uuid": uuid})
 
     return [task.model]
+
+
+@app.delete("/{uuid}/images/{name}", response_model=List[Task])
+def delete_image(
+        uuid: str,
+        name: str,
+        req: Request,
+        cu: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
+
+    task = TaskManager(db=db)
+    task.select(method='delete', resource='image', object='root')
+    task.commit(user=cu, req=req, param={"uuid": uuid, "name": name})
+
+    return [task.model]

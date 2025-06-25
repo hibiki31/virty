@@ -1,8 +1,8 @@
 <template>
   <v-dialog width="900" v-model="dialogState" color="black">
-    <v-card title="Create VM">
-      <v-card-text>
-        <v-form class="form-box">
+    <v-form ref="formRef" @submit.prevent="submit">
+      <v-card title="Create VM">
+        <v-card-text>
           <!-- 基本 -->
           <v-row cols="12">
             <v-col>
@@ -12,8 +12,8 @@
                 @change="() => { if (postData.cloudInit) { postData.cloudInit.hostname = postData.name } }"></v-text-field>
             </v-col>
             <v-col md="2">
-              <v-select variant="outlined" density="comfortable" label="Memory" :items="itemsMemory"
-                :rules="[r.required]" v-model="postData.memoryMegaByte"></v-select>
+              <v-select variant="outlined" density="comfortable" label="Memory" :items="itemsMemory" item-title="title"
+                item-value="value" :rules="[r.required]" v-model="postData.memoryMegaByte"></v-select>
             </v-col>
             <v-col md="2">
               <v-select variant="outlined" density="comfortable" label="CPU" :items="itemsCPU" :rules="[r.required]"
@@ -62,17 +62,16 @@
           <v-row v-for="(nic, index) in postData.interface" :key="index">
             <v-col cols="12" md="3">
               <v-select variant="outlined" density="comfortable" :items="[{ title: 'Network', value: 'network' }]"
-                :rules="[r.required]" v-model="nic.type" label="Network Type"></v-select>
+                hide-details :rules="[r.required]" v-model="nic.type" label="Network Type"></v-select>
             </v-col>
             <v-col cols="12" md="3">
               <v-select variant="outlined" density="comfortable"
-                :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-title="name"
-                item-value="uuid" :rules="[r.required]" v-model="nic.networkUuid" label="Network"
-                @change="getNetworkDetail()"></v-select>
+                :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)" item-title="name" hide-details
+                item-value="uuid" :rules="[r.required]" v-model="nic.networkUuid" label="Network"></v-select>
             </v-col>
             <v-col cols="12" md="3" v-if="checkOVS(nic.networkUuid)">
-              <v-select :loading="nic.port === null" :items="[]" item-title="name" item-value="" :rules="[r.required]"
-                label="Port"></v-select>
+              <v-select variant="outlined" density="comfortable" :items="itemsPort(nic.networkUuid)" item-text="name"
+                hide-details item-value="" :rules="[r.required]" v-model="nic.port" label="Port"></v-select>
             </v-col>
             <v-col><v-btn variant="text" size="small" class="mt-1" @click="deleteInterface(index)"
                 icon="mdi-minus-circle-outline"></v-btn></v-col>
@@ -90,58 +89,58 @@
             <v-textarea variant="outlined" density="comfortable" clearable class="text-caption" auto-grow
               v-model="postData.cloudInit.userData" clear-icon="mdi-close-circle" label="User-data"></v-textarea>
           </div>
-        </v-form>
-      </v-card-text>
-      <v-divider></v-divider>
-
-      <v-card-actions>
-        <v-btn color="primary" class="mr-2" @click="submit">CREATE</v-btn>
-      </v-card-actions>
-    </v-card>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-btn color="primary" class="mr-2" type="submit" :loading="loading">CREATE</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-form>
   </v-dialog>
 
 </template>
 
 <script lang="ts" setup>
-import { ref, defineModel, onMounted } from 'vue';
-import * as r from '@/composables/rules';
 
 import { itemsCPU, itemsMemory } from '@/composables/vm'
 import type { bodyPostVM } from '@/composables/vm';
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 
-import type { typeListNetwork } from '@/composables/network';
+import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network';
 import { initNetworkList, getNetworkList } from '@/composables/network';
 
-import type { typeListStorage } from '@/composables/storage';
+import type { typeListStorageQuery } from '@/composables/storage';
 import { initStorageList, getStorageList } from '@/composables/storage';
 
 import type { typeListImage, typeListImageQuery } from '@/composables/image';
 import { initImageList, getImageList } from '@/composables/image';
 import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
+import type { schemas } from '@/composables/schemas';
+import { asyncSleep } from '@/composables/sleep';
 
 
 const useCloudInit = ref(true)
 
+const loading = ref(false)
 const dialogState = defineModel({ default: false })
 
 const itemsNodes = ref<typeListNode>(initNodeList)
 const itemsNetworks = ref<typeListNetwork>(initNetworkList)
-const itemsStorages = ref<typeListStorage>(initStorageList)
+const itemsStorages = ref<schemas['StoragePage']>(initStorageList)
 const itemsImages = ref<typeListImage>(initImageList)
 
 const postData = reactive<bodyPostVM>({
   type: 'manual',
   name: '',
   nodeName: '',
-  memoryMegaByte: 512,
+  memoryMegaByte: 8192,
   cpu: 2,
   disks: [
     {
       type: 'empty',
-      savePoolUuid: 'default',
+      savePoolUuid: '',
       originalPoolUuid: null,
       originalName: null,
       sizeGigaByte: 32
@@ -152,20 +151,30 @@ const postData = reactive<bodyPostVM>({
       type: 'network',
       mac: null,
       networkUuid: '',
-      port: null
+      port: '' as string | null
     }
   ],
   cloudInit: null
 })
 
-function submit() {
+async function submit(event: Promise<{ valid: boolean }>) {
+  if (!(await event).valid) {
+    return
+  }
 
-  apiClient.POST('/api/tasks/vms', { body: postData }).then(res => {
-    if (res.data) {
-      notifyTask(res.data[0].uuid || "")
-      dialogState.value = false
-    }
-  })
+  const res = await apiClient.POST('/api/tasks/vms', { body: postData })
+
+  if (res.data) {
+    notifyTask(res.data[0].uuid)
+    dialogState.value = false
+  }
+
+  asyncSleep(500)
+  if (res.data) {
+    notifyTask(res.data[0].uuid)
+    dialogState.value = false
+  }
+  loading.value = false
 }
 
 function togleCloudInit(value: any) {
@@ -185,9 +194,15 @@ ssh_authorized_keys:
   }
 }
 
+function itemsPort(networkUuid: string) {
+  const net = itemsNetworks.value.data
+    .filter(n => n.nodeName === postData.nodeName && n.uuid === networkUuid)
 
-function getNetworkDetail() {
-  //       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
+  if (net[0]) {
+    return net[0].portgroups.map(p => ({ title: p.name, value: p.vlanId }))
+  } else {
+    return []
+  }
 }
 
 function addInterface() {
@@ -203,97 +218,33 @@ function deleteInterface(index: number) {
 }
 
 onMounted(async () => {
-  const query: typeListImageQuery = {
+  const queryImage: typeListImageQuery = {
+    admin: true,
+    limit: 999999,
+    page: 1,
+  }
+  const queryNetwork: typeListNetworkQuery = {
+    admin: true,
+    limit: 999999,
+    page: 1,
+  }
+  const queryStorage: typeListStorageQuery = {
     admin: true,
     limit: 999999,
     page: 1,
   }
 
   itemsNodes.value = await getNode()
-  itemsNetworks.value = await getNetworkList()
-  itemsStorages.value = await getStorageList()
-  itemsImages.value = await getImageList(query)
+  itemsNetworks.value = await getNetworkList(queryNetwork)
+  itemsStorages.value = await getStorageList(queryStorage)
+  itemsImages.value = await getImageList(queryImage)
 })
 
-function checkOVS(networkName: string) {
-  const net = itemsNetworks.value.data.filter(x => x.nodeName === postData.nodeName && x.name === networkName);
-  if (net.length === 1) {
-    return (net[0].type === 'openvswitch');
-  }
+
+function checkOVS(networkUuid: string): boolean {
+  const net = itemsNetworks.value.data
+    .filter(n => n.nodeName === postData.nodeName && n.uuid === networkUuid)
+
+  return net.length === 1 && net[0].type === 'openvswitch'
 }
-
-
-// export default {
-//   name: 'NodeAddDialog',
-//   data: function () {
-//     return {
-//       networkDetail: [],
-//     };
-//   },
-//   methods: {
-//     openDialog() {
-//       this.dialogState = true;
-//     },
-//     checkOVS(networkName) {
-//       const net = this.itemsNetworks.filter(x => x.nodeName === this.postData.nodeName && x.name === networkName);
-//       if (net.length === 1) {
-//         return (net[0].type === 'openvswitch');
-//       }
-//     },
-//     returnUUID(networkName) {
-//       const net = this.itemsNetworks.filter(x => x.nodeName === this.postData.nodeName && x.name === networkName);
-//       if (net.length === 1) {
-//         return net[0].uuid;
-//       }
-//     },
-//     getNetworkDetail(uuid, nic) {
-//       axios.get('/api/networks/' + uuid).then((response) => (nic.selectPort = response.data.portgroups));
-//     },
-//
-//     runMethod() {
-//       if (!this.useCloudInit) {
-//         this.postData.cloudInit = null;
-//       }
-//       axios.request({
-//         method: 'post',
-//         url: '/api/vms',
-//         data: this.postData
-//       })
-//         .then(res => {
-//           this.$_pushNotice('Please wait for task to complete', 'success');
-//           this.dialogState = false;
-//         })
-//         .catch(error => {
-//           this.$_pushNotice(error.response.data.detail, 'error');
-//         });
-//     }
-//   },
-
 </script>
-
-<style>
-.v-textarea textarea {
-  line-height: 1.1rem !important;
-  font-family: monospace, serif;
-}
-
-.theme--dark.v-stepper {
-  background: #1E1E1E !important;
-}
-
-.v-stepper__step {
-  padding: 15px !important;
-}
-
-.v-stepper__header {
-  height: 50px !important;
-}
-
-.form-box {
-  min-height: 300px;
-}
-
-.v-stepper__label {
-  text-shadow: 0px 0px 0px #1E1E1E !important;
-}
-</style>

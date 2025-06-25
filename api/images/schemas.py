@@ -26,7 +26,7 @@ class ImageDomain(BaseSchema):
 
 class Image(ImageBase):
     name:str
-    storage_uuid:str | None = None
+    storage_uuid:str
     capacity:int
     storage: Storage
     flavor: Flavor | None = None

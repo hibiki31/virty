@@ -49,7 +49,7 @@ def get_storages(
     ).outerjoin(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
-    ).order_by(StorageModel.node_name,StorageModel.name)
+    ).order_by(StorageModel.name,StorageModel.node_name)
 
     if param.node_name:
         query = query.filter(StorageModel.node_name==param.node_name)

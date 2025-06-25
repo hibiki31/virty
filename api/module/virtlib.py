@@ -1,16 +1,28 @@
 
-from typing import List
+import re
+from typing import Final, List
 
 import libvirt
 
 from mixin.log import setup_logger
-from module.xmllib import XmlEditor
+from module.xmllib import StorageXmlEditor, XmlEditor
 from network.schemas import PaseNetwork
 from node.models import NodeModel
-from storage.models import StorageModel
-from storage.schemas import PaseStorage
+from storage.schemas import ImageForLibvirt, StorageForLibvirt
 
 logger = setup_logger(__name__)
+
+class LibvirtPortNotfound(Exception):
+    pass
+
+class StoragePoolAlreadyExistsError(RuntimeError):
+    """プールが既に存在するとき専用の例外"""
+
+class NetworkAlreadyExistsError(RuntimeError):
+    """プールが既に存在するとき専用の例外"""
+
+# libvirt が返す「操作失敗」のエラーコード
+OP_FAILED: Final[int] = libvirt.VIR_ERR_OPERATION_FAILED
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):
@@ -22,7 +34,7 @@ class VirtManager():
 
 
     def domain_data(self):
-        if self.node == None:
+        if self.node is None:
             return
         domains = self.node.listAllDomains()
         DATA = []
@@ -35,54 +47,56 @@ class VirtManager():
         return DATA
 
 
-    def storage_data(self, token) -> List[StorageModel]:
-        # GlustorFSが遅い
-        pools = self.node.listAllStoragePools(0)
-        if pools == None:
-            return []
+    def storages_data(self, token:str, uuids:List[str]=[]) -> List[StorageForLibvirt]:
         data = []
-        for pool in pools:
-            # if pool.info()[0] != 2 :
-            #     storage = StorageModel(
-            #         uuid = pool.UUIDString(),
-            #         name = pool.name(),
-            #         node_name = self.node_model.name,
-            #         capacity = None,
-            #         available = None,
-            #         path = None,
-            #         active = pool.isActive(),
-            #         auto_start = pool.autostart(),
-            #         status = pool.info()[0],
-            #         update_token = token,
-            #     )
-            #     data.append({"storage":storage, "image": []})
-            #     continue
-                
-            # GlustorFSが遅い
-            pool.refresh()
-            storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
-            storage_xml = storage_xml.storage_pase()
-            storage = PaseStorage(
-                uuid = pool.UUIDString(),
-                name = pool.name(),
-                node_name = self.node_model.name,
-                capacity = int(storage_xml.capacity),
-                available = int(storage_xml.available),
-                path = storage_xml.path,
-                active = pool.isActive(),
-                auto_start = pool.autostart(),
-                status = pool.info()[0],
-                update_token = str(token),
-                images= []
-            )
-            for image_obj in pool.listAllVolumes():
-                xml_pace = XmlEditor(type="str", obj=image_obj.XMLDesc())
-                xml_pace = xml_pace.image_pase()
-                xml_pace.update_token = token
-                xml_pace.storage_uuid = pool.UUIDString()
-                storage.images.append(xml_pace)
-            data.append(storage)
+        
+        if len(uuids) == 0:
+            pools = self.node.listAllStoragePools(0)
+            if pools is None:
+                return
+            for pool in pools:
+                data.append(self.storage_data(pool=pool, token=token))
+        else:
+            for uuid in uuids:
+                pool = self.node.storagePoolLookupByUUIDString(uuid)
+                data.append(self.storage_data(pool=pool, token=token))
         return data
+    
+    def storage_data(self, pool: libvirt.virStoragePool, token:str) -> List[StorageForLibvirt]:
+        pool.refresh()
+        storage_editor = StorageXmlEditor(type="str", obj=pool.XMLDesc())
+        storage_xml = storage_editor.storage_pase()
+
+        storage = StorageForLibvirt(
+            **storage_xml.model_dump(),
+            node_name = self.node_model.name,
+            active = pool.isActive(),
+            auto_start = pool.autostart(),
+            status = pool.info()[0],
+            update_token = token,
+            images=[],
+        )
+        for image_obj in pool.listAllVolumes():
+            image_editor = StorageXmlEditor(type="str", obj=image_obj.XMLDesc())
+            image_xml = image_editor.image_pase()
+            image = ImageForLibvirt(
+                **image_xml.model_dump(),
+                storage_uuid = storage.uuid,
+                update_token = token,
+            )
+            storage.images.append(image)
+        
+        return storage
+
+    def image_delete(self, storage_uuid, image_name, secure:bool = False):
+        pool = self.node.storagePoolLookupByUUIDString(storage_uuid)
+        pool.refresh(0)
+        vol = pool.storageVolLookupByName(image_name)
+        
+        if secure:
+            vol.delete(flags=libvirt.VIR_STORAGE_VOL_DELETE_ZEROED)
+        else:
+            vol.delete(flags=libvirt.VIR_STORAGE_VOL_DELETE_NORMAL)
 
 
     def network_data(self) -> list[PaseNetwork]:
@@ -155,20 +169,33 @@ class VirtManager():
 
         xml = XmlEditor(type="str",obj=domain.XMLDesc())
         xml = xml.domain_network(mac=mac,network=network,port=port)
-        try:
-            domain.updateDeviceFlags(xml)
-        except libvirt.libvirtError as e:
-            raise Exception("Cannot switch the OVS while the VM is running" + str(e))      
+        
+        # Flagが0 CURRENT, 1 LIVEだとVM停止すると元に戻る
+        domain.updateDeviceFlags(xml,flags=0)
+        # 2 CONFIGも同時に変更して、永続化＋ライブ更新を入れている
+        domain.updateDeviceFlags(xml,flags=2)
+        
         
 
     def storage_define(self,xml_str):
-        sp = self.node.storagePoolDefineXML(xml_str,0)
         try:
-            sp.create()
+            sp = self.node.storagePoolDefineXML(xml_str,0)
+            
         except libvirt.libvirtError as e:
-            sp.undefine()
-            raise e
+            # 1) libvirt 側で「操作失敗」扱いか確認
+            is_op_failed = e.get_error_code() == OP_FAILED
 
+            # 2) エラーメッセージに already exists を含むか確認（大文字小文字を無視）
+            is_already_exists = bool(re.search(r"already\s+exists", e.get_error_message(), re.I))
+
+            if is_op_failed and is_already_exists:
+                # 専用例外に変換してエスカレーション
+                raise StoragePoolAlreadyExistsError(e.get_error_message()) from e
+
+            # それ以外は元の例外をそのまま投げ直す
+            raise
+    
+        sp.create()
         sp.setAutostart(1)
 
 
@@ -180,7 +207,22 @@ class VirtManager():
 
 
     def network_define(self,xml_str):
-        net = self.node.networkDefineXML(xml_str)
+        try:
+            net = self.node.networkDefineXML(xml_str)
+        except libvirt.libvirtError as e:
+            # 1) libvirt 側で「操作失敗」扱いか確認
+            is_op_failed = e.get_error_code() == OP_FAILED
+
+            # 2) エラーメッセージに already exists を含むか確認（大文字小文字を無視）
+            is_already_exists = bool(re.search(r"already\s+exists", e.get_error_message(), re.I))
+
+            if is_op_failed and is_already_exists:
+                # 専用例外に変換してエスカレーション
+                raise NetworkAlreadyExistsError(e.get_error_message()) from e
+
+            # それ以外は元の例外をそのまま投げ直す
+            raise
+        
         net.create()
         net.autostart()
 
@@ -193,7 +235,6 @@ class VirtManager():
             pass
         net.undefine()
 
-    
     def network_ovs_add(self, uuid, name, vlan):
         net = self.node.networkLookupByUUIDString(uuid)
         xml = f'''
@@ -206,41 +247,33 @@ class VirtManager():
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
         # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
         # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
-        # parentIndex: 1先頭, -1適当末尾
-        res = net.update(command=3,section=9, xml=xml, parentIndex=1)
-        if res == -1:
-            raise Exception("An error occurred after updating the network with libvirt")
-
-
-    def network_ovs_add(self, uuid, name, vlan):
-        net = self.node.networkLookupByUUIDString(uuid)
-        xml = f'''
-        <portgroup name="{name}">
-            <vlan>
-            <tag id="{str(vlan)}" />
-            </vlan>
-        </portgroup>
-        '''
-        # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        # command: VIR_NETWORK_UPDATE_COMMAND_ADD_LAST	=	3
-        # section: VIR_NETWORK_SECTION_PORTGROUP	=	9 (0x9)	
-        # parentIndex: 1先頭, -1適当末尾
-        # 新しいlibvirtでセクションとコマンドが逆のバグが直った
-        # https://github.com/digitalocean/go-libvirt/pull/148#issue-1234093981
-        # 6.0.0では逆、少なくとも8.0.0で直ってる
-        if self.lib_version < 8000000:
-            res = net.update(command=3,section=9, xml=xml, parentIndex=1)
-        else:
-            res = net.update(command=9,section=3, xml=xml, parentIndex=1)
-        if res == -1:
-            raise Exception("An error occurred after updating the network with libvirt")
+        # parentIndex: 1先頭, -1適当末尾 
+        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1, flags=1) #LIVE
+        res = self.network_update(net=net, command=3, section=9, xml=xml, parentIndex=1, flags=2) #CONFIG
+        logger.info(res)
 
 
     def network_ovs_delete(self, uuid, name):
         net = self.node.networkLookupByUUIDString(uuid)
         editor = XmlEditor(type="str",obj=net.XMLDesc())
         xml = editor.network_ovs_find(name=name)
+        if xml is None:
+            raise LibvirtPortNotfound(f"Port is alredy deleted {uuid}, {name}")
 
         # https://libvirt.org/html/libvirt-libvirt-network.html#virNetworkUpdateCommand
-        res = net.update(command=2, section=9, xml=xml, parentIndex=1, flags=0)
+        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=1) #LIVE
+        res = self.network_update(net=net, command=2, section=9, xml=xml, parentIndex=1, flags=2) #CONFIG
         logger.info(res)
+    
+    def network_update(self, net, command, section, xml, parentIndex, flags=0):
+        # 新しいlibvirtでセクションとコマンドが逆のバグが直った
+        # https://github.com/digitalocean/go-libvirt/pull/148#issue-1234093981
+        # 6.0.0では逆、少なくとも8.0.0で直ってる
+        if self.lib_version == 10000000:
+            res = net.update(command=section,section=command, xml=xml, parentIndex=parentIndex, flags=flags)
+        else:
+            res = net.update(command=command,section=section, xml=xml, parentIndex=parentIndex, flags=flags)
+        if res == -1:
+            raise Exception("An error occurred after updating the network with libvirt")
+
+        return res

@@ -30,6 +30,7 @@ class Storage(BaseModel):
 class Networks(BaseModel):
     name: str
     type: str
+    octet: int
 
 class VM(BaseModel):
     name: str

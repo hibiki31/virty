@@ -44,6 +44,7 @@ def get_networks(
     if param.type:
         query = query.filter(NetworkModel.type==param.type)
     
+    query = query.order_by(NetworkModel.name)
     count = query.count()
     if param.limit > 0:
         query = query.limit(param.limit).offset(int(param.limit*param.page))

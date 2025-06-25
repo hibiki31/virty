@@ -1,14 +1,17 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import NoResultFound
 from mixin.log import setup_logger
 from task.functions import TaskManager
 from task.schemas import Task
 
-from .models import *
-from .schemas import *
+from .models import NetworkModel, NetworkPortgroupModel
+from .schemas import NetworkForCreate, NetworkOVSForCreate, NetworkProviderForCreate
 
 app = APIRouter(prefix="/api/tasks/networks", tags=["networks-task"])
 logger = setup_logger(__name__)
@@ -98,7 +101,7 @@ def delete_network_ovs(
             NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==uuid
             ).filter(NetworkPortgroupModel.name==name).one()
-    except:
+    except NoResultFound:
         raise HTTPException(status_code=404, detail="network or port is not found")
 
     task = TaskManager(db=db)

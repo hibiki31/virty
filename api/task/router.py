@@ -3,13 +3,19 @@ import time
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, not_, or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from task.models import TaskModel
-from task.schemas import Task, TaskForQuery, TaskIncomplete, TaskPage
+from task.schemas import (
+    Task,
+    TaskForQuery,
+    TaskIncomplete,
+    TaskIncompleteForQuery,
+    TaskPage,
+)
 
 app = APIRouter(
     prefix="/api/tasks",
@@ -70,38 +76,51 @@ def delete_tasks(
     return model
 
 
+EXCLUDED_STATUSES = ("error", "lost", "finish")
+
+def _calc_hash(rows: list[tuple[str, str]]) -> str:
+    # rows=(uuid,status)
+    joined = ";".join(f"{u}:{s}" for u, s in rows)
+    return hashlib.md5(joined.encode()).hexdigest()
+
 @app.get("/incomplete", response_model=TaskIncomplete)
 def get_incomplete_tasks(
+        param: TaskIncompleteForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        hash: str = None,
-        admin: bool = False
     ):
 
-    task_hash = None
-    task_count = 0
-    task_model = None
-
-    if admin:
+    if param.admin:
         current_user.verify_scope(["admin.tasks"])
- 
-    for i in range(0,20):
-        query = db.query(TaskModel)
-        if not admin:
-            query = query.filter(TaskModel.user_id==current_user.id)
     
-        task_model = query.filter(TaskModel.status!="error")\
-            .filter(TaskModel.status!="lost")\
-            .filter(TaskModel.status!="finish").all()        
-        
-        task_count = len(task_model)
-        task_hash = str(hashlib.md5(str([j.uuid+j.status for j in task_model]).encode()).hexdigest())
-        
-        if task_hash != hash:
-            break
-        time.sleep(0.5)       
+    base_query = (
+        db.query(TaskModel.uuid, TaskModel.status)
+          .filter(not_(TaskModel.status.in_(EXCLUDED_STATUSES)))
+          .order_by(TaskModel.uuid)
+    )
+    
+    if not param.admin:
+        base_query = base_query.filter(TaskModel.user_id==current_user.id)
+ 
+    for _ in range(20):
+        rows = base_query.all()                      # uuid,status のみ取得
+        new_hash = _calc_hash(rows)
 
-    return {"hash": task_hash, "count": task_count, "uuids": [j.uuid for j in task_model]}
+        if new_hash != param.reference_hash:
+            return {
+                "hash": new_hash,
+                "count": len(rows),
+                "uuids": [u for u, _ in rows],
+            }
+
+        time.sleep(0.5)  # 同期版を維持。非同期なら asyncio.sleep()
+
+    # 変更なしのままタイムアウト
+    return {
+        "hash": new_hash,
+        "count": len(rows),
+        "uuids": [u for u, _ in rows],
+    }
 
 
 @app.get("/{uuid}", response_model=Task)

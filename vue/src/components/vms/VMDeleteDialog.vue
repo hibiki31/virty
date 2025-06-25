@@ -19,19 +19,16 @@
 </template>
 
 <script setup lang="ts">
-import type { typeListVM } from '@/composables/vm'
-import { reactive, ref } from 'vue';
-import { defineProps, defineModel } from 'vue'
+import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
-import { useNotification } from '@kyvg/vue3-notification'
+import notify from '@/composables/notify';
 import { asyncSleep } from '@/composables/sleep';
 const router = useRouter()
 
-const { notify } = useNotification()
 const model = defineModel({ default: false })
 const props = defineProps({
   item: {
-    type: Object as PropType<typeListVM["data"][0]>,
+    type: Object as PropType<schemas['DomainDetail']>,
     required: false,
   }
 })
@@ -45,18 +42,12 @@ async function submit() {
     const res = await apiClient.DELETE('/api/tasks/vms/{uuid}', { params: { path: { uuid: props.item.uuid } } })
 
     if (res.response.ok) {
-      notify({
-        type: 'success',
-        title: 'Delete VM successful',
-        text: 'Wait until the task is completed'
-      })
+      notify('success', 'Delete VM successful', 'Wait until the task is completed')
       await asyncSleep(600)
       router.push("/vms")
-    } else {
-      notify({
-        type: 'error',
-        title: 'Delete VM failed'
-      })
+    }
+    if (res.error) {
+      notify('error', 'Delete VM failed', res.error)
     }
     model.value = false
     loading.value = false

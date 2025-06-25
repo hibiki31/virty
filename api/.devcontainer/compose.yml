@@ -30,6 +30,9 @@ services:
     environment:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_DEFAULT_EMAIL: "virty-dev@example.local"
+      PGADMIN_DEFAULT_PASSWORD: "virty-dev"
+      PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: "['local']"
     depends_on:
       - db
 

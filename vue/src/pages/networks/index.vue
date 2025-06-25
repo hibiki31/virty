@@ -1,16 +1,17 @@
 <template>
   <v-card>
+    <network-add-dialog v-model="stateCreateDialog"></network-add-dialog>
     <v-card-actions>
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
     </v-card-actions>
-    <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
+    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
       <template v-slot:item.uuid="{ item }">
-        <router-link :to="'/vms/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
+        <router-link :to="'/networks/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
       </template>
 
     </v-data-table-server>
@@ -24,19 +25,16 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
 import { apiClient } from '@/api'
-import type { paths } from '@/api/openapi'
 import notify from '@/composables/notify'
 import { useReloadListener } from '@/composables/trigger'
 
-import type { typeListNetwork } from '@/composables/network'
-import { getNetworkList } from '@/composables/network'
+import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network'
+import { getNetworkList, initNetworkList } from '@/composables/network'
 
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
-const itemsPerPage = ref(10)
 
 const headers = [
   { title: 'Name', value: 'name' },
@@ -48,41 +46,34 @@ const headers = [
   { title: 'actions', value: 'actions' }
 ]
 
-const items = ref<typeListNetwork>({
-  count: 0,
-  data: [],
+const items = ref<typeListNetwork>(initNetworkList)
+const query = ref<NonNullable<typeListNetworkQuery>>({
+  admin: true,
+  limit: 20,
+  page: 1
 })
 
-function loadItems({ page = 0, itemsPerPage = 10, sortBy = "date" }) {
-  loading.value = true
-  apiClient.GET('/api/networks', {
-    params: {
-      query: {
-        admin: true,
-        limit: itemsPerPage,
-        page: page,
-      }
-    }
-  }).then((res) => {
-    if (res.data) {
-      items.value = res.data
-    }
-    loading.value = false
-  })
+
+async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+  query.value.page = page
+  query.value.limit = itemsPerPage
+  await reload()
 }
 
 
 const rescan = () => {
   apiClient.PUT('/api/tasks/networks').then((res) => {
     if (res.data) {
-      notify("success", "The task has been queued.", res.data[0].uuid || "")
+      notify("success", "The task has been queued.", res.data[0].uuid)
     }
   })
 }
 
 
 async function reload() {
-  items.value = await getNetworkList()
+  loading.value = true
+  items.value = await getNetworkList(query.value)
+  loading.value = false
 }
 
 useReloadListener(() => {
@@ -90,7 +81,6 @@ useReloadListener(() => {
 })
 
 onMounted(() => {
-  reload()
 })
 
 </script>

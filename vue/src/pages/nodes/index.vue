@@ -2,12 +2,12 @@
   <v-card>
     <node-add-dialog v-model="dialogAdd"></node-add-dialog>
     <node-key-dialog v-model="dialogKey"></node-key-dialog>
+    <node-delete-dialog v-model="dialogDelete" :item="dataDailogDelete"></node-delete-dialog>
     <v-card-actions>
       <v-btn prepend-icon="mdi-file-key" variant="flat" color="primary" size="small"
         @click="dialogKey = true">KEY</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="dialogAdd = true">JOIN</v-btn>
-      <v-btn prepend-icon="mdi-server-remove" variant="flat" color="error" size="small">LEAVE</v-btn>
     </v-card-actions>
     <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
       <template v-slot:item.name="{ item }">
@@ -20,6 +20,10 @@
         <v-chip v-for="role in item.roles" :text="role.roleName" variant="flat" color="primary" size="x-small"
           class="ma-1"></v-chip>
       </template>
+      <template v-slot:item.actions="{ item }">
+        <v-icon color="medium-emphasis" icon="mdi-delete"
+          @click="dataDailogDelete = item; dialogDelete = true"></v-icon>
+      </template>
     </v-data-table>
   </v-card>
 </template>
@@ -30,15 +34,18 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import type { schemas } from '@/composables/schemas'
 import { apiClient } from '@/api'
-import type { paths } from '@/api/openapi'
+import { useReloadListener } from '@/composables/trigger'
 import { getNodeStatusColor } from '@/composables/nodes'
+
+const loading = ref(false)
 
 const dialogAdd = ref(false)
 const dialogKey = ref(false)
+const dialogDelete = ref(false)
 
-const loading = ref(false)
+const dataDailogDelete = ref<schemas["Node"]>()
 
 const headers = [
   { title: 'Status', value: 'status' },
@@ -55,12 +62,12 @@ const headers = [
   { title: 'Actions', value: 'actions' }
 ]
 
-const items = ref<paths['/api/nodes']['get']['responses']['200']['content']['application/json']>({
+const items = ref<schemas['NodePage']>({
   count: 0,
   data: [],
 })
 
-const load = () => {
+const reload = () => {
   apiClient.GET('/api/nodes', {
     params: {
       query: {
@@ -75,8 +82,12 @@ const load = () => {
   })
 }
 
+useReloadListener(() => {
+  reload()
+})
+
 onMounted(() => {
-  load()
+  reload()
 })
 
 </script>

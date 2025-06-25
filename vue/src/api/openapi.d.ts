@@ -515,6 +515,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tasks/storages/{uuid}/images/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Image */
+        delete: operations["delete_image"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/images": {
         parameters: {
             query?: never;
@@ -1176,7 +1193,7 @@ export interface components {
             /** Name */
             name: string;
             /** Storageuuid */
-            storageUuid?: string | null;
+            storageUuid: string;
             /** Capacity */
             capacity: number;
             storage: components["schemas"]["Storage"];
@@ -1250,21 +1267,38 @@ export interface components {
             /** Updatetoken */
             updateToken?: string | null;
         };
+        /** NetworkDHCPForCreate */
+        NetworkDHCPForCreate: {
+            /**
+             * Start
+             * Format: ipvanyaddress
+             */
+            start: string;
+            /**
+             * End
+             * Format: ipvanyaddress
+             */
+            end: string;
+        };
         /** NetworkForCreate */
         NetworkForCreate: {
             /** Name */
             name: string;
             /** Nodename */
             nodeName: string;
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
             /**
-             * Type
+             * Forwardmode
              * @enum {string}
              */
-            type: "bridge" | "ovs" | "nat" | "route";
-            nat?: components["schemas"]["NetworkNatForCreate"] | null;
-            route?: components["schemas"]["NetworkRouteForCreate"] | null;
-            /** Bridgedevice */
-            bridgeDevice?: string | null;
+            forwardMode: "bridge" | "ovs" | "nat" | "route" | "isorated";
+            /** Bridgename */
+            bridgeName?: string | null;
+            dhcp?: components["schemas"]["NetworkDHCPForCreate"] | null;
+            ip?: components["schemas"]["NetworkIPForCreate"] | null;
         };
         /** NetworkForNetworkPool */
         NetworkForNetworkPool: {
@@ -1288,10 +1322,8 @@ export interface components {
             /** Port */
             port?: string | null;
         };
-        /** NetworkNatForCreate */
-        NetworkNatForCreate: {
-            /** Bridgename */
-            bridgeName?: string | null;
+        /** NetworkIPForCreate */
+        NetworkIPForCreate: {
             /**
              * Address
              * Format: ipvanyaddress
@@ -1302,16 +1334,6 @@ export interface components {
              * Format: ipvanyaddress
              */
             netmask: string;
-            /**
-             * Dhcpstart
-             * Format: ipvanyaddress
-             */
-            dhcpStart: string;
-            /**
-             * Dhcpend
-             * Format: ipvanyaddress
-             */
-            dhcpEnd: string;
         };
         /** NetworkOVSForCreate */
         NetworkOVSForCreate: {
@@ -1390,31 +1412,6 @@ export interface components {
             /** Networknode */
             networkNode?: string | null;
         };
-        /** NetworkRouteForCreate */
-        NetworkRouteForCreate: {
-            /** Bridgename */
-            bridgeName?: string | null;
-            /**
-             * Address
-             * Format: ipvanyaddress
-             */
-            address: string;
-            /**
-             * Netmask
-             * Format: ipvanyaddress
-             */
-            netmask: string;
-            /**
-             * Dhcpstart
-             * Format: ipvanyaddress
-             */
-            dhcpStart: string;
-            /**
-             * Dhcpend
-             * Format: ipvanyaddress
-             */
-            dhcpEnd: string;
-        };
         /** NetworkXML */
         NetworkXML: {
             /** Xml */
@@ -1486,6 +1483,12 @@ export interface components {
             free: string;
             /** Top */
             top: string;
+            /** Iptables */
+            iptables: string;
+            /** Iptablesnat */
+            iptablesNat: string;
+            /** Netplanget */
+            netplanGet: string;
         };
         /** NodePage */
         NodePage: {
@@ -1617,12 +1620,12 @@ export interface components {
              * Allocationcommit
              * @default 0
              */
-            allocationCommit: number;
+            allocationCommit: number | null;
             /**
              * Capacitycommit
              * @default 0
              */
-            capacityCommit: number;
+            capacityCommit: number | null;
         };
         /** StorageContainerForStoragePool */
         StorageContainerForStoragePool: {
@@ -1729,7 +1732,7 @@ export interface components {
             /** Log */
             log?: string | null;
             /** Uuid */
-            uuid?: string | null;
+            uuid: string;
         };
         /** TaskIncomplete */
         TaskIncomplete: {
@@ -1892,8 +1895,8 @@ export interface operations {
     get_incomplete_tasks: {
         parameters: {
             query?: {
-                hash?: string;
-                admin?: boolean;
+                referenceHash?: string | null;
+                admin?: boolean | null;
             };
             header?: never;
             path?: never;
@@ -2916,6 +2919,38 @@ export interface operations {
             };
         };
     };
+    delete_image: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_images: {
         parameters: {
             query?: {
@@ -3002,7 +3037,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
         };

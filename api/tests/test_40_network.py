@@ -2,11 +2,17 @@
 from tests.fixtures.network import create_network, delete_network
 
 
+def test_delete_network(env, client, created_network):
+    delete_network(env, client)
+
 def test_create_network(env, client, deleted_network):
     create_network(env, client)
 
-def test_delete_network(env, client, created_network):
-    delete_network(env, client)
+
+
+
+
+
 
 # @tester
 # def post_network_ovs():

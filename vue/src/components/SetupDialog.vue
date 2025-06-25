@@ -21,12 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import notify from '@/composables/notify'
 import { apiClient } from '@/api'
 import { asyncSleep } from '@/composables/sleep';
-
-import * as r from '@/composables/rules';
 
 const dialogState = ref(false)
 const postData = ref({

@@ -1,12 +1,38 @@
 from typing import List
 
+from pydantic import field_validator
+
 from flavor.schemas import Flavor
 from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
 
 
-class ImageBase(BaseSchema):
-    pass
+class ImageForXML(BaseSchema):
+    name:str
+    capacity: float
+    allocation: float
+    path:str
+
+class StorageForXML(BaseSchema):
+    name: str
+    uuid: str
+    available: int
+    capacity: int 
+    allocation: int
+    path: str | None = None
+
+
+class ImageForLibvirt(ImageForXML):
+    update_token:str
+    storage_uuid:str
+
+class StorageForLibvirt(StorageForXML):
+    node_name: str
+    active: bool
+    auto_start: bool
+    status: int
+    update_token:str
+    images: List[ImageForLibvirt]
 
 
 class StorageForQuery(GetPagination):
@@ -50,8 +76,11 @@ class Storage(BaseSchema):
     path: str | None = None
     meta_data: StorageMetadata | None = None
     update_token:str | None = None
-    allocation_commit: int = 0
-    capacity_commit: int = 0
+    allocation_commit: int| None = 0
+    capacity_commit: int| None = 0
+    @field_validator("allocation_commit", "capacity_commit")
+    def none_to_zero(cls, v):
+        return 0 if v is None else v
     
 
 class StoragePage(BaseSchema):
@@ -59,7 +88,7 @@ class StoragePage(BaseSchema):
     data: List[Storage]
 
 
-class PaseImage(ImageBase):
+class PaseImage(BaseSchema):
     name:str
     storage_uuid:str | None = None
     capacity: float
@@ -89,7 +118,7 @@ class ImageDomain(BaseSchema):
     uuid: str
 
 
-class Image(ImageBase):
+class Image(BaseSchema):
     name:str
     storage_uuid:str | None = None
     capacity:int

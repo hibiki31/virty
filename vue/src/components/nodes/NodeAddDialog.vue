@@ -26,9 +26,6 @@
 </template>
 
 <script setup>
-import * as r from '@/composables/rules';
-import { reactive, ref } from 'vue';
-import { defineProps, defineModel } from 'vue'
 import { apiClient } from '@/api';
 import { useNotification } from '@kyvg/vue3-notification'
 

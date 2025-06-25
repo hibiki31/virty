@@ -2,6 +2,8 @@
   <div v-if="data">
     <v-card variant="flat">
       <v-m-delete-dialog v-model="stateDeleteDialog" :item="data"></v-m-delete-dialog>
+      <v-m-network-change v-model="stateNetworkDialog" :item="data" :mac="changeMac"></v-m-network-change>
+      <v-m-cdrom-change v-model="stateCdromDialog" :item="data" :target="deleteTarget"></v-m-cdrom-change>
       <v-card-item>
         <v-card-title>
           <v-icon left class="ma-3" :color="getPowerColor(data.status)">mdi-power-standby</v-icon>
@@ -59,7 +61,7 @@
                 <tbody align="right">
                   <tr>
                     <th>Name:</th>
-                    <td>{{ data.node.name }}</td>
+                    <td>{{ data.nodeName }}</td>
                   </tr>
                   <tr>
                     <th>Node IP:</th>
@@ -101,7 +103,7 @@
                       <td>{{ item.port }}</td>
                       <td>{{ item.target }}</td>
                       <td>
-                        <v-icon @click="">mdi-pencil</v-icon>
+                        <v-icon @click="changeMac = item.mac || ''; stateNetworkDialog = true">mdi-pencil</v-icon>
                       </td>
                     </tr>
                   </tbody>
@@ -131,12 +133,25 @@
                       <td>{{ itemDisk.target }}</td>
                       <td>
                         <v-icon v-if="itemDisk.device == 'cdrom'"
-                          @click="openCDRomDialog(itemDisk.target)">mdi-pencil</v-icon>
+                          @click="deleteTarget = itemDisk.target || ''; stateCdromDialog = true">mdi-pencil</v-icon>
                       </td>
                     </tr>
                   </tbody>
                 </template>
               </v-table>
+            </v-card>
+            <v-card class="mt-5">
+              <v-card-title class="subheading font-weight-bold">
+                <v-icon>mdi-xml</v-icon>XML
+              </v-card-title>
+              <v-expansion-panels>
+                <v-expansion-panel>
+                  <v-expansion-panel-title></v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <code-feild :text="dataXML?.xml" type="XML" :loading="false" class="ma-5"></code-feild>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
             </v-card>
           </v-col>
         </v-row>
@@ -146,82 +161,45 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
-import type { paths } from '@/api/openapi'
-const router = useRouter()
 const route = useRoute()
-import { onMounted } from 'vue';
 import { useReloadListener } from '@/composables/trigger';
-
+import type { schemas } from '@/composables/schemas';
 import { vmPowerOff, vmPowerOn, openVNC, getPowerColor } from '@/composables/vm';
 
-type typeVM = paths['/api/vms/{uuid}']['get']['responses']['200']['content']['application/json']
-const data = ref<typeVM>()
+const data = ref<schemas['DomainDetail']>()
+const dataXML = ref<schemas['DomainXML']>()
 
 const stateDeleteDialog = ref(false)
+const stateCdromDialog = ref(false)
+const stateNetworkDialog = ref(false)
+const deleteTarget = ref("")
+const changeMac = ref("")
 
-function reload() {
+async function reload() {
   console.debug("vm detail reload")
   if ('uuid' in route.params) {
     console.debug(route.params.uuid)
-    apiClient.GET('/api/vms/{uuid}', {
+    const res = await apiClient.GET('/api/vms/{uuid}', {
       params: {
         path: { uuid: route.params.uuid }
       }
-    }).then((res) => {
-      if (res.data) {
-        data.value = res.data
-        window.document.title = `Virty - ${res.data.name}`
+    })
+    if (res.data) {
+      data.value = res.data
+      window.document.title = `Virty - ${res.data.name}`
+    }
+
+    const resXML = await apiClient.GET('/api/vms/{uuid}/xml', {
+      params: {
+        path: { uuid: route.params.uuid }
       }
     })
+    if (resXML.data) {
+      dataXML.value = resXML.data
+    }
   }
-}
-
-
-
-function openCDRomDialog(target: string | null | undefined) {
-  // this.$refs.domainCDRomDialog.openDialog(target, this.data.uuid, this.data.node.name);
-}
-function openDeleteDialog() {
-  // this.$refs.domainDeleteDialog.openDialog(this.data.uuid);
-}
-
-
-
-function memoryChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/memory', { uuid: this.$route.params.uuid, memory: this.memoryValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change memory task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-function cpuChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/cpu', { uuid: this.$route.params.uuid, cpu: this.cpuValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change cpu task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
 }
 
 useReloadListener(() => {

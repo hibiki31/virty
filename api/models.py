@@ -3,16 +3,14 @@ from flavor.models import FlavorModel
 from network.models import NetworkModel
 from node.models import NodeModel, NodeRoleModel
 from project.models import ProjectModel
+from storage.models import ImageModel, StorageModel, StoragePoolModel
 from task.models import TaskModel
 from user.models import UserModel, UserScopeModel
 
-
-def orm_initializing_mappler():
-    UserModel, UserScopeModel
-    DomainDriveModel, DomainInterfaceModel, DomainModel
-    NodeModel, NodeRoleModel
-
-    TaskModel
-    NetworkModel
-    FlavorModel
-    ProjectModel
+__all__ = [
+    "UserModel", "UserScopeModel",
+    "DomainDriveModel", "DomainInterfaceModel", "DomainModel",
+    "NodeModel", "NodeRoleModel",
+    "ProjectModel", "TaskModel", "NetworkModel", "FlavorModel",
+    "StorageModel", "StoragePoolModel", "ImageModel"
+]    
