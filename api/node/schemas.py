@@ -76,6 +76,7 @@ class NodeInfo(BaseSchema):
     top: str
     iptables: str
     iptables_nat: str
+    netplan_get: str
 
 
 class SSHKeyPair(BaseSchema):

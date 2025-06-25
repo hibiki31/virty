@@ -172,8 +172,9 @@ def get_node_info(
         uptime         = ssh_manager.run_cmd("uptime -p").stdout,
         free           = ssh_manager.run_cmd("free -h").stdout,
         top            = ssh_manager.run_cmd("top -b -n 1|head -n 20").stdout,
-        iptables       = ssh_manager.run_cmd("sudo iptables -L -t nat").stdout,
-        iptables_nat   = ssh_manager.run_cmd("sudo iptables -L").stdout,
+        iptables_nat   = ssh_manager.run_cmd("sudo iptables -L -t nat").stdout,
+        iptables       = ssh_manager.run_cmd("sudo iptables -L").stdout,
+        netplan_get    = ssh_manager.run_cmd("sudo netplan get").stdout,
     )
 
     return res

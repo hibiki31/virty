@@ -1470,6 +1470,8 @@ export interface components {
             iptables: string;
             /** Iptablesnat */
             iptablesNat: string;
+            /** Netplanget */
+            netplanGet: string;
         };
         /** NodePage */
         NodePage: {

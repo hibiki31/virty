@@ -142,13 +142,16 @@ function getSpecList() {
 function getInfoList() {
   if (dataInfo) {
     return [
-      { title: "Top (top | head -n 20)", value: dataInfo.value?.top },
+      { title: "Top (top -b -n 1|head -n 20)", value: dataInfo.value?.top },
       { title: "Free (free -h)", value: dataInfo.value?.free },
       { title: "Filesystem (df -h)", value: dataInfo.value?.dfH },
       { title: "Storage (lsblk)", value: dataInfo.value?.lsblk },
       { title: "IP Route (ip r)", value: dataInfo.value?.ipRoute },
       { title: "IP Neigh (ip n)", value: dataInfo.value?.ipNeigh },
       { title: "IP Address (ip a)", value: dataInfo.value?.ipAddress },
+      { title: "Netfilter (iptables -L)", value: dataInfo.value?.iptables },
+      { title: "NAT (iptables -L -t nat)", value: dataInfo.value?.iptablesNat },
+      { title: "Netplan (netplan get)", value: dataInfo.value?.netplanGet },
     ]
   }
 }
