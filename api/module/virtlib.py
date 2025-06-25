@@ -4,11 +4,10 @@ from typing import List
 import libvirt
 
 from mixin.log import setup_logger
-from module.xmllib import XmlEditor
+from module.xmllib import StorageXmlEditor, XmlEditor
 from network.schemas import PaseNetwork
 from node.models import NodeModel
-from storage.models import StorageModel
-from storage.schemas import PaseStorage
+from storage.schemas import ImageForLibvirt, StorageForLibvirt
 
 logger = setup_logger(__name__)
 
@@ -38,54 +37,46 @@ class VirtManager():
         return DATA
 
 
-    def storage_data(self, token) -> List[StorageModel]:
-        # GlustorFSが遅い
-        pools = self.node.listAllStoragePools(0)
-        if pools == None:
-            return []
+    def storages_data(self, token:str, uuids:List[str]=[]) -> List[StorageForLibvirt]:
         data = []
-        for pool in pools:
-            # if pool.info()[0] != 2 :
-            #     storage = StorageModel(
-            #         uuid = pool.UUIDString(),
-            #         name = pool.name(),
-            #         node_name = self.node_model.name,
-            #         capacity = None,
-            #         available = None,
-            #         path = None,
-            #         active = pool.isActive(),
-            #         auto_start = pool.autostart(),
-            #         status = pool.info()[0],
-            #         update_token = token,
-            #     )
-            #     data.append({"storage":storage, "image": []})
-            #     continue
-                
-            # GlustorFSが遅い
-            pool.refresh()
-            storage_xml = XmlEditor(type="str", obj=pool.XMLDesc())
-            storage_xml = storage_xml.storage_pase()
-            storage = PaseStorage(
-                uuid = pool.UUIDString(),
-                name = pool.name(),
-                node_name = self.node_model.name,
-                capacity = int(storage_xml.capacity),
-                available = int(storage_xml.available),
-                path = storage_xml.path,
-                active = pool.isActive(),
-                auto_start = pool.autostart(),
-                status = pool.info()[0],
-                update_token = str(token),
-                images= []
-            )
-            for image_obj in pool.listAllVolumes():
-                xml_pace = XmlEditor(type="str", obj=image_obj.XMLDesc())
-                xml_pace = xml_pace.image_pase()
-                xml_pace.update_token = token
-                xml_pace.storage_uuid = pool.UUIDString()
-                storage.images.append(xml_pace)
-            data.append(storage)
+        
+        if len(uuids) == 0:
+            pools = self.node.listAllStoragePools(0)
+            if pools is None:
+                return
+            for pool in pools:
+                data.append(self.storage_data(pool=pool, token=token))
+        else:
+            for uuid in uuids:
+                pool = self.node.storagePoolLookupByUUIDString(uuid)
+                data.append(self.storage_data(pool=pool, token=token))
         return data
+    
+    def storage_data(self, pool: libvirt.virStoragePool, token:str) -> List[StorageForLibvirt]:
+        pool.refresh()
+        storage_editor = StorageXmlEditor(type="str", obj=pool.XMLDesc())
+        storage_xml = storage_editor.storage_pase()
+
+        storage = StorageForLibvirt(
+            **storage_xml.model_dump(),
+            node_name = self.node_model.name,
+            active = pool.isActive(),
+            auto_start = pool.autostart(),
+            status = pool.info()[0],
+            update_token = token,
+            images=[],
+        )
+        for image_obj in pool.listAllVolumes():
+            image_editor = StorageXmlEditor(type="str", obj=image_obj.XMLDesc())
+            image_xml = image_editor.image_pase()
+            image = ImageForLibvirt(
+                **image_xml.model_dump(),
+                storage_uuid = storage.uuid,
+                update_token = token,
+            )
+            storage.images.append(image)
+        
+        return storage
 
 
     def network_data(self) -> list[PaseNetwork]:

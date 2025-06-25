@@ -4,10 +4,10 @@ from uuid import uuid4
 
 from domain.schemas import *
 from mixin.log import setup_logger
-from module.model import AttributeDict
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
 from settings import APP_ROOT
-from storage.schemas import PaseImage
+
+from .utils import macaddress_generator, unit_convertor
 
 logger = setup_logger(__name__)
 
@@ -42,51 +42,10 @@ class XmlEditor():
             self.xml = root
 
 
-    def storage_pase(self):
-        data = AttributeDict()
-        
-        data.name = self.xml.find('name').text
-        data.uuid = self.xml.find('uuid').text
-        data.capacity = self.xml.find('capacity').text
-        data.capacity_unit = self.xml.find('capacity').get("unit")
-        data.allocation_unit = self.xml.find('allocation').get("unit")
-        data.allocation = self.xml.find('allocation').text
-        data.available_unit = self.xml.find('available').get("unit")
-        data.available = self.xml.find('available').text
 
-        data.capacity = unit_convertor(data.capacity_unit, "G", data.capacity)
-        data.capacity_unit = "G"
-        data.allocation = unit_convertor(data.allocation_unit, "G", data.allocation)
-        data.allocation_unit = "G"
-        data.available = unit_convertor(data.available_unit, "G", data.available)
-        data.available_unit = "G"
-        
-        if target := self.xml.find('target'):
-            data.path = target.find('path').text
-        else:
-            data.path = ""
-
-        return data
     
 
-    def image_pase(self):
-        """
-        イメージのXMLをパースする
-        Returns
-        -------
-        AttributeDict()
-        """
-
-        data = PaseImage(
-            name = self.xml.find('name').text,
-            capacity = int(unit_convertor( self.xml.find('capacity').get("unit"), "G",  self.xml.find('capacity').text)),
-            allocation = int(unit_convertor( self.xml.find('allocation').get("unit"), "G",  self.xml.find('allocation').text)),
-            capacity_unit = "G",
-            allocation_unit = "G",
-            path = self.xml.find('target').find('path').text
-        )
-
-        return data
+    
     
 
     def network_pase(self):
@@ -363,21 +322,3 @@ class XmlEditor():
         self.xml.find('name').text = name
         self.xml.find('bridge').set('name', name)
     
-def unit_convertor(from_unit, to_unit, value):
-    if from_unit == "bytes" and to_unit == "G":
-        return round(float(value)/1024/1024/1024,1)
-    elif from_unit == "bytes" and to_unit == "M":
-        return round(float(value)/1024/1024,1)
-    elif from_unit == "KiB" and to_unit == "M":
-        return round(float(value)/1024,1)
- 
-    return value
-
-
-def macaddress_generator():
-    import random
-    mac = [ 0x00, 0x16, 0x3e,
-    random.randint(0x00, 0x7f),
-    random.randint(0x00, 0xff),
-    random.randint(0x00, 0xff) ]
-    return( ':'.join(map(lambda x: "%02x" % x, mac)))

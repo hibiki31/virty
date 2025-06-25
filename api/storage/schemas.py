@@ -7,8 +7,32 @@ from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
 
 
-class ImageBase(BaseSchema):
-    pass
+class ImageForXML(BaseSchema):
+    name:str
+    capacity: float
+    allocation: float
+    path:str
+
+class StorageForXML(BaseSchema):
+    name: str
+    uuid: str
+    available: int
+    capacity: int 
+    allocation: int
+    path: str | None = None
+
+
+class ImageForLibvirt(ImageForXML):
+    update_token:str
+    storage_uuid:str
+
+class StorageForLibvirt(StorageForXML):
+    node_name: str
+    active: bool
+    auto_start: bool
+    status: int
+    update_token:str
+    images: List[ImageForLibvirt]
 
 
 class StorageForQuery(GetPagination):
@@ -64,7 +88,7 @@ class StoragePage(BaseSchema):
     data: List[Storage]
 
 
-class PaseImage(ImageBase):
+class PaseImage(BaseSchema):
     name:str
     storage_uuid:str | None = None
     capacity: float
@@ -94,7 +118,7 @@ class ImageDomain(BaseSchema):
     uuid: str
 
 
-class Image(ImageBase):
+class Image(BaseSchema):
     name:str
     storage_uuid:str | None = None
     capacity:int
