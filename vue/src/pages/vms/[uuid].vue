@@ -202,52 +202,6 @@ async function reload() {
   }
 }
 
-
-
-function openCDRomDialog(target: string | null | undefined) {
-  // this.$refs.domainCDRomDialog.openDialog(target, this.data.uuid, this.data.node.name);
-}
-function openDeleteDialog() {
-  // this.$refs.domainDeleteDialog.openDialog(this.data.uuid);
-}
-
-
-
-function memoryChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/memory', { uuid: this.$route.params.uuid, memory: this.memoryValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change memory task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-function cpuChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/cpu', { uuid: this.$route.params.uuid, cpu: this.cpuValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change cpu task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-
 useReloadListener(() => {
   reload()
 })

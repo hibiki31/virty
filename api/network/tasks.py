@@ -1,4 +1,3 @@
-import secrets
 from ipaddress import ip_interface
 from random import randint
 from time import time
@@ -9,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
 from module import virtlib, xmllib
+from network.create import create_network
 from node.models import NodeModel
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
@@ -78,35 +78,10 @@ def post_network_root(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
     
-    editor = xmllib.XmlEditor("static","net_base")
-    
-    if not body.bridge_name:
-        body.bridge_name = f"v-{secrets.token_hex(4)}"
-
-    editor.network_base(name=body.name, bridge=body.bridge_name)
-
-    if body.forward_mode == "isorated":
-        editor.network_forward(None)
-    elif body.forward_mode == "ovs":
-        editor.network_ovs()
-        editor.network_forward("bridge")
-    else:
-        editor.network_forward(body.forward_mode)
-    
-    if body.ip:
-        editor.network_ip(address=str(body.ip.address), netmask=str(body.ip.netmask))
-        if body.dhcp:
-            editor.network_dhcp(start=str(body.dhcp.start), end=str(body.dhcp.end))
-        else:
-            editor.network_dhcp_delete()
-    else:
-        editor.network_ip_delete()
-
-    xml = editor.dump_str()
-
-    # ソイや！
-    manager = virtlib.VirtManager(node_model=node)
-    manager.network_define(xml_str=xml)
+    create_network(
+        body=body,
+        node=node
+        )
 
     model.message = "Network add has been successfull"
 

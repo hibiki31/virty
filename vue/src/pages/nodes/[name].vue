@@ -26,10 +26,21 @@
               </v-card>
             </v-col>
           </v-row>
-          <div v-for="item in getInfoList()">
-            <p class="text-h6 pt-3">{{ item.title }}</p>
-            <code-feild :text="item.value" type='Plaintext' :loading="!item.value"></code-feild>
-          </div>
+
+          <v-row>
+            <v-col cols="12" lg="6">
+              <div v-for="item in getInfoListL()">
+                <p class="text-h6 pt-3">{{ item.title }}</p>
+                <code-feild :text="item.value" type='Plaintext' :loading="!item.value"></code-feild>
+              </div>
+            </v-col>
+            <v-col cols="12" lg="6">
+              <div v-for="item in getInfoListR()">
+                <p class="text-h6 pt-3">{{ item.title }}</p>
+                <code-feild :text="item.value" type='Plaintext' :loading="!item.value"></code-feild>
+              </div>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card-item>
     </v-card>
@@ -80,52 +91,6 @@ function reload() {
   }
 }
 
-
-
-function openCDRomDialog(target: string | null | undefined) {
-  // this.$refs.domainCDRomDialog.openDialog(target, this.data.uuid, this.data.node.name);
-}
-function openDeleteDialog() {
-  // this.$refs.domainDeleteDialog.openDialog(this.data.uuid);
-}
-
-
-
-function memoryChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/memory', { uuid: this.$route.params.uuid, memory: this.memoryValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change memory task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-function cpuChangeMethod() {
-  // axios
-  //   .put('/api/queue/vm/cpu', { uuid: this.$route.params.uuid, cpu: this.cpuValue })
-  //   .then((res) => {
-  //     if (res.status === 401) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //     } else if (res.status !== 200) {
-  //       this.$_pushNotice('An error occurred', 'error');
-  //       return;
-  //     }
-  //     this.$_pushNotice('Queueing change cpu task', 'success');
-  //   })
-  //   .catch(async () => {
-  //     await this.$_sleep(500);
-  //     this.$_pushNotice('An error occurred', 'error');
-  //   });
-}
-
 function getSpecList() {
   if (data) {
     return [
@@ -139,19 +104,26 @@ function getSpecList() {
   }
 }
 
-function getInfoList() {
+function getInfoListR() {
   if (dataInfo) {
     return [
       { title: "Top (top -b -n 1|head -n 20)", value: dataInfo.value?.top },
       { title: "Free (free -h)", value: dataInfo.value?.free },
-      { title: "Filesystem (df -h)", value: dataInfo.value?.dfH },
-      { title: "Storage (lsblk)", value: dataInfo.value?.lsblk },
       { title: "IP Route (ip r)", value: dataInfo.value?.ipRoute },
       { title: "IP Neigh (ip n)", value: dataInfo.value?.ipNeigh },
       { title: "IP Address (ip a)", value: dataInfo.value?.ipAddress },
+    ]
+  }
+}
+
+function getInfoListL() {
+  if (dataInfo) {
+    return [
+      { title: "Filesystem (df -h)", value: dataInfo.value?.dfH },
+      { title: "Storage (lsblk)", value: dataInfo.value?.lsblk },
+      { title: "Netplan (netplan get)", value: dataInfo.value?.netplanGet },
       { title: "Netfilter (iptables -L)", value: dataInfo.value?.iptables },
       { title: "NAT (iptables -L -t nat)", value: dataInfo.value?.iptablesNat },
-      { title: "Netplan (netplan get)", value: dataInfo.value?.netplanGet },
     ]
   }
 }

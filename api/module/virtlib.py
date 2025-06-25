@@ -18,6 +18,9 @@ class LibvirtPortNotfound(Exception):
 class StoragePoolAlreadyExistsError(RuntimeError):
     """プールが既に存在するとき専用の例外"""
 
+class NetworkAlreadyExistsError(RuntimeError):
+    """プールが既に存在するとき専用の例外"""
+
 # libvirt が返す「操作失敗」のエラーコード
 OP_FAILED: Final[int] = libvirt.VIR_ERR_OPERATION_FAILED
 
@@ -31,7 +34,7 @@ class VirtManager():
 
 
     def domain_data(self):
-        if self.node == None:
+        if self.node is None:
             return
         domains = self.node.listAllDomains()
         DATA = []
@@ -204,7 +207,22 @@ class VirtManager():
 
 
     def network_define(self,xml_str):
-        net = self.node.networkDefineXML(xml_str)
+        try:
+            net = self.node.networkDefineXML(xml_str)
+        except libvirt.libvirtError as e:
+            # 1) libvirt 側で「操作失敗」扱いか確認
+            is_op_failed = e.get_error_code() == OP_FAILED
+
+            # 2) エラーメッセージに already exists を含むか確認（大文字小文字を無視）
+            is_already_exists = bool(re.search(r"already\s+exists", e.get_error_message(), re.I))
+
+            if is_op_failed and is_already_exists:
+                # 専用例外に変換してエスカレーション
+                raise NetworkAlreadyExistsError(e.get_error_message()) from e
+
+            # それ以外は元の例外をそのまま投げ直す
+            raise
+        
         net.create()
         net.autostart()
 

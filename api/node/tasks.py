@@ -6,7 +6,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from mixin.log import setup_logger
 from module.ansiblelib import AnsibleManager
 from module.paramikolib import ParamikoManager
-from module.virtlib import StoragePoolAlreadyExistsError
+from module.virtlib import NetworkAlreadyExistsError, StoragePoolAlreadyExistsError
+from network.create import create_network
+from network.schemas import NetworkDHCPForCreate, NetworkForCreate, NetworkIPForCreate
 from storage.create import create_storage
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
@@ -103,7 +105,19 @@ def patch_node_role(db: Session, model: TaskModel, req: TaskRequest):
             )
         except StoragePoolAlreadyExistsError:
             logger.info(f'Skip {node.name} {os.path.join("/var/virty/", i)}')
-            pass
+    
+    network_body = NetworkForCreate(
+        name="virty-nat",
+        node_name=node.name,
+        forward_mode='nat',
+        dhcp=NetworkDHCPForCreate(start="192.168.177.1", end="192.168.177.200"),
+        ip=NetworkIPForCreate(address="192.168.177.254", netmask="255.255.255.0")
+    )
+    
+    try:
+        create_network(body=network_body, node=node)
+    except NetworkAlreadyExistsError:
+        logger.info(f'Skip {node.name} "virty-net')
     
     model.message = "Node patch has been successfull"
 
