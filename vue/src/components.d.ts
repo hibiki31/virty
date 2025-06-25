@@ -12,7 +12,6 @@ declare module 'vue' {
     CodeFeild: typeof import('./components/CodeFeild.vue')['default']
     DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
-    DomainNetworkChange: typeof import('./components/vms/DomainNetworkChange.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     ImageDeleteDialog: typeof import('./components/images/ImageDeleteDialog.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']

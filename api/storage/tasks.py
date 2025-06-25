@@ -3,13 +3,12 @@ from time import time
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
-from module import virtlib, xmllib
-from module.ansiblelib import AnsibleManager
+from module import virtlib
 from node.models import NodeModel
+from storage.create import create_storage
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 
-from .function import is_safe_fullpath
 from .models import StorageModel
 from .rescan import storage_rescan
 from .schemas import StorageForCreate
@@ -40,25 +39,14 @@ def post_storage_root(db: Session, model: TaskModel, req: TaskRequest):
     except Exception:
         raise Exception("node not found")
 
-    # XMLを定義、設定
-    editor = xmllib.XmlEditor("static","storage_dir")
-    editor.storage_base_edit(name=body.name, path=body.path)
-
-    am = AnsibleManager(user=node.user_name, domain=node.domain)
-    
-    db.close_all()
-    if not is_safe_fullpath(body.path):
-        raise Exception(f"The specified path is not a safe full path. {body.path}")
-    am.run(
-        playbook_name="commom/make_dir_recurse",
-        extravars={"path": body.path}
+    create_storage(
+        storage_name=body.name,
+        storage_path=body.path,
+        node=node
     )
+    
 
-    # ソイや！
-    manager = virtlib.VirtManager(node_model=node)
-    manager.storage_define(xml_str=editor.dump_str())
-
-    # model.message = "Storage append has been successfull"
+    model.message = "Storage append has been successfull"
 
 
 @worker_task(key="delete.storage.root")

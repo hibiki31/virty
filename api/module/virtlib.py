@@ -1,5 +1,6 @@
 
-from typing import List
+import re
+from typing import Final, List
 
 import libvirt
 
@@ -13,6 +14,12 @@ logger = setup_logger(__name__)
 
 class LibvirtPortNotfound(Exception):
     pass
+
+class StoragePoolAlreadyExistsError(RuntimeError):
+    """プールが既に存在するとき専用の例外"""
+
+# libvirt が返す「操作失敗」のエラーコード
+OP_FAILED: Final[int] = libvirt.VIR_ERR_OPERATION_FAILED
 
 class VirtManager():
     def __init__(self,node_model:NodeModel):
@@ -168,13 +175,24 @@ class VirtManager():
         
 
     def storage_define(self,xml_str):
-        sp = self.node.storagePoolDefineXML(xml_str,0)
         try:
-            sp.create()
+            sp = self.node.storagePoolDefineXML(xml_str,0)
+            
         except libvirt.libvirtError as e:
-            sp.undefine()
-            raise e
+            # 1) libvirt 側で「操作失敗」扱いか確認
+            is_op_failed = e.get_error_code() == OP_FAILED
 
+            # 2) エラーメッセージに already exists を含むか確認（大文字小文字を無視）
+            is_already_exists = bool(re.search(r"already\s+exists", e.get_error_message(), re.I))
+
+            if is_op_failed and is_already_exists:
+                # 専用例外に変換してエスカレーション
+                raise StoragePoolAlreadyExistsError(e.get_error_message()) from e
+
+            # それ以外は元の例外をそのまま投げ直す
+            raise
+    
+        sp.create()
         sp.setAutostart(1)
 
 
