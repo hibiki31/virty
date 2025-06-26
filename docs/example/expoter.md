@@ -37,7 +37,7 @@ services:
 ```
 
 !!! note
-  `docker run --rm ghcr.io/inovex/prometheus-libvirt-exporter:2.1.1-amd64 -h`でオプションを確認できます。
+    `docker run --rm ghcr.io/inovex/prometheus-libvirt-exporter:2.1.1-amd64 -h`でオプションを確認できます。
 
 ```bash
 docker compose up -d
@@ -77,9 +77,9 @@ Grafanaで可視化を行いたい場合、以下のダッシュボードを利�
 https://grafana.com/grafana/dashboards/20737-libvirt-dashboard/
 
 !!! note
-  このダッシュボードは以下のIssueで議論されている通り、貢献者のPR待ちのステータスです。仮であり、公式のものではないことに注意が必要です。
-  https://github.com/inovex/prometheus-libvirt-exporter/issues/17
-
+    このダッシュボードは以下のIssueで議論されている通り、貢献者のPR待ちのステータスです。仮であり、公式のものではないことに注意が必要です。
+    https://github.com/inovex/prometheus-libvirt-exporter/issues/17
 
 !!! warning
-  virty関連のダッシュボードは作成中です。
+    virty関連のダッシュボードは作成中です。
+
