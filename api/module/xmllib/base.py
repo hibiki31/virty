@@ -5,7 +5,7 @@ from uuid import uuid4
 from domain.schemas import *
 from mixin.log import setup_logger
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
-from settings import APP_ROOT
+from settings import APP_ROOT, DATA_ROOT
 
 from .utils import macaddress_generator, unit_convertor
 
@@ -23,18 +23,15 @@ class XmlEditor():
             file, dom, net, str
         """
         if type == "static":
-            os.chdir(APP_ROOT)
-            tree = ET.parse(APP_ROOT + '/static/xml/'+ obj +'.xml') 
+            tree = ET.parse(os.path.join(APP_ROOT, 'static/xml', f"{obj}.xml")) 
             root = tree.getroot()
             self.xml = root
         elif type == "domain":
-            os.chdir(APP_ROOT)
-            tree = ET.parse(APP_ROOT + '/data/xml/domain/'+ obj +'.xml') 
+            tree = ET.parse(os.path.join(APP_ROOT, 'static/xml/domain', f"{obj}.xml")) 
             root = tree.getroot()
             self.xml = root
         elif type == "network":
-            os.chdir(APP_ROOT)
-            tree = ET.parse(APP_ROOT + '/data/xml/network/'+ obj +'.xml') 
+            tree = ET.parse(os.path.join(APP_ROOT, 'static/xml/network', f"{obj}.xml")) 
             root = tree.getroot()
             self.xml = root
         elif type == "str":
@@ -266,11 +263,11 @@ class XmlEditor():
     
 
     def dump_file(self,type):
-        xml_dir = APP_ROOT + '/data/xml/' +type+ '/'
-        os.chdir(APP_ROOT)
-        os.makedirs(xml_dir, exist_ok=True)
         xml_uuid = self.xml.find('uuid').text
-        ET.ElementTree(self.xml).write(xml_dir + xml_uuid + '.xml')
+        xml_dir = os.path.join(DATA_ROOT, "xml", type)
+        
+        os.makedirs(xml_dir, exist_ok=True)
+        ET.ElementTree(self.xml).write(os.path.join(xml_dir, f"{xml_uuid}.xml"))
 
 
     def storage_base_edit(self,name,path):
