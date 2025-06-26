@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from auth.router import app as auth_router
 from domain.router import app as domain_router
@@ -99,6 +100,10 @@ app.include_router(exporter_router)
 app.include_router(mixin_router)
 
 use_route_names_as_operation_ids(app)
+
+Instrumentator(
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(app=app, endpoint="/metrics")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=7799, reload=True)
