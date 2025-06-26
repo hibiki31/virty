@@ -20,7 +20,7 @@ class TaskBase:
 
     def __call__(self, key):
         def receive_func(f):
-            logger.info(f"register {key} {f}")
+            logger.info(f"Register task {key}")
             self.task_func[key] = f
 
             def wrapper(*args, **kwargs):

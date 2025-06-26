@@ -27,6 +27,7 @@ class AnsibleManager():
     def __init__(self, user, domain):
         self.user = user
         self.domain = domain
+        os.environ['ANSIBLE_LIBRARY'] = os.path.join(APP_ROOT, "ansible")
         
     def run(self, playbook_name:str, extravars={}, timeout=900):
         hosts = f"{self.user}@{self.domain}"
