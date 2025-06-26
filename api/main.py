@@ -103,7 +103,7 @@ use_route_names_as_operation_ids(app)
 
 Instrumentator(
     excluded_handlers=["/metrics"],
-).instrument(app).expose(app=app, endpoint="/metrics")
+).instrument(app).expose(app=app, endpoint="/api/metrics-fastapi", tags=["metrics"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=7799, reload=True)
