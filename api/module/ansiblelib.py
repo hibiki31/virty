@@ -68,7 +68,7 @@ class AnsibleManager():
             
             if event['event'] == 'playbook_on_stats':
                 playbook_on_stats = event['event_data']
-                logger.info(pformat(playbook_on_stats))
+                logger.debug(pformat(playbook_on_stats))
         
         msg = f"[Ansible Finish] {hosts} name={playbook_name} extravars={extravars} res.rc={res.rc} res.status={res.status}"
         if res.rc == 0:

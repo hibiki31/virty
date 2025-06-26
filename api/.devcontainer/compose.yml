@@ -9,6 +9,7 @@ services:
     command: sleep infinity
     environment:
       PYTHONPATH: /workspaces/api
+      IS_DEV: True
 
   db:
     image: postgres:latest

@@ -1,11 +1,12 @@
 <template>
   <v-card>
     <image-delete-dialog v-model="stateDeleteDialog" :item="imageSelected"></image-delete-dialog>
+    <image-download-dialog v-model="stateCreateDialog"></image-download-dialog>
     <v-card-actions>
       <!-- ボタン -->
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
-        @click="stateCreateDialog = true">CREATE</v-btn>
+        @click="stateCreateDialog = true">DOWNLOAD</v-btn>
       <v-btn prepend-icon="mdi-delete" variant="flat" color="error" size="small" @click="stateDeleteDialog = true"
         :disabled="imageSelected.length === 0">DELETE</v-btn>
       <v-spacer></v-spacer>

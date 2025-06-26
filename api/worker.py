@@ -117,9 +117,9 @@ def exec_task(task_manager: TaskBase, task_uuid: str):
     start_time = time()
 
     try:
-        logger.info(f'Task start: {task_uuid} {task_key}')
+        logger.info(f'[Worker] Task start : {task_uuid} {task_key}')
         task_manager.run(key=task_key, task_uuid=task_uuid)
-        logger.info(f"Task finish: {task_uuid} {task_key}")
+        logger.info(f"[Worker] Task finish: {task_uuid} {task_key}")
         
         with SessionLocal.begin() as db:
             task = db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()

@@ -1,43 +1,33 @@
 import logging
+import os
 
 from rich.logging import RichHandler
 
-from settings import DATA_ROOT
-
-# logging.basicConfig()
-# logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+from settings import DATA_ROOT, IS_DEV
 
 
-def setup_logger(name, logfile=f'{DATA_ROOT}/api.log'):
+def setup_logger(name):
     logger = logging.getLogger(name)
 
     # ファイル出力設定
-    # fh = logging.FileHandler(logfile)
-    # fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
-    # fh.setFormatter(fh_formatter)
+    fh = logging.FileHandler(os.path.join(DATA_ROOT, "virty-api.log"))
+    fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
+    fh.setFormatter(fh_formatter)
 
-    # ファイル出力設定
-    # fh_info = logging.FileHandler(f'{DATA_ROOT}/api_info.log')
-    # fh_info_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
-    # fh_info.setFormatter(fh_info_formatter)
-
-    # コンソール出力設定
-    # ch = logging.StreamHandler()
-    # ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
-    # ch.setFormatter(ch_formatter)
-    ch = RichHandler()
+    if IS_DEV:
+        ch = RichHandler()
+    else:
+        ch = logging.StreamHandler()
+        ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
+        ch.setFormatter(ch_formatter)
   
-
-    # logger.addHandler(fh)
-    # logger.addHandler(fh_info)
+    logger.addHandler(fh)
     logger.addHandler(ch)
 
     # 全体のログレベル
     logger.setLevel(logging.DEBUG)
-    # ファイル出力のログレベル
-    # fh.setLevel(logging.DEBUG)
-    # fh_info.setLevel(logging.INFO)
-    # コンソール出力のログレベル
-    ch.setLevel(logging.DEBUG)
+    # 個別のログレベル
+    fh.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
 
     return logger

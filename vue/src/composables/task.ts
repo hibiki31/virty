@@ -60,10 +60,11 @@ export const getMethodColor = (statusCode: string) => {
 };
 
 export const getResourceIcon = (resource: string | undefined | null) => {
-  if (resource === "vm") return "mdi-cube-outline";
+  if (resource === "vm") return "mdi-desktop-tower";
   else if (resource === "node") return "mdi-server";
   else if (resource === "storage") return "mdi-database";
   else if (resource === "network") return "mdi-wan";
+  else if (resource === "image") return "mdi-harddisk";
   else return "mdi-help-rhombus";
 };
 

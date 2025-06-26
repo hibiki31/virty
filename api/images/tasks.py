@@ -9,9 +9,11 @@ from module.ansiblelib import AnsibleManager
 from module.virtlib import VirtManager
 from node.models import NodeModel
 from storage.models import StorageModel
+from storage.rescan import storage_rescan
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 
+from .function import url_body_size
 from .schemas import ImageDownloadForCreate
 
 worker_task = TaskBase()
@@ -31,17 +33,24 @@ def post_image_download(db: Session, model: TaskModel, req: TaskRequest):
     url_filename = os.path.basename(url_parse.path)
     save_file_path = os.path.join(storage_model.path, url_filename)
     
-    
-    
     am = AnsibleManager(user=node_model.user_name, domain=node_model.domain)
-    db.close_all()
+    
+    image_size = url_body_size(url=body.image_url)
+    if image_size is None:
+        model.message = f"Start download Size unknown {url_filename}"
+    else:
+        model.message = f"Start download Size {image_size / (1024 * 1024):,.2f} MB {url_filename}"
+    db.commit()
     
     am.run(
-        playbook_name="pb_wget",
+        playbook_name="commom/download_file_in_node",
         extravars={"url": body.image_url, "dest": save_file_path}
     )
     
-    return f"save {body.image_url}"
+    storage_rescan(node=node_model, db=db, storage_uuids=[storage_model.uuid])
+    
+    
+    model.message = f"Saved Size {image_size / (1024 * 1024):,.2f} MB {body.image_url}"
 
 
 @worker_task(key="delete.image.root")
