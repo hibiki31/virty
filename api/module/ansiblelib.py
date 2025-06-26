@@ -27,6 +27,7 @@ class AnsibleManager():
     def __init__(self, user, domain):
         self.user = user
         self.domain = domain
+        os.environ['ANSIBLE_LIBRARY'] = os.path.join(APP_ROOT, "ansible")
         
     def run(self, playbook_name:str, extravars={}, timeout=900):
         hosts = f"{self.user}@{self.domain}"
@@ -68,7 +69,7 @@ class AnsibleManager():
             
             if event['event'] == 'playbook_on_stats':
                 playbook_on_stats = event['event_data']
-                logger.info(pformat(playbook_on_stats))
+                logger.debug(pformat(playbook_on_stats))
         
         msg = f"[Ansible Finish] {hosts} name={playbook_name} extravars={extravars} res.rc={res.rc} res.status={res.status}"
         if res.rc == 0:

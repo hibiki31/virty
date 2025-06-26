@@ -8,6 +8,4 @@ DATA_ROOT = os.getenv('DATA_ROOT', str(pathlib.Path('./data').resolve()))
 IS_DEV = bool(os.getenv('IS_DEV', False))
 API_VERSION = '5.1.2'
 SECRET_KEY = 'DEV_KEY' if IS_DEV else os.getenv('SECRET_KEY', secrets.token_hex(32))
-
-# Ansible用のパスを指定
-os.environ['ANSIBLE_LIBRARY'] = APP_ROOT + "/ansible"
+LOG_MODE = os.getenv('LOG_MODE', "TEXT")

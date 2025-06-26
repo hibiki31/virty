@@ -30,7 +30,7 @@ def refresh_images(
     return [task.model]
 
 
-@app.post("/download")
+@app.post("/download", response_model=List[Task])
 def download_image(
         req: Request,
         body: ImageDownloadForCreate,

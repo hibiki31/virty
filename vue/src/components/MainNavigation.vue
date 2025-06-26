@@ -2,7 +2,7 @@
   <v-navigation-drawer v-model="state.showSideDrawer">
     <v-list density="compact" nav class="primary--text text--primary">
       <v-list-item prepend-icon="mdi-view-dashboard" title="Home" :to="{ name: '/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-cube-outline" title="VM" :to="{ name: '/vms/' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-desktop-tower" title="VM" :to="{ name: '/vms/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-server" title="Node" :to="{ name: '/nodes/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-database" title="Storage" :to="{ name: '/storages/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-harddisk" title="Image" :to="{ name: '/images/' }"></v-list-item>

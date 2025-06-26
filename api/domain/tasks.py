@@ -207,7 +207,6 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     node.domain_define(xml_str=editor.dump_str())
 
     model.message = f"Virtual machine ({req.name}@{model.user_id}) has been added successfully"
-    logger.info('task終了')
 
 
 @worker_task(key="delete.vm.root")

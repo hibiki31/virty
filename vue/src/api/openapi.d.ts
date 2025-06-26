@@ -3061,7 +3061,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
             /** @description Validation Error */

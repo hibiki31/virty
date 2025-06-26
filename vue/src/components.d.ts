@@ -10,10 +10,12 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     CodeFeild: typeof import('./components/CodeFeild.vue')['default']
+    DocsLink: typeof import('./components/DocsLink.vue')['default']
     DomainAddTicketsDialog: typeof import('./components/vms/DomainAddTicketsDialog.vue')['default']
     DomainGroupPut: typeof import('./components/vms/DomainGroupPut.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     ImageDeleteDialog: typeof import('./components/images/ImageDeleteDialog.vue')['default']
+    ImageDownloadDialog: typeof import('./components/images/ImageDownloadDialog.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
     NetworkAddDialog: typeof import('./components/networks/NetworkAddDialog.vue')['default']

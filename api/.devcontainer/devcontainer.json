@@ -12,7 +12,8 @@
 				"KevinRose.vsc-python-indent",
 				"charliermarsh.ruff",
 				"tamasfe.even-better-toml",
-				"saoudrizwan.claude-dev"
+				"saoudrizwan.claude-dev",
+				"tanggod.json-log-viewer"
 			]
 		}
 	},

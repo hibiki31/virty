@@ -46,6 +46,15 @@ export const isValidIp = (value: string) =>
 
 export const requiredCheckbox = (value: boolean) => value || "Required Ceckbox";
 
+export function isValidURL(value: string) {
+  try {
+    new URL(value); // 例外が出なければほぼ仕様どおりの URL
+    return true;
+  } catch {
+    return "not a valid URL.";
+  }
+}
+
 const r = {
   required,
   limitLength64,
@@ -61,6 +70,7 @@ const r = {
   firstCharacterRestrictions,
   isValidIp,
   requiredCheckbox,
+  isValidURL,
 } as const;
 
 export default r;
