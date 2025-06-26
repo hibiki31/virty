@@ -20,18 +20,17 @@ services:
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
     command: python3 /opt/app/worker.py
-  old:
-    build: ./web
+  web:
+    build: ./vue
     ports: 
       - 0.0.0.0:8765:80
     restart: always
-  new:
-    build: ./vue
-    ports: 
-      - 0.0.0.0:8766:80
-    restart: always
     environment:
       VITE_API_BASE_URL: ""
+  proxy:
+    build: ./proxy
+    restart: always
+    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
   db:
     image: postgres:latest
     volumes:
@@ -41,10 +40,6 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_PASSWORD: password
     restart: unless-stopped
-  proxy:
-    build: ./proxy
-    restart: always
-    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
 
 volumes:
   postgres-data:

@@ -74,7 +74,6 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
                     ImageModel.storage.has(StorageModel.node_name==node.name),
                     ImageModel.path==disk.source).one_or_none()
                 if db_image is not None:
-                    logger.info(db_image)
                     db_image.domain_uuid=temp.uuid
                     db.merge(db_image)
                 row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))

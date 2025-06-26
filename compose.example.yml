@@ -20,8 +20,8 @@ services:
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
     restart: always
     command: python3 /opt/app/worker.py
-  vue:
-    image: hibiki31/virty-vue
+  web:
+    image: hibiki31/virty-web
     ports: 
       - 0.0.0.0:8765:80
     restart: always
