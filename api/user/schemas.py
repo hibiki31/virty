@@ -28,6 +28,9 @@ class UserScope(BaseSchema):
 class UserProject(BaseSchema):
     name: str
 
+class UserPublickey(BaseSchema):
+    name: str
+    publickey: str
 
 class UserForQuery(GetPagination):
     name_like: str | None = None
@@ -37,6 +40,7 @@ class User(BaseSchema):
     username: str
     scopes: List[UserScope]
     projects: List[UserProject]
+    publickeys: List[UserPublickey]
 
 
 class UserPage(BaseSchema):

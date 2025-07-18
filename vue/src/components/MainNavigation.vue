@@ -7,6 +7,7 @@
       <v-list-item prepend-icon="mdi-database" title="Storage" :to="{ name: '/storages/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-harddisk" title="Image" :to="{ name: '/images/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-wan" title="Network" :to="{ name: '/networks/' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-account" title="Users" :to="{ name: '/users/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-checkbox-multiple-marked-outline" title="Task"
         :to="{ name: '/tasks/' }"></v-list-item>
     </v-list>

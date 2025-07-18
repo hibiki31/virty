@@ -7,8 +7,6 @@ pip install pip-review
 pip-review
 ```
 
-
-
 ## 開発時のメモ
 
 テスト用コマンドの登録
@@ -19,22 +17,10 @@ datamodel-codegen --url http://localhost:7799/api/openapi.json --output model.py
 docker run --rm koxudaxi/datamodel-code-generator --url http://localhost:8765/api/openapi.json --output model.py
 ```
 
-
-## Celery
-
-```bash
-# ダッシュボード
-celery --app=worker flower --port=5555
-# 12サブプロセス
-celery --app=worker worker --pool prefork --concurrency 12
-# オートスケール
-celery --app=worker worker --autoscale=32,4
-```
-
 ## Alembic
 
 ```bash
-alembic revision --autogenerate -m "Added columns."
+alembic revision --autogenerate -m "Added users publickey"
 alembic revision --autogenerate
 alembic upgrade head
 alembic downgrade base

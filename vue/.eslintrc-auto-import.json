@@ -74,6 +74,7 @@
     "useCssVars": true,
     "useId": true,
     "useModel": true,
+    "useReloadListener": true,
     "useRoute": true,
     "useRouter": true,
     "useSlots": true,

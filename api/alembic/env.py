@@ -1,19 +1,12 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
+import models
 from alembic import context
-
 from mixin.database import Base, get_db_url
 
-from user.models import *
-from domain.models import *
-from node.models import *
-from task.models import *
-from network.models import *
-from flavor.models import *
-from project.models import *
+models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

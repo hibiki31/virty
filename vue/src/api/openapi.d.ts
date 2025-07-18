@@ -933,6 +933,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/metrics-fastapi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Metrics
+         * @description Endpoint that serves Prometheus metrics.
+         */
+        get: operations["metrics_api_metrics_fastapi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1780,6 +1800,8 @@ export interface components {
             scopes: components["schemas"]["UserScope"][];
             /** Projects */
             projects: components["schemas"]["UserProject"][];
+            /** Publickeys */
+            publickeys: components["schemas"]["UserPublickey"][];
         };
         /** UserForCreate */
         UserForCreate: {
@@ -1799,6 +1821,13 @@ export interface components {
         UserProject: {
             /** Name */
             name: string;
+        };
+        /** UserPublickey */
+        UserPublickey: {
+            /** Name */
+            name: string;
+            /** Publickey */
+            publickey: string;
         };
         /** UserResponse */
         UserResponse: {
@@ -3836,6 +3865,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /** @example # HELP virty_vm_len Virty Metrics
+                     *     # TYPE virty_vm_len gauge
+                     *     virty_vm_len 10
+                     *     # HELP virty_vm_cpus Virty Metrics
+                     *     # TYPE virty_vm_cpus gauge
+                     *     virty_vm_cpus 4
+                     *     # HELP virty_vm_memorys Virty Metrics
+                     *     # TYPE virty_vm_memorys gauge
+                     *     virty_vm_memorys 8192
+                     *     # HELP virty_task_counter Virty Metrics
+                     *     # TYPE virty_task_counter counter
+                     *     virty_task_counter 5
+                     *     # HELP virty_task_runtime Virty Metrics
+                     *     # TYPE virty_task_runtime counter
+                     *     virty_task_runtime 12345
+                     *     # HELP virty_task_summry Virty Metrics
+                     *     # TYPE virty_task_summry counter
+                     *     virty_task_summry{status="finish"} 42
+                     *     virty_task_summry{status="init"} 13
+                     *     virty_task_summry{status="start"} 7
+                     *      */
                     "text/plain": string;
                 };
             };
@@ -3857,6 +3907,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Version"];
+                };
+            };
+        };
+    };
+    metrics_api_metrics_fastapi_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
