@@ -53,8 +53,6 @@ import { apiClient } from '@/api';
 import type { paths } from '@/api/openapi'
 const router = useRouter()
 const route = useRoute()
-import { useReloadListener } from '@/composables/trigger';
-
 import { getNodeStatusColor } from '@/composables/nodes'
 
 type typeNode = paths['/api/nodes/{name}']['get']['responses']['200']['content']['application/json']

@@ -97,10 +97,7 @@
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
-
-import { useReloadListener } from '@/composables/trigger';
 import { asyncSleep } from '@/composables/sleep';
-import { itemsCPU } from '@/composables/vm';
 
 const route = useRoute()
 const state = useStateStore()
