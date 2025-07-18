@@ -60,7 +60,15 @@ class ExpoterEditor():
         
 
 
-@app.get("", response_class=PlainTextResponse)
+@app.get(
+    "",
+    response_class=PlainTextResponse,
+    responses={
+        200: {
+            "content": {"text/plain": {"example": "# HELP virty_vm_len Virty Metrics\n# TYPE virty_vm_len gauge\nvirty_vm_len 10\n# HELP virty_vm_cpus Virty Metrics\n# TYPE virty_vm_cpus gauge\nvirty_vm_cpus 4\n# HELP virty_vm_memorys Virty Metrics\n# TYPE virty_vm_memorys gauge\nvirty_vm_memorys 8192\n# HELP virty_task_counter Virty Metrics\n# TYPE virty_task_counter counter\nvirty_task_counter 5\n# HELP virty_task_runtime Virty Metrics\n# TYPE virty_task_runtime counter\nvirty_task_runtime 12345\n# HELP virty_task_summry Virty Metrics\n# TYPE virty_task_summry counter\nvirty_task_summry{status=\"finish\"} 42\nvirty_task_summry{status=\"init\"} 13\nvirty_task_summry{status=\"start\"} 7\n"}}
+        }
+    }
+)
 def get_metrics(
         db: Session = Depends(get_db)
     ):
