@@ -28,7 +28,7 @@
             </v-card>
           </v-col>
           <!-- Port Group -->
-          <v-col xs="12" sm="12" md="6" lg="3">
+          <v-col xs="12" sm="12" md="6" lg="3" v-if="data.type === 'openvswitch'">
             <v-card prepend-icon="mdi-cube-outline" title="Port Group">
               <v-table class="text-caption" density="compact">
                 <thead>
@@ -100,6 +100,7 @@ import { apiClient } from '@/api';
 
 import { useReloadListener } from '@/composables/trigger';
 import { asyncSleep } from '@/composables/sleep';
+import { itemsCPU } from '@/composables/vm';
 
 const route = useRoute()
 const state = useStateStore()
