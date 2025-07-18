@@ -17,7 +17,13 @@ app = APIRouter(prefix="/api/metrics", tags=["metrics"])
 
 class Metric(BaseModel):
     label: dict | None = None
-    value: str | int | float = None
+    value: str | int | float
+    
+    def __init__(self, **data):
+        # Noneのvalueを0に変換して共通化
+        if "value" in data and data["value"] is None:
+            data["value"] = 0
+        super().__init__(**data)
 
 
 class ExpoterEditor():
