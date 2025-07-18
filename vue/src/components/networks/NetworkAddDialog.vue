@@ -20,8 +20,7 @@
             </v-col>
             <v-col>
               <v-text-field variant="outlined" density="compact" label="Bridge Name" v-model="bridgeName"
-                :disabled="!enableBridge"
-                :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
+                :rules="enableBridge ? [r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions] : []"
                 counter="64"></v-text-field>
             </v-col>
           </v-row>
