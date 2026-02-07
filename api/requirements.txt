@@ -4,7 +4,7 @@
 fastapi==0.115.13
 uvicorn==0.34.3
 libvirt-python==11.4.0
-ansible==11.7.0
+ansible==12.2.0
 ansible-runner==2.4.1 
 SQLAlchemy==2.0.41
 alembic==1.16.2
