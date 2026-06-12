@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+CMD bash -c "mkdir -p /opt/data/metrics && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
