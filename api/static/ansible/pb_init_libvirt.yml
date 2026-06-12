@@ -12,7 +12,9 @@
         vars:
           packages: 
             # - qemu
-            - qemu-kvm
+            # qemu-kvm is a virtual package on newer Ubuntu (24/26),
+            # use the real package qemu-system-x86 instead.
+            - qemu-system-x86
             - qemu-utils
             - libvirt-daemon
             - libvirt-clients
