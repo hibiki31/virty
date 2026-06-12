@@ -39,7 +39,6 @@
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
-import { useReloadListener } from '@/composables/trigger';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()

@@ -36,7 +36,6 @@ meta:
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas'
 import { apiClient } from '@/api'
-import { useReloadListener } from '@/composables/trigger'
 import { getNodeStatusColor } from '@/composables/nodes'
 
 const loading = ref(false)

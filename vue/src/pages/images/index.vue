@@ -43,7 +43,6 @@ meta:
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas'
 import type { typeListImage, typeListImageQuery } from '@/composables/image'
-import { useReloadListener } from '@/composables/trigger'
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
 import { getImageList, initImageList } from '@/composables/image'

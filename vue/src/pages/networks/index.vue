@@ -27,7 +27,6 @@ meta:
 <script lang="ts" setup>
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
-import { useReloadListener } from '@/composables/trigger'
 
 import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network'
 import { getNetworkList, initNetworkList } from '@/composables/network'

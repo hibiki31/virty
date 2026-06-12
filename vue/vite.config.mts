@@ -29,6 +29,11 @@ export default defineConfig({
         {
           "@/composables/rules.ts": [["default", "r"]],
         },
+        {
+          "@/composables/trigger.ts": [
+            ["useReloadListener", "useReloadListener"],
+          ],
+        },
       ],
       dirs: ["src/stores"],
       dts: "src/auto-imports.d.ts",

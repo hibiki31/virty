@@ -44,9 +44,7 @@ import type { typeListVM, typeListVMQuery } from '@/composables/vm'
 import { initVMList, getVMList } from '@/composables/vm'
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
-import { useReloadListener } from '@/composables/trigger'
 import { getPowerColor } from '@/composables/vm'
-
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)

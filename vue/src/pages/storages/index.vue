@@ -40,7 +40,6 @@ meta:
 <script lang="ts" setup>
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
-import { useReloadListener } from '@/composables/trigger'
 
 import type { typeListStorageQuery } from '@/composables/storage'
 import { initStorageList, getStorageList, getAvailableColoer } from '@/composables/storage'
