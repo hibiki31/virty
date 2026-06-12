@@ -106,7 +106,9 @@ class XmlEditor():
     def domain_emulator_edit(self, os_like):
         if os_like == "Debian" or os_like == "debian":
             self.xml.find('devices').find('emulator').text = "/usr/bin/kvm"
-            self.xml.find('os').find('type').set('machine', "pc-i440fx-2.8")
+            # 固定バージョン(pc-i440fx-2.8)はUbuntu26のQEMU10系で非対応のため
+            # 汎用エイリアス"pc"を使用し、環境のQEMUが対応する最新i440fxへ自動解決させる
+            self.xml.find('os').find('type').set('machine', "pc")
         elif os_like == "rhel fedora":
             self.xml.find('devices').find('emulator').text = "/usr/libexec/qemu-kvm"
             self.xml.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
