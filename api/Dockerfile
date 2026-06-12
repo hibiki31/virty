@@ -1,7 +1,7 @@
 FROM python:3.12-bullseye
 
 WORKDIR /opt/app
-ENV prometheus_multiproc_dir /opt/data/metrics
+ENV PROMETHEUS_MULTIPROC_DIR /opt/data/metrics
 RUN mkdir -p /opt/data/metrics
 
 RUN apt-get update -y
