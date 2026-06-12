@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
 from auth.function import get_password_hash
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import raise_notfound
 from mixin.log import setup_logger
-from user.models import UserModel, UserScopeModel
-from user.schemas import TokenData, UserForCreate, UserForQuery, UserPage
+from user.functions import overwrite_user_scopes
+from user.models import UserModel, UserPublickeyModel, UserScopeModel
+from user.schemas import TokenData, UserForCreate, UserForQuery, UserForUpdate, UserPage
 
 logger = setup_logger(__name__)
 app = APIRouter(prefix="/api/users", tags=["users"])
@@ -48,6 +51,24 @@ def create_user(
 
     return user_model
 
+@app.put("/{username}")
+def update_user(
+        request: UserForUpdate,
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user),
+    ):
+    try:
+        user_model = db.query(UserModel).filter(UserModel.username==request.username).one()
+    except NoResultFound:
+        raise_notfound()
+    
+    user_model.publickeys = [UserPublickeyModel(name=key.name, publickey=key.publickey) for key in request.publickeys]
+
+    db.commit()
+    
+    overwrite_user_scopes(db=db, username=request.username, new_scope_names=[scope.name for scope in request.scopes])
+
+    return user_model
 
 @app.get("", response_model=UserPage)
 def get_users(

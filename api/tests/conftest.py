@@ -14,6 +14,7 @@ from main import app
 class User(BaseModel):
     username: str
     password: str
+    publickey: str
 
 class Project(BaseModel):
     name: str

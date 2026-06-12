@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, String, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 from mixin.database import Base
 
@@ -13,8 +13,21 @@ class UserModel(Base):
     __tablename__ = "users"
     username = Column(String, primary_key=True, index=True)
     hashed_password = Column(String)
-    scopes = relationship('UserScopeModel', lazy=False)
-    publickeys = relationship('UserPublickeyModel', lazy=False)
+    
+    scopes: Mapped[list["UserScopeModel"]] = relationship(
+        "UserScopeModel",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+    
+    publickeys: Mapped[list["UserPublickeyModel"]] = relationship(
+        "UserPublickeyModel",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
     projects = relationship("ProjectModel", secondary=association_users_to_projects, back_populates="users", lazy=False, viewonly=True)
 
 

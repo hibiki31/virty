@@ -38,21 +38,16 @@ class UserForQuery(GetPagination):
 
 class User(BaseSchema):
     username: str
-    scopes: List[UserScope]
-    projects: List[UserProject]
-    publickeys: List[UserPublickey]
+    scopes: List[UserScope] = []
+    projects: List[UserProject] = []
+    publickeys: List[UserPublickey] = []
 
 
 class UserPage(BaseSchema):
     count: int
     data:List[User]
 
-class UserForCreate(BaseSchema):
-    username: str = Field(
-        min_length=3,
-        max_length=30,
-        pattern=r"^[A-Za-z][A-Za-z0-9_-]*$"
-    )
+class UserForCreate(User):
     password: str = Field(
         min_length=8,
         max_length=128,
@@ -68,6 +63,8 @@ class UserForCreate(BaseSchema):
             raise ValueError('Password must contain lower-case, upper-case, digit and symbol')
         return v
 
+class UserForUpdate(UserForCreate):
+    pass
 
 class UserInDB(UserBase):
     hashed_password: str
