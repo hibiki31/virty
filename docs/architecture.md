@@ -56,6 +56,19 @@ interfaceをproviderから受け取る。production providerは`api/module/`の�
 JWT signing keyはprocess再起動をまたいで同じ値を使う必要がある。productionでは明示的なsecretを与え、
 repositoryやimageへ埋め込まない。
 
+### Create VMのcloud-init補助
+
+Create VM dialogはguided formの状態とraw `userData`をbrowser内で分離して保持する。利用者が適用を指示したときだけ、
+Webが現在のraw dataを単一の`#cloud-config` YAML mappingとして厳密に検証し、formが管理する初期user、password認証、
+SSH公開鍵、package更新・install一覧、初回起動scriptの設定をmergeする。構文や構造が不正な場合はraw dataを変更せず、
+VM作成も許可しない。
+管理対象外のkeyは保持し、適用後はraw dataを送信内容の正本とする。raw側の手編集をformへ逆同期せず、再適用時だけ
+formの値で管理対象を更新する。平文passwordとroot権限で実行するscriptの安全上の警告もWebの責務である。
+
+登録済みSSH公開鍵の補完では、認証状態のuser名と既存の利用者取得APIを使い、完全一致した利用者の公開鍵だけを候補にする。
+取得失敗や候補なしはmanual入力を妨げない。この補助処理とYAML生成はWeb内で完結し、APIは従来どおり
+`cloudInit.userData`をopaqueな文字列として受け取る。form用schemaやendpointを追加せず、既存API契約を変更しない。
+
 ### 非同期resource操作
 
 1. task routerが`method.resource.object`の組とrequest情報をDBへ保存する。

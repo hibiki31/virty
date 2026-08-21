@@ -1229,6 +1229,8 @@ export interface components {
             source?: string | null;
             /** Target */
             target?: string | null;
+            /** Capacitygb */
+            capacityGb?: number | null;
         };
         /** DomainForCreate */
         DomainForCreate: {
@@ -1289,6 +1291,8 @@ export interface components {
             bridge?: string | null;
             /** Network */
             network?: string | null;
+            /** Networkuuid */
+            networkUuid?: string | null;
             /** Port */
             port?: string | null;
         };
