@@ -11,9 +11,9 @@ jobs:
     env:
       VIRTY_CI_CACHE: gha
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Expose GitHub Actions cache runtime
         uses: ./.github/actions/expose-github-runtime
       - name: Verify release image
