@@ -35,6 +35,21 @@
 - 大きなHTML、OpenAPI、生成ファイルは全文を展開せず、`rg`、parser、対象範囲の抽出で調査する。
 - 秘密鍵、token、password、`api/tests/env*.json`、external labの実config、DB dumpをコミットしない。
 
+## 定型タスク: 実機試験情報の受け入れ
+
+- 利用者が「試験用情報を提供します」と述べた場合、または専用lab設定の提供・作成を明確に申し出た場合は、
+  実機testを開始せず、`api/tests/external/README.md`の「設定受け入れタスク」を実施する。
+  この申し出は設定fileを準備する許可だけであり、`./devctl infra`の実行許可ではない。
+- `api/tests/external/infra-config.example.json`を正本として、変更が必要な非機密値だけを項目別に質問する。
+  password、秘密鍵、token、credential付きURLは質問しない。利用者が自発的に提示した場合も使用、復唱、
+  設定fileへの転記をせず、露出済みのcredentialまたはkeyとして失効・rotationを依頼する。
+  組織上秘匿したいhost名、IP address、usernameも手動置換を選べるようにする。
+- 回答後はrepository rootの`.secrets/infra-config.json`をexampleから作成し、非機密値だけを反映する。
+  既存fileを無断で読んだり上書きしたりせず、directoryを`0700`、fileを`0600`にする。
+  秘密値は用途が分かるplaceholder、`allow_destructive`は`false`のままにする。
+- 最後にplaceholderを安全なlocal editorで利用者自身が置換し、専用labと設定全体を確認してから
+  `allow_destructive`を`true`へ変更するよう依頼する。秘密値を返信させず、置換後のfileを表示、diff、stage、commitしない。
+
 ## 開発環境と検証
 
 - 開発、型check、test、image buildはrepository rootの`./devctl`だけを入口とし、hostのPython、Node、pnpmや

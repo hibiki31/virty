@@ -111,7 +111,8 @@ warm logでは`apt`、`pip install`、`pnpm install`の再実行がなく、API/
 `tests/external`は標準verifyと通常CIから分離する。Compose projectを分けても管理node上のVM、network、
 storageは自動分離されないため、次の条件をすべて満たす場合だけ`devctl infra`で実行する。
 
-- `api/tests/external/infra-config.example.json`をrepository外へcopyし、絶対pathで渡す。
+- 設定受け入れ手順は`api/tests/external/README.md`を正本とする。`infra-config.example.json`を基に
+  repository rootのignored directory `.secrets/`内へ`infra-config.json`を作成し、directoryを`0700`、fileを`0600`にする。
 - operatorが必要なSSH接続と空き容量を事前確認する。`devctl`のpreflightはnested構造、専用lab宣言、
   URL、path、必須resource suffixを資源作成前に検査する。
 - resource名へrun IDを付け、既存resourceをskip、再利用、削除しない。

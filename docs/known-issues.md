@@ -163,12 +163,15 @@
 - 状態: 未解決
 - 影響: fail-closed preflight、fake integration、cleanup判断は検証済みだが、実SSH、Ansible、libvirt、
   image downloadを組み合わせたsuiteは専用lab設定がないため未実行である。OS、libvirt、network、storage固有の
-  差異と、実worker停止時の診断・cleanupは標準verifyだけでは保証できない。
+  差異と、実worker停止時の診断・cleanupは標準verifyだけでは保証できない。また、`become`でroot所有のpathを
+  作成する処理に対し、cleanup playbookが`become`を使わない経路があり、通常の非root SSH userでは
+  run資源を削除できない可能性がある。
 - 根拠: [`api/tests/external/`](../api/tests/external/)と
   [`api/tests/external/infra-config.example.json`](../api/tests/external/infra-config.example.json)。
-- 改善方針: disposableな専用labを用意し、通常成功、task失敗、worker停止、INT/TERMを順番に実測する。
-  credentialや管理node固有値はrepositoryへ保存しない。
-- 完了条件: 各scenarioが有限時間で診断付き終了し、run ID資源とremote pathが0件になることを独立inventoryで確認する。
+- 改善方針: 作成とcleanupの権限境界を揃えたうえでdisposableな専用labを用意し、通常成功、task失敗、
+  worker停止、INT/TERMを順番に実測する。credentialや管理node固有値はrepositoryへ保存しない。
+- 完了条件: 非root SSH userを含む各scenarioが有限時間で診断付き終了し、run ID資源とremote pathが
+  0件になることを独立inventoryで確認する。
 
 ### INFRA-002: cleanupが作成資源の永続manifestを持たない
 
