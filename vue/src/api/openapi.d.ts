@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dashboard */
+        get: operations["get_dashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/nodes": {
         parameters: {
             query?: never;
@@ -1004,6 +1021,142 @@ export interface components {
             hostname: string;
             /** Userdata */
             userData: string;
+        };
+        /** DashboardBreakdown */
+        DashboardBreakdown: {
+            /** Name */
+            name: string;
+            /** Count */
+            count: number;
+        };
+        /** DashboardImageSummary */
+        DashboardImageSummary: {
+            /** Count */
+            count: number;
+        };
+        /** DashboardNetworkSummary */
+        DashboardNetworkSummary: {
+            /** Count */
+            count: number;
+            /** Portgroupcount */
+            portGroupCount: number;
+            /** Types */
+            types: components["schemas"]["DashboardBreakdown"][];
+        };
+        /** DashboardNodeSummary */
+        DashboardNodeSummary: {
+            /** Count */
+            count: number;
+            /** Core */
+            core: number;
+            /** Memorygib */
+            memoryGib: number;
+            /** Roles */
+            roles: components["schemas"]["DashboardBreakdown"][];
+        };
+        /** DashboardRecentTask */
+        DashboardRecentTask: {
+            /** Uuid */
+            uuid: string;
+            /** Userid */
+            userId: string | null;
+            /** Status */
+            status: string | null;
+            /** Resource */
+            resource: string;
+            /** Object */
+            object: string;
+            /** Method */
+            method: string;
+            /** Posttime */
+            postTime: string | null;
+            /** Runtime */
+            runTime: number | null;
+        };
+        /** DashboardResponse */
+        DashboardResponse: {
+            /**
+             * Generatedat
+             * Format: date-time
+             */
+            generatedAt: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "all" | "assigned";
+            nodes: components["schemas"]["DashboardNodeSummary"];
+            vms: components["schemas"]["DashboardVmSummary"];
+            storages: components["schemas"]["DashboardStorageSummary"];
+            networks: components["schemas"]["DashboardNetworkSummary"];
+            images: components["schemas"]["DashboardImageSummary"];
+            tasks: components["schemas"]["DashboardTaskSummary"];
+        };
+        /** DashboardStoragePool */
+        DashboardStoragePool: {
+            /** Uuid */
+            uuid: string;
+            /** Name */
+            name: string;
+            /** Nodename */
+            nodeName: string;
+            /** Capacitygib */
+            capacityGib: number;
+            /** Usedgib */
+            usedGib: number;
+            /** Availablegib */
+            availableGib: number;
+            /** Usagepercent */
+            usagePercent: number | null;
+        };
+        /** DashboardStorageSummary */
+        DashboardStorageSummary: {
+            /** Count */
+            count: number;
+            /** Capacitygib */
+            capacityGib: number;
+            /** Usedgib */
+            usedGib: number;
+            /** Availablegib */
+            availableGib: number;
+            /** Highusagecount */
+            highUsageCount: number;
+            /** Highestusage */
+            highestUsage: components["schemas"]["DashboardStoragePool"][];
+        };
+        /** DashboardTaskSummary */
+        DashboardTaskSummary: {
+            /** Incompletecount */
+            incompleteCount: number;
+            /** Failedlast24Hours */
+            failedLast24Hours: number;
+            /** Recent */
+            recent: components["schemas"]["DashboardRecentTask"][];
+        };
+        /** DashboardVmStatuses */
+        DashboardVmStatuses: {
+            /** Running */
+            running: number;
+            /** Stopped */
+            stopped: number;
+            /** Maintenance */
+            maintenance: number;
+            /** Deleted */
+            deleted: number;
+            /** Lostnode */
+            lostNode: number;
+            /** Unknown */
+            unknown: number;
+        };
+        /** DashboardVmSummary */
+        DashboardVmSummary: {
+            /** Count */
+            count: number;
+            /** Core */
+            core: number;
+            /** Memorygib */
+            memoryGib: number;
+            statuses: components["schemas"]["DashboardVmStatuses"];
         };
         /** Domain */
         Domain: {
@@ -2117,6 +2270,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthValidateResponse"];
+                };
+            };
+        };
+    };
+    get_dashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
                 };
             };
         };

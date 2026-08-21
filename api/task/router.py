@@ -36,7 +36,7 @@ def get_tasks(
     if admin:
         current_user.verify_scope(["admin.tasks"])
     else:
-        query.filter(TaskModel.user_id==current_user.id)
+        query = query.filter(TaskModel.user_id==current_user.id)
 
     if param.resource:
         query = query.filter(TaskModel.resource==param.resource)

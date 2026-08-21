@@ -70,7 +70,10 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 Web UIには、login・初期設定、VM、node、storage、image、network、利用者一覧、task一覧・詳細の画面がある。
 projectとflavorはbackend APIおよび一部の関連操作に存在するが、独立した管理画面は現時点で提供しない。
-dashboardは入口のみであり、集計dashboardを提供済みとは扱わない。
+dashboardは、認証利用者が参照できるVM、node、storage、image、network、taskの件数、状態、容量を、
+DB上のinventory cacheとtask recordから集約した現在値のsnapshotとして表示する。
+表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。
+集計対象は各APIの認可とprojectによる絞り込みに従い、利用者が参照できないresourceを含めない。
 
 ## 品質上の不変条件
 

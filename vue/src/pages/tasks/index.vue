@@ -63,16 +63,19 @@ meta:
 <script lang="ts" setup>
 import type { typeListTask, typeListTaskQuery } from '@/composables/task'
 
+import { hasAdminScope } from '@/composables/auth'
 import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'
 import { itemsPerPAgeOption } from '@/composables/table'
+import { useAuthStore } from '@/stores/auth'
 
+const auth = useAuthStore()
 const loading = ref(false)
 const stateDetailDialog = ref(false)
 const dataDetailDaalog = ref<typeListTask["data"][0]>()
 const pageState = ref(1)
 
 const query = ref<NonNullable<typeListTaskQuery>>({
-  admin: true,
+  admin: hasAdminScope(auth.scopes),
   limit: 20,
   page: 1,
   status: "",
