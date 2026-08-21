@@ -8,7 +8,7 @@ import socket
 import uuid
 from dataclasses import replace
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ValidationError
@@ -50,6 +50,17 @@ from .policy import (
     resolve_generation,
 )
 from .schemas import ActionRequest, ActionResult, OperationAccepted
+
+
+def _mutation_risk(
+    definition: ActionDefinition,
+) -> Literal["R1", "R2", "R3"]:
+    if definition.risk == "R0":
+        raise ServiceUnavailableError(
+            "invalid_mutation_risk",
+            "変更actionへR0 riskは設定できません",
+        )
+    return definition.risk
 
 
 def _public_action(action_id: str) -> dict[str, Any]:
@@ -124,7 +135,7 @@ _PATH_ONLY_FIELDS: dict[str, set[str]] = {
 }
 
 
-def _load_input_model(definition: ActionDefinition, value: dict[str, Any]) -> BaseModel:
+def _load_input_model(definition: ActionDefinition, value: dict[str, Any]) -> Any:
     from agent.input_models import EmptyInput
 
     cleaned = {
@@ -297,7 +308,7 @@ def resolve_action_target(
     context: LeaseContext,
     definition: ActionDefinition,
     request: ActionRequest,
-    model: BaseModel,
+    model: Any,
 ) -> ResolvedTarget:
     _assert_target_mapping(definition, request)
     public_target = _public_action(definition.action_id).get("target", {})
@@ -317,67 +328,67 @@ def resolve_action_target(
     if definition.action_id in {"node.get", "node.facts", "node.info"}:
         from node.models import NodeModel
 
-        row = db.get(NodeModel, resource_id)
-        if row is None:
+        node_row = db.get(NodeModel, resource_id)
+        if node_row is None:
             raise NotFoundError("node_not_found", "nodeがありません")
-        node_id = row.name
+        node_id = node_row.name
     elif definition.action_id in {"vm.get", "vm.xml.get"}:
         from domain.models import DomainModel
 
-        row = db.get(DomainModel, resource_id)
-        if row is None:
+        domain_row = db.get(DomainModel, resource_id)
+        if domain_row is None:
             raise NotFoundError("vm_not_found", "VMがありません")
-        project_id = row.owner_project_id
-        node_id = row.node_name
+        project_id = domain_row.owner_project_id
+        node_id = domain_row.node_name
     elif definition.action_id == "storage.get":
         from storage.models import StorageModel
 
-        row = db.get(StorageModel, resource_id)
-        if row is None:
+        storage_row = db.get(StorageModel, resource_id)
+        if storage_row is None:
             raise NotFoundError("storage_not_found", "storageがありません")
-        node_id = row.node_name
+        node_id = storage_row.node_name
     elif definition.action_id in {"network.get", "network.xml.get"}:
         from network.models import NetworkModel
 
-        row = db.get(NetworkModel, resource_id)
-        if row is None:
+        network_row = db.get(NetworkModel, resource_id)
+        if network_row is None:
             raise NotFoundError("network_not_found", "networkがありません")
-        node_id = row.node_name
+        node_id = network_row.node_name
 
     if definition.requires_generation:
         if definition.resource_type == "vm":
             from domain.models import DomainModel
 
-            row = db.get(DomainModel, resource_id)
-            if row is None:
+            generation_domain = db.get(DomainModel, resource_id)
+            if generation_domain is None:
                 raise NotFoundError("vm_not_found", "VMがありません")
-            project_id = row.owner_project_id
-            node_id = row.node_name
-            generation_type, generation_id = "vm", row.uuid
+            project_id = generation_domain.owner_project_id
+            node_id = generation_domain.node_name
+            generation_type, generation_id = "vm", generation_domain.uuid
         elif definition.resource_type == "node":
             from node.models import NodeModel
 
-            row = db.get(NodeModel, resource_id)
-            if row is None:
+            generation_node = db.get(NodeModel, resource_id)
+            if generation_node is None:
                 raise NotFoundError("node_not_found", "nodeがありません")
-            node_id = row.name
-            generation_type, generation_id = "node", row.name
+            node_id = generation_node.name
+            generation_type, generation_id = "node", generation_node.name
         elif definition.resource_type == "storage":
             from storage.models import StorageModel
 
-            row = db.get(StorageModel, resource_id)
-            if row is None:
+            generation_storage = db.get(StorageModel, resource_id)
+            if generation_storage is None:
                 raise NotFoundError("storage_not_found", "storageがありません")
-            node_id = row.node_name
-            generation_type, generation_id = "storage", row.uuid
+            node_id = generation_storage.node_name
+            generation_type, generation_id = "storage", generation_storage.uuid
         elif definition.resource_type == "network":
             from network.models import NetworkModel
 
-            row = db.get(NetworkModel, resource_id)
-            if row is None:
+            generation_network = db.get(NetworkModel, resource_id)
+            if generation_network is None:
                 raise NotFoundError("network_not_found", "networkがありません")
-            node_id = row.node_name
-            generation_type, generation_id = "network", row.uuid
+            node_id = generation_network.node_name
+            generation_type, generation_id = "network", generation_network.uuid
         elif definition.resource_type == "image":
             from storage.models import ImageModel, StorageModel
 
@@ -591,7 +602,7 @@ def _validate_action_references(
     *,
     context: LeaseContext,
     definition: ActionDefinition,
-    model: BaseModel,
+    model: Any,
     target: ResolvedTarget,
 ) -> ResolvedTarget:
     """入力が参照するstorage/network/project等もlease制約と同一nodeで検査する。"""
@@ -902,7 +913,7 @@ def _validate_identity_admin_scope(
     db: Session,
     context: LeaseContext,
     definition: ActionDefinition,
-    model: BaseModel,
+    model: Any,
 ) -> None:
     """恒久admin credentialへ影響する場合だけ追加能力を要求する。"""
 
@@ -1039,9 +1050,9 @@ def _apply_reservation_contract(
 def _task_body_and_params(
     definition: ActionDefinition,
     request: ActionRequest,
-    model: BaseModel,
-) -> tuple[BaseModel | None, dict[str, Any]]:
-    body: BaseModel | None = model if definition.input_model else None
+    model: Any,
+) -> tuple[Any | None, dict[str, Any]]:
+    body: Any | None = model if definition.input_model else None
     params: dict[str, Any] = {}
     action = definition.action_id
     resource_id = request.target.resource_id
@@ -1064,9 +1075,12 @@ def _task_body_and_params(
     return body, params
 
 
-def _dependent_selectors(definition: ActionDefinition, model: BaseModel) -> list[tuple[str, str, str, BaseModel | None]]:
+def _dependent_selectors(
+    definition: ActionDefinition,
+    model: Any,
+) -> list[tuple[str, str, str, Any | None]]:
     action = definition.action_id
-    result: list[tuple[str, str, str, BaseModel | None]] = []
+    result: list[tuple[str, str, str, Any | None]] = []
     if action == "node.create":
         if model.libvirt_role:
             from node.schemas import NodeRoleForUpdate
@@ -1104,7 +1118,7 @@ def _execute_task_action(
     context: LeaseContext,
     definition: ActionDefinition,
     request: ActionRequest,
-    model: BaseModel,
+    model: Any,
     target: ResolvedTarget,
     correlation_id: str,
     agent_request_hash: str,
@@ -1144,7 +1158,7 @@ def _execute_task_action(
             principal_id=context.principal_id,
             correlation_id=correlation_id,
             lease_id=context.lease.id,
-            risk=definition.risk,
+            risk=_mutation_risk(definition),
             resolved_targets=target.task_value(),
             expected_generation=request.expected_generation,
             commit_transaction=False,
@@ -1158,7 +1172,7 @@ def _execute_task_action(
             operation_id=operation["operation_id"],
             task_ids=operation["task_ids"],
             status=operation["normalized_status"],
-            risk=definition.risk,
+            risk=_mutation_risk(definition),
             lease_id=root.lease_id or context.lease.id,
             correlation_id=root.correlation_id or root.uuid,
         )
@@ -1186,7 +1200,7 @@ def _execute_task_action(
                 principal_id=context.principal_id,
                 correlation_id=root.correlation_id,
                 lease_id=context.lease.id,
-                risk=definition.risk,
+                risk=_mutation_risk(definition),
                 commit_transaction=False,
             )
     except TaskTargetBusy as exc:
@@ -1209,7 +1223,7 @@ def _execute_task_action(
         operation_id=root.uuid,
         task_ids=operation["task_ids"],
         status="queued",
-        risk=definition.risk,
+        risk=_mutation_risk(definition),
         lease_id=context.lease.id,
         correlation_id=root.correlation_id or root.uuid,
     )
@@ -1262,7 +1276,7 @@ def _execute_direct_action(
             principal_id=context.principal_id,
             correlation_id=correlation_id,
             lease_id=context.lease.id,
-            risk=definition.risk,
+            risk=_mutation_risk(definition),
             resolved_targets=target.task_value(),
             expected_generation=request.expected_generation,
             commit_transaction=False,
@@ -1276,7 +1290,7 @@ def _execute_direct_action(
             operation_id=operation["operation_id"],
             task_ids=operation["task_ids"],
             status=operation["normalized_status"],
-            risk=definition.risk,
+            risk=_mutation_risk(definition),
             lease_id=task.lease_id or context.lease.id,
             correlation_id=task.correlation_id or task.uuid,
         )
@@ -1308,7 +1322,7 @@ def _execute_direct_action(
         operation_id=task.uuid,
         task_ids=[task.uuid],
         status="queued",
-        risk=definition.risk,
+        risk=_mutation_risk(definition),
         lease_id=context.lease.id,
         correlation_id=task.correlation_id or task.uuid,
     )
@@ -1353,7 +1367,7 @@ def execute_action(
                 operation_id=existing.uuid,
                 task_ids=operation["task_ids"],
                 status=operation["normalized_status"],
-                risk=definition.risk,
+                risk=_mutation_risk(definition),
                 lease_id=existing.lease_id or context.lease.id,
                 correlation_id=existing.correlation_id or existing.uuid,
             )

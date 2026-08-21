@@ -38,6 +38,16 @@ production例ではbrowserに公開するのは`web`である。`web`のNginxが
 `api/domain/`はVM domainの実装packageであるが、外部APIとtask resourceでは`vms`・`vm`を使う。
 名称を変更する場合は、router、task key、worker handler、frontend contractを一体として扱う。
 
+### 管理node連携の境界
+
+APIとworkerの業務処理は、SSH、Ansible、libvirt、downloadを直接初期化せず、それぞれのbackend
+interfaceをproviderから受け取る。production providerは`api/module/`の実装へ接続し、標準integration testは
+同じinterfaceのdeterministic fakeへ接続する。これによりtask登録、依存関係、状態遷移、失敗処理を
+管理nodeへ接続せず検証する。
+
+実backendそのものの互換性確認は`external` testの責務であり、標準CIの責務に混ぜない。fakeはproductionの
+成功・失敗contractを再現するが、libvirtやOS固有の挙動を保証するものではない。
+
 ## 主要flow
 
 ### 初期設定と認証
@@ -109,6 +119,19 @@ VM名、description、task log、facts、raw XMLなど管理対象由来の文�
 global mutation停止、device失効、device breakerはLLM/MCP経路から独立したWeb管理操作とする。
 R3とmutation全体の同時実行上限、30分の失敗windowはAgent APIとworkerの双方で強制する。
 
+### Create VMのcloud-init補助
+
+Create VM dialogはguided formの状態とraw `userData`をbrowser内で分離して保持する。利用者が適用を指示したときだけ、
+Webが現在のraw dataを単一の`#cloud-config` YAML mappingとして厳密に検証し、formが管理する初期user、password認証、
+SSH公開鍵、package更新・install一覧、初回起動scriptの設定をmergeする。構文や構造が不正な場合はraw dataを変更せず、
+VM作成も許可しない。
+管理対象外のkeyは保持し、適用後はraw dataを送信内容の正本とする。raw側の手編集をformへ逆同期せず、再適用時だけ
+formの値で管理対象を更新する。平文passwordとroot権限で実行するscriptの安全上の警告もWebの責務である。
+
+登録済みSSH公開鍵の補完では、認証状態のuser名と既存の利用者取得APIを使い、完全一致した利用者の公開鍵だけを候補にする。
+取得失敗や候補なしはmanual入力を妨げない。この補助処理とYAML生成はWeb内で完結し、APIは従来どおり
+`cloudInit.userData`をopaqueな文字列として受け取る。form用schemaやendpointを追加せず、既存API契約を変更しない。
+
 ### 非同期resource操作
 
 1. task routerが`method.resource.object`の組とrequest情報をDBへ保存する。
@@ -159,3 +182,4 @@ runtimeのmajor versionとimageはDockerfileおよび`compose.example.yml`、Pyt
 - destructive operationでは、対象node、VM、storage、networkを一意なIDで解決してから実行する。
 - Agent API以外の既存REST経路も同じscope・project・object境界を迂回できないようにする。
 - MCP annotationはclient表示のhintに限り、認可やrisk判定の入力にしない。
+- 管理node操作はbackend interfaceを越えて行い、標準testからproduction adapterへ接続しない。

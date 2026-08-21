@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from .exceptions import AuditWriteError
-from .models import AuditEventModel, utc_now
+from .models import AuditEventModel, new_agent_model, utc_now
 
 AUDIT_RETENTION_DAYS = 365
 _SECRET_KEYS = {
@@ -97,7 +97,8 @@ def append_audit_event(
     detail: dict[str, Any] | None = None,
 ) -> AuditEventModel:
     now = utc_now()
-    model = AuditEventModel(
+    model = new_agent_model(
+        AuditEventModel,
         occurred_at=now,
         retention_until=now + timedelta(days=AUDIT_RETENTION_DAYS),
         event_type=event_type,

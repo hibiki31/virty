@@ -1055,22 +1055,23 @@ def _resource_belongs_to_project(
 def resolve_generation(db: Session, *, resource_type: str, resource_id: str) -> str:
     """公開可能なresource状態からoptimistic generationを解決する。"""
 
+    value: dict[str, Any] | None
     if resource_type == "vm":
         from domain.models import DomainModel
 
-        model = db.get(DomainModel, resource_id)
-        value = None if model is None else {
-            "uuid": model.uuid,
-            "name": model.name,
-            "core": model.core,
-            "memory": model.memory,
-            "status": model.status,
-            "description": model.description,
-            "updateToken": model.update_token,
-            "storageUsed": model.storage_used,
-            "nodeName": model.node_name,
-            "ownerUserId": model.owner_user_id,
-            "ownerProjectId": model.owner_project_id,
+        domain = db.get(DomainModel, resource_id)
+        value = None if domain is None else {
+            "uuid": domain.uuid,
+            "name": domain.name,
+            "core": domain.core,
+            "memory": domain.memory,
+            "status": domain.status,
+            "description": domain.description,
+            "updateToken": domain.update_token,
+            "storageUsed": domain.storage_used,
+            "nodeName": domain.node_name,
+            "ownerUserId": domain.owner_user_id,
+            "ownerProjectId": domain.owner_project_id,
             "interfaces": sorted(
                 (
                     item.mac,
@@ -1081,7 +1082,7 @@ def resolve_generation(db: Session, *, resource_type: str, resource_id: str) -> 
                     item.port,
                     item.update_token,
                 )
-                for item in model.interfaces
+                for item in domain.interfaces
             ),
             "drives": sorted(
                 (
@@ -1091,47 +1092,47 @@ def resolve_generation(db: Session, *, resource_type: str, resource_id: str) -> 
                     item.source,
                     item.update_token,
                 )
-                for item in model.drives
+                for item in domain.drives
             ),
         }
     elif resource_type == "network":
         from network.models import NetworkModel
 
-        model = db.get(NetworkModel, resource_id)
-        value = None if model is None else {
-            "uuid": model.uuid,
-            "name": model.name,
-            "description": model.description,
-            "nodeName": model.node_name,
-            "bridge": model.bridge,
-            "type": model.type,
-            "active": model.active,
-            "autoStart": model.auto_start,
-            "dhcp": model.dhcp,
-            "updateToken": model.update_token,
-            "ip": model.ip,
-            "mac": model.mac,
+        network = db.get(NetworkModel, resource_id)
+        value = None if network is None else {
+            "uuid": network.uuid,
+            "name": network.name,
+            "description": network.description,
+            "nodeName": network.node_name,
+            "bridge": network.bridge,
+            "type": network.type,
+            "active": network.active,
+            "autoStart": network.auto_start,
+            "dhcp": network.dhcp,
+            "updateToken": network.update_token,
+            "ip": network.ip,
+            "mac": network.mac,
             "portgroups": sorted(
                 (item.name, item.vlan_id, item.is_default)
-                for item in model.portgroups
+                for item in network.portgroups
             ),
         }
     elif resource_type == "storage":
         from storage.models import StorageModel
 
-        model = db.get(StorageModel, resource_id)
-        metadata = None if model is None else model.meta_data
-        value = None if model is None else {
-            "uuid": model.uuid,
-            "name": model.name,
-            "nodeName": model.node_name,
-            "capacity": model.capacity,
-            "available": model.available,
-            "path": model.path,
-            "active": model.active,
-            "autoStart": model.auto_start,
-            "status": model.status,
-            "updateToken": model.update_token,
+        storage = db.get(StorageModel, resource_id)
+        metadata = None if storage is None else storage.meta_data
+        value = None if storage is None else {
+            "uuid": storage.uuid,
+            "name": storage.name,
+            "nodeName": storage.node_name,
+            "capacity": storage.capacity,
+            "available": storage.available,
+            "path": storage.path,
+            "active": storage.active,
+            "autoStart": storage.auto_start,
+            "status": storage.status,
+            "updateToken": storage.update_token,
             "metadata": None if metadata is None else (
                 metadata.rool,
                 metadata.protocol,
@@ -1143,25 +1144,25 @@ def resolve_generation(db: Session, *, resource_type: str, resource_id: str) -> 
 
         from storage.models import ImageModel
 
-        model = None
+        image = None
         try:
             storage_uuid, path = json.loads(resource_id)
         except (TypeError, ValueError, json.JSONDecodeError):
             storage_uuid, path = None, None
         if storage_uuid and path:
-            model = db.query(ImageModel).filter(
+            image = db.query(ImageModel).filter(
                 ImageModel.storage_uuid == storage_uuid,
                 ImageModel.path == path,
             ).one_or_none()
-        value = None if model is None else {
-            "storageUuid": model.storage_uuid,
-            "name": model.name,
-            "path": model.path,
-            "capacity": model.capacity,
-            "allocation": model.allocation,
-            "domainUuid": model.domain_uuid,
-            "flavorId": model.flavor_id,
-            "updateToken": model.update_token,
+        value = None if image is None else {
+            "storageUuid": image.storage_uuid,
+            "name": image.name,
+            "path": image.path,
+            "capacity": image.capacity,
+            "allocation": image.allocation,
+            "domainUuid": image.domain_uuid,
+            "flavorId": image.flavor_id,
+            "updateToken": image.update_token,
         }
     else:
         generation = _hash_non_versioned_resource(db, resource_type, resource_id)
@@ -1178,39 +1179,40 @@ def _hash_non_versioned_resource(
     resource_type: str,
     resource_id: str,
 ) -> str | None:
+    value: Any
     if resource_type == "node":
         from node.models import NodeModel
 
-        model = db.get(NodeModel, resource_id)
-        if model is None:
+        node = db.get(NodeModel, resource_id)
+        if node is None:
             return None
         value = {
-            column.name: getattr(model, column.name)
-            for column in model.__table__.columns
+            column.name: getattr(node, column.name)
+            for column in node.__table__.columns
         }
     elif resource_type == "project":
         from project.models import ProjectModel
 
-        model = db.get(ProjectModel, resource_id)
-        if model is None:
+        project = db.get(ProjectModel, resource_id)
+        if project is None:
             return None
         value = {
-            "id": model.id,
-            "name": model.name,
-            "users": sorted(user.username for user in model.users),
-            "limits": [model.core, model.memory_g, model.storage_capacity_g],
+            "id": project.id,
+            "name": project.name,
+            "users": sorted(user.username for user in project.users),
+            "limits": [project.core, project.memory_g, project.storage_capacity_g],
         }
     elif resource_type == "user":
         from user.models import UserModel
 
-        model = db.get(UserModel, resource_id)
-        if model is None:
+        user = db.get(UserModel, resource_id)
+        if user is None:
             return None
         value = {
-            "username": model.username,
-            "scopes": sorted(scope.name for scope in model.scopes),
-            "projects": sorted(project.id for project in model.projects),
-            "publicKeys": sorted(key.name for key in model.publickeys),
+            "username": user.username,
+            "scopes": sorted(scope.name for scope in user.scopes),
+            "projects": sorted(project.id for project in user.projects),
+            "publicKeys": sorted(key.name for key in user.publickeys),
         }
     elif resource_type == "flavor":
         from flavor.models import FlavorModel
@@ -1219,45 +1221,57 @@ def _hash_non_versioned_resource(
             key: Any = int(resource_id)
         except ValueError:
             return None
-        model = db.get(FlavorModel, key)
-        if model is None:
+        flavor = db.get(FlavorModel, key)
+        if flavor is None:
             return None
         value = {
-            column.name: getattr(model, column.name)
-            for column in model.__table__.columns
+            column.name: getattr(flavor, column.name)
+            for column in flavor.__table__.columns
         }
-    elif resource_type in {"network-pool", "storage-pool"}:
-        if resource_type == "network-pool":
-            from network.models import NetworkPoolModel as PoolModel
-        else:
-            from storage.models import StoragePoolModel as PoolModel
+    elif resource_type == "network-pool":
+        from network.models import NetworkPoolModel
+
         try:
             pool_key = int(resource_id)
         except ValueError:
             return None
-        model = db.get(PoolModel, pool_key)
-        if model is None:
+        network_pool = db.get(NetworkPoolModel, pool_key)
+        if network_pool is None:
             return None
         value = {
-            column.name: getattr(model, column.name)
-            for column in model.__table__.columns
+            column.name: getattr(network_pool, column.name)
+            for column in network_pool.__table__.columns
         }
-        if resource_type == "network-pool":
-            value["networks"] = sorted(network.uuid for network in model.networks)
-            value["ports"] = sorted(
-                (port.network_uuid, port.name) for port in model.ports
-            )
-        else:
-            value["storages"] = sorted(
-                association.storage_uuid for association in model.storages
-            )
+        value["networks"] = sorted(
+            network.uuid for network in network_pool.networks
+        )
+        value["ports"] = sorted(
+            (port.network_uuid, port.name) for port in network_pool.ports
+        )
+    elif resource_type == "storage-pool":
+        from storage.models import StoragePoolModel
+
+        try:
+            pool_key = int(resource_id)
+        except ValueError:
+            return None
+        storage_pool = db.get(StoragePoolModel, pool_key)
+        if storage_pool is None:
+            return None
+        value = {
+            column.name: getattr(storage_pool, column.name)
+            for column in storage_pool.__table__.columns
+        }
+        value["storages"] = sorted(
+            association.storage_uuid for association in storage_pool.storages
+        )
     elif resource_type == "task":
         from task.models import TaskModel
 
-        model = db.get(TaskModel, resource_id)
-        if model is None:
+        task = db.get(TaskModel, resource_id)
+        if task is None:
             return None
-        value = [model.status, str(model.update_time), model.message]
+        value = [task.status, str(task.update_time), task.message]
     else:
         return None
     return request_hash(value)

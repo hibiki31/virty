@@ -23,7 +23,7 @@ def create_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: StorageForCreate = None
+        body: StorageForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["storage.manage"])
     require_admin(cu)

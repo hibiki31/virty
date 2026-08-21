@@ -1,16 +1,14 @@
-## DEV
+# Virty Web development
 
-```
-pnpm install
+Webの開発環境、lint、型check、Vitest、生成型、production buildは
+[`docs/development.md`](../docs/development.md)を正本とする。
+
+hostへNode.jsやpnpmを導入せず、repository rootから次を使う。
+
+```bash
+./devctl quick web
+./devctl verify web
 ```
 
-`.env.local`
-
-```
-VITE_APP_API_HOST="http://100.81.114.103:8765"
-```
-
-```
-npx openapi-typescript http://100.81.114.103:8765/api/openapi.json -o ./src/api/openapi.d.ts
-npx openapi-typescript http://192.168.218.79:7799/api/openapi.json -o ./src/api/openapi.d.ts
-```
+OpenAPIまたはVite pluginの生成型を更新するときだけ、`./devctl generate openapi`または
+`./devctl generate web-types`を明示的に実行する。

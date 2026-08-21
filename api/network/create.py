@@ -1,6 +1,6 @@
 import secrets
 
-from module.virtlib import VirtManager
+from module.backends import create_libvirt_backend
 from module.xmllib import XmlEditor
 from network.schemas import NetworkForCreate
 from node.models import NodeModel
@@ -34,5 +34,5 @@ def create_network(body: NetworkForCreate, node: NodeModel):
     xml = editor.dump_str()
 
     # ソイや！
-    manager = VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
     manager.network_define(xml_str=xml)

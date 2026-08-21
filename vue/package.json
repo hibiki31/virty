@@ -5,11 +5,20 @@
   "version": "5.1.2",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "run-s check:web-types type-check:full",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --fix"
+    "generate:web-types": "node scripts/web-types.mjs generate",
+    "check:web-types": "node scripts/web-types.mjs check",
+    "type-check": "vue-tsc --build",
+    "type-check:full": "vue-tsc --build --force",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check:quick": "run-p lint type-check test",
+    "check:full": "run-s check:web-types check:full:parallel",
+    "check:full:parallel": "run-p lint type-check:full test:coverage"
   },
   "dependencies": {
     "@fontsource/roboto": "5.2.5",
@@ -23,15 +32,19 @@
     "openapi-fetch": "^0.14.0",
     "typescript-cookie": "^1.0.6",
     "vue": "^3.5.13",
-    "vuetify": "^3.8.1"
+    "vuetify": "^3.8.1",
+    "yaml": "2.8.0"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.9.0",
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.7.0",
     "eslint": "^9.23.0",
     "eslint-config-vuetify": "^4.0.0",
+    "jsdom": "^30.0.1",
     "npm-run-all2": "^7.0.2",
     "openapi-typescript": "^7.8.0",
     "pinia": "^3.0.1",
@@ -41,9 +54,10 @@
     "unplugin-fonts": "^1.3.1",
     "unplugin-vue-components": "^28.4.1",
     "unplugin-vue-router": "^0.12.0",
-    "vite": "^6.4.2",
+    "vite": "^6.4.3",
     "vite-plugin-vue-layouts-next": "^0.0.8",
     "vite-plugin-vuetify": "^2.1.1",
+    "vitest": "^4.1.11",
     "vue-router": "^4.5.0",
     "vue-tsc": "^2.2.8"
   },

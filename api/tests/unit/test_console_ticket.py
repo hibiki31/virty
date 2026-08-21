@@ -1,10 +1,11 @@
 import logging
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from fastapi import HTTPException, Response
+from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser
 from domain import router
@@ -77,7 +78,7 @@ def test_console_ticket_is_opaque_and_single_use(
         "vm-1",
         response=http_response,
         current_user=user,
-        db=create_db,
+        db=cast(Session, create_db),
     )
 
     assert create_db.added is not None
@@ -88,7 +89,7 @@ def test_console_ticket_is_opaque_and_single_use(
 
     domain = SimpleNamespace(node=SimpleNamespace(domain="node.internal"), vnc_port=5900)
     resolve_db = _ResolveSession(create_db.added, domain)
-    assert router.get_vnc_address(ticket.token, db=resolve_db) == {
+    assert router.get_vnc_address(ticket.token, db=cast(Session, resolve_db)) == {
         "host": "node.internal",
         "port": 5900,
     }
@@ -96,7 +97,7 @@ def test_console_ticket_is_opaque_and_single_use(
     assert resolve_db.commits == 1
 
     with pytest.raises(HTTPException) as exc_info:
-        router.get_vnc_address(ticket.token, db=resolve_db)
+        router.get_vnc_address(ticket.token, db=cast(Session, resolve_db))
     assert exc_info.value.status_code == 401
 
 

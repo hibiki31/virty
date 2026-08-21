@@ -19,7 +19,7 @@
             <v-card prepend-icon="mdi-cube-outline" title="Spec">
               <v-table class="text-caption" density="compact">
                 <tbody align="right">
-                  <tr v-for="item in getSpecList()">
+                  <tr v-for="item in getSpecList()" :key="item.title">
                     <th>{{ item.title }}</th>
                     <td>{{ item.value }}</td>
                   </tr>
@@ -81,7 +81,7 @@
           <v-col xs="12" sm="12" md="12" lg="6">
             <v-card prepend-icon="mdi-xml" title="Info">
               <v-card-text>
-                <div v-for="item in getInfoList()">
+                <div v-for="item in getInfoList()" :key="item.title">
                   <p class="text-h6 pt-3">{{ item.title }}</p>
                   <code-feild :text="item.value" type="XML" :loading="!item.value"></code-feild>
                 </div>
@@ -195,7 +195,7 @@ async function submitPort(event: Promise<{ valid: boolean }>) {
   loading.value = false
 }
 
-const hasAnyOverlap = <T>(a: readonly T[], b: readonly T[]) =>
+const hasAnyOverlap = <T,>(a: readonly T[], b: readonly T[]) =>
   a.some(x => b.includes(x))
 
 async function deletePort(name: string) {
@@ -204,7 +204,7 @@ async function deletePort(name: string) {
 
   deleting.value.add(name)
 
-  const res = await apiClient.DELETE('/api/tasks/networks/{uuid}/ovs/{name}', {
+  await apiClient.DELETE('/api/tasks/networks/{uuid}/ovs/{name}', {
     params: {
       path: {
         uuid: route.params.uuid,

@@ -22,7 +22,7 @@ def create_node(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NodeForCreate = None
+        body: NodeForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["node.manage"])
     require_admin(cu)

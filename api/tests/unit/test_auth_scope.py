@@ -1,8 +1,10 @@
 from datetime import timedelta
+from typing import cast
 
 import pytest
 from fastapi import HTTPException
 from fastapi.security import SecurityScopes
+from sqlalchemy.orm import Session
 
 from auth.router import (
     CurrentUser,
@@ -82,7 +84,7 @@ def test_access_token_preserves_project_constraint() -> None:
     user = get_current_user(
         SecurityScopes(scopes=["vm.read"]),
         token,
-        _Session(db_user),
+        cast(Session, _Session(db_user)),
     )
 
     assert user.id == "alice"
@@ -91,7 +93,7 @@ def test_access_token_preserves_project_constraint() -> None:
 
 def test_invalid_token_is_unauthorized() -> None:
     with pytest.raises(HTTPException) as exc_info:
-        get_current_user(SecurityScopes(), "not-a-jwt", _Session(None))
+        get_current_user(SecurityScopes(), "not-a-jwt", cast(Session, _Session(None)))
 
     assert exc_info.value.status_code == 401
 
@@ -103,7 +105,7 @@ def test_non_string_subject_is_unauthorized() -> None:
     )
 
     with pytest.raises(HTTPException) as exc_info:
-        get_current_user(SecurityScopes(), token, _Session(None))
+        get_current_user(SecurityScopes(), token, cast(Session, _Session(None)))
 
     assert exc_info.value.status_code == 401
 
@@ -136,9 +138,13 @@ def test_new_database_grant_does_not_expand_existing_token() -> None:
         get_current_user(
             SecurityScopes(scopes=["vm.delete"]),
             token,
-            _Session(db_user),
+            cast(Session, _Session(db_user)),
         )
 
     assert exc_info.value.status_code == 403
-    current = get_current_user(SecurityScopes(), token, _Session(db_user))
+    current = get_current_user(
+        SecurityScopes(),
+        token,
+        cast(Session, _Session(db_user)),
+    )
     assert current.projects == ["a1b2c3"]

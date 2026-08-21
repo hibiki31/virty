@@ -82,7 +82,7 @@ const query = ref<NonNullable<typeListTaskQuery>>({
 })
 
 
-let headers = [
+const headers = [
   { title: 'Status', value: 'status' },
   { title: 'PostTime', value: 'postTime' },
   { title: 'userId', value: 'userId' },
@@ -99,7 +99,7 @@ const items = ref<typeListTask>({
 })
 
 
-async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+async function loadItems({ page = 1, itemsPerPage = 10 }) {
   query.value.page = page
   query.value.limit = itemsPerPage
 

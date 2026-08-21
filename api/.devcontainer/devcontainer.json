@@ -1,9 +1,19 @@
 {
 	"name": "virty-api",
-	"dockerComposeFile": "compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspaces/api/",
-	"postCreateCommand": ".devcontainer/post_create.sh",
+	"dockerComposeFile": "../../compose.dev.yml",
+	"service": "api",
+	"runServices": ["db", "migrate", "api", "worker"],
+	"workspaceFolder": "/workspace/api",
+	"initializeCommand": [
+		"bash",
+		"-lc",
+		"repo=$(git -C \"$1\" rev-parse --show-toplevel) && exec \"$repo/scripts/init-devcontainer-project.sh\" \"$1\"",
+		"bash",
+		"${localWorkspaceFolder}"
+	],
+	"remoteUser": "virty",
+	"updateRemoteUserUID": true,
+	"shutdownAction": "stopCompose",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -16,8 +26,5 @@
 				"tanggod.json-log-viewer"
 			]
 		}
-	},
-	"forwardPorts": [
-		7799
-	]
+	}
 }

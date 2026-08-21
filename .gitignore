@@ -2,6 +2,9 @@
 /data/
 .DS_Store
 /.env
+/api/.env
+/api/tests/external/*.json
+!/api/tests/external/infra-config.example.json
 feature/main.bin
 feature/ansible_hosts.ini
 feature/dev.sh

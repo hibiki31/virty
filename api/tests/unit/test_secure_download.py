@@ -4,8 +4,18 @@ import socket
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import BinaryIO, Protocol, cast
 
 import pytest
+
+
+class _ConnectionFactory(Protocol):
+    def __call__(
+        self,
+        target: tuple[str, int],
+        timeout: float | None = None,
+        source_address: tuple[str, int] | None = None,
+    ) -> socket.socket: ...
 
 
 _MODULE_PATH = Path(__file__).parents[2] / "ansible/secure_download.py"
@@ -71,6 +81,7 @@ def test_secure_download_pins_validated_ip_and_rejects_redirect(
         def __init__(self, hostname: str, port: int, **_: object) -> None:
             assert hostname == "images.example.invalid"
             assert port == 443
+            self._create_connection: _ConnectionFactory
 
         def request(self, *_: object, **__: object) -> None:
             self._create_connection(("ignored", 443))
@@ -89,10 +100,18 @@ def test_secure_download_pins_validated_ip_and_rejects_redirect(
         lambda *_: ["93.184.216.34"],
     )
     monkeypatch.setattr(_MODULE.http.client, "HTTPSConnection", FakeConnection)
+
+    def fake_create_connection(
+        address: tuple[str, int],
+        **_: object,
+    ) -> socket.socket:
+        connected.append(address)
+        return cast(socket.socket, object())
+
     monkeypatch.setattr(
         _MODULE.socket,
         "create_connection",
-        lambda address, **_: connected.append(address) or object(),
+        fake_create_connection,
     )
 
     with pytest.raises(ValueError, match="redirect"):
@@ -111,7 +130,7 @@ def test_concurrent_secure_download_has_exactly_one_no_clobber_winner(
     barrier = threading.Barrier(2)
 
     def install(payload: bytes) -> str:
-        def download(output: object) -> None:
+        def download(output: BinaryIO) -> None:
             barrier.wait(timeout=5)
             output.write(payload)
 

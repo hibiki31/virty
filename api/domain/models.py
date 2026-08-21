@@ -1,58 +1,72 @@
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mixin.database import Base
+
+if TYPE_CHECKING:
+    from node.models import NodeModel
+    from project.models import ProjectModel
+    from user.models import UserModel
 
 
 class DomainModel(Base):
     __tablename__ = "domains"
-    uuid = Column(String, primary_key=True, index=True)
+    uuid: Mapped[str] = Column(String, primary_key=True, index=True)
     # name@user
-    name = Column(String)
-    core = Column(Integer)
-    memory = Column(Integer)
-    status = Column(Integer)
-    description = Column(String)
-    update_token = Column(String)
-    vnc_port = Column(String)
+    name: Mapped[str] = Column(String)
+    core: Mapped[int] = Column(Integer)
+    memory: Mapped[int] = Column(Integer)
+    status: Mapped[int] = Column(Integer)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    update_token: Mapped[str] = Column(String)
+    vnc_port: Mapped[str | None] = mapped_column(String, nullable=True)
     
     # Cache
-    storage_used = Column(Integer, default=0)
+    storage_used: Mapped[int] = Column(Integer, default=0)
 
     # One to Many
-    interfaces = relationship('DomainInterfaceModel')
-    drives = relationship('DomainDriveModel')
+    interfaces: Mapped[list["DomainInterfaceModel"]] = relationship('DomainInterfaceModel')
+    drives: Mapped[list["DomainDriveModel"]] = relationship('DomainDriveModel')
 
     # Many to One
-    node = relationship('NodeModel')
-    node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
-    owner_user = relationship("UserModel")
-    owner_user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='SET NULL'))
-    owner_project = relationship("ProjectModel")
-    owner_project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='SET NULL'))
+    node: Mapped["NodeModel"] = relationship('NodeModel')
+    node_name: Mapped[str] = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
+    owner_user: Mapped["UserModel | None"] = relationship("UserModel")
+    owner_user_id: Mapped[str | None] = mapped_column(
+        String,
+        ForeignKey('users.username', onupdate='CASCADE', ondelete='SET NULL'),
+        nullable=True,
+    )
+    owner_project: Mapped["ProjectModel | None"] = relationship("ProjectModel")
+    owner_project_id: Mapped[str | None] = mapped_column(
+        String,
+        ForeignKey('projects.id', onupdate='CASCADE', ondelete='SET NULL'),
+        nullable=True,
+    )
 
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"
-    domain_uuid = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    mac = Column(String, primary_key=True)
-    type = Column(String)
-    target = Column(String)
-    bridge = Column(String)
-    network = Column(String)
-    port = Column(String)
-    update_token = Column(String)
+    domain_uuid: Mapped[str] = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    mac: Mapped[str] = Column(String, primary_key=True)
+    type: Mapped[str] = Column(String)
+    target: Mapped[str | None] = mapped_column(String, nullable=True)
+    bridge: Mapped[str | None] = mapped_column(String, nullable=True)
+    network: Mapped[str | None] = mapped_column(String, nullable=True)
+    port: Mapped[str | None] = mapped_column(String, nullable=True)
+    update_token: Mapped[str] = Column(String)
 
 
 class DomainDriveModel(Base):
     __tablename__ = "domains_drives"
-    domain_uuid = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    target = Column(String, primary_key=True)
-    device = Column(String)
-    type = Column(String)
-    source = Column(String)
-    update_token = Column(String)
+    domain_uuid: Mapped[str] = Column(String, ForeignKey('domains.uuid', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    target: Mapped[str] = Column(String, primary_key=True)
+    device: Mapped[str] = Column(String)
+    type: Mapped[str] = Column(String)
+    source: Mapped[str | None] = mapped_column(String, nullable=True)
+    update_token: Mapped[str] = Column(String)
 
 
 class DomainConsoleTicketModel(Base):
@@ -60,18 +74,18 @@ class DomainConsoleTicketModel(Base):
 
     __tablename__ = "domain_console_tickets"
 
-    token_hash = Column(String(64), primary_key=True)
-    domain_uuid = Column(
+    token_hash: Mapped[str] = Column(String(64), primary_key=True)
+    domain_uuid: Mapped[str] = Column(
         String,
         ForeignKey("domains.uuid", onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    actor_id = Column(String, nullable=False)
-    created_at = Column(
+    actor_id: Mapped[str] = Column(String, nullable=False)
+    created_at: Mapped[datetime] = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
-    used_at = Column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=False, index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

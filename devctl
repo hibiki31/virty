@@ -1,0 +1,683 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+readonly ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+readonly COMPOSE_FILE="${ROOT_DIR}/compose.dev.yml"
+
+declare -a COMPOSE_FILES=(--file "${COMPOSE_FILE}")
+declare -a TEMP_PATHS=()
+declare -a CHILD_PIDS=()
+ACTIVE_PROJECT=""
+ACTIVE_PROFILE=""
+INFRA_CLEANUP_ENABLED=0
+
+die() {
+  printf 'エラー: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./devctl quick [api|web|mcp]
+  ./devctl verify [api|web|proxy|mcp]
+  ./devctl up [--tools]
+  ./devctl down
+  ./devctl logs [service ...]
+  ./devctl shell api|web
+  ./devctl ports
+  ./devctl clean
+  ./devctl generate openapi|web-types
+  ./devctl infra --config /absolute/path/to/env.json
+  ./devctl infra cleanup --config /absolute/path/to/env.json --run-id ID --project NAME
+  ./devctl project
+
+`quick`と`verify`でcomponentを省略すると、対象componentをすべて検証します。
+EOF
+}
+
+register_temp_path() {
+  TEMP_PATHS+=("$1")
+}
+
+compose_project() {
+  local project="$1"
+  shift
+  docker compose "${COMPOSE_FILES[@]}" --project-name "${project}" "$@"
+}
+
+cleanup_active_project() {
+  if [[ -z "${ACTIVE_PROJECT}" ]]; then
+    return
+  fi
+
+  if [[ "${ACTIVE_PROFILE}" == "quick" ]]; then
+    docker compose "${COMPOSE_FILES[@]}" \
+      --project-name "${ACTIVE_PROJECT}" \
+      --profile quick \
+      down --remove-orphans >/dev/null 2>&1 || true
+  else
+    docker compose "${COMPOSE_FILES[@]}" \
+      --project-name "${ACTIVE_PROJECT}" \
+      --profile "${ACTIVE_PROFILE}" \
+      down --volumes --remove-orphans --rmi local >/dev/null 2>&1 || true
+  fi
+  ACTIVE_PROJECT=""
+  ACTIVE_PROFILE=""
+}
+
+cleanup_infra_resources() {
+  if ((INFRA_CLEANUP_ENABLED == 0)) || [[ -z "${ACTIVE_PROJECT}" ]]; then
+    return 0
+  fi
+
+  printf 'external test資源をrun IDでcleanupします...\n' >&2
+  if ! compose_project "${ACTIVE_PROJECT}" --profile external \
+    run --rm --no-deps -T infra-cleanup; then
+    printf 'エラー: external test資源のcleanupに失敗しました。project=%s run_id=%s\n' \
+      "${ACTIVE_PROJECT}" "${VIRTY_TEST_RUN_ID:-unknown}" >&2
+    return 1
+  fi
+  INFRA_CLEANUP_ENABLED=0
+}
+
+cleanup() {
+  local status=$?
+  local path
+  local preserve_project=0
+
+  trap - EXIT INT TERM
+
+  if ((${#CHILD_PIDS[@]} > 0)); then
+    kill "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
+    wait "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
+  fi
+
+  if ! cleanup_infra_resources; then
+    status=1
+    preserve_project=1
+    printf 'project/volumeを診断とcleanup再試行用に保持します: %s\n' \
+      "${ACTIVE_PROJECT}" >&2
+    printf '再試行: ./devctl infra cleanup --config %q --run-id %q --project %q\n' \
+      "${VIRTY_INFRA_CONFIG_HOST:-CONFIG}" \
+      "${VIRTY_TEST_RUN_ID:-RUN_ID}" "${ACTIVE_PROJECT}" >&2
+  fi
+  if ((preserve_project == 0)); then
+    cleanup_active_project
+  fi
+
+  for path in "${TEMP_PATHS[@]}"; do
+    if [[ -e "${path}" ]]; then
+      rm -rf -- "${path}"
+    fi
+  done
+
+  exit "${status}"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+require_base_tools() {
+  local tool
+
+  for tool in awk base64 docker realpath sha256sum install id mktemp sed date chmod flock grep head tr; do
+    command -v "${tool}" >/dev/null 2>&1 || die "${tool}が見つかりません"
+  done
+  docker compose version >/dev/null 2>&1 || die "Docker Compose pluginが利用できません"
+  [[ -f "${COMPOSE_FILE}" ]] || die "${COMPOSE_FILE} が見つかりません"
+}
+
+random_base64_key() {
+  head -c 32 /dev/urandom | base64 | tr -d '\n'
+}
+
+random_hex_secret() {
+  local digest
+
+  digest="$(head -c 32 /dev/urandom | sha256sum)"
+  printf '%s' "${digest%% *}"
+}
+
+ensure_local_credentials() {
+  local env_file env_lock digest temp_file
+  local agent_signing_key agent_task_key dev_secret db_password pgadmin_password
+
+  env_file="${ROOT_DIR}/.env"
+  [[ ! -L "${env_file}" ]] || die "${env_file}がsymlinkのため更新できません"
+
+  digest="$(printf '%s' "${ROOT_DIR}" | sha256sum)"
+  digest="${digest%% *}"
+  env_lock="${TMPDIR:-/tmp}/virty-env-${digest:0:16}.lock"
+  exec {LOCAL_ENV_LOCK_FD}>"${env_lock}"
+  flock "${LOCAL_ENV_LOCK_FD}" || die "開発credential用lockを取得できません"
+
+  if [[ -f "${env_file}" ]] \
+    && grep -q '^VIRTY_AGENT_LEASE_SIGNING_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_AGENT_TASK_ENCRYPTION_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_SECRET_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_DB_PASSWORD=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_PGADMIN_PASSWORD=.' "${env_file}"; then
+    return
+  fi
+
+  agent_signing_key="$(random_base64_key)"
+  agent_task_key="$(random_base64_key)"
+  dev_secret="$(random_base64_key)"
+  db_password="$(random_hex_secret)"
+  pgadmin_password="$(random_hex_secret)"
+  temp_file="$(mktemp "${env_file}.XXXXXX")"
+  register_temp_path "${temp_file}"
+
+  if [[ -f "${env_file}" ]]; then
+    awk '!/^(VIRTY_AGENT_LEASE_SIGNING_KEY|VIRTY_AGENT_TASK_ENCRYPTION_KEY|VIRTY_DEV_SECRET_KEY|VIRTY_DEV_DB_PASSWORD|VIRTY_DEV_PGADMIN_PASSWORD)=/' \
+      "${env_file}" >"${temp_file}"
+  fi
+  {
+    printf 'VIRTY_AGENT_LEASE_SIGNING_KEY=%s\n' "${agent_signing_key}"
+    printf 'VIRTY_AGENT_TASK_ENCRYPTION_KEY=%s\n' "${agent_task_key}"
+    printf 'VIRTY_DEV_SECRET_KEY=%s\n' "${dev_secret}"
+    printf 'VIRTY_DEV_DB_PASSWORD=%s\n' "${db_password}"
+    printf 'VIRTY_DEV_PGADMIN_PASSWORD=%s\n' "${pgadmin_password}"
+  } >>"${temp_file}"
+  chmod 0600 "${temp_file}"
+  mv -- "${temp_file}" "${env_file}"
+}
+
+project_base() {
+  "${ROOT_DIR}/scripts/project-name.sh" "${ROOT_DIR}"
+}
+
+emit_cache_service() {
+  local service="$1"
+  local scope="$2"
+
+  printf '  %s:\n' "${service}"
+  printf '    build:\n'
+  printf '      cache_from:\n'
+  printf '        - type=gha,scope=virty-%s\n' "${scope}"
+  printf '      cache_to:\n'
+  printf '        - type=gha,scope=virty-%s,mode=max\n' "${scope}"
+}
+
+enable_ci_cache() {
+  local override
+
+  if [[ "${VIRTY_CI_CACHE:-}" != "gha" ]]; then
+    return
+  fi
+
+  [[ -n "${ACTIONS_RUNTIME_TOKEN:-}" ]] || die "GHA cache用runtime tokenがありません"
+  if [[ -z "${ACTIONS_RESULTS_URL:-}" && -z "${ACTIONS_CACHE_URL:-}" ]]; then
+    die "GHA cache用runtime URLがありません"
+  fi
+
+  override="$(mktemp "${TMPDIR:-/tmp}/virty-compose-cache.XXXXXX.yml")"
+  register_temp_path "${override}"
+
+  {
+    printf 'services:\n'
+    emit_cache_service api api-development
+    emit_cache_service api-volume-init api-development
+    emit_cache_service migrate api-development
+    emit_cache_service worker api-development
+    emit_cache_service api-quick api-check
+    emit_cache_service api-openapi api-development
+    emit_cache_service api-migrate-verify api-check
+    emit_cache_service api-worker-verify api-check
+    emit_cache_service openapi-schema-verify api-check
+    emit_cache_service openapi-contract-verify web-development
+    emit_cache_service api-verify api-check
+    emit_cache_service api-production-verify api-production
+    emit_cache_service infra-preflight api-development
+    emit_cache_service infra-volume-init api-development
+    emit_cache_service infra-migrate api-development
+    emit_cache_service infra-worker api-development
+    emit_cache_service infra-test api-check
+    emit_cache_service infra-cleanup api-check
+    emit_cache_service web web-development
+    emit_cache_service web-volume-init web-development
+    emit_cache_service web-quick web-development
+    emit_cache_service web-openapi-types web-development
+    emit_cache_service web-types web-development
+    emit_cache_service web-verify web-check
+    emit_cache_service web-production-verify web-production
+    emit_cache_service proxy proxy-production
+    emit_cache_service proxy-production-verify proxy-production
+    emit_cache_service mcp-quick mcp-development
+    emit_cache_service mcp-verify mcp-check
+  } >"${override}"
+
+  COMPOSE_FILES+=(--file "${override}")
+}
+
+validate_component() {
+  local component="$1"
+  shift
+  local allowed
+
+  for allowed in "$@"; do
+    if [[ "${component}" == "${allowed}" ]]; then
+      return
+    fi
+  done
+  die "未対応のcomponentです: ${component}"
+}
+
+run_labeled() {
+  local label="$1"
+  shift
+
+  "$@" 2>&1 | sed -u "s/^/[${label}] /"
+}
+
+wait_for_children() {
+  local failed=0
+  local pid status
+
+  for pid in "${CHILD_PIDS[@]}"; do
+    if wait "${pid}"; then
+      status=0
+    else
+      status=$?
+    fi
+    if ((status != 0)); then
+      failed=1
+    fi
+  done
+  CHILD_PIDS=()
+  return "${failed}"
+}
+
+run_quick() {
+  local component="${1:-all}"
+  local project
+  local -a services=()
+
+  (($# <= 1)) || die "quickの引数が多すぎます"
+  validate_component "${component}" all api web mcp
+  project="$(project_base)-quick"
+  acquire_quick_lock "${project}"
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE=quick
+
+  case "${component}" in
+    all) services=(api-quick web-quick mcp-quick) ;;
+    api) services=(api-quick) ;;
+    web) services=(web-quick) ;;
+    mcp) services=(mcp-quick) ;;
+  esac
+
+  compose_project "${project}" --profile quick build "${services[@]}"
+
+  if [[ "${component}" == "all" ]]; then
+    run_labeled api compose_project "${project}" --profile quick run --rm --no-deps -T api-quick &
+    CHILD_PIDS+=("$!")
+    run_labeled web compose_project "${project}" --profile quick run --rm --no-deps -T web-quick &
+    CHILD_PIDS+=("$!")
+    run_labeled mcp compose_project "${project}" --profile quick run --rm --no-deps -T mcp-quick &
+    CHILD_PIDS+=("$!")
+    wait_for_children || die "quick checkに失敗しました"
+  else
+    compose_project "${project}" --profile quick run --rm --no-deps -T "${services[0]}"
+  fi
+
+  cleanup_active_project
+}
+
+acquire_quick_lock() {
+  local project="$1"
+  local digest lock_path
+
+  command -v flock >/dev/null 2>&1 || die "quick実行に必要なflockが見つかりません"
+  digest="$(printf '%s' "${project}" | sha256sum)"
+  digest="${digest%% *}"
+  lock_path="${TMPDIR:-/tmp}/virty-quick-${digest:0:16}.lock"
+
+  exec {QUICK_LOCK_FD}>"${lock_path}"
+  flock "${QUICK_LOCK_FD}" || die "quick checkの実行lockを取得できませんでした"
+}
+
+verify_runtime() {
+  local project="$1"
+  local component="$2"
+
+  case "${component}" in
+    api)
+      compose_project "${project}" --profile verify run --rm -T api-verify
+      ;;
+    web)
+      # testはbuild layerで一度だけ実行し、cache hit時も保存済みsummaryをlogへ出す。
+      compose_project "${project}" --profile verify run --rm --no-deps -T \
+        web-verify node -e \
+        'const summary = require("./coverage/coverage-summary.json"); console.log(JSON.stringify(summary.total))'
+      ;;
+    proxy)
+      # Proxy確認はimage build内で完結する。
+      ;;
+    mcp)
+      # helper testはcheck image build内で完結する。
+      compose_project "${project}" --profile verify run --rm --no-deps -T mcp-verify
+      ;;
+  esac
+}
+
+run_verify() {
+  local component="${1:-all}"
+  local run_id project
+  local -a services=()
+
+  (($# <= 1)) || die "verifyの引数が多すぎます"
+  validate_component "${component}" all api web proxy mcp
+
+  run_id="$(date -u +%s)-$$-${RANDOM}"
+  project="$(project_base)-verify-${run_id}"
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE="verify"
+
+  case "${component}" in
+    all)
+      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify proxy-production-verify mcp-verify)
+      ;;
+    api)
+      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify)
+      ;;
+    web)
+      services=(openapi-schema-verify openapi-contract-verify web-verify web-production-verify)
+      ;;
+    proxy)
+      services=(proxy-production-verify)
+      ;;
+    mcp)
+      services=(mcp-verify)
+      ;;
+  esac
+
+  compose_project "${project}" --profile verify build "${services[@]}"
+
+  if [[ "${component}" == "all" || "${component}" == "api" || "${component}" == "web" ]]; then
+    compose_project "${project}" --profile verify run --rm -T openapi-contract-verify
+  fi
+
+  if [[ "${component}" == "all" ]]; then
+    run_labeled api verify_runtime "${project}" api &
+    CHILD_PIDS+=("$!")
+    run_labeled web verify_runtime "${project}" web &
+    CHILD_PIDS+=("$!")
+    run_labeled mcp verify_runtime "${project}" mcp &
+    CHILD_PIDS+=("$!")
+    wait_for_children || die "verifyに失敗しました"
+  else
+    verify_runtime "${project}" "${component}"
+  fi
+
+  cleanup_active_project
+}
+
+run_up() {
+  local -a profiles=(--profile dev)
+
+  if (($# == 1)) && [[ "$1" == "--tools" ]]; then
+    profiles+=(--profile tools)
+  elif (($# != 0)); then
+    die "upで指定できるoptionは --tools だけです"
+  fi
+
+  compose_project "$(project_base)-dev" "${profiles[@]}" up --detach --build --wait --wait-timeout 180
+  run_ports
+}
+
+run_down() {
+  (($# == 0)) || die "downに引数は指定できません"
+  compose_project "$(project_base)-dev" --profile dev --profile tools down --remove-orphans
+}
+
+run_logs() {
+  compose_project "$(project_base)-dev" --profile dev --profile tools logs --follow "$@"
+}
+
+run_shell() {
+  local service="${1:-}"
+  local host_uid host_gid workspace
+
+  (($# == 1)) || die "shellにはapiまたはwebを1つ指定してください"
+  validate_component "${service}" api web
+  host_uid="$(id -u)"
+  host_gid="$(id -g)"
+  case "${service}" in
+    api) workspace=/workspace/api ;;
+    web) workspace=/workspace/vue ;;
+  esac
+  compose_project "$(project_base)-dev" --profile dev exec \
+    --user "${host_uid}:${host_gid}" \
+    --env HOME=/tmp/virty-shell-home \
+    "${service}" bash -lc \
+    'mkdir -p "$HOME" && cd "$1" && exec bash' bash "${workspace}"
+}
+
+show_port() {
+  local project="$1"
+  local service="$2"
+  local port="$3"
+  local label="$4"
+  local value
+
+  if value="$(compose_project "${project}" --profile dev --profile tools port "${service}" "${port}" 2>/dev/null)"; then
+    printf '%-8s http://%s\n' "${label}" "${value}"
+  else
+    printf '%-8s %s\n' "${label}" "停止中"
+  fi
+}
+
+run_ports() {
+  local project
+
+  project="$(project_base)-dev"
+  show_port "${project}" web 3000 web
+  show_port "${project}" api 8000 api
+  show_port "${project}" proxy 5999 proxy
+  show_port "${project}" pgadmin 80 pgadmin
+}
+
+run_clean() {
+  (($# == 0)) || die "cleanに引数は指定できません"
+  compose_project "$(project_base)-dev" --profile dev --profile tools \
+    down --volumes --remove-orphans --rmi local
+  compose_project "$(project_base)-quick" --profile quick \
+    down --volumes --remove-orphans --rmi local
+}
+
+run_generate() {
+  local target="${1:-}"
+  local project generated_dir
+
+  (($# == 1)) || die "generateにはopenapiまたはweb-typesを1つ指定してください"
+  validate_component "${target}" openapi web-types
+  project="$(project_base)-quick"
+
+  case "${target}" in
+    openapi)
+      generated_dir="$(mktemp -d "${TMPDIR:-/tmp}/virty-openapi.XXXXXX")"
+      register_temp_path "${generated_dir}"
+      chmod 0777 "${generated_dir}"
+      export VIRTY_GENERATED_DIR="${generated_dir}"
+
+      compose_project "${project}" --profile quick build api-openapi web-openapi-types >&2
+      compose_project "${project}" --profile quick run --rm --no-deps -T api-openapi \
+        >"${generated_dir}/openapi.json"
+      [[ -s "${generated_dir}/openapi.json" ]] || die "OpenAPI schemaが空です"
+      compose_project "${project}" --profile quick run --rm --no-deps -T web-openapi-types
+      [[ -s "${generated_dir}/openapi.d.ts" ]] || die "OpenAPI生成型が空です"
+      install -m 0664 "${generated_dir}/openapi.d.ts" \
+        "${ROOT_DIR}/vue/src/api/openapi.d.ts"
+      ;;
+    web-types)
+      generated_dir="$(mktemp -d "${TMPDIR:-/tmp}/virty-web-types.XXXXXX")"
+      register_temp_path "${generated_dir}"
+      chmod 0777 "${generated_dir}"
+      export VIRTY_GENERATED_DIR="${generated_dir}"
+
+      compose_project "${project}" --profile quick build web-types
+      compose_project "${project}" --profile quick run --rm --no-deps -T web-types
+      [[ -s "${generated_dir}/auto-imports.d.ts" ]] || die "auto-imports.d.tsが空です"
+      [[ -s "${generated_dir}/components.d.ts" ]] || die "components.d.tsが空です"
+      [[ -s "${generated_dir}/typed-router.d.ts" ]] || die "typed-router.d.tsが空です"
+      install -m 0664 "${generated_dir}/auto-imports.d.ts" \
+        "${ROOT_DIR}/vue/src/auto-imports.d.ts"
+      install -m 0664 "${generated_dir}/components.d.ts" \
+        "${ROOT_DIR}/vue/src/components.d.ts"
+      install -m 0664 "${generated_dir}/typed-router.d.ts" \
+        "${ROOT_DIR}/vue/src/typed-router.d.ts"
+      ;;
+  esac
+}
+
+acquire_lab_lock() {
+  local lab_id="$1"
+  local digest lock_path
+
+  command -v flock >/dev/null 2>&1 || die "infra実行に必要なflockが見つかりません"
+  digest="$(printf '%s' "${lab_id}" | sha256sum)"
+  digest="${digest%% *}"
+  lock_path="${TMPDIR:-/tmp}/virty-infra-${digest:0:16}.lock"
+
+  exec {INFRA_LOCK_FD}>"${lock_path}"
+  flock -n "${INFRA_LOCK_FD}" || die "lab ${lab_id} は別のinfra testが利用中です"
+}
+
+run_infra_cleanup() {
+  local config="" run_id="" project="" canonical_config prefix
+
+  while (($# > 0)); do
+    case "$1" in
+      --config)
+        (($# >= 2)) || die "--configのpathがありません"
+        config="$2"
+        shift 2
+        ;;
+      --run-id)
+        (($# >= 2)) || die "--run-idの値がありません"
+        run_id="$2"
+        shift 2
+        ;;
+      --project)
+        (($# >= 2)) || die "--projectの値がありません"
+        project="$2"
+        shift 2
+        ;;
+      *) die "infra cleanupの未対応optionです: $1" ;;
+    esac
+  done
+
+  [[ "${config}" == /* ]] || die "infra cleanup configは絶対pathで指定してください"
+  canonical_config="$(realpath -e -- "${config}")" || die "infra configが存在しません"
+  [[ -f "${canonical_config}" && -r "${canonical_config}" ]] \
+    || die "infra configを読み取れません"
+  [[ "${run_id}" =~ ^[a-z0-9][a-z0-9-]{5,31}$ ]] || die "run IDの形式が不正です"
+  prefix="$(project_base)-infra-"
+  [[ "${project}" == "${prefix}"* ]] || die "別worktreeのinfra projectはcleanupできません"
+
+  export VIRTY_INFRA_CONFIG_HOST="${canonical_config}"
+  export VIRTY_TEST_RUN_ID="${run_id}"
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE=external
+  INFRA_CLEANUP_ENABLED=1
+  cleanup_infra_resources
+  cleanup_active_project
+}
+
+run_infra() {
+  local config=""
+  local canonical_config run_id project lab_id
+
+  if [[ "${1:-}" == "cleanup" ]]; then
+    shift
+    run_infra_cleanup "$@"
+    return
+  fi
+
+  while (($# > 0)); do
+    case "$1" in
+      --config)
+        (($# >= 2)) || die "--configのpathがありません"
+        [[ -z "${config}" ]] || die "--configは1回だけ指定してください"
+        config="$2"
+        shift 2
+        ;;
+      *)
+        die "infraの未対応optionです: $1"
+        ;;
+    esac
+  done
+
+  [[ -n "${config}" ]] || die "infraには --config /absolute/path が必要です"
+  [[ "${config}" == /* ]] || die "infra configは絶対pathで指定してください"
+  canonical_config="$(realpath -e -- "${config}")" || die "infra configが存在しません"
+  [[ -f "${canonical_config}" && -r "${canonical_config}" ]] || die "infra configを読み取れません"
+
+  run_id="run-$(date -u +%Y%m%d%H%M%S)-$$-${RANDOM}"
+  project="$(project_base)-infra-$(date -u +%s)-$$"
+  export VIRTY_INFRA_CONFIG_HOST="${canonical_config}"
+  export VIRTY_TEST_RUN_ID="${run_id}"
+
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE="external"
+
+  # DBやworkerを起動する前に、隔離labであることをcontainer内でも検証する。
+  compose_project "${project}" --profile external build infra-preflight >&2
+  lab_id="$(compose_project "${project}" --profile external run --rm --no-deps -T infra-preflight)"
+  [[ "${lab_id}" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$ ]] \
+    || die "infra preflightが有効なlab_idを返しませんでした"
+  acquire_lab_lock "${lab_id}"
+
+  compose_project "${project}" --profile external build \
+    infra-cleanup infra-test infra-worker infra-migrate infra-volume-init
+  INFRA_CLEANUP_ENABLED=1
+  compose_project "${project}" --profile external run --rm -T infra-test
+}
+
+main() {
+  local command="${1:-}"
+
+  require_base_tools
+  ensure_local_credentials
+  export VIRTY_HOST_UID="$(id -u)"
+  export VIRTY_HOST_GID="$(id -g)"
+  enable_ci_cache
+
+  if (($# > 0)); then
+    shift
+  fi
+
+  case "${command}" in
+    quick) run_quick "$@" ;;
+    verify) run_verify "$@" ;;
+    up) run_up "$@" ;;
+    down) run_down "$@" ;;
+    logs) run_logs "$@" ;;
+    shell) run_shell "$@" ;;
+    ports)
+      (($# == 0)) || die "portsに引数は指定できません"
+      run_ports
+      ;;
+    clean) run_clean "$@" ;;
+    generate) run_generate "$@" ;;
+    infra) run_infra "$@" ;;
+    project)
+      (($# == 0)) || die "projectに引数は指定できません"
+      project_base
+      ;;
+    -h|--help|help|"")
+      usage
+      ;;
+    *)
+      usage >&2
+      die "未対応のcommandです: ${command}"
+      ;;
+  esac
+}
+
+main "$@"

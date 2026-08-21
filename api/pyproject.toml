@@ -1,17 +1,84 @@
 [tool.ruff]
-# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-# ALL
-select = [
-    "E",
-    "F"
-]
-ignore = [
-    "D100", # パブリックモジュールにはdocstringを書く必要がある
-    "INP001", # __init__.pyでモジュールを初期化する必要がある
-    "E501", #文字数!!!!
-]
-fixable = ["ALL"]
-target-version = "py39"
+target-version = "py312"
+exclude = [".venv", "venv", "tests/external"]
 
-# Exclude a variety of commonly ignored directories.
-exclude = [".venv", "venv"]
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501"]
+fixable = ["ALL"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+files = [
+    "agent",
+    "main.py",
+    "models.py",
+    "settings.py",
+    "worker.py",
+    "ansible",
+    "auth",
+    "domain",
+    "exporter",
+    "flavor",
+    "images",
+    "mixin",
+    "module",
+    "network",
+    "node",
+    "project",
+    "storage",
+    "task",
+    "user",
+    "tests/unit",
+    "tests/integration",
+]
+check_untyped_defs = true
+explicit_package_bases = true
+mypy_path = "."
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+exclude = '''(?x)(
+    ^tests/external/
+    | ^module/(ansiblelib|cloudinitlib|ovslib|paramikolib|virtlib)\.py$
+    | ^module/xmllib/
+)'''
+
+[[tool.mypy.overrides]]
+module = [
+    "ansible_runner",
+    "ansible.*",
+    "bcrypt",
+    "libvirt",
+    "paramiko",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "module.ansiblelib",
+    "module.cloudinitlib",
+    "module.paramikolib",
+    "module.virtlib",
+    "module.xmllib",
+    "module.xmllib.*",
+]
+follow_imports = "skip"
+
+[tool.pytest.ini_options]
+minversion = "8.4"
+testpaths = ["tests/unit", "tests/integration"]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--durations=10",
+]
+markers = [
+    "unit: DB・network・外部processを使用しないtest",
+    "integration: Compose内の専用PostgreSQLを使用するtest",
+    "external: 専用labのSSH・Ansible・libvirt資源を変更するtest",
+]
+timeout = 30
+timeout_method = "thread"

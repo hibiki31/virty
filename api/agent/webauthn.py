@@ -20,6 +20,7 @@ from .exceptions import (
 from .models import (
     AgentWebAuthnChallengeModel,
     AgentWebAuthnCredentialModel,
+    new_agent_model,
     utc_now,
 )
 
@@ -286,7 +287,8 @@ class WebAuthnService:
                 "WebAuthn credentialは既に登録されています",
             )
         now = utc_now()
-        model = AgentWebAuthnCredentialModel(
+        model = new_agent_model(
+            AgentWebAuthnCredentialModel,
             credential_id=result.credential_id,
             user_id=user_id,
             name=credential_name,
@@ -398,7 +400,8 @@ class WebAuthnService:
                 "webauthn_challenge_capacity_exceeded",
                 "WebAuthn challenge数が上限に達しています",
             )
-        model = AgentWebAuthnChallengeModel(
+        model = new_agent_model(
+            AgentWebAuthnChallengeModel,
             id=new_uuid(),
             user_id=user_id,
             purpose=purpose,

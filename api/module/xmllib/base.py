@@ -254,10 +254,10 @@ class XmlEditor():
             model.interface.append(DomainDetailXmlInterface(
                 type=nic.get("type"),
                 mac=nic.find("mac").get("address"),
-                bridge=source.get("bridge", None),
+                bridge=source.get("bridge", None) if source is not None else None,
                 network=source.get("network", None) if source is not None else None,
                 target=target.get("dev", None) if target is not None else None,
-                port=source.get("portgroup")
+                port=source.get("portgroup") if source is not None else None,
             ))
 
         for seclabel in self.xml.findall('seclabel'):

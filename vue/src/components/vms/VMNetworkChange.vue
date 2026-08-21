@@ -100,7 +100,7 @@ function itemsPort() {
 
 async function getNetworkList() {
   loadingList.value = true
-  if (model && props.item) {
+  if (model.value && props.item) {
     const res = await apiClient.GET("/api/networks", {
       params: {
         query: {

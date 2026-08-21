@@ -1,6 +1,9 @@
+from typing import cast
+
 import pytest
 from fastapi import HTTPException
 from fastapi.routing import APIRoute
+from sqlalchemy.orm import Session
 
 from auth.schemas import SetupRequest
 from auth.router import CurrentUser
@@ -60,18 +63,19 @@ def test_identity_manage_without_admin_cannot_mutate_or_list_users() -> None:
         username="target",
         password="Strong1!Password",
     )
+    unreachable_db = cast(Session, object())
     calls = (
-        lambda: create_user(create_request, db=object(), current_user=delegated),
+        lambda: create_user(create_request, db=unreachable_db, current_user=delegated),
         lambda: update_user(
             "target",
             update_request,
-            db=object(),
+            db=unreachable_db,
             current_user=delegated,
         ),
-        lambda: delete_user("target", db=object(), current_user=delegated),
+        lambda: delete_user("target", db=unreachable_db, current_user=delegated),
         lambda: get_users(
             UserForQuery(),
-            db=object(),
+            db=unreachable_db,
             current_user=delegated,
         ),
     )

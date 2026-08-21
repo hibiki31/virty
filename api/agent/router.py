@@ -1,7 +1,7 @@
 """閉域Agent APIの明示route。"""
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import Depends, Header, Request
 from fastapi.exceptions import RequestValidationError
@@ -23,7 +23,12 @@ from .actions import execute_action
 from .audit import append_audit_event, redact_secrets
 from .catalog import ACTIONS, catalog_document, get_action
 from .crypto import expected_htu
-from .exceptions import AgentError, AuthorizationError, NotFoundError
+from .exceptions import (
+    AgentError,
+    AuthorizationError,
+    NotFoundError,
+    ServiceUnavailableError,
+)
 from .policy import authenticate_lease, authorize_operation_access
 from .schemas import (
     ActionRequest,
@@ -82,7 +87,10 @@ class AgentAPIRoute(APIRoute):
                         "field": ".".join(str(value) for value in item["loc"]),
                         "type": item["type"],
                     }
-                    for item in exc.errors(include_input=False, include_url=False)
+                    # FastAPIのRequestValidationError.errors()はPydanticの
+                    # keyword引数を受け付けない。必要なfield/typeだけを選び、
+                    # inputやctxに含まれ得る秘密値は応答へ出さない。
+                    for item in exc.errors()
                 ]
                 response = JSONResponse(
                     status_code=422,
@@ -105,6 +113,40 @@ app = APIRouter(
     tags=["agent"],
     route_class=AgentAPIRoute,
 )
+
+
+def _pairing_status(
+    value: str,
+) -> Literal["pending", "active", "expired", "rejected"]:
+    if value == "pending":
+        return "pending"
+    if value == "active":
+        return "active"
+    if value == "expired":
+        return "expired"
+    if value == "rejected":
+        return "rejected"
+    raise ServiceUnavailableError(
+        "invalid_pairing_status",
+        "pairing状態がDB制約と一致しません",
+    )
+
+
+def _lease_request_status(
+    value: str,
+) -> Literal["pending", "approved", "expired", "rejected"]:
+    if value == "pending":
+        return "pending"
+    if value == "approved":
+        return "approved"
+    if value == "expired":
+        return "expired"
+    if value == "rejected":
+        return "rejected"
+    raise ServiceUnavailableError(
+        "invalid_lease_request_status",
+        "lease request状態がDB制約と一致しません",
+    )
 
 
 def _admin(
@@ -226,7 +268,7 @@ def pairing_status(
     return PairingStatusResponse(
         pairing_id=pairing.id,
         device_id=device.id if pairing.status == "active" else None,
-        status=pairing.status,
+        status=_pairing_status(pairing.status),
         expires_at=pairing.expires_at,
     )
 
@@ -379,7 +421,7 @@ def lease_status(
     return LeaseStatusResponse(
         request_id=model.id,
         device_id=model.device_id,
-        status=model.status,
+        status=_lease_request_status(model.status),
         expires_at=model.expires_at,
     )
 

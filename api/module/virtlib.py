@@ -231,7 +231,7 @@ class VirtManager():
         net = self.node.networkLookupByUUIDString(uuid)
         try:
             net.destroy()
-        except:
+        except libvirt.libvirtError:
             pass
         net.undefine()
 

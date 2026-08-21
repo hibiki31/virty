@@ -33,12 +33,12 @@ class AnsibleManager():
     def run(
         self,
         playbook_name: str,
-        extravars: dict[str, Any] | None = None,
+        extravars: Mapping[str, Any] | None = None,
         timeout: int = 900,
         *,
         sensitive_keys: set[str] | None = None,
     ) -> AnsibleRunResult:
-        extravars = extravars or {}
+        extravars = dict(extravars or {})
         sensitive_keys = sensitive_keys or set()
         sensitive_values = tuple(
             str(value)
@@ -86,7 +86,7 @@ class AnsibleManager():
         
         runner_on_ok = []
         runner_on_failed = []
-        playbook_on_stats = None
+        playbook_on_stats: dict[str, Any] = {}
         for event in safe_events:
             if event['event'] == 'runner_on_ok':
                 runner_on_ok.append(event)
@@ -133,7 +133,7 @@ class AnsibleManager():
         return node_info
 
 
-def _capture_handlers() -> Dict[int, signal.Handlers]:
+def _capture_handlers() -> Dict[int, Any]:
     """現在の SIGINT/SIGTERM ハンドラを dict として返す。"""
     return {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
 
@@ -161,7 +161,7 @@ def _redact_sensitive_values(value: Any, secrets: tuple[str, ...]) -> Any:
     return value
 
 
-def _restore_handlers(handlers: Dict[int, signal.Handlers]) -> None:
+def _restore_handlers(handlers: Dict[int, Any]) -> None:
     """保存しておいたハンドラを元に戻す。"""
     for sig, handler in handlers.items():
         signal.signal(sig, handler)

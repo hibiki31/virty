@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import traceback
 from datetime import datetime
+from pathlib import Path
 from time import sleep, time
 
 from sqlalchemy import or_
@@ -47,6 +48,10 @@ def main() -> None:
     task_manager.include_task(agent_tasks)
 
     init_scheduler()
+    ready_file = os.getenv("VIRTY_WORKER_READY_FILE")
+    if ready_file:
+        Path(ready_file).touch()
+        logger.info("Workerの起動準備が完了しました")
 
     while True:
         run_scheduler(task_manager)

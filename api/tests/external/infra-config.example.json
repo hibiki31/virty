@@ -1,0 +1,57 @@
+{
+  "allow_destructive": false,
+  "lab_id": "replace-with-dedicated-lab-id",
+  "username": "admin",
+  "password": "replace-me",
+  "users": [
+    {
+      "username": "test-user",
+      "password": "replace-me",
+      "publickey": "ssh-ed25519 replace-me test-user"
+    }
+  ],
+  "projects": [
+    {
+      "name": "test-project"
+    }
+  ],
+  "key": "-----BEGIN OPENSSH PRIVATE KEY-----\nreplace-me\n-----END OPENSSH PRIVATE KEY-----\n",
+  "pub": "ssh-ed25519 replace-me lab-key",
+  "servers": [
+    {
+      "name": "test-node",
+      "domain": "192.0.2.10",
+      "username": "lab-user"
+    }
+  ],
+  "storages": [
+    {
+      "name": "test-cloud",
+      "path": "/var/lib/libvirt/virty-test/cloud"
+    },
+    {
+      "name": "test-iso",
+      "path": "/var/lib/libvirt/virty-test/iso"
+    },
+    {
+      "name": "test-img",
+      "path": "/var/lib/libvirt/virty-test/images"
+    }
+  ],
+  "networks": [
+    {
+      "name": "test-nat",
+      "type": "nat",
+      "octet": 240
+    }
+  ],
+  "vms": [
+    {
+      "name": "test-vm",
+      "image": "unused",
+      "network": "test-nat"
+    }
+  ],
+  "image_url": "https://downloads.example.invalid/cloud-image.qcow2",
+  "iso_url": "https://downloads.example.invalid/installer.iso"
+}

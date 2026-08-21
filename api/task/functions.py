@@ -24,7 +24,7 @@ from task.crypto import (
     is_encrypted_task_request,
 )
 from task.models import TaskModel, TaskTargetReservationModel
-from task.schemas import TaskOperation, TaskRequest
+from task.schemas import OperationStatus, TaskOperation, TaskRequest
 
 logger = setup_logger(__name__)
 
@@ -787,12 +787,21 @@ class TaskBase:
 class TaskManager:
     def __init__(self, db: Session) -> None:
         self.db = db
-        self.model: TaskModel | None = None
+        self._model: TaskModel | None = None
         self.created = False
         self.idempotency_replayed = False
         self.method: str | None = None
         self.resource: str | None = None
         self.object: str | None = None
+
+    @property
+    def model(self) -> TaskModel:
+        if self._model is None:
+            raise TaskError(
+                "taskはまだcommitされていません",
+                error_code="TASK_NOT_COMMITTED",
+            )
+        return self._model
 
     def select(self, method: str, resource: str, object: str) -> None:
         self.method = method
@@ -800,7 +809,7 @@ class TaskManager:
         self.object = object
 
     def _set_result(self, model: TaskModel, *, created: bool) -> TaskModel:
-        self.model = model
+        self._model = model
         self.created = created
         self.idempotency_replayed = not created
         # response schemaには露出させず、呼出し側が判定できる一時属性とする。
@@ -871,7 +880,8 @@ class TaskManager:
         task_uuid = str(uuid.uuid4())
         path_param = param if param is not None else {}
         task_body = body if body is not None else BaseSchema()
-        user_id = getattr(user, "id", None) or getattr(user, "username", None)
+        raw_user_id = getattr(user, "id", None) or getattr(user, "username", None)
+        user_id = raw_user_id if isinstance(raw_user_id, str) else None
         effective_principal = principal_id or user_id
 
         if idempotency_key is not None:
@@ -982,6 +992,10 @@ class TaskManager:
             )
 
         if idempotency_key is not None:
+            if effective_principal is None:
+                raise TaskIdempotencyConflict(
+                    "idempotency keyにはprincipalが必要です",
+                )
             existing = self._find_idempotent_task(
                 principal_id=effective_principal,
                 idempotency_key=idempotency_key,
@@ -1120,7 +1134,7 @@ def _find_operation_tasks(db: Session, root_task_uuid: str) -> list[TaskModel]:
     )
 
 
-def normalize_operation_status(tasks: list[TaskModel]) -> str:
+def normalize_operation_status(tasks: list[TaskModel]) -> OperationStatus:
     statuses = {task.status for task in tasks}
     if "unknown" in statuses:
         return "unknown"

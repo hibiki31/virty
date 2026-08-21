@@ -20,11 +20,11 @@
       <template v-slot:item.status="{ item }">
         <v-icon :color="getPowerColor(item.status)">mdi-power</v-icon>
       </template>
-      <template v-slot:item.memory="{ item }" justify="right">
+      <template v-slot:item.memory="{ item }">
         <v-icon left>mdi-memory</v-icon>
         {{ item.memory / 1024 }} G
       </template>
-      <template v-slot:item.core="{ item }" justify="right">
+      <template v-slot:item.core="{ item }">
         <v-icon left>mdi-cpu-64-bit</v-icon>
         {{ item.core }} core
       </template>
@@ -72,7 +72,7 @@ const query = ref<typeListVMQuery>({
 
 const items = ref<typeListVM>(initVMList)
 
-async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+async function loadItems({ page = 1, itemsPerPage = 10 }) {
   query.value.page = page
   query.value.limit = itemsPerPage
 

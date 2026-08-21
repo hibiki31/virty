@@ -88,7 +88,7 @@ def get_storages(
 def update_storage_metadata(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageMetadataForUpdate = None
+        request_model: StorageMetadataForUpdate = None,  # type: ignore[assignment]
 ):
     current_user.verify_scope(["storage.manage"])
     get_authorized_storage(db, request_model.uuid, current_user)

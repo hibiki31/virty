@@ -27,7 +27,7 @@
           <v-divider class="pt-5"></v-divider>
 
           <!-- ストレージ -->
-          <v-row v-for="disk in postData.disks">
+          <v-row v-for="(disk, index) in postData.disks" :key="index">
             <v-col cols="12" md="2">
               <v-select variant="outlined" density="comfortable"
                 :items="[{ title: 'Empty', value: 'empty' }, { title: 'Copy', value: 'copy' }]" :rules="[r.required]"
@@ -80,14 +80,86 @@
           <v-divider></v-divider>
 
           <!-- Cloud-init -->
-          <v-checkbox density="comfortable" @update:model-value="togleCloudInit" label="Use cloud-init"
-            color="primary"></v-checkbox>
+          <v-checkbox data-testid="cloud-init-toggle" density="comfortable"
+            :model-value="postData.cloudInit !== null" @update:model-value="togleCloudInit"
+            label="Use cloud-init" color="primary"></v-checkbox>
           <div v-if="postData.cloudInit">
             <v-text-field variant="outlined" density="comfortable" v-model="postData.cloudInit.hostname"
               label="Host name" dense :rules="[r.required, r.limitLength64, r.characterRestrictions]">
             </v-text-field>
-            <v-textarea variant="outlined" density="comfortable" clearable class="text-caption" auto-grow
-              v-model="postData.cloudInit.userData" clear-icon="mdi-close-circle" label="User-data"></v-textarea>
+
+            <v-tabs data-testid="cloud-init-tabs" v-model="cloudInitTab" color="primary">
+              <v-tab value="simple" @click="cloudInitTab = 'simple'">Simple form</v-tab>
+              <v-tab value="yaml" @click="cloudInitTab = 'yaml'">YAML</v-tab>
+            </v-tabs>
+
+            <v-window v-model="cloudInitTab">
+              <v-window-item value="simple">
+                <v-alert class="my-3" type="warning" variant="tonal">
+                  Plaintext passwords are stored in the VM creation task history and cloud-init ISO.
+                  SSH key authentication is recommended.
+                </v-alert>
+
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field data-testid="cloud-init-username" variant="outlined" density="comfortable"
+                      v-model="cloudInitForm.username" label="Initial user name" hint="Leave blank to use the image default"
+                      persistent-hint></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field data-testid="cloud-init-password" variant="outlined" density="comfortable"
+                      v-model="cloudInitForm.password" label="Password" type="password"
+                      autocomplete="new-password"></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-checkbox data-testid="cloud-init-password-expires" density="comfortable"
+                  v-model="cloudInitForm.passwordExpires" label="Require password change on first login"
+                  color="primary"></v-checkbox>
+                <v-checkbox data-testid="cloud-init-ssh-password-authentication" density="comfortable"
+                  v-model="cloudInitForm.sshPasswordAuthentication" label="Enable SSH password authentication"
+                  color="primary"></v-checkbox>
+
+                <v-select data-testid="cloud-init-saved-public-keys" variant="outlined" density="comfortable"
+                  v-model="cloudInitForm.selectedPublicKeys" :items="savedPublicKeys" item-title="name"
+                  item-value="publickey" label="Saved SSH public keys" multiple chips closable-chips
+                  :loading="savedPublicKeysLoading" no-data-text="No saved SSH public keys"></v-select>
+                <v-alert v-if="savedPublicKeysError" data-testid="saved-public-keys-error" class="mb-3" type="warning"
+                  variant="tonal">{{ savedPublicKeysError }}</v-alert>
+                <v-textarea data-testid="cloud-init-manual-public-keys" variant="outlined" density="comfortable"
+                  v-model="cloudInitForm.manualPublicKeys" auto-grow label="Additional SSH public keys"
+                  hint="Enter one public key per line" persistent-hint></v-textarea>
+
+                <v-checkbox data-testid="cloud-init-package-update" density="comfortable"
+                  v-model="cloudInitForm.packageUpdate" label="Update package metadata" color="primary"></v-checkbox>
+                <v-textarea data-testid="cloud-init-packages" variant="outlined" density="comfortable"
+                  v-model="cloudInitForm.packages" auto-grow label="Packages"
+                  hint="Enter one package per line" persistent-hint></v-textarea>
+
+                <v-textarea data-testid="cloud-init-script" variant="outlined" density="comfortable"
+                  v-model="cloudInitForm.script" auto-grow label="Initial script"></v-textarea>
+                <v-alert class="mb-3" type="warning" variant="tonal">
+                  The script runs as root once during the cloud-init final stage.
+                </v-alert>
+
+                <v-alert v-if="cloudInitFormDirty" data-testid="cloud-init-dirty-warning" class="mb-3" type="warning"
+                  variant="tonal">
+                  Unapplied simple form changes are not sent. CREATE uses the current raw YAML.
+                </v-alert>
+                <v-alert v-if="cloudInitFormError" data-testid="cloud-init-form-error" class="mb-3" type="error"
+                  variant="tonal" style="white-space: pre-line">{{ cloudInitFormError }}</v-alert>
+                <v-btn data-testid="cloud-init-apply" color="primary" variant="tonal" @click="applyCloudInitForm">
+                  Apply to YAML
+                </v-btn>
+              </v-window-item>
+
+              <v-window-item value="yaml">
+                <v-textarea data-testid="cloud-init-yaml" variant="outlined" density="comfortable" clearable
+                  class="text-caption mt-3" auto-grow :model-value="postData.cloudInit.userData"
+                  clear-icon="mdi-close-circle" label="User-data" :error-messages="cloudInitYamlError"
+                  style="white-space: pre-line" @update:model-value="updateCloudInitUserData"></v-textarea>
+              </v-window-item>
+            </v-window>
           </div>
         </v-card-text>
         <v-divider></v-divider>
@@ -102,6 +174,8 @@
 
 <script lang="ts" setup>
 
+import { computed, onMounted, reactive, ref, toRaw } from 'vue';
+import r from '@/composables/rules';
 import { itemsCPU, itemsMemory } from '@/composables/vm'
 import type { bodyPostVM } from '@/composables/vm';
 import type { typeListNode } from '@/composables/nodes';
@@ -119,9 +193,15 @@ import { apiClient } from '@/api';
 import { notifyTask } from '@/composables/notify';
 import type { schemas } from '@/composables/schemas';
 import { asyncSleep } from '@/composables/sleep';
+import {
+  EMPTY_CLOUD_CONFIG,
+  createCloudInitFormState,
+  mergeCloudInitForm,
+  validateCloudInitYaml,
+} from '@/composables/cloudInit';
+import type { CloudInitFormState } from '@/composables/cloudInit';
+import { useAuthStore } from '@/stores/auth';
 
-
-const useCloudInit = ref(true)
 
 const loading = ref(false)
 const dialogState = defineModel({ default: false })
@@ -130,6 +210,19 @@ const itemsNodes = ref<typeListNode>(initNodeList)
 const itemsNetworks = ref<typeListNetwork>(initNetworkList)
 const itemsStorages = ref<schemas['StoragePage']>(initStorageList)
 const itemsImages = ref<typeListImage>(initImageList)
+const cloudInitTab = ref<'simple' | 'yaml'>('simple')
+const cloudInitForm = reactive<CloudInitFormState>(createCloudInitFormState())
+const cloudInitFormSnapshot = ref(JSON.stringify(toRaw(cloudInitForm)))
+const cloudInitFormError = ref('')
+const cloudInitYamlError = ref('')
+const savedPublicKeys = ref<schemas['UserPublickey'][]>([])
+const savedPublicKeysLoading = ref(false)
+const savedPublicKeysError = ref('')
+const savedPublicKeysLoadAttempted = ref(false)
+
+const cloudInitFormDirty = computed(
+  () => JSON.stringify(cloudInitForm) !== cloudInitFormSnapshot.value
+)
 
 const postData = reactive<bodyPostVM>({
   type: 'manual',
@@ -162,6 +255,15 @@ async function submit(event: Promise<{ valid: boolean }>) {
     return
   }
 
+  if (postData.cloudInit) {
+    const validation = validateCloudInitYaml(postData.cloudInit.userData)
+    if (!validation.ok) {
+      cloudInitYamlError.value = validation.errors.join('\n')
+      cloudInitTab.value = 'yaml'
+      return
+    }
+  }
+
   const res = await apiClient.POST('/api/tasks/vms', { body: postData })
 
   if (res.data) {
@@ -177,20 +279,90 @@ async function submit(event: Promise<{ valid: boolean }>) {
   loading.value = false
 }
 
-function togleCloudInit(value: any) {
-  if (value) {
+function togleCloudInit(value: unknown) {
+  if (value === true) {
+    resetCloudInitForm()
+    cloudInitTab.value = 'simple'
+    cloudInitYamlError.value = ''
     postData.cloudInit = {
       hostname: '',
-      userData: `#cloud-config
-password: password
-chpasswd: {expire: False}
-ssh_pwauth: True
-ssh_authorized_keys:
-  - ssh-rsa AAA...fHQ== sample@example.com
-          `
+      userData: EMPTY_CLOUD_CONFIG
     }
+    void loadSavedPublicKeys()
   } else {
     postData.cloudInit = null
+  }
+}
+
+function resetCloudInitForm() {
+  Object.assign(cloudInitForm, createCloudInitFormState())
+  cloudInitFormSnapshot.value = JSON.stringify(toRaw(cloudInitForm))
+  cloudInitFormError.value = ''
+}
+
+function applyCloudInitForm() {
+  if (!postData.cloudInit) {
+    return
+  }
+
+  const result = mergeCloudInitForm(postData.cloudInit.userData, toRaw(cloudInitForm))
+  if (!result.ok) {
+    cloudInitFormError.value = result.errors.join('\n')
+    return
+  }
+
+  postData.cloudInit.userData = result.value
+  cloudInitFormSnapshot.value = JSON.stringify(toRaw(cloudInitForm))
+  cloudInitFormError.value = ''
+  cloudInitYamlError.value = ''
+  cloudInitTab.value = 'yaml'
+}
+
+function updateCloudInitUserData(value: unknown) {
+  if (!postData.cloudInit) {
+    return
+  }
+
+  postData.cloudInit.userData = typeof value === 'string' ? value : ''
+  cloudInitYamlError.value = ''
+}
+
+async function loadSavedPublicKeys() {
+  if (savedPublicKeysLoadAttempted.value) {
+    return
+  }
+
+  savedPublicKeysLoadAttempted.value = true
+  savedPublicKeysLoading.value = true
+  savedPublicKeysError.value = ''
+
+  try {
+    const username = useAuthStore().username
+    if (!username) {
+      savedPublicKeys.value = []
+      return
+    }
+
+    const response = await apiClient.GET('/api/users', {
+      params: {
+        query: {
+          nameLike: username,
+          limit: 0,
+          page: 0,
+        },
+      },
+    })
+    const currentUser = response.data?.data.find(user => user.username === username)
+
+    if (!response.data) {
+      savedPublicKeysError.value = 'Saved SSH public keys could not be loaded. You can enter keys manually.'
+    }
+    savedPublicKeys.value = currentUser?.publickeys ?? []
+  } catch {
+    savedPublicKeys.value = []
+    savedPublicKeysError.value = 'Saved SSH public keys could not be loaded. You can enter keys manually.'
+  } finally {
+    savedPublicKeysLoading.value = false
   }
 }
 

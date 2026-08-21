@@ -14,8 +14,8 @@ from typing import Any, Callable
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
-from sqlalchemy import func, or_
-from sqlalchemy.orm import Query, Session
+from sqlalchemy import false, func, or_
+from sqlalchemy.orm import Query, Session, object_session
 
 from auth.function import get_password_hash
 from domain.models import DomainModel
@@ -96,6 +96,15 @@ def _page(query: Query, model: Any) -> tuple[int, list[Any]]:
     return count, query.all()
 
 
+def _model_session(model: object) -> Session:
+    """serializerが受け取った永続modelのSessionを安全に取得する。"""
+
+    session = object_session(model)
+    if session is None:
+        raise RuntimeError("永続化されていないmodelはserializeできません")
+    return session
+
+
 def _node_dict(model: NodeModel) -> dict[str, Any]:
     return {
         "name": model.name,
@@ -117,7 +126,7 @@ def _node_dict(model: NodeModel) -> dict[str, Any]:
             for role in model.roles
         ],
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="node",
             resource_id=model.name,
         ),
@@ -158,7 +167,7 @@ def _vm_dict(model: DomainModel) -> dict[str, Any]:
         ],
         # vnc_port/vnc_passwordはAgent readへ公開しない。
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="vm",
             resource_id=model.uuid,
         ),
@@ -187,7 +196,7 @@ def _network_dict(model: NetworkModel) -> dict[str, Any]:
             for item in model.portgroups
         ],
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="network",
             resource_id=model.uuid,
         ),
@@ -212,7 +221,7 @@ def _storage_dict(model: StorageModel) -> dict[str, Any]:
             "deviceType": metadata.device_type,
         },
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="storage",
             resource_id=model.uuid,
         ),
@@ -229,7 +238,7 @@ def _image_dict(model: ImageModel) -> dict[str, Any]:
         "domainUuid": model.domain_uuid,
         "flavorId": model.flavor_id,
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="image",
             resource_id=json.dumps(
                 [model.storage_uuid, model.path],
@@ -319,7 +328,7 @@ def _task_dict(model: TaskModel) -> dict[str, Any]:
         "retryable": model.retryable,
         "correlationId": model.correlation_id,
         "generation": resolve_generation(
-            model._sa_instance_state.session,
+            _model_session(model),
             resource_type="task",
             resource_id=model.uuid,
         ),
@@ -669,7 +678,7 @@ def project_list(db: Session, context: LeaseContext, model: Any, _: Any) -> Any:
     query = db.query(ProjectModel).order_by(ProjectModel.name)
     if context.lease.node_ids:
         # projectはnode単独制約から安全に完全対応付けできない。
-        query = query.filter(False)
+        query = query.filter(false())
     if context.lease.project_ids:
         query = query.filter(ProjectModel.id.in_(context.lease.project_ids))
     elif not _is_admin(db, context.principal_id):
@@ -757,7 +766,7 @@ def task_incomplete(db: Session, context: LeaseContext, model: Any, __: Any) -> 
 def flavor_list(db: Session, context: LeaseContext, model: Any, _: Any) -> Any:
     query = db.query(FlavorModel).order_by(FlavorModel.name)
     if context.lease.node_ids:
-        query = query.filter(False)
+        query = query.filter(false())
     if context.lease.project_ids:
         allowed = {
             flavor.id

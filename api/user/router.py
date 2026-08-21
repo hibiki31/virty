@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from auth.function import get_password_hash
-from auth.router import CurrentUser, get_current_user
+from auth.router import CurrentUser, get_current_user as require_current_user
 from mixin.database import get_db
 from mixin.exception import raise_notfound
 from mixin.log import setup_logger
@@ -24,7 +24,9 @@ logger = setup_logger(__name__)
 app = APIRouter(prefix="/api/users", tags=["users"])
 
 @app.get("/me", response_model=TokenData)
-def get_current_user_profile(current_user: CurrentUser = Depends(get_current_user)):
+def get_current_user_profile(
+    current_user: CurrentUser = Depends(require_current_user),
+):
     return current_user
 
 
@@ -32,7 +34,7 @@ def get_current_user_profile(current_user: CurrentUser = Depends(get_current_use
 def create_user(
         request: UserForCreate,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
 ):
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
@@ -67,7 +69,7 @@ def update_user(
         username: str,
         request: UserForUpdate,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
 ):
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
@@ -106,7 +108,7 @@ def update_user(
 def get_users(
         param: UserForQuery = Depends(),
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
 ):
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
@@ -126,7 +128,7 @@ def get_users(
 def delete_user(
         username: str,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
 ):
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)

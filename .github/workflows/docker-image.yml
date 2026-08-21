@@ -1,41 +1,143 @@
-name: Docker build test
+name: Development verification
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VIRTY_CI_CACHE: gha
 
 jobs:
-  docker:
+  changes:
+    name: Detect affected components
     runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      mcp: ${{ steps.filter.outputs.mcp }}
+      proxy: ${{ steps.filter.outputs.proxy }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v7
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build test vue
-        uses: docker/build-push-action@v6
-        with:
-          context: ./vue
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha
+          fetch-depth: 0
+      - id: filter
+        name: Compare changed paths
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
 
-      - name: Build test api
-        uses: docker/build-push-action@v6
-        with:
-          context: ./api
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            base_sha="${PR_BASE_SHA}"
+            head_sha="${PR_HEAD_SHA}"
+          else
+            head_sha="${HEAD_SHA}"
+            if [[ -n "${BEFORE_SHA}" && ! "${BEFORE_SHA}" =~ ^0+$ ]] \
+              && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+              base_sha="${BEFORE_SHA}"
+            else
+              base_sha="$(git rev-list --max-parents=0 "${HEAD_SHA}" | tail -n 1)"
+            fi
+          fi
+
+          changed="$(git diff --name-only "${base_sha}" "${head_sha}")"
+          shared=false
+          api=false
+          mcp=false
+          web=false
+          proxy=false
+
+          if grep -Eq '^(compose\.dev\.yml|devctl|scripts/project-name\.sh|\.github/actions/expose-github-runtime/.*|\.github/workflows/docker-image\.yml)$' <<<"${changed}"; then
+            shared=true
+          fi
+          if [[ "${shared}" == true ]] || grep -Eq '^api/' <<<"${changed}"; then
+            api=true
+          fi
+          if [[ "${shared}" == true ]] || grep -Eq '^vue/' <<<"${changed}"; then
+            web=true
+          fi
+          if [[ "${shared}" == true ]] || grep -Eq '^proxy/' <<<"${changed}"; then
+            proxy=true
+          fi
+          # helper contractはAPIの管理routeとAgent catalogも照合する。
+          # root .dockerignoreはmcpのroot build contextに影響する。
+          if [[ "${shared}" == true ]] \
+            || grep -Eq '^(api/|virty_mcp/|\.dockerignore$)' <<<"${changed}"; then
+            mcp=true
+          fi
+
+          {
+            printf 'api=%s\n' "${api}"
+            printf 'mcp=%s\n' "${mcp}"
+            printf 'proxy=%s\n' "${proxy}"
+            printf 'web=%s\n' "${web}"
+          } >>"${GITHUB_OUTPUT}"
+
+  api:
+    name: API verify
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: ./.github/actions/expose-github-runtime
+      - name: Full verification
+        run: ./devctl verify api
+
+  web:
+    name: Web verify
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: ./.github/actions/expose-github-runtime
+      - name: Full verification
+        run: ./devctl verify web
+
+  proxy:
+    name: Proxy verify
+    needs: changes
+    if: needs.changes.outputs.proxy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: ./.github/actions/expose-github-runtime
+      - name: Production image verification
+        run: ./devctl verify proxy
+
+  mcp:
+    name: MCP helper verify
+    needs: changes
+    if: needs.changes.outputs.mcp == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: ./.github/actions/expose-github-runtime
+      - name: Full verification
+        run: ./devctl verify mcp

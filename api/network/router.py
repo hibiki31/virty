@@ -135,9 +135,9 @@ def get_network(
 
 @app.get("/{uuid}/xml",response_model=NetworkXML)
 def get_network_xml(
+        uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        uuid:str = None
 ):
     current_user.verify_scope(["network.read"])
     get_authorized_network(db, uuid, current_user)

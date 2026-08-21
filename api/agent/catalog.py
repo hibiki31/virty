@@ -6,7 +6,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from .exceptions import NotFoundError
 
@@ -240,7 +240,7 @@ def get_action(action_id: str) -> ActionDefinition:
         ) from exc
 
 
-def _load_public_catalog() -> dict[str, object]:
+def _load_public_catalog() -> dict[str, Any]:
     path = Path(__file__).with_name("action_catalog.json")
     with path.open(encoding="utf-8") as file:
         document = json.load(file)
@@ -275,7 +275,7 @@ def _load_public_catalog() -> dict[str, object]:
 PUBLIC_CATALOG = _load_public_catalog()
 
 
-def catalog_document() -> dict[str, object]:
+def catalog_document() -> dict[str, Any]:
     """MCP helperがmirrorするstrict JSON Schema catalogを返す。"""
 
     return PUBLIC_CATALOG

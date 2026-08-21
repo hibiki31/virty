@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import os, glob
+import glob
+
 from ansible.module_utils.basic import AnsibleModule
 
 

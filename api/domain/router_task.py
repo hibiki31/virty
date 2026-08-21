@@ -57,7 +57,7 @@ def create_vm(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainForCreate = None
+        body: DomainForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["vm.create"])
     node = db.query(NodeModel).filter(NodeModel.name == body.node_name).one_or_none()
@@ -89,6 +89,11 @@ def create_vm(
                 detail="Destination storage must belong to the selected node",
             )
         if disk.type == "copy":
+            if disk.original_pool_uuid is None or disk.original_name is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Copy source storage and image are required",
+                )
             get_authorized_storage(db, disk.original_pool_uuid, cu)
             source = (
                 db.query(ImageModel)
@@ -144,7 +149,7 @@ def update_vm_power_status(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PowerStatusForUpdateDomain = None,
+        body: PowerStatusForUpdateDomain = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["vm.power"])
     get_authorized_domain(db, uuid, cu)
@@ -293,7 +298,7 @@ def update_vm_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForUpdateDomain = None
+        body: NetworkForUpdateDomain = None,  # type: ignore[assignment]
 ):
     """
     **Power off required**

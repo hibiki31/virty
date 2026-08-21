@@ -3,7 +3,7 @@ from time import time
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
-from module import virtlib
+from module.backends import create_libvirt_backend
 from node.models import NodeModel
 from storage.create import create_storage
 from task.functions import TaskBase, TaskRequest
@@ -60,7 +60,7 @@ def delete_storage_root(db: Session, model: TaskModel, req: TaskRequest):
         NodeModel.name == storage.node_name
     ).one()
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
     manager.storage_undefine(uuid)
 
     db.query(StorageModel).filter(StorageModel.uuid==uuid).delete()

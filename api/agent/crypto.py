@@ -13,13 +13,14 @@ from typing import Any
 from urllib.parse import SplitResult, urlsplit, urlunsplit
 
 import jwt
+from jwt.exceptions import InvalidKeyError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from settings import IS_DEV
 
 from .exceptions import AuthenticationError, ConflictError, ServiceUnavailableError
-from .models import AgentDeviceModel, AgentDpopReplayModel
+from .models import AgentDeviceModel, AgentDpopReplayModel, new_agent_model
 
 AGENT_AUDIENCE = "virty-agent-api"
 AGENT_ISSUER = "virty"
@@ -124,12 +125,6 @@ def jwk_thumbprint(jwk: dict[str, str]) -> str:
         ) from exc
     canonical = {key: jwk[key] for key in sorted(required)}
     return base64url_encode(hashlib.sha256(canonical_json(canonical)).digest())
-
-
-try:
-    from jwt.exceptions import InvalidKeyError
-except ImportError:  # pragma: no cover - 対応PyJWTには常に存在する
-    InvalidKeyError = ValueError
 
 
 def pairing_code() -> str:
@@ -298,7 +293,8 @@ def _consume_dpop_replay(
             replay_db.query(AgentDpopReplayModel).filter(
                 AgentDpopReplayModel.expires_at <= now,
             ).delete(synchronize_session=False)
-            replay_db.add(AgentDpopReplayModel(
+            replay_db.add(new_agent_model(
+                AgentDpopReplayModel,
                 device_id=device_id,
                 jti=jti,
                 seen_at=now,

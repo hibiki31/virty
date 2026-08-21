@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, relationship
 
 from mixin.database import Base
+
+if TYPE_CHECKING:
+    from project.models import ProjectModel
 
 association_users_to_projects = Table('users_to_projects', Base.metadata,
     Column('user_id', String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE')),
@@ -11,8 +16,8 @@ association_users_to_projects = Table('users_to_projects', Base.metadata,
 
 class UserModel(Base):
     __tablename__ = "users"
-    username = Column(String, primary_key=True, index=True)
-    hashed_password = Column(String)
+    username: Mapped[str] = Column(String, primary_key=True, index=True)
+    hashed_password: Mapped[str] = Column(String)
     
     scopes: Mapped[list["UserScopeModel"]] = relationship(
         "UserScopeModel",
@@ -28,16 +33,22 @@ class UserModel(Base):
         lazy="selectin",
     )
 
-    projects = relationship("ProjectModel", secondary=association_users_to_projects, back_populates="users", lazy=False, viewonly=True)
+    projects: Mapped[list["ProjectModel"]] = relationship(
+        "ProjectModel",
+        secondary=association_users_to_projects,
+        back_populates="users",
+        lazy=False,
+        viewonly=True,
+    )
 
 
 class UserScopeModel(Base):
     __tablename__ = "users_scope"
-    user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    name = Column(String, primary_key=True)
+    user_id: Mapped[str] = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    name: Mapped[str] = Column(String, primary_key=True)
 
 class UserPublickeyModel(Base):
     __tablename__ = "users_publickey"
-    user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
-    name = Column(String, primary_key=True)
-    publickey = Column(String)
+    user_id: Mapped[str] = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    name: Mapped[str] = Column(String, primary_key=True)
+    publickey: Mapped[str] = Column(String)

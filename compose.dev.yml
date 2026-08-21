@@ -1,0 +1,644 @@
+# devctlは常にcanonical workspace pathのSHA由来project名を明示する。
+# Dev Containersは各configのinitializeCommandが同じSHAを.envへ書き込む。
+name: ${VIRTY_DEVCONTAINER_PROJECT:-virty-workspace}
+
+x-api-development-build: &api-development-build
+  context: ./api
+  target: development
+
+x-api-check-build: &api-check-build
+  context: ./api
+  target: check
+
+x-api-production-build: &api-production-build
+  context: ./api
+  target: production
+
+x-web-development-build: &web-development-build
+  context: ./vue
+  target: development
+
+x-web-check-build: &web-check-build
+  context: ./vue
+  target: check
+
+x-web-production-build: &web-production-build
+  context: ./vue
+  target: production
+
+x-mcp-development-build: &mcp-development-build
+  context: .
+  dockerfile: virty_mcp/Dockerfile
+  target: development
+
+x-mcp-check-build: &mcp-check-build
+  context: .
+  dockerfile: virty_mcp/Dockerfile
+  target: check
+
+x-api-dev-environment: &api-dev-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: http://localhost:8000
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: http://localhost:3000
+  AGENT_WEBAUTHN_RP_ID: localhost
+  HOME: /tmp/virty-home
+  IS_DEV: "true"
+  LOG_MODE: TEXT
+  PYTHONPATH: /workspace/api
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db:5432/virty_dev
+
+x-api-test-environment: &api-test-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: https://virty.test
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: https://virty.test
+  AGENT_WEBAUTHN_RP_ID: virty.test
+  IS_DEV: "true"
+  LOG_MODE: TEXT
+  PYTHONPATH: /workspace/api
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db-test:5432/virty_test
+  VIRTY_BACKEND_MODE: fake
+  VIRTY_TESTING: "1"
+
+x-infra-test-environment: &infra-test-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: https://virty.test
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: https://virty.test
+  AGENT_WEBAUTHN_RP_ID: virty.test
+  HOME: /tmp/virty-home
+  IS_DEV: "true"
+  LOG_MODE: TEXT
+  PYTHONPATH: /workspace/api
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@infra-db:5432/virty_test
+  VIRTY_INFRA_CONFIG: /run/secrets/infra-config.json
+  VIRTY_INFRA_CLEANUP_MARKER: /workspace/api/data/infra-cleanup-armed
+  VIRTY_TESTING: "1"
+  VIRTY_TEST_RUN_ID: ${VIRTY_TEST_RUN_ID:-unset}
+
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+  interval: 2s
+  timeout: 3s
+  retries: 30
+  start_period: 5s
+
+services:
+  db:
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
+    profiles: [dev]
+    environment:
+      POSTGRES_DB: virty_dev
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
+      POSTGRES_USER: postgres
+    healthcheck: *postgres-healthcheck
+    volumes:
+      - db-data:/var/lib/postgresql
+
+  api-volume-init:
+    build: *api-development-build
+    profiles: [dev]
+    user: "0:0"
+    command:
+      - bash
+      - -ceu
+      - |
+        touch /workspace/api/data/.virty-volume-initialized \
+          /tmp/virty-home/.ssh/.virty-volume-initialized
+        chown -R "$${VIRTY_RUNTIME_UID}:$${VIRTY_RUNTIME_GID}" \
+          /workspace/api/data /tmp/virty-home/.ssh
+        chmod 0755 /workspace/api/data
+        chmod 0700 /tmp/virty-home/.ssh
+    environment:
+      VIRTY_RUNTIME_GID: ${VIRTY_HOST_GID:-1000}
+      VIRTY_RUNTIME_UID: ${VIRTY_HOST_UID:-1000}
+    volumes:
+      - api-data:/workspace/api/data
+      - api-ssh:/tmp/virty-home/.ssh
+
+  migrate:
+    build: *api-development-build
+    profiles: [dev]
+    working_dir: /workspace/api
+    command: ["alembic", "upgrade", "head"]
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    environment: *api-dev-environment
+    volumes:
+      - ./api:/workspace/api
+      - api-data:/workspace/api/data
+    depends_on:
+      api-volume-init:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+
+  api:
+    build: *api-development-build
+    profiles: [dev]
+    working_dir: /workspace/api
+    command:
+      - uvicorn
+      - main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+    environment: *api-dev-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - api-data:/workspace/api/data
+      - api-ssh:/tmp/virty-home/.ssh
+    ports:
+      - target: 8000
+        published: "0"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/version', timeout=2)
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    build: *api-development-build
+    profiles: [dev]
+    working_dir: /workspace/api
+    command: ["python", "worker.py"]
+    environment: *api-dev-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - api-data:/workspace/api/data
+      - api-ssh:/tmp/virty-home/.ssh
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web-volume-init:
+    build: *web-development-build
+    profiles: [dev]
+    user: "0:0"
+    command:
+      - bash
+      - -ceu
+      - |
+        chown -R "$${VIRTY_RUNTIME_UID}:$${VIRTY_RUNTIME_GID}" \
+          /workspace/vue/node_modules
+    environment:
+      VIRTY_RUNTIME_GID: ${VIRTY_HOST_GID:-1000}
+      VIRTY_RUNTIME_UID: ${VIRTY_HOST_UID:-1000}
+    volumes:
+      - web-node-modules:/workspace/vue/node_modules
+
+  web:
+    build: *web-development-build
+    profiles: [dev]
+    working_dir: /workspace/vue
+    command: ["pnpm", "dev", "--host", "0.0.0.0", "--port", "3000"]
+    environment:
+      HOME: /tmp/virty-web-home
+      VITE_API_BASE_URL: ""
+      VITE_DEV_API_PROXY_TARGET: http://api:8000
+      VITE_DEV_NOVNC_PROXY_TARGET: http://proxy:5999
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./vue:/workspace/vue
+      - web-node-modules:/workspace/vue/node_modules
+    ports:
+      - target: 3000
+        published: "0"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      api:
+        condition: service_healthy
+      proxy:
+        condition: service_started
+      web-volume-init:
+        condition: service_completed_successfully
+
+  proxy:
+    build:
+      context: ./proxy
+    profiles: [dev]
+    command:
+      - websockify
+      - --web
+      - /usr/share/novnc/
+      - --token-plugin
+      - JSONTokenApi
+      - --token-source
+      - http://api:8000/api/vms/vnc/%s
+      - "5999"
+    ports:
+      - target: 5999
+        published: "0"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      api:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4:9.4@sha256:6b1c0db09695758c72abcd5160b7c4cc6d0847ab0c90a2403bdbf951f0defb5a
+    profiles: [tools]
+    environment:
+      PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: "['local']"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_DEFAULT_EMAIL: virty-dev@example.local
+      PGADMIN_DEFAULT_PASSWORD: ${VIRTY_DEV_PGADMIN_PASSWORD:?VIRTY_DEV_PGADMIN_PASSWORD is required}
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./api/.devcontainer/config/servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - target: 80
+        published: "0"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api-quick:
+    build: *api-check-build
+    profiles: [quick]
+    working_dir: /workspace/api
+    command:
+      - bash
+      - -lc
+      - ruff check . && mypy && pytest -o cache_dir=/cache/pytest tests/unit
+    environment:
+      AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+      AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+      IS_DEV: "true"
+      LOG_MODE: TEXT
+      MYPY_CACHE_DIR: /cache/mypy
+      PYTHONPATH: /workspace/api
+      RUFF_CACHE_DIR: /cache/ruff
+      SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+    network_mode: none
+    volumes:
+      - api-quick-cache:/cache
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+
+  web-quick:
+    build: *web-development-build
+    profiles: [quick]
+    working_dir: /workspace/vue
+    command: ["pnpm", "run", "check:quick"]
+    network_mode: none
+    volumes:
+      - web-quick-cache:/workspace/vue/node_modules/.tmp
+
+  mcp-quick:
+    build: *mcp-development-build
+    profiles: [quick]
+    working_dir: /workspace/virty/virty_mcp
+    command: ["bash", "-lc", "ruff check . && pytest"]
+    network_mode: none
+
+  api-openapi:
+    build: *api-development-build
+    profiles: [quick]
+    working_dir: /workspace/api
+    command:
+      - python
+      - -c
+      - |
+        import json
+        from main import app
+        print(json.dumps(app.openapi(), ensure_ascii=False, indent=2))
+    environment:
+      IS_DEV: "true"
+      LOG_MODE: TEXT
+      PYTHONPATH: /workspace/api
+      SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+    network_mode: none
+    volumes:
+      - ./api:/workspace/api
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+
+  web-openapi-types:
+    build: *web-development-build
+    profiles: [quick]
+    working_dir: /workspace/vue
+    command:
+      - pnpm
+      - exec
+      - openapi-typescript
+      - /generated/openapi.json
+      - -o
+      - /generated/openapi.d.ts
+    network_mode: none
+    volumes:
+      - ${VIRTY_GENERATED_DIR:-/tmp}:/generated
+
+  web-types:
+    build: *web-development-build
+    profiles: [quick]
+    working_dir: /workspace/vue
+    command:
+      - bash
+      - -euc
+      - |
+        pnpm run generate:web-types
+        cp src/auto-imports.d.ts src/components.d.ts src/typed-router.d.ts /generated/
+    network_mode: none
+    volumes:
+      - ${VIRTY_GENERATED_DIR:-/tmp}:/generated
+
+  db-test:
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
+    profiles: [verify]
+    environment:
+      POSTGRES_DB: virty_test
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
+      POSTGRES_USER: postgres
+    healthcheck: *postgres-healthcheck
+    networks: [verify-internal]
+    tmpfs:
+      - /var/lib/postgresql
+
+  api-migrate-verify:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-test-environment
+    networks: [verify-internal]
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+    depends_on:
+      db-test:
+        condition: service_healthy
+
+  openapi-schema-verify:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command:
+      - python
+      - -c
+      - |
+        import json
+        from pathlib import Path
+        from main import app
+
+        Path("/generated/openapi.json").write_text(
+            json.dumps(app.openapi(), ensure_ascii=False),
+            encoding="utf-8",
+        )
+    environment: *api-test-environment
+    networks: [verify-internal]
+    volumes:
+      - openapi-contract:/generated
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+
+  openapi-contract-verify:
+    build: *web-development-build
+    profiles: [verify]
+    working_dir: /workspace/vue
+    command:
+      - bash
+      - -euc
+      - |
+        pnpm exec openapi-typescript /generated/openapi.json -o /tmp/openapi.d.ts
+        if ! cmp -s src/api/openapi.d.ts /tmp/openapi.d.ts; then
+          echo "OpenAPI生成型が古くなっています。devctl generate openapi を実行してください。" >&2
+          diff -u src/api/openapi.d.ts /tmp/openapi.d.ts || true
+          exit 1
+        fi
+    networks: [verify-internal]
+    volumes:
+      - openapi-contract:/generated:ro
+    depends_on:
+      openapi-schema-verify:
+        condition: service_completed_successfully
+
+  api-worker-verify:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command: ["python", "worker.py"]
+    environment:
+      <<: *api-test-environment
+      VIRTY_WORKER_READY_FILE: /tmp/virty-worker-ready
+    networks: [verify-internal]
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/virty-worker-ready"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+      start_period: 2s
+    depends_on:
+      api-migrate-verify:
+        condition: service_completed_successfully
+
+  api-verify:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command:
+      - bash
+      - -lc
+      - ruff check . && mypy && pytest tests/unit tests/integration
+    environment: *api-test-environment
+    networks: [verify-internal]
+    tmpfs:
+      - /workspace/api/data:uid=1000,gid=1000,mode=0755
+    depends_on:
+      api-worker-verify:
+        condition: service_healthy
+
+  api-production-verify:
+    build: *api-production-build
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  web-verify:
+    build: *web-check-build
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  web-production-verify:
+    build: *web-production-build
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  proxy-production-verify:
+    build:
+      context: ./proxy
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  mcp-verify:
+    build: *mcp-check-build
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  infra-preflight:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command:
+      - python
+      - -c
+      - |
+        from pathlib import Path
+
+        from tests.external.conftest import EnvConfig, validate_infra_config
+
+        path = "/run/secrets/infra-config.json"
+        try:
+            config = EnvConfig.model_validate_json(Path(path).read_text(encoding="utf-8"))
+            validate_infra_config(config)
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"infra設定を読み込めません: {exc}") from exc
+        print(config.lab_id)
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+
+  infra-db:
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
+    profiles: [external]
+    environment:
+      POSTGRES_DB: virty_test
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
+      POSTGRES_USER: postgres
+    healthcheck: *postgres-healthcheck
+    tmpfs:
+      - /var/lib/postgresql
+
+  infra-volume-init:
+    build: *api-development-build
+    profiles: [external]
+    user: "0:0"
+    command:
+      - bash
+      - -ceu
+      - |
+        touch /workspace/api/data/.virty-volume-initialized \
+          /tmp/virty-home/.ssh/.virty-volume-initialized
+        chown -R "$${VIRTY_RUNTIME_UID}:$${VIRTY_RUNTIME_GID}" \
+          /workspace/api/data /tmp/virty-home/.ssh
+        chmod 0755 /workspace/api/data
+        chmod 0700 /tmp/virty-home/.ssh
+    environment:
+      VIRTY_RUNTIME_GID: ${VIRTY_HOST_GID:-1000}
+      VIRTY_RUNTIME_UID: ${VIRTY_HOST_UID:-1000}
+    volumes:
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+
+  infra-migrate:
+    build: *api-development-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["alembic", "upgrade", "head"]
+    environment: *infra-test-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+    depends_on:
+      infra-preflight:
+        condition: service_completed_successfully
+      infra-db:
+        condition: service_healthy
+      infra-volume-init:
+        condition: service_completed_successfully
+
+  infra-worker:
+    build: *api-development-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["python", "worker.py"]
+    environment:
+      <<: *infra-test-environment
+      VIRTY_WORKER_READY_FILE: /tmp/virty-worker-ready
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+    depends_on:
+      infra-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/virty-worker-ready"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+      start_period: 2s
+
+  infra-test:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["pytest", "tests/external"]
+    environment: *infra-test-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+    depends_on:
+      infra-worker:
+        condition: service_healthy
+
+  infra-cleanup:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["python", "-m", "tests.external.cleanup"]
+    environment: *infra-test-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+
+volumes:
+  api-data:
+  api-quick-cache:
+  api-ssh:
+  db-data:
+  infra-data:
+  infra-ssh:
+  openapi-contract:
+  pgadmin-data:
+  web-node-modules:
+  web-quick-cache:
+
+networks:
+  verify-internal:
+    internal: true

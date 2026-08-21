@@ -38,7 +38,7 @@ def create_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForCreate = None
+        body: NetworkForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["network.manage"])
     require_admin(cu)
@@ -60,7 +60,7 @@ def create_network_ovs(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkOVSForCreate = None
+        body: NetworkOVSForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["network.manage"])
     get_authorized_network(db, uuid, cu)
@@ -80,7 +80,7 @@ def create_network_providers(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkProviderForCreate = None
+        body: NetworkProviderForCreate = None,  # type: ignore[assignment]
 ):
     cu.verify_scope(["network.manage"])
     require_admin(cu)

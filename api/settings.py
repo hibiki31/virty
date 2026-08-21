@@ -6,10 +6,10 @@ SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql://pos
 IS_DEV = os.getenv('IS_DEV', '').lower() in {'1', 'true', 'yes'}
 APP_ROOT = str(pathlib.Path('./').resolve()) if IS_DEV else "/opt/app"
 DATA_ROOT = str(pathlib.Path('./data').resolve()) if IS_DEV else "/opt/data"
-SECRET_KEY = 'DEV_KEY' if IS_DEV else os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
-    raise RuntimeError('本番環境ではSECRET_KEYの設定が必要です')
-if not IS_DEV and len(SECRET_KEY) < 32:
+    raise RuntimeError('SECRET_KEYの設定が必要です')
+if len(SECRET_KEY) < 32:
     raise RuntimeError('SECRET_KEYは32文字以上で設定してください')
 LOG_MODE = os.getenv('LOG_MODE', "TEXT")
 JWT_ISSUER = os.getenv('JWT_ISSUER', 'virty')

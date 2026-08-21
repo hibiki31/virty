@@ -17,7 +17,7 @@
               <v-card prepend-icon="mdi-cube-outline" title="Spec">
                 <v-table class="text-caption" density="compact">
                   <tbody align="right">
-                    <tr v-for="item in getSpecList()">
+                    <tr v-for="item in getSpecList()" :key="item.title">
                       <th>{{ item.title }}</th>
                       <td>{{ item.value }}</td>
                     </tr>
@@ -29,13 +29,13 @@
 
           <v-row>
             <v-col cols="12" lg="6">
-              <div v-for="item in getInfoListL()">
+              <div v-for="item in getInfoListL()" :key="item.title">
                 <p class="text-h6 pt-3">{{ item.title }}</p>
                 <code-feild :text="item.value" type='Plaintext' :loading="!item.value"></code-feild>
               </div>
             </v-col>
             <v-col cols="12" lg="6">
-              <div v-for="item in getInfoListR()">
+              <div v-for="item in getInfoListR()" :key="item.title">
                 <p class="text-h6 pt-3">{{ item.title }}</p>
                 <code-feild :text="item.value" type='Plaintext' :loading="!item.value"></code-feild>
               </div>
@@ -48,10 +48,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
 import type { paths } from '@/api/openapi'
-const router = useRouter()
 const route = useRoute()
 import { getNodeStatusColor } from '@/composables/nodes'
 
@@ -60,8 +59,6 @@ type typeNodeInfo = paths['/api/nodes/{name}/info']['get']['responses']['200']['
 
 const data = ref<typeNode>()
 const dataInfo = ref<typeNodeInfo>()
-
-const stateDeleteDialog = ref(false)
 
 function reload() {
   if ('name' in route.params) {

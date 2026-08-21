@@ -1,5 +1,5 @@
 import { useNotification } from "@kyvg/vue3-notification";
-import type { paths, components } from "@/api/openapi";
+import type { components } from "@/api/openapi";
 
 const { notify: baseNotify } = useNotification();
 

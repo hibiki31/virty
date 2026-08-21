@@ -1,5 +1,9 @@
 # バージョン履歴
 
+!!! warning "履歴資料"
+    このpageのcommand、path、private addressは過去versionを再現した記録であり、現行の開発手順ではない。
+    現行sourceの開発・検証にはrepositoryの`docs/development.md`と`./devctl`を使う。
+
 ## v0.0.8
 
 <img width="1628" alt="スクリーンショット 2025-06-22 15 02 51" src="https://github.com/user-attachments/assets/87779a6d-71e2-4dc6-843b-8eac3c000b89" />

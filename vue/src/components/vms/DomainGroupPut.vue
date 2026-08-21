@@ -29,6 +29,7 @@ import axios from '@/axios/index';
 
 export default {
   name: 'GroupAddDialog',
+  emits: ['reload'],
   data: function() {
     return {
       requestData: {
@@ -57,7 +58,7 @@ export default {
         url: '/api/vms/project',
         data: this.requestData
       })
-        .then(res => {
+        .then(() => {
           this.$_pushNotice('Add successful', 'success');
           this.submitting = false;
           this.$emit('reload');

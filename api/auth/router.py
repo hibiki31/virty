@@ -29,6 +29,11 @@ from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 
 logger = setup_logger(__name__)
 
+if SECRET_KEY is None:
+    # settingsでも検査するが、JWT libraryへ渡す型をこの境界で確定する。
+    raise RuntimeError("JWT署名鍵が設定されていません")
+JWT_SECRET_KEY: str = SECRET_KEY
+
 
 app = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -144,7 +149,7 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta) -> str:
         "iss": JWT_ISSUER,
         "jti": str(uuid4()),
     })
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -162,12 +167,12 @@ def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            SECRET_KEY,
+            JWT_SECRET_KEY,
             algorithms=[ALGORITHM],
             audience=JWT_AUDIENCE,
             issuer=JWT_ISSUER,
         )
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
         token_scopes = payload.get("scopes", [])
         token_projects = payload.get("projects", [])
         if (

@@ -96,7 +96,11 @@ def test_provider_network_uses_request_body_and_each_worker_role_extra(
             return "<network/>"
 
     monkeypatch.setattr(tasks, "randint", lambda *_: 0x123456)
-    monkeypatch.setattr(tasks.virtlib, "VirtManager", _VirtManager)
+    monkeypatch.setattr(
+        tasks,
+        "create_libvirt_backend",
+        lambda *, node_model: _VirtManager(node_model=node_model),
+    )
     monkeypatch.setattr(tasks.xmllib, "XmlEditor", _XmlEditor)
     def post(*, url: str, json: dict[str, Any], timeout: float) -> httpx.Response:
         posts.append((url, json, timeout))
@@ -198,7 +202,11 @@ def test_provider_network_rejects_failed_internal_http_response(
         return httpx.Response(500, request=httpx.Request("POST", url))
 
     monkeypatch.setattr(tasks, "randint", lambda *_: 0x123456)
-    monkeypatch.setattr(tasks.virtlib, "VirtManager", _VirtManager)
+    monkeypatch.setattr(
+        tasks,
+        "create_libvirt_backend",
+        lambda *, node_model: _VirtManager(node_model=node_model),
+    )
     monkeypatch.setattr(tasks.xmllib, "XmlEditor", _XmlEditor)
     monkeypatch.setattr(tasks.httpx, "post", post)
 

@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
-from module import virtlib, xmllib
+from module import xmllib
+from module.backends import create_libvirt_backend
+from module.virtlib import LibvirtPortNotfound
 from network.create import create_network
 from node.models import NodeModel
 from task.functions import TaskBase, TaskRequest
@@ -35,7 +37,7 @@ def put_network_list(db: Session, model: TaskModel, req: TaskRequest):
         if node.status != 10:
             continue
 
-        manager = virtlib.VirtManager(node_model=node)
+        manager = create_libvirt_backend(node_model=node)
 
         for network in manager.network_data():
             merge_model = NetworkModel(
@@ -52,15 +54,15 @@ def put_network_list(db: Session, model: TaskModel, req: TaskRequest):
                     network_uuid = network.uuid, 
                     update_token=token,
                     name=port.name,
-                    vlan_id=port.vlan_id,
                     is_default=port.is_default
                 )
+                port_model.vlan_id = port.vlan_id
                 db.merge(port_model)
             db.commit()
         db.query(NetworkPortgroupModel).filter(
-            NetworkPortgroupModel.network_uuid==network.uuid, 
+            NetworkPortgroupModel.network.has(NetworkModel.node_name == node.name),
             NetworkPortgroupModel.update_token!=token
-        ).delete()
+        ).delete(synchronize_session=False)
         db.query(NetworkModel).filter(
             NetworkModel.node_name==node.name,
             NetworkModel.update_token!=token
@@ -101,7 +103,7 @@ def delete_network_root(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
     manager.network_undefine(uuid)    
 
 
@@ -120,8 +122,10 @@ def post_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
 
-    manager = virtlib.VirtManager(node_model=node)
-    manager.network_ovs_add(uuid=network.uuid, name=body.name, vlan=body.vlan_id)
+    manager = create_libvirt_backend(node_model=node)
+    if body.vlan_id is None:
+        raise ValueError("vlan_id is required")
+    manager.network_ovs_add(uuid=str(network.uuid), name=body.name, vlan=body.vlan_id)
     
 
 @worker_task(key="delete.network.ovs")
@@ -142,10 +146,10 @@ def delete_network_ovs(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("node not found")
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
     try:
-        manager.network_ovs_delete(uuid=network.uuid, name=ovs_name)
-    except virtlib.LibvirtPortNotfound:
+        manager.network_ovs_delete(uuid=str(network.uuid), name=ovs_name)
+    except LibvirtPortNotfound:
         pass
     
     model.message = "Port is already deleted"
@@ -160,7 +164,9 @@ def post_network_vxlan_internal(db: Session, model: TaskModel, req: TaskRequest)
     nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
 
     for node in nodes:
-        logger.info(node.extra_json)
+        logger.info([
+            role.extra_json for role in node.roles if role.role_name == "ovs"
+        ])
 
     # manager = OVSManager(node_model=db.query(NodeModel).first())
     # manager.ovs_crean()
@@ -199,7 +205,7 @@ def post_network_provider(
     xml = editor.dump_str()
    
     # ソイや！
-    manager = virtlib.VirtManager(node_model=network_node)
+    manager = create_libvirt_backend(node_model=network_node)
     manager.network_define(xml_str=xml)
 
     
@@ -210,7 +216,6 @@ def post_network_provider(
     for node in nodes:
         if node.name == body.network_node:
             continue
-        node: NodeModel
         node_extra = next(
             role.extra_json
             for role in node.roles
@@ -244,7 +249,7 @@ def post_network_provider(
         editor.network_internal(name=f'vbr-{net_id}')
         xml = editor.dump_str()
     
-        manager = virtlib.VirtManager(node_model=node)
+        manager = create_libvirt_backend(node_model=node)
         manager.network_define(xml_str=xml)
         req_data = {
             "vni": vni,

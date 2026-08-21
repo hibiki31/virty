@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from mixin.log import setup_logger
-from module import cloudinitlib, virtlib, xmllib
-from module.ansiblelib import AnsibleManager
+from module import cloudinitlib, xmllib
+from module.backends import create_ansible_backend, create_libvirt_backend
 from network.models import (
     NetworkModel,
 )
@@ -23,8 +23,6 @@ from .models import DomainDriveModel, DomainInterfaceModel, DomainModel
 from .schemas import (
     CdromForUpdateDomain,
     DomainForCreate,
-    DomainForCreateDisk,
-    DomainForCreateInterface,
     NetworkForUpdateDomain,
     PowerStatusForUpdateDomain,
 )
@@ -36,14 +34,14 @@ logger = setup_logger(__name__)
 
 @worker_task(key="put.vm.list")
 def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
-    nodes:NodeModel = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
+    nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="libvirt"))
     token = str(time())
 
     for node in nodes:
         if node.status != 10:
             continue
         try:
-            manager = virtlib.VirtManager(node_model=node)
+            manager = create_libvirt_backend(node_model=node)
         except Exception as e:
             logger.error(f'{e}')
             continue
@@ -62,19 +60,23 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
             )
             
             row = DomainModel(
-                uuid = temp.uuid,
-                name = re.sub(r'(.*)@.*',r'\1', temp.name),
-                core = temp.vcpu,
-                memory = temp.memory,
-                status = domain['status'],
-                node_name = node.name,
-                update_token = token,
-                vnc_port = temp.vnc_port,
-                description=existing.description if existing is not None else None,
-                owner_user_id=existing.owner_user_id if existing is not None else None,
-                owner_project_id=(
-                    existing.owner_project_id if existing is not None else None
-                ),
+                uuid=temp.uuid,
+                name=re.sub(r"(.*)@.*", r"\1", temp.name),
+                core=temp.vcpu,
+                memory=temp.memory,
+                status=domain["status"],
+                node_name=node.name,
+                update_token=token,
+            )
+            row.vnc_port = (
+                str(temp.vnc_port) if temp.vnc_port is not None else None
+            )
+            row.description = existing.description if existing is not None else None
+            row.owner_user_id = (
+                existing.owner_user_id if existing is not None else None
+            )
+            row.owner_project_id = (
+                existing.owner_project_id if existing is not None else None
             )
             for interface in temp.interface:
                 row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
@@ -100,17 +102,18 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
 
 @worker_task(key="post.vm.root")
 def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
+    body: DomainForCreate
     if is_agent_task(model):
         from agent.input_models import AgentDomainForCreate
 
-        req = AgentDomainForCreate.model_validate(req.body)
+        body = AgentDomainForCreate.model_validate(req.body)
     else:
-        req = DomainForCreate.model_validate(req.body)
+        body = DomainForCreate.model_validate(req.body)
 
-    if req.type != "manual":
+    if body.type != "manual":
         raise ValueError("このendpointではmanual作成だけを利用できます")
 
-    owner_project_id = getattr(req, "project_id", None)
+    owner_project_id = getattr(body, "project_id", None)
     if is_agent_task(model):
         from project.models import ProjectModel
 
@@ -118,16 +121,16 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
             raise ValueError("VM owner projectがありません")
 
     # データベースから情報とってきて確認も行う
-    domains = db.query(DomainModel).filter(DomainModel.name==req.name).all()
+    domains = db.query(DomainModel).filter(DomainModel.name==body.name).all()
     if domains != []:
         raise Exception("domain name is duplicated")
     
     try:
-        node = db.query(NodeModel).filter(NodeModel.name==req.node_name).one()
+        node = db.query(NodeModel).filter(NodeModel.name==body.node_name).one()
     except NoResultFound:
         raise Exception("node not found")
 
-    ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
+    ansible_manager = create_ansible_backend(user=node.user_name, domain=node.domain)
 
     # XMLのベース読み込んで編集開始
     editor = xmllib.XmlEditor("static","domain_base")
@@ -136,55 +139,54 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
     editor.domain_emulator_edit(node.os_like)
     editor.domain_base_edit(
-        domain_name=f'{req.name}@{model.user_id}#{domain_uuid}',
-        memory_mega_byte=req.memory_mega_byte,
-        core=req.cpu,
+        domain_name=f'{body.name}@{model.user_id}#{domain_uuid}',
+        memory_mega_byte=body.memory_mega_byte,
+        core=body.cpu,
         vnc_port=0,
     )
     
     # ネットワークインターフェイス
-    for interface in req.interface:
+    for interface_model in body.interface:
         net = db.query(NetworkModel).filter(
-            NetworkModel.uuid==interface.network_uuid
+            NetworkModel.uuid==interface_model.network_uuid
             ).one()
         if net.node_name != node.name:
             raise Exception("request network belongs to another node")
 
-        interface: DomainForCreateInterface
         editor.domain_interface_add(
-            network_name=net.name, 
+            network_name=str(net.name),
             mac_address=None, 
-            port=interface.port
+            port=interface_model.port
         )
 
     img_device_names = ["vda","vdb","vdc"]
     
     # ブロックデバイス
-    for device, device_name in zip(req.disks, img_device_names):
-        device: DomainForCreateDisk
-
+    for device_model, device_name in zip(body.disks, img_device_names):
         try:
             new_pool = db.query(StorageModel).filter(
-                StorageModel.uuid==device.save_pool_uuid
+                StorageModel.uuid==device_model.save_pool_uuid
                 ).one()
         except NoResultFound:
             raise Exception("request storage pool uuid not found")
         if new_pool.node_name != node.name:
             raise Exception("request destination storage belongs to another node")
 
-        create_image_path = f'{new_pool.path}/{model.user_id}_{req.name}_{device_name}_{domain_uuid}.img'
+        create_image_path = f'{new_pool.path}/{model.user_id}_{body.name}_{device_name}_{domain_uuid}.img'
         editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
 
 
-        if device.type == "empty":
-            ex_vars = {"path": create_image_path,  "size": f"{device.size_giga_byte}G"}
+        if device_model.type == "empty":
+            ex_vars = {"path": create_image_path,  "size": f"{device_model.size_giga_byte}G"}
             ansible_manager.run(playbook_name="vms/qemu_image_create", extravars=ex_vars)
 
-        elif device.type == "copy":
+        elif device_model.type == "copy":
+            if device_model.original_name is None:
+                raise ValueError("copy diskにはoriginal_nameが必要です")
             try:
                 source_image = db.query(ImageModel).filter(
-                    ImageModel.storage_uuid == device.original_pool_uuid,
-                    ImageModel.name == device.original_name,
+                    ImageModel.storage_uuid == device_model.original_pool_uuid,
+                    ImageModel.name == device_model.original_name,
                 ).one()
             except NoResultFound:
                 raise Exception("request source image not found")
@@ -200,14 +202,14 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
             ansible_manager.run(playbook_name="commom/copy_node_internal", extravars=ex_vars)
             
             logger.info(f'{create_image_path}のサイズを変更します')
-            ex_vars = {"path": create_image_path,  "size": f"{device.size_giga_byte}G"}
+            ex_vars = {"path": create_image_path,  "size": f"{device_model.size_giga_byte}G"}
             ansible_manager.run(playbook_name="vms/qemu_image_resize", extravars=ex_vars)
 
     # Cloud-init
-    if req.cloud_init is not None:
-        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,req.cloud_init.hostname)
+    if body.cloud_init is not None:
+        cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,body.cloud_init.hostname)
         try:
-            cloudinit_manager.custom_user_data(req.cloud_init.userData)
+            cloudinit_manager.custom_user_data(body.cloud_init.userData)
             iso_path = cloudinit_manager.make_iso()
 
             # /var/virtyで固定
@@ -226,25 +228,24 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
 
     # ノードに接続してlibvirtでXMLを登録
-    node = virtlib.VirtManager(node_model=node)
-    node.domain_define(xml_str=editor.dump_str())
+    libvirt_backend = create_libvirt_backend(node_model=node)
+    libvirt_backend.domain_define(xml_str=editor.dump_str())
 
     # 後続inventory refreshでも所有者を失わないよう、定義直後にmetadataを残す。
-    db.merge(
-        DomainModel(
-            uuid=domain_uuid,
-            name=req.name,
-            core=req.cpu,
-            memory=req.memory_mega_byte,
-            status=5,
-            node_name=req.node_name,
-            owner_user_id=model.user_id,
-            owner_project_id=owner_project_id,
-            vnc_port=0,
-        )
+    created_domain = DomainModel(
+        uuid=domain_uuid,
+        name=body.name,
+        core=body.cpu,
+        memory=body.memory_mega_byte,
+        status=5,
+        node_name=body.node_name,
     )
+    created_domain.owner_user_id = model.user_id
+    created_domain.owner_project_id = owner_project_id
+    created_domain.vnc_port = "0"
+    db.merge(created_domain)
 
-    model.message = f"Virtual machine ({req.name}@{model.user_id}) has been added successfully"
+    model.message = f"Virtual machine ({body.name}@{model.user_id}) has been added successfully"
 
 
 @worker_task(key="delete.vm.root")
@@ -253,7 +254,7 @@ def delete_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
     domain, node = get_domain(db=db, uuid=uuid)
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
     manager.domain_destroy(uuid=uuid)
     manager.domain_undefine(uuid)
     
@@ -269,7 +270,7 @@ def patch_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
     domain, node = get_domain(db=db, uuid=uuid)
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
 
     # 電源
     if body.status == "on":
@@ -287,7 +288,7 @@ def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
 
     domain, node = get_domain(db=db, uuid=uuid)
 
-    manager = virtlib.VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
 
     if body.path is None or body.path == "":
         manager.domain_cdrom(uuid, body.target)
@@ -307,8 +308,8 @@ def patch_vm_network(db: Session, model: TaskModel, req: TaskRequest):
     except NoResultFound:
         raise Exception("Network uuid is not found")
     
-    manager = virtlib.VirtManager(node_model=node)
-    manager.domain_network(uuid=uuid, network=network.name, port=body.port, mac=body.mac)
+    manager = create_libvirt_backend(node_model=node)
+    manager.domain_network(uuid=uuid, network=str(network.name), port=body.port, mac=body.mac)
     
     
 def get_domain(db: Session, uuid):

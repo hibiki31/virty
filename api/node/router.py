@@ -15,7 +15,7 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import HTTPException
 from mixin.log import setup_logger
-from module.paramikolib import ParamikoManager
+from module.backends import create_ssh_backend
 from resource_authorization import allowed_node_names, require_admin
 
 from .models import NodeModel
@@ -196,23 +196,24 @@ def create_ssh_key_pair(
 def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    home = os.path.expanduser("~")
-    keys = {
-        "id_rsa.pub": os.path.join(home, ".ssh", "id_rsa.pub"),
-        "id_ed25519.pub": os.path.join(home, ".ssh", "id_ed25519.pub"),
-    }
-
-    pub_key_path = None
-    for path in keys.values():
-        if os.path.isfile(path):
-            pub_key_path = path
-            break
-
+    pub_key_path = next(
+        (
+            path
+            for path in (
+                SSH_DIRECTORY / "id_rsa.pub",
+                SSH_DIRECTORY / "id_ed25519.pub",
+            )
+            if path.is_file()
+        ),
+        None,
+    )
     if pub_key_path is None:
-        raise HTTPException(status_code=404, detail="SSH public key is not configured")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="SSH public key not found",
+        )
 
-    with open(pub_key_path) as f:
-        public_key = f.read()
+    public_key = pub_key_path.read_text(encoding="utf-8")
 
     return SSHPublicKey(public_key=public_key)
 
@@ -256,12 +257,16 @@ def get_node_info(
 ):
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    node:NodeModel = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
+    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
     
     if node is None:
         raise HTTPException(status_code=404, detail="Node not found")
     
-    ssh_manager = ParamikoManager(user=node.user_name, domain=node.domain, port=node.port)
+    ssh_manager = create_ssh_backend(
+        user=node.user_name,
+        domain=node.domain,
+        port=node.port,
+    )
     
     
     res = NodeInfo(

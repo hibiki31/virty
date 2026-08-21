@@ -9,21 +9,30 @@ import ssl
 import tempfile
 import urllib.request
 from pathlib import Path
-from typing import BinaryIO, Callable, List, Optional, Tuple
+from typing import BinaryIO, Callable, List, Optional, Protocol, Tuple, cast
 from urllib.parse import urlsplit, urlunsplit
 
 from ansible.module_utils.basic import AnsibleModule
 
 
+class _PinnableHTTPSConnection(Protocol):
+    _create_connection: Callable[
+        [Tuple[str, int], Optional[float], Optional[Tuple[str, int]]],
+        socket.socket,
+    ]
+
+
 def _resolved_global_addresses(hostname: str, port: int) -> List[str]:
-    addresses = {
-        result[4][0]
-        for result in socket.getaddrinfo(
-            hostname,
-            port,
-            type=socket.SOCK_STREAM,
-        )
-    }
+    addresses: set[str] = set()
+    for result in socket.getaddrinfo(
+        hostname,
+        port,
+        type=socket.SOCK_STREAM,
+    ):
+        address = result[4][0]
+        if not isinstance(address, str):
+            raise ValueError("download hostがIP address以外を返しました")
+        addresses.add(address)
     if not addresses:
         raise ValueError("download hostを名前解決できません")
     if any(not ipaddress.ip_address(value).is_global for value in addresses):
@@ -63,7 +72,7 @@ def _stream_hardened(url: str, output: BinaryIO, allowed_hosts: List[str]) -> No
             source_address=source_address,
         )
 
-    connection._create_connection = pinned_connection
+    cast(_PinnableHTTPSConnection, connection)._create_connection = pinned_connection
     request_target = urlunsplit(("", "", parsed.path or "/", parsed.query, ""))
     try:
         connection.request("GET", request_target, headers={"Accept-Encoding": "identity"})

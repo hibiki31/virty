@@ -42,6 +42,7 @@ from .models import (
     AgentLeaseRequestModel,
     AgentPairingModel,
     AgentWebAuthnCredentialModel,
+    new_agent_model,
 )
 from .policy import scope_allows
 from .schemas import ControlChangeRequest, LeaseRequest, PairingCreateRequest
@@ -87,7 +88,8 @@ class AgentIdentityService:
             )
         self._validate_catalog_scopes(request.requested_scopes)
         code = pairing_code()
-        device = AgentDeviceModel(
+        device = new_agent_model(
+            AgentDeviceModel,
             id=new_uuid(),
             principal_id=None,
             name=request.device_name,
@@ -97,7 +99,8 @@ class AgentIdentityService:
             status="pending",
             created_at=now,
         )
-        pairing = AgentPairingModel(
+        pairing = new_agent_model(
+            AgentPairingModel,
             id=new_uuid(),
             device_id=device.id,
             code_hash=pairing_code_hash(code),
@@ -356,7 +359,8 @@ class AgentIdentityService:
             principal_id=request.principal_id,
             requested_projects=request.project_ids,
         )
-        model = AgentLeaseRequestModel(
+        model = new_agent_model(
+            AgentLeaseRequestModel,
             id=new_uuid(),
             device_id=device.id,
             principal_id=request.principal_id,
@@ -489,7 +493,8 @@ class AgentIdentityService:
             issued_at=now,
             expires_at=expires_at,
         )
-        lease = AgentCapabilityLeaseModel(
+        lease = new_agent_model(
+            AgentCapabilityLeaseModel,
             id=lease_id,
             jti=jti,
             principal_id=model.principal_id,
@@ -713,7 +718,8 @@ class AgentIdentityService:
 def ensure_control(db: Session) -> AgentControlModel:
     control = db.get(AgentControlModel, 1)
     if control is None:
-        control = AgentControlModel(
+        control = new_agent_model(
+            AgentControlModel,
             id=1,
             mutations_enabled=False,
             shadow_mode=True,

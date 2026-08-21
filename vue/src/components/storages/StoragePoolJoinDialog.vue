@@ -29,6 +29,7 @@ import axios from '@/axios/index';
 
 export default {
   name: 'StoragePoolJoinDialog',
+  emits: ['reload'],
   data: function() {
     return {
       itemsPools: [],
@@ -56,7 +57,7 @@ export default {
         url: '/api/storages/pools',
         data: this.postData
       })
-        .then(res => {
+        .then(() => {
           this.$_pushNotice('Please wait for task to complete', 'success');
           this.$emit('reload');
           this.dialogState = false;

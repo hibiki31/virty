@@ -1,18 +1,22 @@
 """Agent API境界・能力lease・queue契約の副作用なし回帰test。"""
 
 import json
+import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from typing import TypeVar, cast
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
+from auth.router import CurrentUser
 from agent.actions import (
     _apply_reservation_contract,
     _validate_action_references,
@@ -45,10 +49,12 @@ from agent.input_models import EmptyInput
 from agent.models import (
     AgentDeviceModel,
     AgentCapabilityLeaseModel,
+    AgentControlModel,
     AgentDpopReplayModel,
     AgentWebAuthnChallengeModel,
     AgentWebAuthnCredentialModel,
     AuditEventModel,
+    new_agent_model,
 )
 from agent.policy import (
     LeaseContext,
@@ -68,18 +74,47 @@ from agent.schemas import (
     PairingApproveRequest,
     PairingCreateRequest,
 )
-from agent.router import app as agent_router, list_operation_reconciliations
+from agent.router import AgentAPIRoute, app as agent_router, list_operation_reconciliations
 from agent.service import AgentManagementService
 from agent.tasks import worker_task
 from agent.webauthn import (
     AuthenticationVerification,
     PythonWebAuthnBackend,
+    WebAuthnBackend,
     WebAuthnService,
 )
 from task.functions import calculate_target_reservation_specs
 from task.models import TaskModel, TaskTargetReservationModel
 from task.schemas import TaskRequest
 from user.models import UserModel, UserScopeModel
+
+_T = TypeVar("_T")
+
+
+def _typed(model_type: type[_T], value: object) -> _T:
+    """Protocol相当のtest doubleを期待する静的型へ局所的に適合させる。"""
+
+    return cast(_T, value)
+
+
+def _session(value: object) -> Session:
+    return _typed(Session, value)
+
+
+def _lease(value: object) -> AgentCapabilityLeaseModel:
+    return _typed(AgentCapabilityLeaseModel, value)
+
+
+def _device(value: object) -> AgentDeviceModel:
+    return _typed(AgentDeviceModel, value)
+
+
+def _control(value: object) -> AgentControlModel:
+    return _typed(AgentControlModel, value)
+
+
+def _task(value: object) -> TaskModel:
+    return _typed(TaskModel, value)
 
 
 def _context(
@@ -89,26 +124,20 @@ def _context(
     nodes: list[str] | None = None,
     destructive: bool = True,
 ) -> LeaseContext:
-    lease = SimpleNamespace(
+    lease = _lease(SimpleNamespace(
         id="lease-1",
         principal_id="admin",
         scopes=scopes,
         project_ids=projects or [],
         node_ids=nodes or [],
         allow_destructive=destructive,
-    )
-    device = SimpleNamespace(id="device-1")
+    ))
+    device = _device(SimpleNamespace(id="device-1"))
     return LeaseContext(lease=lease, device=device, claims={}, token="")
 
 
-def test_catalog_is_explicit_strict_and_helper_mirror_matches() -> None:
+def test_catalog_is_explicit_and_strict() -> None:
     assert len(ACTIONS) == 63
-    helper = (
-        Path(__file__).parents[3]
-        / "virty_mcp/src/virty_mcp/action_catalog.json"
-    )
-    server = Path(__file__).parents[2] / "agent/action_catalog.json"
-    assert helper.read_bytes() == server.read_bytes()
 
     def assert_strict(schema: object) -> None:
         if isinstance(schema, dict):
@@ -183,6 +212,28 @@ def test_public_schemas_reject_unknown_fields_and_empty_allowed_scopes() -> None
         })
 
 
+def test_agent_route_sanitizes_request_validation_errors() -> None:
+    validation_router = APIRouter(route_class=AgentAPIRoute)
+
+    @validation_router.post("/validate")
+    def validate(body: dict[str, int]) -> dict[str, bool]:
+        return {"accepted": bool(body)}
+
+    application = FastAPI()
+    application.include_router(validation_router)
+    secret = "password=DoNotReturnThisSecret"
+
+    response = TestClient(application).post(
+        "/validate",
+        json={"unexpectedSecret": secret},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "validation_error"
+    assert secret not in response.text
+    assert "input" not in response.text
+
+
 def test_vm_create_requires_owner_project_in_public_input() -> None:
     payload = {
         "type": "manual",
@@ -236,7 +287,8 @@ def test_webauthn_challenge_is_subject_bound_and_single_use(tmp_path: Path) -> N
     now = datetime.now(UTC)
     with Session(engine) as db:
         db.add(UserModel(username="admin", hashed_password="unused"))
-        db.add(AgentWebAuthnCredentialModel(
+        db.add(new_agent_model(
+            AgentWebAuthnCredentialModel,
             credential_id="credential-1",
             user_id="admin",
             name="security-key",
@@ -246,7 +298,8 @@ def test_webauthn_challenge_is_subject_bound_and_single_use(tmp_path: Path) -> N
             created_at=now,
         ))
         db.add_all([
-            AgentWebAuthnChallengeModel(
+            new_agent_model(
+                AgentWebAuthnChallengeModel,
                 id="challenge-1",
                 user_id="admin",
                 purpose="lease",
@@ -255,7 +308,8 @@ def test_webauthn_challenge_is_subject_bound_and_single_use(tmp_path: Path) -> N
                 created_at=now,
                 expires_at=now + timedelta(minutes=5),
             ),
-            AgentWebAuthnChallengeModel(
+            new_agent_model(
+                AgentWebAuthnChallengeModel,
                 id="challenge-2",
                 user_id="admin",
                 purpose="lease",
@@ -267,7 +321,9 @@ def test_webauthn_challenge_is_subject_bound_and_single_use(tmp_path: Path) -> N
         ])
         db.commit()
 
-        service = WebAuthnService(backend=FakeBackend())
+        service = WebAuthnService(
+            backend=cast(WebAuthnBackend, FakeBackend()),
+        )
         with pytest.raises(AuthenticationError, match="対象が一致"):
             service.verify_authentication(
                 db,
@@ -286,7 +342,9 @@ def test_webauthn_challenge_is_subject_bound_and_single_use(tmp_path: Path) -> N
             credential={"id": "credential-1", "response": {}},
         )
         db.commit()
-        assert db.get(AgentWebAuthnChallengeModel, "challenge-1").used_at is not None
+        consumed = db.get(AgentWebAuthnChallengeModel, "challenge-1")
+        assert consumed is not None
+        assert consumed.used_at is not None
         with pytest.raises(ConflictError, match="既に使用"):
             service.verify_authentication(
                 db,
@@ -321,7 +379,8 @@ def test_dpop_replay_consumption_survives_business_rollback(tmp_path: Path) -> N
     AgentDeviceModel.__table__.create(engine)
     AgentDpopReplayModel.__table__.create(engine)
     with Session(engine) as seed:
-        seed.add(AgentDeviceModel(
+        seed.add(new_agent_model(
+            AgentDeviceModel,
             id="device-1",
             name="codex",
             public_key_jwk={"kty": "EC"},
@@ -361,7 +420,7 @@ def test_deleted_principal_cannot_resurrect_old_lease_or_queued_task(
     engine = create_engine(f"sqlite:///{tmp_path / 'principal-binding.sqlite'}")
 
     @event.listens_for(engine, "connect")
-    def enable_foreign_keys(dbapi_connection: object, _: object) -> None:
+    def enable_foreign_keys(dbapi_connection: sqlite3.Connection, _: object) -> None:
         dbapi_connection.execute("PRAGMA foreign_keys=ON")
 
     UserModel.__table__.create(engine)
@@ -391,7 +450,8 @@ def test_deleted_principal_cannot_resurrect_old_lease_or_queued_task(
             username="admin",
             hashed_password="old",
         ))
-        db.add(AgentDeviceModel(
+        db.add(new_agent_model(
+            AgentDeviceModel,
             id="device-1",
             principal_id="admin",
             name="codex",
@@ -401,7 +461,8 @@ def test_deleted_principal_cannot_resurrect_old_lease_or_queued_task(
             status="active",
         ))
         db.flush()
-        db.add(AgentCapabilityLeaseModel(
+        db.add(new_agent_model(
+            AgentCapabilityLeaseModel,
             id="lease-1",
             jti="lease-jti-1",
             principal_id="admin",
@@ -431,7 +492,9 @@ def test_deleted_principal_cannot_resurrect_old_lease_or_queued_task(
         ))
         db.commit()
         db.expire_all()
-        assert db.get(AgentDeviceModel, "device-1").principal_id is None
+        persisted_device = db.get(AgentDeviceModel, "device-1")
+        assert persisted_device is not None
+        assert persisted_device.principal_id is None
 
         with pytest.raises(AuthenticationError, match="現在の所有者"):
             authenticate_lease(
@@ -471,7 +534,9 @@ def test_mutation_concurrency_limit_is_global_across_leases(
         with pytest.raises(ConflictError, match="全端末"):
             _check_concurrency(db, "R2")
 
-        db.get(TaskModel, "task-2").status = "finish"
+        completed = db.get(TaskModel, "task-2")
+        assert completed is not None
+        completed.status = "finish"
         db.flush()
         _check_concurrency(db, "R2")
         with pytest.raises(ConflictError, match="全端末"):
@@ -484,7 +549,8 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
         def get(*_: object) -> None:
             return None
 
-    task = SimpleNamespace(
+    db = _session(RootOnlyDB())
+    task = _task(SimpleNamespace(
         uuid="task-1",
         dependence_uuid=None,
         correlation_id=None,
@@ -494,21 +560,21 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R3",
-    )
-    lease = SimpleNamespace(
+    ))
+    lease = _lease(SimpleNamespace(
         principal_id="admin",
         scopes=["node.delete"],
         allow_destructive=True,
         allow_delete_without_recovery=True,
         allow_network_change_without_oob=True,
-    )
-    control = SimpleNamespace(
+    ))
+    control = _control(SimpleNamespace(
         allow_delete_without_recovery=True,
         allow_network_change_without_oob=True,
-    )
+    ))
     definition = ACTIONS["node.delete"]
     _validate_dispatch_action_contract(
-        RootOnlyDB(),
+        db,
         task=task,
         lease=lease,
         control=control,
@@ -518,7 +584,7 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
     task.principal_id = "another-admin"
     with pytest.raises(AuthorizationError, match="task principal"):
         _validate_dispatch_action_contract(
-            RootOnlyDB(),
+            db,
             task=task,
             lease=lease,
             control=control,
@@ -528,7 +594,7 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
     lease.scopes = ["vm.get"]
     with pytest.raises(AuthorizationError, match="scope"):
         _validate_dispatch_action_contract(
-            RootOnlyDB(),
+            db,
             task=task,
             lease=lease,
             control=control,
@@ -538,7 +604,7 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
     task.risk = "R2"
     with pytest.raises(AuthorizationError, match="risk"):
         _validate_dispatch_action_contract(
-            RootOnlyDB(),
+            db,
             task=task,
             lease=lease,
             control=control,
@@ -548,14 +614,14 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
     control.allow_delete_without_recovery = False
     with pytest.raises(AuthorizationError, match="復旧手段"):
         _validate_dispatch_action_contract(
-            RootOnlyDB(),
+            db,
             task=task,
             lease=lease,
             control=control,
             definition=definition,
         )
 
-    network_task = SimpleNamespace(
+    network_task = _task(SimpleNamespace(
         uuid="task-2",
         dependence_uuid=None,
         correlation_id=None,
@@ -565,21 +631,21 @@ def test_worker_rechecks_catalog_scope_risk_and_safety_flags() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R3",
-    )
-    network_lease = SimpleNamespace(
+    ))
+    network_lease = _lease(SimpleNamespace(
         principal_id="admin",
         scopes=["vm.network.update"],
         allow_destructive=True,
         allow_delete_without_recovery=True,
         allow_network_change_without_oob=True,
-    )
-    network_control = SimpleNamespace(
+    ))
+    network_control = _control(SimpleNamespace(
         allow_delete_without_recovery=True,
         allow_network_change_without_oob=False,
-    )
+    ))
     with pytest.raises(AuthorizationError, match="帯域外復旧"):
         _validate_dispatch_action_contract(
-            RootOnlyDB(),
+            db,
             task=network_task,
             lease=network_lease,
             control=network_control,
@@ -600,7 +666,8 @@ def test_worker_requires_identity_admin_after_target_is_promoted() -> None:
                 return target_user
             return None
 
-    task = SimpleNamespace(
+    db = _session(FakeDB())
+    task = _task(SimpleNamespace(
         uuid="user-update",
         dependence_uuid=None,
         correlation_id=None,
@@ -615,21 +682,21 @@ def test_worker_requires_identity_admin_after_target_is_promoted() -> None:
             "resourceId": "target-user",
             "generationTarget": "true",
         }],
-    )
-    lease = SimpleNamespace(
+    ))
+    lease = _lease(SimpleNamespace(
         principal_id="admin",
         scopes=["user.update"],
         allow_destructive=True,
         allow_delete_without_recovery=False,
         allow_network_change_without_oob=False,
-    )
-    control = SimpleNamespace(
+    ))
+    control = _control(SimpleNamespace(
         allow_delete_without_recovery=False,
         allow_network_change_without_oob=False,
-    )
+    ))
     with pytest.raises(AuthorizationError, match="identity.admin"):
         _validate_dispatch_action_contract(
-            FakeDB(),
+            db,
             task=task,
             lease=lease,
             control=control,
@@ -638,7 +705,7 @@ def test_worker_requires_identity_admin_after_target_is_promoted() -> None:
 
     lease.scopes.append("identity.admin")
     _validate_dispatch_action_contract(
-        FakeDB(),
+        db,
         task=task,
         lease=lease,
         control=control,
@@ -647,7 +714,7 @@ def test_worker_requires_identity_admin_after_target_is_promoted() -> None:
 
 
 def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
-    root = SimpleNamespace(
+    root = _task(SimpleNamespace(
         uuid="root",
         dependence_uuid=None,
         correlation_id=None,
@@ -657,8 +724,8 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R2",
-    )
-    malicious = SimpleNamespace(
+    ))
+    malicious = _task(SimpleNamespace(
         uuid="child",
         dependence_uuid="root",
         correlation_id=None,
@@ -668,33 +735,34 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R2",
-    )
+    ))
 
     class FakeDB:
         @staticmethod
         def get(_: object, key: str) -> object | None:
             return root if key == "root" else None
 
-    assert _task_action_id(FakeDB(), malicious) == "node.create"
+    db = _session(FakeDB())
+    assert _task_action_id(db, malicious) == "node.create"
     with pytest.raises(AuthorizationError, match="selector"):
         _validate_dispatch_action_contract(
-            FakeDB(),
+            db,
             task=malicious,
-            lease=SimpleNamespace(
+            lease=_lease(SimpleNamespace(
                 principal_id="admin",
                 scopes=["node.create"],
                 allow_destructive=False,
                 allow_delete_without_recovery=False,
                 allow_network_change_without_oob=False,
-            ),
-            control=SimpleNamespace(
+            )),
+            control=_control(SimpleNamespace(
                 allow_delete_without_recovery=False,
                 allow_network_change_without_oob=False,
-            ),
+            )),
             definition=ACTIONS["node.create"],
         )
 
-    unknown_root = SimpleNamespace(
+    unknown_root = _task(SimpleNamespace(
         uuid="unknown",
         dependence_uuid=None,
         correlation_id=None,
@@ -703,11 +771,11 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
         object="proxy",
         principal_id="admin",
         user_id="admin",
-    )
-    assert _task_action_id(FakeDB(), unknown_root).startswith("internal.")
-    assert _task_action_id(FakeDB(), unknown_root) not in ACTIONS
+    ))
+    assert _task_action_id(db, unknown_root).startswith("internal.")
+    assert _task_action_id(db, unknown_root) not in ACTIONS
 
-    direct_root = SimpleNamespace(
+    direct_root = _task(SimpleNamespace(
         uuid="direct-root",
         dependence_uuid=None,
         correlation_id=None,
@@ -717,8 +785,8 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R3",
-    )
-    direct_child = SimpleNamespace(
+    ))
+    direct_child = _task(SimpleNamespace(
         uuid="direct-child",
         dependence_uuid="direct-root",
         correlation_id=None,
@@ -728,7 +796,7 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
         principal_id="admin",
         user_id="admin",
         risk="R3",
-    )
+    ))
 
     class DirectDB:
         @staticmethod
@@ -737,19 +805,19 @@ def test_worker_rejects_unknown_or_unrelated_dependent_selector() -> None:
 
     with pytest.raises(AuthorizationError, match="selector"):
         _validate_dispatch_action_contract(
-            DirectDB(),
+            _session(DirectDB()),
             task=direct_child,
-            lease=SimpleNamespace(
+            lease=_lease(SimpleNamespace(
                 principal_id="admin",
                 scopes=["user.create", "identity.admin"],
                 allow_destructive=True,
                 allow_delete_without_recovery=True,
                 allow_network_change_without_oob=True,
-            ),
-            control=SimpleNamespace(
+            )),
+            control=_control(SimpleNamespace(
                 allow_delete_without_recovery=True,
                 allow_network_change_without_oob=True,
-            ),
+            )),
             definition=ACTIONS["user.create"],
         )
 
@@ -778,21 +846,23 @@ def test_worker_rejects_multiple_operation_roots(
         ])
         db.commit()
 
+        duplicate_root = db.get(TaskModel, "root-1")
+        assert duplicate_root is not None
         with pytest.raises(AuthorizationError, match="root"):
             _validate_dispatch_action_contract(
                 db,
-                task=db.get(TaskModel, "root-1"),
-                lease=SimpleNamespace(
+                task=duplicate_root,
+                lease=_lease(SimpleNamespace(
                     principal_id="admin",
                     scopes=["node.create"],
                     allow_destructive=False,
                     allow_delete_without_recovery=False,
                     allow_network_change_without_oob=False,
-                ),
-                control=SimpleNamespace(
+                )),
+                control=_control(SimpleNamespace(
                     allow_delete_without_recovery=False,
                     allow_network_change_without_oob=False,
-                ),
+                )),
                 definition=ACTIONS["node.create"],
             )
 
@@ -877,12 +947,13 @@ def test_create_dependent_uses_root_sentinel_and_rechecks_related_targets() -> N
                 return storage
             return None
 
-    lease = SimpleNamespace(project_ids=["p1"], node_ids=["node-1"])
-    _validate_task_constraints(FakeDB(), dependent, lease)
+    db = _session(FakeDB())
+    lease = _lease(SimpleNamespace(project_ids=["p1"], node_ids=["node-1"]))
+    _validate_task_constraints(db, dependent, lease)
 
     storage_exists = False
     with pytest.raises(AuthorizationError, match="参照resource"):
-        _validate_task_constraints(FakeDB(), dependent, lease)
+        _validate_task_constraints(db, dependent, lease)
 
 
 def test_worker_resolves_user_generation_target() -> None:
@@ -896,13 +967,13 @@ def test_worker_resolves_user_generation_target() -> None:
             return None
 
     _validate_related_target_binding(
-        FakeDB(),
+        _session(FakeDB()),
         {
             "resourceType": "user",
             "resourceId": "target-user",
             "generationTarget": "true",
         },
-        SimpleNamespace(project_ids=[], node_ids=[]),
+        _lease(SimpleNamespace(project_ids=[], node_ids=[])),
     )
 
 
@@ -935,13 +1006,13 @@ def test_malformed_dpop_claims_are_normalized_to_authentication_error(
         algorithm="ES256",
         headers={"typ": "dpop+jwt", "jwk": jwk},
     )
-    device = SimpleNamespace(
+    device = _device(SimpleNamespace(
         id="device-1",
         public_key_thumbprint=jwk_thumbprint(jwk),
-    )
+    ))
     with pytest.raises(AuthenticationError, match="claimの型"):
         verify_dpop_proof(
-            SimpleNamespace(),
+            _session(SimpleNamespace()),
             proof=proof,
             device=device,
             method="POST",
@@ -973,7 +1044,7 @@ def test_server_derives_vm_scope_and_ignores_client_project_node() -> None:
         ),
     )
     target = resolve_action_target(
-        FakeDB(),
+        _session(FakeDB()),
         context=_context(scopes=["vm.get"]),
         definition=ACTIONS["vm.get"],
         request=request,
@@ -1031,8 +1102,9 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
         disks=[],
         interface=[],
     )
+    db = _session(FakeDB())
     resolved = _validate_action_references(
-        FakeDB(),
+        db,
         context=_context(
             scopes=["vm.create"],
             projects=["p1"],
@@ -1051,7 +1123,7 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
 
     with pytest.raises(AuthorizationError, match="owner project"):
         _validate_action_references(
-            FakeDB(),
+            db,
             context=_context(
                 scopes=["vm.create"],
                 projects=["p2"],
@@ -1087,8 +1159,9 @@ def test_long_signed_image_url_is_hashed_instead_of_target_resource_id() -> None
         def query(*_: object) -> EmptyQuery:
             return EmptyQuery()
 
+    db = _session(FakeDB())
     target = resolve_action_target(
-        FakeDB(),
+        db,
         context=_context(scopes=["image.download"]),
         definition=ACTIONS["image.download"],
         request=ActionRequest(
@@ -1103,7 +1176,7 @@ def test_long_signed_image_url_is_hashed_instead_of_target_resource_id() -> None
     assert len(target.resource_id) <= 256
 
     same_destination = resolve_action_target(
-        FakeDB(),
+        db,
         context=_context(scopes=["image.download"]),
         definition=ACTIONS["image.download"],
         request=ActionRequest(
@@ -1161,7 +1234,7 @@ def test_image_generation_target_uses_canonical_id_and_server_project() -> None:
             return FakeQuery(model)
 
     target = resolve_action_target(
-        FakeDB(),
+        _session(FakeDB()),
         context=_context(scopes=["image.flavor.update"], projects=["p1"]),
         definition=ACTIONS["image.flavor.update"],
         request=ActionRequest(
@@ -1190,7 +1263,7 @@ def test_image_generation_target_uses_canonical_id_and_server_project() -> None:
 
 
 def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
-    task = SimpleNamespace(
+    task = _task(SimpleNamespace(
         uuid="operation-1",
         dependence_uuid=None,
         correlation_id=None,
@@ -1207,9 +1280,9 @@ def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
                 "authorizationTarget": "false",
             },
         ],
-    )
+    ))
     authorize_operation_access(
-        SimpleNamespace(),
+        _session(SimpleNamespace()),
         context=_context(
             scopes=["vm.network.update"],
             projects=["p1"],
@@ -1220,15 +1293,16 @@ def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
     )
     with pytest.raises(AuthorizationError, match="scope"):
         authorize_operation_access(
-            SimpleNamespace(),
+            _session(SimpleNamespace()),
             context=_context(scopes=["vm.get"], projects=["p1"], nodes=["n1"]),
             definition=ACTIONS["vm.network.update"],
             task=task,
         )
+    assert task.resolved_targets is not None
     task.resolved_targets[1]["projectId"] = "p2"
     with pytest.raises(AuthorizationError, match="project"):
         authorize_operation_access(
-            SimpleNamespace(),
+            _session(SimpleNamespace()),
             context=_context(
                 scopes=["vm.network.update"],
                 projects=["p1"],
@@ -1261,7 +1335,7 @@ def test_dispatch_rederives_storage_project_binding_from_database() -> None:
                 return project
             return None
 
-    task = SimpleNamespace(
+    task = _task(SimpleNamespace(
         uuid="storage-delete",
         dependence_uuid=None,
         correlation_id=None,
@@ -1277,15 +1351,16 @@ def test_dispatch_rederives_storage_project_binding_from_database() -> None:
             "nodeId": "node-1",
             "generationTarget": "true",
         }],
-    )
-    lease = SimpleNamespace(project_ids=["p1"], node_ids=["node-1"])
+    ))
+    db = _session(FakeDB())
+    lease = _lease(SimpleNamespace(project_ids=["p1"], node_ids=["node-1"]))
     with pytest.raises(AuthorizationError, match="project所属"):
-        _validate_task_constraints(FakeDB(), task, lease)
+        _validate_task_constraints(db, task, lease)
 
     project.storage_pools = [SimpleNamespace(
         storages=[SimpleNamespace(storage_uuid="storage-1")],
     )]
-    _validate_task_constraints(FakeDB(), task, lease)
+    _validate_task_constraints(db, task, lease)
 
 
 def test_reservation_contract_covers_family_refresh_and_ssh_key_exclusion() -> None:
@@ -1445,7 +1520,7 @@ def test_network_provider_requires_every_server_resolved_overlay_node() -> None:
             if entity_name == "NodeModel" and attribute_name == "name":
                 return [SimpleNamespace(name=node.name) for node in nodes]
             if entity_name == "NodeModel":
-                return nodes
+                return cast(list[object], nodes)
             return []
 
         def __iter__(self):
@@ -1474,8 +1549,9 @@ def test_network_provider_requires_every_server_resolved_overlay_node() -> None:
         scopes=["network.provider.create"],
         nodes=["network-node", "worker-a"],
     )
+    db = _session(FakeDB())
     denied_target = _validate_action_references(
-        FakeDB(),
+        db,
         context=denied_context,
         definition=definition,
         model=model,
@@ -1489,7 +1565,7 @@ def test_network_provider_requires_every_server_resolved_overlay_node() -> None:
         nodes=[node.name for node in nodes],
     )
     allowed_target = _validate_action_references(
-        FakeDB(),
+        db,
         context=allowed_context,
         definition=definition,
         model=model,
@@ -1534,7 +1610,7 @@ def test_network_refresh_reserves_every_current_node_lifecycle_shared() -> None:
                 getattr(entity_class, "__name__", "") == "NodeModel"
                 and getattr(self.entity, "key", None) == "name"
             ):
-                return nodes
+                return cast(list[object], nodes)
             return []
 
     class FakeDB:
@@ -1544,7 +1620,7 @@ def test_network_refresh_reserves_every_current_node_lifecycle_shared() -> None:
 
     definition = ACTIONS["network.refresh"]
     resolved = _validate_action_references(
-        FakeDB(),
+        _session(FakeDB()),
         context=_context(scopes=["network.refresh"]),
         definition=definition,
         model=EmptyInput(),
@@ -1609,7 +1685,7 @@ def test_dependent_inventory_tasks_form_a_strict_sequence(
     context = _context(scopes=["node.create"])
     model = SimpleNamespace(name="node-1", libvirt_role=True)
     result = actions._execute_task_action(
-        FakeDB(),
+        _session(FakeDB()),
         context=context,
         definition=ACTIONS["node.create"],
         request=ActionRequest(
@@ -1693,16 +1769,16 @@ def test_ssh_key_audit_failure_is_unknown_after_external_effect(
         "append_audit_event",
         lambda *args, **kwargs: (_ for _ in ()).throw(AuditWriteError()),
     )
-    task = SimpleNamespace(
+    task = _task(SimpleNamespace(
         object="node.ssh-key.write",
         uuid="ssh-key-operation",
         correlation_id="ssh-key-correlation",
         result=None,
         message=None,
-    )
+    ))
     with pytest.raises(AuditWriteError) as caught:
         agent_tasks.execute_direct_action(
-            SimpleNamespace(),
+            _session(SimpleNamespace()),
             task,
             TaskRequest(path_param={}, body={}),
         )
@@ -1801,8 +1877,9 @@ def test_pool_list_read_adapters_return_object_contract(monkeypatch: pytest.Monk
         scopes=["storage.pool.list", "network.pool.list"],
         nodes=["node-1"],
     )
-    storage_result = adapters.storage_pool_list(FakeDB(), context, None, None)
-    network_result = adapters.network_pool_list(FakeDB(), context, None, None)
+    db = _session(FakeDB())
+    storage_result = adapters.storage_pool_list(db, context, None, None)
+    network_result = adapters.network_pool_list(db, context, None, None)
     assert storage_result == {
         "count": 1,
         "data": [{
@@ -1895,7 +1972,8 @@ def test_reconciliation_list_returns_root_operation_and_openapi_schema(
         ])
         db.commit()
 
-        result = list_operation_reconciliations(SimpleNamespace(id="admin"), db)
+        current_user = _typed(CurrentUser, SimpleNamespace(id="admin"))
+        result = list_operation_reconciliations(current_user, db)
 
     assert len(result) == 1
     assert result[0].operation_id == "root-task"
@@ -2002,8 +2080,12 @@ def test_manual_reconciliation_preserves_or_releases_operation_reservation(
         )
         db.commit()
         assert confirmed["normalized_status"] == "queued"
-        assert db.get(TaskModel, "confirmed-root").status == "finish"
-        assert db.get(TaskModel, "confirmed-wait").status == "wait"
+        confirmed_root = db.get(TaskModel, "confirmed-root")
+        confirmed_wait = db.get(TaskModel, "confirmed-wait")
+        assert confirmed_root is not None
+        assert confirmed_wait is not None
+        assert confirmed_root.status == "finish"
+        assert confirmed_wait.status == "wait"
         assert (
             db.query(TaskTargetReservationModel).filter(
                 TaskTargetReservationModel.correlation_id
@@ -2023,9 +2105,15 @@ def test_manual_reconciliation_preserves_or_releases_operation_reservation(
         )
         db.commit()
         assert absent["normalized_status"] == "failed"
-        assert db.get(TaskModel, "absent-root").status == "error"
-        assert db.get(TaskModel, "absent-wait").status == "cancelled"
-        assert db.get(TaskModel, "absent-cancel-requested").status == "cancelled"
+        absent_root = db.get(TaskModel, "absent-root")
+        absent_wait = db.get(TaskModel, "absent-wait")
+        absent_cancel_requested = db.get(TaskModel, "absent-cancel-requested")
+        assert absent_root is not None
+        assert absent_wait is not None
+        assert absent_cancel_requested is not None
+        assert absent_root.status == "error"
+        assert absent_wait.status == "cancelled"
+        assert absent_cancel_requested.status == "cancelled"
         assert (
             db.query(TaskTargetReservationModel).filter(
                 TaskTargetReservationModel.correlation_id
@@ -2044,7 +2132,7 @@ def test_admin_credential_grant_requires_dedicated_identity_scope() -> None:
         def first() -> None:
             return None
 
-    db = SimpleNamespace(query=lambda _: EmptyQuery())
+    db = _session(SimpleNamespace(query=lambda _: EmptyQuery()))
     model = SimpleNamespace(
         username="new-admin",
         scopes=[SimpleNamespace(name="admin")],

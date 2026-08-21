@@ -33,24 +33,36 @@
 - バージョンはリリース対象の変更でのみ更新し、更新時は`api/settings.py`と
   `vue/package.json`の値を同時に確認する。
 - 大きなHTML、OpenAPI、生成ファイルは全文を展開せず、`rg`、parser、対象範囲の抽出で調査する。
-- 秘密鍵、token、password、`api/tests/env*.json`、DB dumpをコミットしない。
+- 秘密鍵、token、password、`api/tests/env*.json`、external labの実config、DB dumpをコミットしない。
+
+## 定型タスク: 実機試験情報の受け入れ
+
+- 利用者が「試験用情報を提供します」と述べた場合、または専用lab設定の提供・作成を明確に申し出た場合は、
+  実機testを開始せず、`api/tests/external/README.md`の「設定受け入れタスク」を実施する。
+  この申し出は設定fileを準備する許可だけであり、`./devctl infra`の実行許可ではない。
+- `api/tests/external/infra-config.example.json`を正本として、変更が必要な非機密値だけを項目別に質問する。
+  password、秘密鍵、token、credential付きURLは質問しない。利用者が自発的に提示した場合も使用、復唱、
+  設定fileへの転記をせず、露出済みのcredentialまたはkeyとして失効・rotationを依頼する。
+  組織上秘匿したいhost名、IP address、usernameも手動置換を選べるようにする。
+- 回答後はrepository rootの`.secrets/infra-config.json`をexampleから作成し、非機密値だけを反映する。
+  既存fileを無断で読んだり上書きしたりせず、directoryを`0700`、fileを`0600`にする。
+  秘密値は用途が分かるplaceholder、`allow_destructive`は`false`のままにする。
+- 最後にplaceholderを安全なlocal editorで利用者自身が置換し、専用labと設定全体を確認してから
+  `allow_destructive`を`true`へ変更するよう依頼する。秘密値を返信させず、置換後のfileを表示、diff、stage、commitしない。
 
 ## 開発環境と検証
 
-- 利用可能なコンテナ環境を優先する。Docker Composeを使う場合は
-  `-p virty-task-name`の形式でproject名を分離し、他のworktreeのcontainer、network、volumeを共有しない。
-- API開発用Composeは`api/.devcontainer/compose.yml`である。
-  `compose.example.yml`は配布imageを使う実行例で、ソースbuild用Composeではない。
-- ルートの`dev.sh`は旧デプロイ更新スクリプトであり、OpenAPI生成や開発テストには使わない。
-- API変更では、API開発containerの`/workspaces/api`で先に`ruff check .`を実行し、必要な場合だけ変更対象へ
-  `--fix`を適用する。完了前にもう一度`ruff check .`を実行する。
-  関連pytestは隔離した統合テスト環境でだけ実行する。単なる確認のために`main.py`を直接起動しない。
-- Web変更では`cd vue && pnpm run type-check && pnpm run build`を実行し、必要に応じてlintする。
-  完了確認のためだけに開発serverを起動しない。
-- API/worker/image/network/storageを扱うpytestは、DB内容の削除や管理ノード上のresource作成・削除を行う。
-  本番・共有環境では実行しない。前提条件と安全な手順は`docs/development.md`を参照する。
+- 開発、型check、test、image buildはrepository rootの`./devctl`だけを入口とし、hostのPython、Node、pnpmや
+  raw Compose commandへ置き換えない。`devctl`がworktree固有のproject名とportを割り当てる。
+- 編集中は変更対象へ`./devctl quick api`、`./devctl quick web`、または`./devctl quick mcp`を実行し、
+  完了前は変更範囲にかかわらず
+  引数なしの`./devctl verify`を実行する。各checkは非修正modeであり、自動修正は対象fileを限定する。
+- API契約変更では`./devctl generate openapi`、Webのrouter/component/auto-import生成型変更では
+  `./devctl generate web-types`を使い、生成型を手編集しない。
+- `./devctl infra`は専用labの明示設定を必要とする破壊的な外部結合testである。利用者の明示許可なく実行せず、
+  本番・共有DB・共有nodeを指定しない。標準`quick`と`verify`は実機resourceを変更しない。
+- 完了確認だけを目的に開発serverを起動しない。詳細なcommand、timeout、test分類は`docs/development.md`を正本とする。
 - 文書だけの変更でも`git diff --check`と内部リンクの存在確認を行う。
-- 影響範囲別の詳しい検証手順は`docs/development.md`を正本とする。
 
 ## 完了とGit
 
@@ -62,3 +74,4 @@
 5. 利用者がコミット保留を指示していない限り、理解可能な単位で必ずコミットする。
 6. 既定ブランチへマージする直前に最新の既定ブランチを作業ブランチへ取り込み、
    競合では双方の意図を保持して解消し、影響範囲を再検証する。
+7. 想定外の事象が発生していない限り、作業ブランチを`master`へ適切にマージして作業を完了する。

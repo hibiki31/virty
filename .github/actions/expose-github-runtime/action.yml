@@ -1,0 +1,26 @@
+name: GitHub Actions cache runtimeを公開
+description: BuildKitのGHA cacheに必要なruntime変数を後続stepへ公開する
+
+runs:
+  using: composite
+  steps:
+    - name: Cache runtime変数を公開
+      uses: actions/github-script@v8
+      with:
+        script: |
+          const cacheRuntimeVariables = [
+            "ACTIONS_CACHE_SERVICE_V2",
+            "ACTIONS_CACHE_URL",
+            "ACTIONS_RESULTS_URL",
+            "ACTIONS_RUNTIME_TOKEN",
+          ];
+
+          for (const name of cacheRuntimeVariables) {
+            const value = process.env[name];
+            if (value) {
+              if (name === "ACTIONS_RUNTIME_TOKEN") {
+                core.setSecret(value);
+              }
+              core.exportVariable(name, value);
+            }
+          }

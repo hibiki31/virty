@@ -94,7 +94,7 @@ def update_project(
     db.merge(project)
     db.commit()
 
-    project: ProjectModel = db.query(
+    project = db.query(
             ProjectModel
         ).filter(
             ProjectModel.id==request.project_id
