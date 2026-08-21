@@ -10,6 +10,7 @@
 | [requirements.md](requirements.md) | 何を、誰のために提供するか | 機能、UI、利用者体験、対応範囲を変えるとき |
 | [architecture.md](architecture.md) | なぜこの境界と処理方式なのか | componentの責務、data flow、外部連携を変えるとき |
 | [development.md](development.md) | どの環境と手順で安全に変更・検証するか | build、test、migration、契約生成、release手順を変えるとき |
+| [known-issues.md](known-issues.md) | 現在どの問題と検証gapが残り、何をもって解決とするか | 関連codeの変更前、課題の追加・解決時 |
 
 各文書は一つの主目的を持つ。要件に実装手順を混ぜず、開発手順に製品の将来構想を混ぜない。
 
@@ -31,7 +32,7 @@
 ## 更新ルール
 
 - 仕様変更は`requirements.md`、構成や責務の変更は`architecture.md`、
-  開発・検証方法の変更は`development.md`へ反映する。
+  開発・検証方法の変更は`development.md`、根拠のある未解決課題は`known-issues.md`へ反映する。
 - endpoint一覧、schema、DB列、依存packageの完全なversion表は複製せず、正本へ案内する。
 - 現行機能、目標、未提供機能を明確に区別する。コードにない機能を提供済みと記載しない。
 - 手順は、現在追跡されているscript、Compose、package scriptで再現できることを確認する。
