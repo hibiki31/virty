@@ -58,7 +58,7 @@ jobs:
           web=false
           proxy=false
 
-          if grep -Eq '^(compose\.dev\.yml|devctl|scripts/project-name\.sh|\.github/workflows/docker-image\.yml)$' <<<"${changed}"; then
+          if grep -Eq '^(compose\.dev\.yml|devctl|scripts/project-name\.sh|\.github/actions/expose-github-runtime/.*|\.github/workflows/docker-image\.yml)$' <<<"${changed}"; then
             shared=true
           fi
           if [[ "${shared}" == true ]] || grep -Eq '^api/' <<<"${changed}"; then
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: Expose GitHub Actions cache runtime
-        uses: crazy-max/ghaction-github-runtime@v3
+        uses: ./.github/actions/expose-github-runtime
       - name: Full verification
         run: ./devctl verify api
 
@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: Expose GitHub Actions cache runtime
-        uses: crazy-max/ghaction-github-runtime@v3
+        uses: ./.github/actions/expose-github-runtime
       - name: Full verification
         run: ./devctl verify web
 
@@ -115,6 +115,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: Expose GitHub Actions cache runtime
-        uses: crazy-max/ghaction-github-runtime@v3
+        uses: ./.github/actions/expose-github-runtime
       - name: Production image verification
         run: ./devctl verify proxy
