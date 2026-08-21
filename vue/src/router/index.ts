@@ -42,7 +42,7 @@ router.beforeEach((to, from, next) => {
   // ログインしているのにログインページに行く場合
   if (auth.authed && to.name === "/login") {
     next({
-      name: "/login",
+      name: "/",
     });
   }
   // 認証が必要なページに未認証でアクセスした場合、ログインページは処理しない
@@ -51,6 +51,10 @@ router.beforeEach((to, from, next) => {
       name: "/login",
       query: { redirect: to.fullPath },
     });
+  }
+  // Agent停止・失効操作をURL直打ちでも管理者以外へ表示しない。
+  else if (to.meta.requiresAdmin === true && !auth.scopes.includes("admin")) {
+    next({ name: "/" });
   }
   // ログイン済み、ログイン不要の場合の通常遷移
   else {

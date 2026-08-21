@@ -98,6 +98,48 @@ pytest suiteは通常のunit testだけではない。`api/tests/env*.json`、�
 前提を用意できない場合は実行したふりをせず、ruff、import、image buildなど実施可能な検証と、
 未実施の統合testおよび理由を報告する。`api/test.sh`は`pytest -v -x`のwrapperに過ぎない。
 
+Agent APIのunit・contract testはfake database/session、固定clock、fake WebAuthn verifier、fake task adapterを使い、
+SSH、Ansible、libvirtへ接続しない。少なくとも次を副作用なしで検証する。
+
+- principal、scope、project、node、resourceの認可matrixと既存REST経路
+- WebAuthn challenge replay、RP ID・origin不一致、device鍵・DPoP不一致
+- lease期限・失効・変更上限、global/device kill switch、breaker、同時実行上限
+- idempotency keyの同時retry、request hash相違、stale generation、取消、worker crash、`unknown`
+- 監査保存失敗時のfail closedと、秘密入力が監査event・task logへ残らないこと
+- VM名、description、task logへprompt injection文字列を入れてもpolicy判断が変化しないこと
+- project pool外のstorage/network/image/flavor/nodeをAgentと既存RESTの双方が404/403で拒否すること
+- image downloadのDNS rebinding、private/link-local address、redirect、既存fileへの同時downloadを拒否し、
+  no-clobber失敗後も既存dataと一時file cleanupが保たれること
+
+Agent関連を検証するときも既存の統合pytest全体は起動せず、安全なtest fileを明示する。
+
+### virty-mcp helper
+
+helperはAPI imageと分離したPython packageであり、stdoutをMCP JSON-RPC以外へ使わない。testではmemory credential storeと
+fake HTTP transportを使い、実端末のcredential storeやVirty productionへ接続しない。
+
+`AGENT_TASK_ENCRYPTION_KEY`はAES-256用の32 byteをbase64/base64url化した値である。hex 32 byte値は
+base64として48 byteに復号されるため使用せず、`openssl rand -base64 32`等で生成する。
+
+```bash
+cd virty_mcp
+python -m venv .venv
+.venv/bin/pip install -e '.[test]'
+.venv/bin/ruff check .
+.venv/bin/pytest
+```
+
+local Codexへ登録するときは、venv内の絶対pathと内部HTTPS URL、必要ならprivate CA fileを指定する。
+秘密鍵やlease tokenを`.codex/config.toml`や環境変数へ記載しない。
+
+```toml
+[mcp_servers.virty]
+command = "/absolute/path/to/virty-mcp"
+env = { VIRTY_AGENT_BASE_URL = "https://virty.internal", VIRTY_TLS_CA_FILE = "/absolute/path/to/ca.pem" }
+```
+
+pairingとleaseはMCP lifecycle toolで申請し、承認操作はVirty Web UIのAgent画面で行う。
+
 ### Web・TypeScript
 
 package managerは`vue/package.json`の`packageManager`を使う。完了確認だけならdev serverは不要である。
@@ -178,3 +220,18 @@ alembic upgrade head
   `git diff --cached --check`と`git --no-pager diff --cached`で、新規fileを含むcommit内容を確認する。
 - 利用者が保留を指示していなければ、理解可能な単位で日本語のcommit messageを付ける。
 - 既定ブランチへマージする直前に最新の既定ブランチを取り込み、競合解消後に影響範囲を再検証する。
+
+## Agent機能のproduction導入
+
+production以外の管理nodeへ向けたcanaryがない場合、機能flagを段階的に有効化すること自体をWebAuthn付き管理操作として扱う。
+
+1. 最初の7日間は`shadow_mode=true`かつmutation停止でreadとpolicy・監査結果だけを評価する。
+2. R1を有効化し、単一resourceの低risk操作、retry、取消、breakerを確認する。
+3. R2を有効化し、対象制約とgeneration conflictを確認する。
+4. R3は同時1件を維持し、削除・network変更の残存riskを運用者が明示的に受容した場合だけ有効化する。
+
+既存RESTやWeb UIから同じresourceを変更するときは、先にAgent global controlでmutationを停止する。
+同期REST mutationはAgentのtarget reservationへ参加しないため、移行期間中の同時変更を安全とは扱わない。
+
+backup、snapshot、帯域外network復旧がない環境では、補償統制が働いても削除後の復元や管理network断からの復旧を
+保証できない。`allow_delete_without_recovery`と`allow_network_change_without_oob`を恒常的な既定値として有効にしない。

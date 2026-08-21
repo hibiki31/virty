@@ -17,7 +17,8 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - VMs
+  title: Virty - Users
+  requiresAdmin: true
 </route>
 
 <script lang="ts" setup>
@@ -37,12 +38,10 @@ const headers = [
   { title: 'publickeys', value: 'publickeys' },
 ]
 
-const query = ref<NonNullable<paths["/api/networks"]["get"]["parameters"]["query"]>>({
-  admin: true,
+const query = ref<NonNullable<paths["/api/users"]["get"]["parameters"]["query"]>>({
   limit: 20,
   page: 1,
   nameLike: "",
-  nodeNameLike: "",
 })
 
 const items = ref<schemas['UserPage']>({ count: 0, data: [] })

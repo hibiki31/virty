@@ -2,7 +2,11 @@ import os
 import xml.etree.ElementTree as ET
 from uuid import uuid4
 
-from domain.schemas import *
+from domain.schemas import (
+    DomainDetailXml,
+    DomainDetailXmlDrive,
+    DomainDetailXmlInterface,
+)
 from mixin.log import setup_logger
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
 from settings import APP_ROOT, DATA_ROOT
@@ -50,11 +54,9 @@ class XmlEditor():
         if self.xml.find('forward') is not None:
             mode = self.xml.find('forward').get("mode")
             network_type = mode
-            try:
-                if self.xml.find('virtualport').get("type") == "openvswitch":
-                    network_type = "openvswitch"
-            except:
-                pass
+            virtual_port = self.xml.find('virtualport')
+            if virtual_port is not None and virtual_port.get("type") == "openvswitch":
+                network_type = "openvswitch"
         else:
             network_type = "internal"
         
@@ -67,10 +69,9 @@ class XmlEditor():
         )
 
         for portgroup in self.xml.findall('portgroup'):
-            try:
-                vlan_id = portgroup.find('vlan').find('tag').get('id')
-            except:
-                vlan_id = None
+            vlan = portgroup.find('vlan')
+            tag = vlan.find('tag') if vlan is not None else None
+            vlan_id = tag.get('id') if tag is not None else None
             data.portgroups.append(PaseNetworkPortgroup(
                 name = portgroup.get("name"),
                 is_default= True if portgroup.get("default") == "yes" else False,
@@ -114,7 +115,7 @@ class XmlEditor():
             self.xml.find('os').find('type').set('machine', "pc-i440fx-rhel7.0.0")
         
     
-    def domain_base_edit(self, domain_name, memory_mega_byte, core, vnc_port:int=None, vnc_passwd=None):
+    def domain_base_edit(self, domain_name, memory_mega_byte, core, vnc_port: int | None = None):
         self.xml.findall('name')[0].text = domain_name
         self.xml.find('memory').text = str(memory_mega_byte)
         self.xml.find('currentMemory').text = str(memory_mega_byte)
@@ -123,17 +124,14 @@ class XmlEditor():
         if vnc_port == 0:
             self.xml.find('devices').find('graphics').set('autoport', "yes")
             self.xml.find('devices').find('graphics').set('port', "0")	
-        elif vnc_port > 0:
+        elif vnc_port is not None and vnc_port > 0:
             self.xml.find('devices').find('graphics').set('autoport', "no")
-            self.xml.find('devices').find('graphics').set('port', vnc_port) 
-
-        if vnc_passwd != None:
-            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)
+            self.xml.find('devices').find('graphics').set('port', str(vnc_port))
     
     def domain_uuid_generate(self, domain_uuid=None):
-        if domain_uuid == None:
+        if domain_uuid is None:
             domain_uuid = str(uuid4())
-        if self.xml.find('uuid') == None:
+        if self.xml.find('uuid') is None:
             uuid_xml = ET.SubElement(self.xml, 'uuid') 
             uuid_xml.text = domain_uuid
         else:
@@ -142,7 +140,7 @@ class XmlEditor():
 
 
     def domain_interface_add(self, network_name, mac_address=None, port=None):
-        if mac_address == None:
+        if mac_address is None:
             mac_address = macaddress_generator()
     
         add_interface = ET.SubElement(self.xml.find('devices'), "interface")
@@ -188,8 +186,12 @@ class XmlEditor():
         for disk in self.xml.find('devices').iter('disk'):
             # hddとcdromがいるのでcdromだけ
             # ターゲットが指定されててかつ，違う場合はスキップ
-            if (disk.get('device') == "cdrom") and ((target == None) or (disk.find('target').get('dev') == target)) :    
-                if disk.find('source') == None:
+            disk_target = disk.find('target')
+            if disk.get('device') == "cdrom" and (
+                target is None
+                or (disk_target is not None and disk_target.get('dev') == target)
+            ):
+                if disk.find('source') is None:
                     ET.SubElement(disk, 'source') 
                 disk.find('source').set('file', path)
                 return ET.tostring(disk).decode()
@@ -228,9 +230,6 @@ class XmlEditor():
             uuid=self.xml.find('uuid').text,
             selinux=False,
             vnc_port=vnc_xml.get("port"),
-            vnc_auto_port=vnc_xml.get("autoport"),
-            vnc_listen=vnc_xml.get("listen"),
-            vnc_password=vnc_xml.get("passwd", "none"),
             disk=[],
             interface=[],
             boot=[],
@@ -240,21 +239,25 @@ class XmlEditor():
             model.boot.append(boot.get('dev'))
 
         for disk in self.xml.find('devices').findall('disk'):
+            target = disk.find("target")
+            source = disk.find("source")
             model.disk.append(DomainDetailXmlDrive(
                 device=disk.get("device"),
                 type=disk.get("type"),
-                target=disk.find("target").get("dev") if disk.find("target") != None else None,
-                source=disk.find("source").get("file") if disk.find("source") != None else None
+                target=target.get("dev") if target is not None else None,
+                source=source.get("file") if source is not None else None
             ))
             
         for nic in self.xml.find('devices').findall('interface'):
+            source = nic.find("source")
+            target = nic.find("target")
             model.interface.append(DomainDetailXmlInterface(
                 type=nic.get("type"),
                 mac=nic.find("mac").get("address"),
-                bridge=nic.find("source").get("bridge", None),
-                network=nic.find("source").get("network", None) if nic.find("source") else None,
-                target=nic.find("target").get("dev",None) if nic.find("target") != None else None,
-                port=nic.find("source").get("portgroup")
+                bridge=source.get("bridge", None),
+                network=source.get("network", None) if source is not None else None,
+                target=target.get("dev", None) if target is not None else None,
+                port=source.get("portgroup")
             ))
 
         for seclabel in self.xml.findall('seclabel'):

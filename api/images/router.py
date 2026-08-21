@@ -7,6 +7,11 @@ from flavor.models import FlavorModel
 from mixin.database import get_db
 from mixin.log import setup_logger
 from node.models import NodeModel
+from resource_authorization import (
+    allowed_storage_ids,
+    get_authorized_flavor,
+    get_authorized_storage,
+)
 from storage.models import ImageModel, StorageMetadataModel, StorageModel
 
 from .schemas import (
@@ -26,7 +31,8 @@ def get_images(
         param: ImageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+):
+    current_user.verify_scope(["image.read"])
     query = db.query(
         ImageModel,
         DomainModel
@@ -39,6 +45,9 @@ def get_images(
     ).outerjoin(
         FlavorModel
     )
+    allowed_storages = allowed_storage_ids(db, current_user)
+    if allowed_storages is not None:
+        query = query.filter(StorageModel.uuid.in_(allowed_storages))
 
     if param.pool_uuid:
         query = query.filter(StorageModel.uuid==param.pool_uuid)
@@ -87,12 +96,15 @@ def update_image_flavor(
         req: ImageForUpdateImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+):
+    current_user.verify_scope(["image.manage"])
+    get_authorized_storage(db, req.storage_uuid, current_user)
+    get_authorized_flavor(db, req.flavor_id, current_user)
     image_model = db.query(ImageModel).filter(
         ImageModel.storage_uuid==req.storage_uuid,
         ImageModel.path==req.path
         ).one()
-    db.query(FlavorModel.id==req.flavor_id).one()
+    db.query(FlavorModel).filter(FlavorModel.id==req.flavor_id).one()
     image_model.flavor_id = req.flavor_id
     db.commit()
 
@@ -101,4 +113,3 @@ def update_image_flavor(
         ImageModel.path==req.path
         ).one()
     return res
-

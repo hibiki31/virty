@@ -17,19 +17,31 @@ The author is not responsible for any damage caused by the use of this software.
 
 ### Quick Start
 
-Nothing needs to be edited.
-Start with Docker compose and connect to localhost:8765.
-
-This can be done on the host that will be the hypervisor, or on the laptop at hand.
+Virty requires an HTTPS name and a certificate trusted by the administrator's browser.
+The WebAuthn and device-bound Agent API must not be exposed directly to the internet.
+Bind the service to a private interface and use a certificate whose SAN contains the
+same FQDN as `VIRTY_PUBLIC_URL` and `VIRTY_WEBAUTHN_RP_ID`.
 
 ```
 mkdir virty
 cd virty
 wget https://raw.githubusercontent.com/hibiki31/virty/refs/heads/master/compose.example.yml -O compose.yml
+export VIRTY_BIND_ADDRESS="192.0.2.10"
+export VIRTY_PUBLIC_URL="https://virty.internal:8765"
+export VIRTY_WEBAUTHN_RP_ID="virty.internal"
+export VIRTY_TLS_CERT="/absolute/path/to/tls.crt"
+export VIRTY_TLS_KEY="/absolute/path/to/tls.key"
+export VIRTY_SECRET_KEY="$(openssl rand -hex 32)"
+export VIRTY_AGENT_LEASE_SIGNING_KEY="$(openssl rand -hex 32)"
+export VIRTY_AGENT_TASK_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+# Agentからimage downloadを許す場合だけ、信頼するHTTPS hostを列挙する。
+export VIRTY_AGENT_IMAGE_DOWNLOAD_ALLOWED_HOSTS="images.example.internal"
 docker compose up -d
 ```
 
-Once activated, access http://localhost:8765 with a web browser.
+Store these values in a root-readable environment file before a production restart;
+generating new signing keys invalidates active sessions and Agent leases. Once activated,
+access `https://virty.internal:8765` with a browser on the private network.
 
 
 ### Preparation of managed nodes

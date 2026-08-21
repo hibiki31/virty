@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Any, Dict, List, Literal
 
+from pydantic import Field
+
 from mixin.schemas import BaseSchema, GetPagination
 from node.schemas import Node
 
@@ -51,7 +53,6 @@ class Domain(BaseSchema):
     owner_project_id: str  | None = None
     owner_project: DomainProject  | None = None
     vnc_port: int  | None = None
-    vnc_password: str  | None = None
     drives: list[DomainDrive] | None  | None = None
     interfaces: list[DomainInterface] | None  | None = None
 
@@ -72,6 +73,11 @@ class DomainDetail(Domain):
 
 class DomainXML(BaseSchema):
     xml: str
+
+
+class DomainConsoleTicket(BaseSchema):
+    token: str
+    expires_in: int
 
 class DomainBase(BaseSchema):
     uuid: str
@@ -175,11 +181,11 @@ class DomainForCreateInterface(BaseSchema):
 
 class CloudInitInsert(BaseSchema):
     hostname: str
-    userData: str
+    userData: str = Field(json_schema_extra={"writeOnly": True})
 
 
 class DomainForCreate(BaseSchema):
-    type: Literal['manual', 'project']
+    type: Literal['manual']
     name: str
     node_name: str
     memory_mega_byte: int

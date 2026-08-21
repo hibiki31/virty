@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from mixin.schemas import BaseSchema
 
@@ -17,11 +17,10 @@ class AuthValidateResponse(TokenRFC6749Response):
 
 class TokenData(BaseSchema):
     user_id: Optional[str] | None = None
-    scopes: List[str] = []
-    role: List[str] = []
-    projects: List[str] = []
+    scopes: List[str] = Field(default_factory=list)
+    role: List[str] = Field(default_factory=list)
+    projects: List[str] = Field(default_factory=list)
 
 class SetupRequest(BaseSchema):
     username: str
-    password: str
-
+    password: str = Field(json_schema_extra={"writeOnly": True})

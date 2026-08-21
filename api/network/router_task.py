@@ -7,6 +7,7 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import NoResultFound
 from mixin.log import setup_logger
+from resource_authorization import get_authorized_network, require_admin
 from task.functions import TaskManager
 from task.schemas import Task
 
@@ -22,8 +23,9 @@ def refresh_networks(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-    
+):
+    cu.verify_scope(["network.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='put', resource='network', object='list')
     task.commit(user=cu, req=req)
@@ -37,8 +39,9 @@ def create_network(
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         body: NetworkForCreate = None
-    ):
-
+):
+    cu.verify_scope(["network.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='network', object='root')
     task.commit(user=cu, req=req, body=body)
@@ -58,8 +61,9 @@ def create_network_ovs(
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         body: NetworkOVSForCreate = None
-    ):
-
+):
+    cu.verify_scope(["network.manage"])
+    get_authorized_network(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='network', object='ovs')
     task.commit(user=cu, req=req, param={"uuid": uuid}, body=body)
@@ -77,8 +81,9 @@ def create_network_providers(
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         body: NetworkProviderForCreate = None
-    ):
-
+):
+    cu.verify_scope(["network.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='network', object='provider')
     task.commit(user=cu, req=req, body=body)
@@ -93,8 +98,9 @@ def delete_network_ovs(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-
+):
+    cu.verify_scope(["network.manage"])
+    get_authorized_network(db, uuid, cu)
     try:
         db.query(NetworkModel).filter(NetworkModel.uuid == uuid).one()
         db.query(
@@ -121,8 +127,9 @@ def delete_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-
+):
+    cu.verify_scope(["network.manage"])
+    get_authorized_network(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='network', object='root')
     task.commit(user=cu, req=req, param={"uuid": uuid})

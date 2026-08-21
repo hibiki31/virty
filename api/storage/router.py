@@ -7,6 +7,13 @@ from sqlalchemy.orm import Session
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
+from resource_authorization import (
+    allowed_storage_ids,
+    allowed_storage_pool_ids,
+    get_authorized_storage,
+    get_authorized_storage_pool,
+    require_admin,
+)
 
 from .models import (
     AssociationStoragePoolModel,
@@ -34,8 +41,8 @@ def get_storages(
         param: StorageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-
+):
+    current_user.verify_scope(["storage.read"])
     image_sum = db.query(
         ImageModel.storage_uuid,
         func.sum(ImageModel.capacity).label('sum_capacity'),
@@ -50,6 +57,9 @@ def get_storages(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.name,StorageModel.node_name)
+    allowed_storages = allowed_storage_ids(db, current_user)
+    if allowed_storages is not None:
+        query = query.filter(StorageModel.uuid.in_(allowed_storages))
 
     if param.node_name:
         query = query.filter(StorageModel.node_name==param.node_name)
@@ -79,7 +89,9 @@ def update_storage_metadata(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
         request_model: StorageMetadataForUpdate = None
-    ):
+):
+    current_user.verify_scope(["storage.manage"])
+    get_authorized_storage(db, request_model.uuid, current_user)
     db.merge(StorageMetadataModel(**request_model.dict()))
     db.commit()
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
@@ -89,9 +101,13 @@ def update_storage_metadata(
 def get_storage_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-    ):
-
-    return db.query(StoragePoolModel).all()
+):
+    current_user.verify_scope(["storage.read"])
+    query = db.query(StoragePoolModel)
+    allowed_pools = allowed_storage_pool_ids(db, current_user)
+    if allowed_pools is not None:
+        query = query.filter(StoragePoolModel.id.in_(allowed_pools))
+    return query.all()
 
 
 @app.post("/pools")
@@ -99,7 +115,9 @@ def create_storage_pool(
         request_model: StoragePoolForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    current_user.verify_scope(["storage.manage"])
+    require_admin(current_user)
     storage_pool_model = StoragePoolModel(name=request_model.name)
     db.add(storage_pool_model)
     for storage_uuid in request_model.storage_uuids:
@@ -115,9 +133,15 @@ def update_storage_pool(
         request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-    storage_pool_model = db.query(StoragePoolModel).filter(StoragePoolModel.id==request_model.id).one()
+):
+    current_user.verify_scope(["storage.manage"])
+    storage_pool_model = get_authorized_storage_pool(
+        db,
+        request_model.id,
+        current_user,
+    )
     for storage_uuid in request_model.storage_uuids:
+        get_authorized_storage(db, storage_uuid, current_user)
         storage_pool_model.storages.append(
             AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
@@ -130,8 +154,9 @@ def get_storage(
         uuid: str,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["storage.read"])
+    get_authorized_storage(db, uuid, cu)
     image_sum = db.query(
         ImageModel.storage_uuid,
         func.sum(ImageModel.capacity).label('sum_capacity'),
@@ -149,7 +174,7 @@ def get_storage(
 
     model = query.filter(StorageModel.uuid==uuid).one_or_none()
 
-    if model == None:
+    if model is None:
         raise HTTPException(status_code=404, detail="storage is not found")
 
     res = model[0]
@@ -157,5 +182,3 @@ def get_storage(
     res.allocation_commit = model[2]
 
     return res
-
-

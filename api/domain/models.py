@@ -1,4 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from datetime import UTC, datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from mixin.database import Base
@@ -15,7 +17,6 @@ class DomainModel(Base):
     description = Column(String)
     update_token = Column(String)
     vnc_port = Column(String)
-    vnc_password = Column(String)
     
     # Cache
     storage_used = Column(Integer, default=0)
@@ -28,9 +29,9 @@ class DomainModel(Base):
     node = relationship('NodeModel')
     node_name = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     owner_user = relationship("UserModel")
-    owner_user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'))
+    owner_user_id = Column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='SET NULL'))
     owner_project = relationship("ProjectModel")
-    owner_project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
+    owner_project_id = Column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='SET NULL'))
 
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"
@@ -52,3 +53,25 @@ class DomainDriveModel(Base):
     type = Column(String)
     source = Column(String)
     update_token = Column(String)
+
+
+class DomainConsoleTicketModel(Base):
+    """noVNC resolverだけが一度消費できるopaque ticket。"""
+
+    __tablename__ = "domain_console_tickets"
+
+    token_hash = Column(String(64), primary_key=True)
+    domain_uuid = Column(
+        String,
+        ForeignKey("domains.uuid", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    actor_id = Column(String, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    used_at = Column(DateTime(timezone=True))

@@ -107,6 +107,504 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent/v1/pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Pairing */
+        post: operations["create_pairing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/pairings/{pairing_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pairing Status */
+        get: operations["pairing_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/pairing-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pending Pairings */
+        get: operations["pending_pairings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/pairing-requests/{pairing_id}/approval-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pairing Approval Options */
+        post: operations["pairing_approval_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/pairing-requests/{pairing_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Pairing */
+        post: operations["approve_pairing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/webauthn/registration-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Webauthn Registration Options */
+        post: operations["webauthn_registration_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/webauthn/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Webauthn Registration */
+        post: operations["complete_webauthn_registration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/leases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Lease */
+        post: operations["request_lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/leases/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lease Status */
+        get: operations["lease_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/leases/{request_id}/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange Lease */
+        post: operations["exchange_lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/lease-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pending Lease Requests */
+        get: operations["pending_lease_requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/lease-requests/{request_id}/approval-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lease Approval Options */
+        post: operations["lease_approval_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/lease-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Lease */
+        post: operations["approve_lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/actions/{action_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Action */
+        post: operations["run_action"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/operations/{operation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operation Status */
+        get: operations["operation_status"];
+        put?: never;
+        /** Cancel Operation */
+        post: operations["cancel_operation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Catalog */
+        get: operations["get_catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Devices */
+        get: operations["list_devices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/devices/{device_id}/revoke-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Device Revoke Options */
+        post: operations["device_revoke_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/devices/{device_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Device */
+        post: operations["revoke_device"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/devices/{device_id}/breaker-reset-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Breaker Reset Options */
+        post: operations["breaker_reset_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/devices/{device_id}/breaker-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Breaker */
+        post: operations["reset_breaker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/capability-leases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Capability Leases */
+        get: operations["list_capability_leases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/capability-leases/{lease_id}/revoke-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lease Revoke Options */
+        post: operations["lease_revoke_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/capability-leases/{lease_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Lease */
+        post: operations["revoke_lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Agent Control */
+        get: operations["get_agent_control"];
+        /** Update Agent Control */
+        put: operations["update_agent_control"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/operation-reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Operation Reconciliations
+         * @description unknownを含むAgent operationをroot task単位で返す。
+         */
+        get: operations["list_operation_reconciliations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/control/approval-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Control Approval Options */
+        post: operations["control_approval_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/operation-reconciliations/{operation_id}/approval-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Operation Reconcile Options */
+        post: operations["operation_reconcile_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/v1/operation-reconciliations/{operation_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reconcile Operation */
+        post: operations["reconcile_operation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/nodes": {
         parameters: {
             query?: never;
@@ -295,17 +793,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/vms/vnc/{token}": {
+    "/api/vms/{uuid}/console-ticket": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Vnc Address */
-        get: operations["get_vnc_address"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Create Console Ticket
+         * @description noVNC resolverだけが一度消費できる短命opaque ticketを発行する。
+         */
+        post: operations["create_console_ticket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -381,7 +882,6 @@ export interface paths {
          * Control Vm Cdrom
          * @description umount
          *     - path = null
-         *
          *     mount
          *     - path = iso file path
          */
@@ -764,8 +1264,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Current User */
-        get: operations["get_current_user"];
+        /** Get Current User Profile */
+        get: operations["get_current_user_profile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -800,7 +1300,8 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /** Update User */
+        put: operations["update_user"];
         post?: never;
         /** Delete User */
         delete: operations["delete_user"];
@@ -940,11 +1441,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Metrics
-         * @description Endpoint that serves Prometheus metrics.
-         */
-        get: operations["metrics_api_metrics_fastapi_get"];
+        /** Get Fastapi Metrics */
+        get: operations["get_fastapi_metrics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -957,6 +1455,38 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActionRequest */
+        ActionRequest: {
+            /** Input */
+            input?: {
+                [key: string]: unknown;
+            };
+            target: components["schemas"]["ActionTarget"];
+            /** Idempotencykey */
+            idempotencyKey?: string | null;
+            /** Expectedgeneration */
+            expectedGeneration?: string | null;
+        };
+        /** ActionResult */
+        ActionResult: {
+            /** Action */
+            action: string;
+            /** Result */
+            result: unknown;
+            /** Correlationid */
+            correlationId: string;
+        };
+        /** ActionTarget */
+        ActionTarget: {
+            /** Resourcetype */
+            resourceType: string;
+            /** Resourceid */
+            resourceId?: string | null;
+            /** Projectid */
+            projectId?: string | null;
+            /** Nodeid */
+            nodeId?: string | null;
+        };
         /** AuthValidateResponse */
         AuthValidateResponse: {
             /** Access Token */
@@ -990,6 +1520,15 @@ export interface components {
              */
             client_secret?: string | null;
         };
+        /** BreakerResetResponse */
+        BreakerResetResponse: {
+            /** Deviceid */
+            deviceId: string;
+            /** Breakeropenedat */
+            breakerOpenedAt: string | null;
+            /** Failurecount */
+            failureCount: number;
+        };
         /** CdromForUpdateDomain */
         CdromForUpdateDomain: {
             /** Path */
@@ -1003,6 +1542,105 @@ export interface components {
             hostname: string;
             /** Userdata */
             userData: string;
+        };
+        /** ControlApprovalRequest */
+        ControlApprovalRequest: {
+            /** Mutationsenabled */
+            mutationsEnabled: boolean;
+            /** Shadowmode */
+            shadowMode: boolean;
+            /** Enabledrisklevels */
+            enabledRiskLevels: ("R1" | "R2" | "R3")[];
+            /**
+             * Allowdeletewithoutrecovery
+             * @default false
+             */
+            allowDeleteWithoutRecovery: boolean;
+            /**
+             * Allownetworkchangewithoutoob
+             * @default false
+             */
+            allowNetworkChangeWithoutOob: boolean;
+            /** Reason */
+            reason: string;
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+        };
+        /** ControlChangeRequest */
+        ControlChangeRequest: {
+            /** Mutationsenabled */
+            mutationsEnabled: boolean;
+            /** Shadowmode */
+            shadowMode: boolean;
+            /** Enabledrisklevels */
+            enabledRiskLevels: ("R1" | "R2" | "R3")[];
+            /**
+             * Allowdeletewithoutrecovery
+             * @default false
+             */
+            allowDeleteWithoutRecovery: boolean;
+            /**
+             * Allownetworkchangewithoutoob
+             * @default false
+             */
+            allowNetworkChangeWithoutOob: boolean;
+            /** Reason */
+            reason: string;
+        };
+        /** ControlResponse */
+        ControlResponse: {
+            /** Mutationsenabled */
+            mutationsEnabled: boolean;
+            /** Shadowmode */
+            shadowMode: boolean;
+            /** Enabledrisklevels */
+            enabledRiskLevels: ("R1" | "R2" | "R3")[];
+            /** Allowdeletewithoutrecovery */
+            allowDeleteWithoutRecovery: boolean;
+            /** Allownetworkchangewithoutoob */
+            allowNetworkChangeWithoutOob: boolean;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Updatedby */
+            updatedBy?: string | null;
+        };
+        /** DeviceResponse */
+        DeviceResponse: {
+            /** Id */
+            id: string;
+            /** Principalid */
+            principalId: string | null;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+            /** Allowedscopes */
+            allowedScopes: string[];
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Approvedat */
+            approvedAt?: string | null;
+            /** Revokedat */
+            revokedAt?: string | null;
+            /** Breakeropenedat */
+            breakerOpenedAt?: string | null;
+        };
+        /** DeviceRevokeRequest */
+        DeviceRevokeRequest: {
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+            /** Reason */
+            reason: string;
         };
         /** Domain */
         Domain: {
@@ -1027,12 +1665,17 @@ export interface components {
             ownerProject?: components["schemas"]["DomainProject"] | null;
             /** Vncport */
             vncPort?: number | null;
-            /** Vncpassword */
-            vncPassword?: string | null;
             /** Drives */
             drives?: components["schemas"]["DomainDrive"][] | null;
             /** Interfaces */
             interfaces?: components["schemas"]["DomainInterface"][] | null;
+        };
+        /** DomainConsoleTicket */
+        DomainConsoleTicket: {
+            /** Token */
+            token: string;
+            /** Expiresin */
+            expiresIn: number;
         };
         /** DomainDetail */
         DomainDetail: {
@@ -1057,8 +1700,6 @@ export interface components {
             ownerProject?: components["schemas"]["DomainProject"] | null;
             /** Vncport */
             vncPort?: number | null;
-            /** Vncpassword */
-            vncPassword?: string | null;
             /** Drives */
             drives?: components["schemas"]["DomainDrive"][] | null;
             /** Interfaces */
@@ -1080,9 +1721,9 @@ export interface components {
         DomainForCreate: {
             /**
              * Type
-             * @enum {string}
+             * @constant
              */
-            type: "manual" | "project";
+            type: "manual";
             /** Name */
             name: string;
             /** Nodename */
@@ -1261,6 +1902,201 @@ export interface components {
             count: number;
             /** Data */
             data: components["schemas"]["Image"][];
+        };
+        /** LeaseApprovalResponse */
+        LeaseApprovalResponse: {
+            /** Requestid */
+            requestId: string;
+            /**
+             * Status
+             * @default approved
+             * @constant
+             */
+            status: "approved";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** LeaseApproveRequest */
+        LeaseApproveRequest: {
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+        };
+        /** LeaseIssuedResponse */
+        LeaseIssuedResponse: {
+            /**
+             * Kind
+             * @default lease
+             * @constant
+             */
+            kind: "lease";
+            /** Accesstoken */
+            accessToken: string;
+            /**
+             * Tokentype
+             * @default DPoP
+             * @constant
+             */
+            tokenType: "DPoP";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+            /** Leaseid */
+            leaseId: string;
+            /** Maxmutations */
+            maxMutations: number;
+        };
+        /** LeaseManagementResponse */
+        LeaseManagementResponse: {
+            /** Leaseid */
+            leaseId: string;
+            /** Principalid */
+            principalId: string;
+            /** Deviceid */
+            deviceId: string;
+            /** Scopes */
+            scopes: string[];
+            /**
+             * Issuedat
+             * Format: date-time
+             */
+            issuedAt: string;
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+            /** Revokedat */
+            revokedAt?: string | null;
+            /** Mutationsused */
+            mutationsUsed: number;
+            /** Maxmutations */
+            maxMutations: number;
+        };
+        /** LeasePendingResponse */
+        LeasePendingResponse: {
+            /**
+             * Kind
+             * @default pending
+             * @constant
+             */
+            kind: "pending";
+            /** Requestid */
+            requestId: string;
+            /**
+             * Status
+             * @default pending
+             * @constant
+             */
+            status: "pending";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /**
+         * LeaseRequest
+         * @description 端末が管理UIへ承認を依頼するためのrequest。
+         */
+        LeaseRequest: {
+            /** Deviceid */
+            deviceId: string;
+            /** Principalid */
+            principalId: string;
+            /** Requestedscopes */
+            requestedScopes: string[];
+            /** Projectids */
+            projectIds?: string[];
+            /** Nodeids */
+            nodeIds?: string[];
+            /**
+             * Maxmutations
+             * @default 20
+             */
+            maxMutations: number;
+            /**
+             * Allowdestructive
+             * @default false
+             */
+            allowDestructive: boolean;
+            /**
+             * Allowdeletewithoutrecovery
+             * @default false
+             */
+            allowDeleteWithoutRecovery: boolean;
+            /**
+             * Allownetworkchangewithoutoob
+             * @default false
+             */
+            allowNetworkChangeWithoutOob: boolean;
+        };
+        /** LeaseRequestSummary */
+        LeaseRequestSummary: {
+            /** Requestid */
+            requestId: string;
+            /** Deviceid */
+            deviceId: string;
+            /** Devicename */
+            deviceName: string;
+            /** Principalid */
+            principalId: string;
+            /** Requestedscopes */
+            requestedScopes: string[];
+            /** Projectids */
+            projectIds: string[];
+            /** Nodeids */
+            nodeIds: string[];
+            /** Maxmutations */
+            maxMutations: number;
+            /** Allowdestructive */
+            allowDestructive: boolean;
+            /** Allowdeletewithoutrecovery */
+            allowDeleteWithoutRecovery: boolean;
+            /** Allownetworkchangewithoutoob */
+            allowNetworkChangeWithoutOob: boolean;
+            /** Status */
+            status: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** LeaseStatusResponse */
+        LeaseStatusResponse: {
+            /** Requestid */
+            requestId: string;
+            /** Deviceid */
+            deviceId: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "expired" | "rejected";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** MutationResponse */
+        MutationResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "updated" | "revoked" | "reset";
         };
         /** Network */
         Network: {
@@ -1537,6 +2373,183 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** OperationAccepted */
+        OperationAccepted: {
+            /** Operationid */
+            operationId: string;
+            /** Taskids */
+            taskIds: string[];
+            /**
+             * Status
+             * @default queued
+             * @enum {string}
+             */
+            status: "queued" | "running" | "succeeded" | "failed" | "cancel_requested" | "cancelled" | "unknown";
+            /**
+             * Risk
+             * @enum {string}
+             */
+            risk: "R1" | "R2" | "R3";
+            /** Leaseid */
+            leaseId: string;
+            /** Correlationid */
+            correlationId: string;
+        };
+        /** OperationReconcileOptionsRequest */
+        OperationReconcileOptionsRequest: {
+            /**
+             * Resolution
+             * @enum {string}
+             */
+            resolution: "effect_confirmed" | "effect_absent";
+            /** Reason */
+            reason: string;
+        };
+        /** OperationReconcileRequest */
+        OperationReconcileRequest: {
+            /**
+             * Resolution
+             * @enum {string}
+             */
+            resolution: "effect_confirmed" | "effect_absent";
+            /** Reason */
+            reason: string;
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+        };
+        /** OperationResponse */
+        OperationResponse: {
+            /** Operationid */
+            operationId: string;
+            /** Taskids */
+            taskIds: string[];
+            /** Action */
+            action: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "succeeded" | "failed" | "cancel_requested" | "cancelled" | "reconciling" | "unknown" | "rejected";
+            /** Message */
+            message?: string | null;
+            /** Errorcode */
+            errorCode?: string | null;
+            /**
+             * Retryable
+             * @default false
+             */
+            retryable: boolean;
+            /** Result */
+            result?: unknown | null;
+        };
+        /** P256PublicKeyJwk */
+        P256PublicKeyJwk: {
+            /**
+             * Kty
+             * @constant
+             */
+            kty: "EC";
+            /**
+             * Crv
+             * @constant
+             */
+            crv: "P-256";
+            /** X */
+            x: string;
+            /** Y */
+            y: string;
+        };
+        /** PairingApprovalOptionsRequest */
+        PairingApprovalOptionsRequest: {
+            /** Pairingcode */
+            pairingCode: string;
+        };
+        /** PairingApproveRequest */
+        PairingApproveRequest: {
+            /** Pairingcode */
+            pairingCode: string;
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+            /** Allowedscopes */
+            allowedScopes?: string[] | null;
+        };
+        /** PairingCreateRequest */
+        PairingCreateRequest: {
+            /** Devicename */
+            deviceName: string;
+            publicKeyJwk: components["schemas"]["P256PublicKeyJwk"];
+            /** Requestedscopes */
+            requestedScopes: string[];
+        };
+        /** PairingCreatedResponse */
+        PairingCreatedResponse: {
+            /** Pairingid */
+            pairingId: string;
+            /** Pairingcode */
+            pairingCode: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "pending";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** PairingRequestSummary */
+        PairingRequestSummary: {
+            /** Pairingid */
+            pairingId: string;
+            /** Deviceid */
+            deviceId: string;
+            /** Devicename */
+            deviceName: string;
+            /** Requestedscopes */
+            requestedScopes: string[];
+            /** Status */
+            status: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** PairingStatusResponse */
+        PairingStatusResponse: {
+            /** Pairingid */
+            pairingId: string;
+            /** Deviceid */
+            deviceId?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "active" | "expired" | "rejected";
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
         /** PowerStatusForUpdateDomain */
         PowerStatusForUpdateDomain: {
             /** Status */
@@ -1715,7 +2728,7 @@ export interface components {
         /** StoragePoolForUpdate */
         StoragePoolForUpdate: {
             /** Id */
-            id: string;
+            id: number;
             /** Storageuuids */
             storageUuids: string[];
         };
@@ -1751,6 +2764,30 @@ export interface components {
             message?: string | null;
             /** Log */
             log?: string | null;
+            /** Principalid */
+            principalId?: string | null;
+            /** Idempotencykey */
+            idempotencyKey?: string | null;
+            /** Requesthash */
+            requestHash?: string | null;
+            /** Agentrequesthash */
+            agentRequestHash?: string | null;
+            /** Correlationid */
+            correlationId?: string | null;
+            /** Leaseid */
+            leaseId?: string | null;
+            /** Risk */
+            risk?: string | null;
+            /** Resolvedtargets */
+            resolvedTargets?: unknown[] | null;
+            /** Expectedgeneration */
+            expectedGeneration?: unknown | null;
+            /** Errorcode */
+            errorCode?: string | null;
+            /** Retryable */
+            retryable?: boolean | null;
+            /** Archivedat */
+            archivedAt?: string | null;
             /** Uuid */
             uuid: string;
         };
@@ -1774,16 +2811,10 @@ export interface components {
         TokenData: {
             /** Id */
             id?: string | null;
-            /**
-             * Scopes
-             * @default []
-             */
-            scopes: string[];
-            /**
-             * Role
-             * @default []
-             */
-            role: string[];
+            /** Scopes */
+            scopes?: string[];
+            /** Role */
+            role?: string[];
         };
         /** TokenRFC6749Response */
         TokenRFC6749Response: {
@@ -1797,16 +2828,35 @@ export interface components {
             /** Username */
             username: string;
             /** Scopes */
-            scopes: components["schemas"]["UserScope"][];
+            scopes?: components["schemas"]["UserScope"][];
             /** Projects */
-            projects: components["schemas"]["UserProject"][];
+            projects?: components["schemas"]["UserProject"][];
             /** Publickeys */
-            publickeys: components["schemas"]["UserPublickey"][];
+            publickeys?: components["schemas"]["UserPublickey"][];
         };
         /** UserForCreate */
         UserForCreate: {
             /** Username */
             username: string;
+            /** Scopes */
+            scopes?: components["schemas"]["UserScope"][];
+            /** Projects */
+            projects?: components["schemas"]["UserProject"][];
+            /** Publickeys */
+            publickeys?: components["schemas"]["UserPublickey"][];
+            /** Password */
+            password: string;
+        };
+        /** UserForUpdate */
+        UserForUpdate: {
+            /** Username */
+            username: string;
+            /** Scopes */
+            scopes?: components["schemas"]["UserScope"][];
+            /** Projects */
+            projects?: components["schemas"]["UserProject"][];
+            /** Publickeys */
+            publickeys?: components["schemas"]["UserPublickey"][];
             /** Password */
             password: string;
         };
@@ -1854,6 +2904,84 @@ export interface components {
             initialized: boolean;
             /** Version */
             version: string;
+        };
+        /** WebAuthnApprovalRequest */
+        WebAuthnApprovalRequest: {
+            /** Challengeid */
+            challengeId: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * WebAuthnCredentialJSON
+         * @description browserのPublicKeyCredential JSONを変更せず受け取る。
+         */
+        WebAuthnCredentialJSON: {
+            /** Id */
+            id: string;
+            /** Rawid */
+            rawId: string;
+            /**
+             * Type
+             * @default public-key
+             * @constant
+             */
+            type: "public-key";
+            /** Response */
+            response: {
+                [key: string]: unknown;
+            };
+            /** Clientextensionresults */
+            clientExtensionResults?: {
+                [key: string]: unknown;
+            };
+            /** Authenticatorattachment */
+            authenticatorAttachment?: string | null;
+        };
+        /** WebAuthnCredentialResponse */
+        WebAuthnCredentialResponse: {
+            /** Credentialid */
+            credentialId: string;
+            /** Credentialname */
+            credentialName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** WebAuthnOptionsResponse */
+        WebAuthnOptionsResponse: {
+            /** Challengeid */
+            challengeId: string;
+            /** Publickey */
+            publicKey: {
+                [key: string]: unknown;
+            };
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** WebAuthnRegistrationCompleteRequest */
+        WebAuthnRegistrationCompleteRequest: {
+            /** Challengeid */
+            challengeId: string;
+            /** Credentialname */
+            credentialName: string;
+            credential: components["schemas"]["WebAuthnCredentialJSON"];
+        };
+        /** WebAuthnRegistrationOptionsRequest */
+        WebAuthnRegistrationOptionsRequest: {
+            /** Credentialname */
+            credentialName: string;
+            /**
+             * Currentpassword
+             * Format: password
+             */
+            currentPassword: string;
         };
     };
     responses: never;
@@ -2066,6 +3194,957 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthValidateResponse"];
+                };
+            };
+        };
+    };
+    create_pairing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairingCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingCreatedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pairing_status: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Pairing-Code": string;
+            };
+            path: {
+                pairing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pending_pairings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingRequestSummary"][];
+                };
+            };
+        };
+    };
+    pairing_approval_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pairing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairingApprovalOptionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_pairing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pairing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairingApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    webauthn_registration_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebAuthnRegistrationOptionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_webauthn_registration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebAuthnRegistrationCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnCredentialResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_lease: {
+        parameters: {
+            query?: never;
+            header: {
+                DPoP: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeasePendingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lease_status: {
+        parameters: {
+            query?: never;
+            header: {
+                DPoP: string;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exchange_lease: {
+        parameters: {
+            query?: never;
+            header: {
+                DPoP: string;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseIssuedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pending_lease_requests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseRequestSummary"][];
+                };
+            };
+        };
+    };
+    lease_approval_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_lease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaseApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseApprovalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_action: {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization: string;
+                DPoP: string;
+            };
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResult"] | components["schemas"]["OperationAccepted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operation_status: {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization: string;
+                DPoP: string;
+            };
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_operation: {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization: string;
+                DPoP: string;
+            };
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_catalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    list_devices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceResponse"][];
+                };
+            };
+        };
+    };
+    device_revoke_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_device: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceRevokeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    breaker_reset_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_breaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebAuthnApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BreakerResetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_capability_leases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseManagementResponse"][];
+                };
+            };
+        };
+    };
+    lease_revoke_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_lease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebAuthnApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_control: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ControlResponse"];
+                };
+            };
+        };
+    };
+    update_agent_control: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ControlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_operation_reconciliations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResponse"][];
+                };
+            };
+        };
+    };
+    control_approval_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operation_reconcile_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationReconcileOptionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebAuthnOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconcile_operation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationReconcileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2444,12 +4523,12 @@ export interface operations {
             };
         };
     };
-    get_vnc_address: {
+    create_console_ticket: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                token: string;
+                uuid: string;
             };
             cookie?: never;
         };
@@ -2461,7 +4540,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DomainConsoleTicket"];
                 };
             };
             /** @description Validation Error */
@@ -3503,7 +5582,7 @@ export interface operations {
             };
         };
     };
-    get_current_user: {
+    get_current_user_profile: {
         parameters: {
             query?: never;
             header?: never;
@@ -3576,7 +5655,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserForUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
                 };
             };
             /** @description Validation Error */
@@ -3911,7 +6025,7 @@ export interface operations {
             };
         };
     };
-    metrics_api_metrics_fastapi_get: {
+    get_fastapi_metrics: {
         parameters: {
             query?: never;
             header?: never;
@@ -3925,9 +6039,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
         };
     };

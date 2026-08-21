@@ -65,7 +65,6 @@ class ProjectModel(Base):
         secondary=association_users_to_projects, 
         back_populates="projects", 
         lazy=False, 
-        cascade="all, delete",
         passive_deletes=True
     )
     domains = relationship("DomainModel", backref="project", viewonly=True)

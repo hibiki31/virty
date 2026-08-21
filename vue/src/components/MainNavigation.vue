@@ -7,7 +7,10 @@
       <v-list-item prepend-icon="mdi-database" title="Storage" :to="{ name: '/storages/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-harddisk" title="Image" :to="{ name: '/images/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-wan" title="Network" :to="{ name: '/networks/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-account" title="Users" :to="{ name: '/users/' }"></v-list-item>
+      <v-list-item v-if="isAdmin" prepend-icon="mdi-account" title="Users"
+        :to="{ name: '/users/' }"></v-list-item>
+      <v-list-item v-if="isAdmin" prepend-icon="mdi-robot-outline" title="Agent"
+        :to="{ name: '/agent/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-checkbox-multiple-marked-outline" title="Task"
         :to="{ name: '/tasks/' }"></v-list-item>
     </v-list>
@@ -27,9 +30,6 @@
         target="_blank">
         <v-icon icon="mdi-book-multiple" size="24" />
       </a>
-      <a class="d-inline-block mx-2 social-link" @click="copyToken" rel="noopener noreferrer">
-        <v-icon icon="mdi-code-json" size="24" />
-      </a>
     </v-list>
     <v-divider></v-divider>
   </v-navigation-drawer>
@@ -38,10 +38,10 @@
 <script lang="ts" setup>
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
-import notify from '@/composables/notify'
 const apiURL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL + "/api" : "/api"
 const state = useStateStore()
 const auth = useAuthStore()
+const isAdmin = computed(() => auth.scopes.includes('admin'))
 import { useDisplay } from 'vuetify'
 
 function useBreakpoint() {
@@ -50,11 +50,6 @@ function useBreakpoint() {
 }
 
 const breakPoint = useBreakpoint()
-async function copyToken() {
-  await navigator.clipboard.writeText(auth.token)
-  notify("success", "Copied the JWT token", "Use it from a Python script")
-}
-
 </script>
 
 <style scoped lang="sass">

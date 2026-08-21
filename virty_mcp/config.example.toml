@@ -1,0 +1,16 @@
+# ~/.codex/config.toml またはtrusted projectの .codex/config.toml へ追加する。
+# commandとCA fileは端末上の絶対pathへ置き換える。
+[mcp_servers.virty]
+command = "/opt/virty-mcp/.venv/bin/virty-mcp"
+enabled = true
+startup_timeout_sec = 20
+tool_timeout_sec = 45
+
+# 能力lease内を追加promptなしで実行する運用選択。
+# 組織policyで都度確認が必要なら "writes" または "prompt" に変更する。
+default_tools_approval_mode = "approve"
+
+[mcp_servers.virty.env]
+VIRTY_AGENT_BASE_URL = "https://virty.internal.example"
+VIRTY_TLS_CA_FILE = "/etc/ssl/certs/virty-internal-ca.pem"
+VIRTY_MCP_PROFILE = "production"

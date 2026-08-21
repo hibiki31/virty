@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "virty-mcp"
+version = "0.1.0"
+description = "Virty Agent API向けローカルstdio MCPサーバー"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography>=50,<51",
+  "jsonschema>=4.10,<5",
+  "keyring>=25,<27",
+  "SecretStorage>=3.3,<4; sys_platform == 'linux'",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8,<10",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+virty-mcp = "virty_mcp.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/virty_mcp"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -1,19 +1,19 @@
 # ビルド環境
-FROM node:24-bullseye as build-stage
+FROM node:24-bullseye AS build-stage
 WORKDIR /app
 
 RUN corepack enable
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm build
+RUN CHOKIDAR_USEPOLLING=true pnpm build
 
 # 本番環境
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine AS production-stage
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build-stage /app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]

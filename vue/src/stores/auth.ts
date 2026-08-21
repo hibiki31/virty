@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 
 type JwtPayload = {
   sub: string;
-  scopes: ("user" | "admin")[];
+  scopes: string[];
   projects: string[];
   exp: number;
 };
