@@ -7,7 +7,7 @@ virty/
 ├── api/          # FastAPI バックエンド (Python)
 ├── vue/          # Vue3 フロントエンド (TypeScript)
 ├── proxy/        # Nginxリバースプロキシ
-├── docs/         # MkDocsドキュメント
+├── mkdocs/       # MkDocsドキュメント
 ├── memory-bank/  # プロジェクト記憶
 ├── compose.example.yml  # Docker Compose設定
 └── dev.sh        # 開発用スクリプト（OpenAPI型生成）
