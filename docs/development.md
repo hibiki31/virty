@@ -4,6 +4,7 @@
 
 現行repositoryで再現できる開発環境、変更種別ごとの検証手順、安全な外部結合testの境界を定義する。
 製品利用者向けの導入・運用手順は`mkdocs/`、エージェント向けの短い強制規則は`AGENTS.md`に置く。
+現行codeに残る検証gapと改善完了条件は[known-issues.md](known-issues.md)を正本とする。
 
 ## 前提と唯一の入口
 
