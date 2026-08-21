@@ -37,6 +37,13 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
   diskのfull pathは必要なときだけfile名chipから展開する。
 - storageとnetworkを選択し、空diskまたは既存imageのcopyからVMを作成できる。
 - cloud-init user data、CD-ROM、network interface、project割り当てを扱える。
+- WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、package更新・install一覧、
+  初回起動scriptをcloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
+- guided formは明示的な適用操作で管理対象の設定だけをraw user dataへ一方向にmergeし、その他の設定を保持する。
+  raw YAMLを送信内容の正本として適用後も自由に編集でき、raw側の変更をformへ逆同期しない。
+- cloud-init user dataは`#cloud-config`から始まる単一のYAML mappingとして厳密に検証し、不正な内容を
+  VM作成へ送信しない。平文passwordがuser dataとrequestへ含まれること、初回起動scriptがroot権限で
+  実行されることをWeb UIで警告する。
 - VMの起動・停止・削除と、noVNC経由のconsole接続を提供する。
 
 ### Storage・image・network

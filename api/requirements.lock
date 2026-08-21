@@ -35,10 +35,10 @@ pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.21.0
-PyJWT==2.10.1
+PyJWT==2.13.0
 PyNaCl==1.6.2
 python-daemon==3.1.2
-python-multipart==0.0.27
+python-multipart==0.0.31
 PyYAML==6.0.3
 resolvelib==1.2.1
 rich==14.0.0
