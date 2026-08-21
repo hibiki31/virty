@@ -33,7 +33,7 @@ def get_vms(
     else:
         query = query.filter(or_(
                 DomainModel.owner_user_id==current_user.id,
-                DomainModel.project.has(ProjectModel.users.any(username=current_user.id))
+                DomainModel.owner_project.has(ProjectModel.users.any(username=current_user.id))
         ))
     if param.name_like:
         query = query.filter(DomainModel.name.like(f'%{param.name_like}%'))
@@ -52,9 +52,9 @@ def get_vms(
 
 @app.get("/{uuid}",response_model=DomainDetail, operation_id="get_vm")
 def get_vm(
+        uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        uuid:str = None
     ):
     try:
         domain:DomainModel = db.query(DomainModel).filter(DomainModel.uuid==uuid).one()
@@ -66,9 +66,9 @@ def get_vm(
 
 @app.get("/{uuid}/xml",response_model=DomainXML)
 def get_vm_xml(
+        uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        uuid:str = None
     ):
     try:
         with open(join(DATA_ROOT, "xml/domain", f"{uuid}.xml")) as f:

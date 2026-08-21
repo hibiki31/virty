@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 from uuid import uuid4
 
-from domain.schemas import *
+from domain.schemas import DomainDetailXml, DomainDetailXmlDrive, DomainDetailXmlInterface
 from mixin.log import setup_logger
 from network.schemas import PaseNetwork, PaseNetworkPortgroup
 from settings import APP_ROOT, DATA_ROOT
@@ -53,7 +53,7 @@ class XmlEditor():
             try:
                 if self.xml.find('virtualport').get("type") == "openvswitch":
                     network_type = "openvswitch"
-            except:
+            except AttributeError:
                 pass
         else:
             network_type = "internal"
@@ -69,7 +69,7 @@ class XmlEditor():
         for portgroup in self.xml.findall('portgroup'):
             try:
                 vlan_id = portgroup.find('vlan').find('tag').get('id')
-            except:
+            except AttributeError:
                 vlan_id = None
             data.portgroups.append(PaseNetworkPortgroup(
                 name = portgroup.get("name"),
@@ -127,13 +127,13 @@ class XmlEditor():
             self.xml.find('devices').find('graphics').set('autoport', "no")
             self.xml.find('devices').find('graphics').set('port', vnc_port) 
 
-        if vnc_passwd != None:
-            self.xml.find('devices').find('graphics').set('passwd', VNC_PASS)
+        if vnc_passwd is not None:
+            self.xml.find('devices').find('graphics').set('passwd', vnc_passwd)
     
     def domain_uuid_generate(self, domain_uuid=None):
-        if domain_uuid == None:
+        if domain_uuid is None:
             domain_uuid = str(uuid4())
-        if self.xml.find('uuid') == None:
+        if self.xml.find('uuid') is None:
             uuid_xml = ET.SubElement(self.xml, 'uuid') 
             uuid_xml.text = domain_uuid
         else:
@@ -142,7 +142,7 @@ class XmlEditor():
 
 
     def domain_interface_add(self, network_name, mac_address=None, port=None):
-        if mac_address == None:
+        if mac_address is None:
             mac_address = macaddress_generator()
     
         add_interface = ET.SubElement(self.xml.find('devices'), "interface")
@@ -188,8 +188,10 @@ class XmlEditor():
         for disk in self.xml.find('devices').iter('disk'):
             # hddとcdromがいるのでcdromだけ
             # ターゲットが指定されててかつ，違う場合はスキップ
-            if (disk.get('device') == "cdrom") and ((target == None) or (disk.find('target').get('dev') == target)) :    
-                if disk.find('source') == None:
+            if (disk.get('device') == "cdrom") and (
+                target is None or disk.find('target').get('dev') == target
+            ):
+                if disk.find('source') is None:
                     ET.SubElement(disk, 'source') 
                 disk.find('source').set('file', path)
                 return ET.tostring(disk).decode()
@@ -243,8 +245,8 @@ class XmlEditor():
             model.disk.append(DomainDetailXmlDrive(
                 device=disk.get("device"),
                 type=disk.get("type"),
-                target=disk.find("target").get("dev") if disk.find("target") != None else None,
-                source=disk.find("source").get("file") if disk.find("source") != None else None
+                target=disk.find("target").get("dev") if disk.find("target") is not None else None,
+                source=disk.find("source").get("file") if disk.find("source") is not None else None
             ))
             
         for nic in self.xml.find('devices').findall('interface'):
@@ -253,7 +255,7 @@ class XmlEditor():
                 mac=nic.find("mac").get("address"),
                 bridge=nic.find("source").get("bridge", None),
                 network=nic.find("source").get("network", None) if nic.find("source") else None,
-                target=nic.find("target").get("dev",None) if nic.find("target") != None else None,
+                target=nic.find("target").get("dev",None) if nic.find("target") is not None else None,
                 port=nic.find("source").get("portgroup")
             ))
 

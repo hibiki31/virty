@@ -28,7 +28,6 @@ meta:
 
 <script lang="ts" setup>
 import { useRouter, useRoute } from 'vue-router'
-import { asyncSleep } from '@/composables/sleep'
 import { useNotification } from '@kyvg/vue3-notification'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient } from '@/api'
@@ -43,11 +42,6 @@ const auth = useAuthStore()
 const password = ref('')
 const username = ref('')
 const isLoadingLogin = ref(false)
-
-const loadingLogin = async () => {
-  await asyncSleep(300)
-  isLoadingLogin.value = false
-}
 
 const login = async () => {
   isLoadingLogin.value = true

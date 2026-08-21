@@ -63,19 +63,20 @@ class TaskManager():
 
         task_request = TaskRequest(url=url, path_param=param, body=body)
 
-        self.db.add(TaskModel(
+        task_model = TaskModel(
             uuid = task_uuid,
             post_time = datetime.now().astimezone(),
-            run_time = None,
             user_id = user.id,
             status = status,
-            dependence_uuid = dep_uuid,
             resource = self.resource,
             object = self.object,
             method = self.method,
             request = task_request.model_dump_json(),
-            message = "Task has been queued"
-        ))
+        )
+        task_model.run_time = None
+        task_model.dependence_uuid = dep_uuid
+        task_model.message = "Task has been queued"
+        self.db.add(task_model)
         self.db.commit()
 
         self.model = self.db.query(TaskModel).filter(TaskModel.uuid==task_uuid).one()
@@ -113,7 +114,7 @@ def task_scheduler(db:Session, bg: BackgroundTasks, mode="init"):
                 raise Exception()
             depends_task:TaskModel = db.query(TaskModel)\
                 .filter(TaskModel.uuid==task.dependence_uuid)\
-                .with_lockmode('update').one()
+                .with_for_update().one()
         except FileNotFoundError:
             task.status = "error"
             task.message = "not found depended task"

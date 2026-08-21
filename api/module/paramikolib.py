@@ -23,24 +23,68 @@ class RemoteCommandResult(BaseSchema):
 
 
 class ParamikoManager():
-    def __init__(self, user, domain, port):
+    def __init__(
+        self,
+        user: str,
+        domain: str,
+        port: int,
+        connect_timeout: float = 10,
+        operation_timeout: float = 60,
+    ) -> None:
         self.user = user
         self.domain = domain
         self.port = port
+        self.operation_timeout = operation_timeout
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(hostname=domain, username=user, port=port)
+        self.client.connect(
+            hostname=domain,
+            username=user,
+            port=port,
+            timeout=connect_timeout,
+            banner_timeout=connect_timeout,
+            auth_timeout=connect_timeout,
+        )
 
         t = self.client.get_transport()
         t.window_size = WIN_SIZE
         t.packet_size = PKT_SIZE
     
     
-    def run_cmd(self, command:str):
-        stdin, stdout, stderr = self.client.exec_command(command)
-        exit_status = stdout.channel.recv_exit_status()  # ← 終了コードを取得
-        out = stdout.read().decode()
-        err = stderr.read().decode()
+    def run_cmd(self, command: str) -> RemoteCommandResult:
+        _stdin, stdout, _stderr = self.client.exec_command(
+            command,
+            timeout=self.operation_timeout,
+        )
+        channel = stdout.channel
+        deadline = time.monotonic() + self.operation_timeout
+        stdout_chunks: list[bytes] = []
+        stderr_chunks: list[bytes] = []
+
+        while True:
+            while channel.recv_ready():
+                stdout_chunks.append(channel.recv(64 * 1024))
+            while channel.recv_stderr_ready():
+                stderr_chunks.append(channel.recv_stderr(64 * 1024))
+
+            if channel.exit_status_ready():
+                exit_status = channel.recv_exit_status()
+                while channel.recv_ready():
+                    stdout_chunks.append(channel.recv(64 * 1024))
+                while channel.recv_stderr_ready():
+                    stderr_chunks.append(channel.recv_stderr(64 * 1024))
+                break
+
+            if time.monotonic() >= deadline:
+                channel.close()
+                raise TimeoutError(
+                    f"SSH command timed out after {self.operation_timeout:.1f}s: "
+                    f"{self.user}@{self.domain} => {command}"
+                )
+            time.sleep(0.05)
+
+        out = b"".join(stdout_chunks).decode(errors="replace")
+        err = b"".join(stderr_chunks).decode(errors="replace")
 
         if exit_status != 0:
             logger.error(err)
@@ -106,9 +150,17 @@ class ParamikoManager():
         '''
         return result
     
-    def scp_node_to_node(self, src_node:Self, dst_node: Self, src_path:str, dst_path:str):
+    def scp_node_to_node(
+        self,
+        src_node: Self,
+        dst_node: Self,
+        src_path: str,
+        dst_path: str,
+    ) -> None:
         sftp_src = src_node.client.open_sftp()
         sftp_dst = dst_node.client.open_sftp()
+        sftp_src.get_channel().settimeout(self.operation_timeout)
+        sftp_dst.get_channel().settimeout(self.operation_timeout)
         
         
         # コピー元サイズを取得

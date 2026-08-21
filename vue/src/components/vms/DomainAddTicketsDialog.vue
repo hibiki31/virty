@@ -424,7 +424,7 @@ ssh_authorized_keys:
         url: '/api/vms/ticket',
         data: this.postData
       })
-        .then(res => {
+        .then(() => {
           this.$_pushNotice('Please wait for task to complete', 'success');
           this.dialogState = false;
         })

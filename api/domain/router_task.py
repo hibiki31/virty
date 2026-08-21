@@ -48,7 +48,7 @@ def create_vm(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainForCreate = None
+        body: DomainForCreate = None,  # type: ignore[assignment]
     ):
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -89,7 +89,7 @@ def update_vm_power_status(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PowerStatusForUpdateDomain = None,
+        body: PowerStatusForUpdateDomain = None,  # type: ignore[assignment]
     ):
     
     task = TaskManager(db=db)
@@ -216,7 +216,7 @@ def update_vm_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForUpdateDomain = None
+        body: NetworkForUpdateDomain = None,  # type: ignore[assignment]
     ):
     """
     **Power off required**

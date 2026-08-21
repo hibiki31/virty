@@ -1,4 +1,4 @@
-name: Publish Docker image Poxy
+name: Publish Docker image Proxy
 
 on:
   push:
@@ -7,8 +7,17 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VIRTY_CI_CACHE: gha
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Expose GitHub Actions cache runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+      - name: Verify release image
+        run: ./devctl verify proxy
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -32,18 +41,12 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ./proxy
-          cache-from: type=gha
-          cache-to: type=gha
-          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha,scope=virty-proxy-production
+          cache-to: type=gha,scope=virty-proxy-production,mode=max
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

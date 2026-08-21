@@ -103,7 +103,7 @@ def get_incomplete_tasks(
         base_query = base_query.filter(TaskModel.user_id==current_user.id)
  
     for _ in range(20):
-        rows = base_query.all()                      # uuid,status のみ取得
+        rows = [(uuid, status) for uuid, status in base_query.all()]
         new_hash = _calc_hash(rows)
 
         if new_hash != param.reference_hash:

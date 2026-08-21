@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import traceback
 from datetime import datetime
+from pathlib import Path
 from time import sleep, time
 
 from sqlalchemy import or_
@@ -37,6 +38,10 @@ def main():
     task_manager.include_task(image_tasks)
 
     init_scheduler()
+    ready_file = os.getenv("VIRTY_WORKER_READY_FILE")
+    if ready_file:
+        Path(ready_file).touch()
+        logger.info("Workerの起動準備が完了しました")
 
     while True:
         run_scheduler(task_manager)
@@ -47,13 +52,13 @@ def main():
 
 def init_scheduler():
     with SessionLocal() as db:
-        lost_tasks = db.query(TaskModel).filter(TaskModel.status!="finish", TaskModel.status!="lost", TaskModel.status!="error")
-        lost_tasks.update({
+        lost_query = db.query(TaskModel).filter(TaskModel.status!="finish", TaskModel.status!="lost", TaskModel.status!="error")
+        lost_query.update({
             TaskModel.status:"lost",
             TaskModel.message:"Worker restarted and did not run"
         })
 
-        lost_tasks = lost_tasks.all()
+        lost_tasks = lost_query.all()
 
         if len(lost_tasks) != 0:
             logger.error(f'{len(lost_tasks)} task was not executed')

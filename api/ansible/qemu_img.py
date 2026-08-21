@@ -21,7 +21,7 @@ def main():
     qemu_img_cmd = module.get_bin_path('qemu-img', True)
     method = module.params['state']
     
-    if img_size != None:
+    if img_size is not None:
         if(img_size[:-1].upper == 'G'):
             img_size = img_size[:-1] * 1024 * 1024 * 1024
         elif(img_size[:-1].upper == 'M'):

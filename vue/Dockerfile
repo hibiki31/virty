@@ -1,19 +1,28 @@
-# ビルド環境
-FROM node:24-bullseye as build-stage
-WORKDIR /app
+# 開発・依存関係環境
+FROM node:24-bullseye@sha256:e98b72e72be9ca56f9467559af60619f738b736c0622b7a9afa39d8fc6fed2b5 AS development
+WORKDIR /workspace/vue
 
-RUN corepack enable
-COPY package.json ./
-COPY pnpm-lock.yaml ./
+RUN corepack enable \
+    && mkdir -p /tmp/virty-web-home \
+    && chmod 0777 /tmp/virty-web-home \
+    && chown node:node /workspace/vue
+USER node
 
-RUN pnpm install
+COPY --chown=node:node package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile \
+    && mkdir -p node_modules/.tmp \
+    && chmod 0777 /workspace/vue /workspace/vue/node_modules node_modules/.tmp
 
-COPY . .
-RUN pnpm build
+COPY --chown=node:node . .
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+# 型・lint・unit test・production bundleを一度ずつ検証する
+FROM development AS check
+RUN pnpm run check:full
 
 # 本番環境
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46 AS production
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=check /workspace/vue/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

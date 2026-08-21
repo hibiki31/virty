@@ -5,8 +5,8 @@ from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
 from user.models import UserModel
 
-from .models import *
-from .schemas import *
+from .models import ProjectModel
+from .schemas import ProjectForCreate
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)

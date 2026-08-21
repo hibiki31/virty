@@ -34,6 +34,16 @@ production例ではbrowserに公開するのは`web`である。`web`のNginxが
 `api/domain/`はVM domainの実装packageであるが、外部APIとtask resourceでは`vms`・`vm`を使う。
 名称を変更する場合は、router、task key、worker handler、frontend contractを一体として扱う。
 
+### 管理node連携の境界
+
+APIとworkerの業務処理は、SSH、Ansible、libvirt、downloadを直接初期化せず、それぞれのbackend
+interfaceをproviderから受け取る。production providerは`api/module/`の実装へ接続し、標準integration testは
+同じinterfaceのdeterministic fakeへ接続する。これによりtask登録、依存関係、状態遷移、失敗処理を
+管理nodeへ接続せず検証する。
+
+実backendそのものの互換性確認は`external` testの責務であり、標準CIの責務に混ぜない。fakeはproductionの
+成功・失敗contractを再現するが、libvirtやOS固有の挙動を保証するものではない。
+
 ## 主要flow
 
 ### 初期設定と認証
@@ -89,3 +99,4 @@ runtimeのmajor versionとimageはDockerfileおよび`compose.example.yml`、Pyt
 - schema変更ではOpenAPIとfrontend生成型を同期し、生成型へ手修正を加えない。
 - model変更では既存DBを移行できる新規Alembic revisionを追加する。
 - destructive operationでは、対象node、VM、storage、networkを一意なIDで解決してから実行する。
+- 管理node操作はbackend interfaceを越えて行い、標準testからproduction adapterへ接続しない。

@@ -78,7 +78,7 @@ def get_storages(
 def update_storage_metadata(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageMetadataForUpdate = None
+        request_model: StorageMetadataForUpdate = None,  # type: ignore[assignment]
     ):
     db.merge(StorageMetadataModel(**request_model.dict()))
     db.commit()
@@ -149,7 +149,7 @@ def get_storage(
 
     model = query.filter(StorageModel.uuid==uuid).one_or_none()
 
-    if model == None:
+    if model is None:
         raise HTTPException(status_code=404, detail="storage is not found")
 
     res = model[0]
@@ -157,5 +157,3 @@ def get_storage(
     res.allocation_commit = model[2]
 
     return res
-
-

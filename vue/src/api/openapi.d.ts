@@ -800,7 +800,8 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /** Update User */
+        put: operations["update_user"];
         post?: never;
         /** Delete User */
         delete: operations["delete_user"];
@@ -1796,17 +1797,63 @@ export interface components {
         User: {
             /** Username */
             username: string;
-            /** Scopes */
+            /**
+             * Scopes
+             * @default []
+             */
             scopes: components["schemas"]["UserScope"][];
-            /** Projects */
+            /**
+             * Projects
+             * @default []
+             */
             projects: components["schemas"]["UserProject"][];
-            /** Publickeys */
+            /**
+             * Publickeys
+             * @default []
+             */
             publickeys: components["schemas"]["UserPublickey"][];
         };
         /** UserForCreate */
         UserForCreate: {
             /** Username */
             username: string;
+            /**
+             * Scopes
+             * @default []
+             */
+            scopes: components["schemas"]["UserScope"][];
+            /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["UserProject"][];
+            /**
+             * Publickeys
+             * @default []
+             */
+            publickeys: components["schemas"]["UserPublickey"][];
+            /** Password */
+            password: string;
+        };
+        /** UserForUpdate */
+        UserForUpdate: {
+            /** Username */
+            username: string;
+            /**
+             * Scopes
+             * @default []
+             */
+            scopes: components["schemas"]["UserScope"][];
+            /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["UserProject"][];
+            /**
+             * Publickeys
+             * @default []
+             */
+            publickeys: components["schemas"]["UserPublickey"][];
             /** Password */
             password: string;
         };
@@ -3567,6 +3614,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UserForCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserForUpdate"];
             };
         };
         responses: {

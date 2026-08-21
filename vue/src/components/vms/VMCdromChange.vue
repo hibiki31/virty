@@ -24,7 +24,6 @@ import type { schemas } from '@/composables/schemas'
 const umount = ref(false)
 const isoPath = ref<string>()
 
-const loadingSubmit = ref(false)
 const isoImages = ref<string[]>([])
 const loadingList = ref(false)
 
@@ -61,7 +60,7 @@ async function submit() {
 
 async function getIsoList() {
   loadingList.value = true
-  if (model && props.item) {
+  if (model.value && props.item) {
     const res = await apiClient.GET("/api/images", {
       params: {
         query: {

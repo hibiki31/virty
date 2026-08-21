@@ -31,6 +31,7 @@ import axios from '@/axios/index';
 
 export default {
   name: 'GroupAddDialog',
+  emits: ['reload'],
   data: function() {
     return {
       roles: [
@@ -66,7 +67,7 @@ export default {
         url: '/api/nodes/role',
         data: this.requestData
       })
-        .then(res => {
+        .then(() => {
           this.$_pushNotice('Please wait for task to complete', 'success');
           this.submitting = false;
           this.$emit('reload');

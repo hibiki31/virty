@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from auth.function import get_password_hash
-from auth.router import CurrentUser, get_current_user
+from auth.router import CurrentUser, get_current_user as require_current_user
 from mixin.database import get_db
 from mixin.exception import raise_notfound
 from mixin.log import setup_logger
@@ -16,7 +16,7 @@ app = APIRouter(prefix="/api/users", tags=["users"])
 
 
 @app.get("/me", response_model=TokenData)
-def get_current_user(current_user: CurrentUser = Depends(get_current_user)):
+def get_current_user(current_user: CurrentUser = Depends(require_current_user)):
     return current_user
 
 
@@ -24,7 +24,7 @@ def get_current_user(current_user: CurrentUser = Depends(get_current_user)):
 def create_user(
         request: UserForCreate,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
     ):
     if request.username == "":
         raise HTTPException(
@@ -55,7 +55,7 @@ def create_user(
 def update_user(
         request: UserForUpdate,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
     ):
     try:
         user_model = db.query(UserModel).filter(UserModel.username==request.username).one()
@@ -74,12 +74,12 @@ def update_user(
 def get_users(
         param: UserForQuery = Depends(),
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
     ):
     query = db.query(UserModel)
 
     if param.name_like:
-        query = query.filter(UserModel.usernamee.like(f"%{param.name_like}%"))
+        query = query.filter(UserModel.username.like(f"%{param.name_like}%"))
 
     count = query.count()
     if param.limit > 0:
@@ -92,7 +92,7 @@ def get_users(
 def delete_user(
         username: str,
         db: Session = Depends(get_db),
-        current_user: CurrentUser = Depends(get_current_user),
+        current_user: CurrentUser = Depends(require_current_user),
     ):
 
     if not db.query(UserModel).filter(UserModel.username==username).one_or_none():

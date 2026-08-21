@@ -17,7 +17,7 @@
         <v-icon left class="ma-3" :color="getNodeStatusColor(item.status)">mdi-power-standby</v-icon>
       </template>
       <template v-slot:item.roles="{ item }">
-        <v-chip v-for="role in item.roles" :text="role.roleName" variant="flat" color="primary" size="x-small"
+        <v-chip v-for="role in item.roles" :key="role.roleName" :text="role.roleName" variant="flat" color="primary" size="x-small"
           class="ma-1"></v-chip>
       </template>
       <template v-slot:item.actions="{ item }">

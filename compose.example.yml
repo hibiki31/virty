@@ -32,7 +32,7 @@ services:
     restart: always
     command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
   db:
-    image: postgres:18
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
     volumes:
       - postgres-data:/var/lib/postgresql
     environment:

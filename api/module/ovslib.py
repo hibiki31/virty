@@ -1,4 +1,7 @@
-# from ryu.lib.ovs import vsctl
+try:
+    from ryu.lib.ovs import vsctl
+except ModuleNotFoundError:
+    vsctl = None
 
 from mixin.log import setup_logger
 
@@ -12,6 +15,8 @@ logger = setup_logger(__name__)
 "https://programtalk.com/python-examples/ryu.lib.ovs.vsctl.VSCtlCommand/?ipage=1"
 class OVSManager():
     def __init__(self, domain):
+        if vsctl is None:
+            raise RuntimeError("OVS操作にはryuが必要です")
         self.port = 6632
         self.address = f'tcp:{socket.gethostbyname(domain)}:{self.port}'
         self.vc =  vsctl.VSCtl(self.address)
@@ -99,4 +104,4 @@ class OVSManager():
         return cmd.result
 
     def ovs_get_port(self):
-        cmd = self.ovs_run('list', ['port'])
+        self.ovs_run('list', ['port'])

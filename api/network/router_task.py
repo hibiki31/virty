@@ -36,7 +36,7 @@ def create_network(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForCreate = None
+        body: NetworkForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)
@@ -57,7 +57,7 @@ def create_network_ovs(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkOVSForCreate = None
+        body: NetworkOVSForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)
@@ -76,7 +76,7 @@ def create_network_providers(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkProviderForCreate = None
+        body: NetworkProviderForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)

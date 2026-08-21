@@ -1,7 +1,7 @@
 import { apiClient } from "@/api";
 import type { paths } from "@/api/openapi";
 
-import { format, parse, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ja } from "date-fns/locale/ja";
 
 export type typeListTask =
@@ -30,18 +30,25 @@ export async function getTaskList(query: typeListTaskQuery) {
   }
 }
 
-export const methodTransration = (method: string) => {
+export const methodTranslation = (method: string) => {
   switch (method) {
     case "add":
+    case "post":
       return "POST";
     case "update":
+    case "put":
       return "PUT";
     case "delete":
       return "DELETE";
+    case "change":
     case "cahnge":
-      return "PATH";
+    case "patch":
+      return "PATCH";
   }
 };
+
+// 既存の利用箇所との互換性を保つ。
+export const methodTransration = methodTranslation;
 
 export const copyClipBoardCurl = (item: typeListTask["data"][0]) => {
   const comand = `curl -X '${methodTransration(item.method)}' \\

@@ -27,7 +27,7 @@
           <v-divider class="pt-5"></v-divider>
 
           <!-- ストレージ -->
-          <v-row v-for="disk in postData.disks">
+          <v-row v-for="(disk, index) in postData.disks" :key="index">
             <v-col cols="12" md="2">
               <v-select variant="outlined" density="comfortable"
                 :items="[{ title: 'Empty', value: 'empty' }, { title: 'Copy', value: 'copy' }]" :rules="[r.required]"
@@ -120,8 +120,6 @@ import { notifyTask } from '@/composables/notify';
 import type { schemas } from '@/composables/schemas';
 import { asyncSleep } from '@/composables/sleep';
 
-
-const useCloudInit = ref(true)
 
 const loading = ref(false)
 const dialogState = defineModel({ default: false })

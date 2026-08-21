@@ -1,10 +1,10 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 
 class AttributeDict(object):
     def __init__(self, attrs=None):
-        if type(attrs) == dict:
+        if isinstance(attrs, dict):
             for k, v in attrs.items():
                 setattr(self, k, v)
     

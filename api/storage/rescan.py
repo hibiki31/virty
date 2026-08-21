@@ -4,21 +4,28 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from mixin.log import setup_logger
-from module.virtlib import VirtManager
+from module.backends import create_libvirt_backend
 from node.models import NodeModel
 from storage.models import ImageModel, StorageModel
 
 logger = setup_logger(__name__)
 
 
-def storage_rescan(node: NodeModel, db:Session, token:str=None, storage_uuids:List[str]=[]):
+def storage_rescan(
+    node: NodeModel,
+    db: Session,
+    token: str | None = None,
+    storage_uuids: List[str] | None = None,
+):
     if token is None:
         token = str(time())
+    if storage_uuids is None:
+        storage_uuids = []
     
     if node.status != 10:
         return [], []
 
-    manager = VirtManager(node_model=node)
+    manager = create_libvirt_backend(node_model=node)
 
     # 全ストレージで取得
     if len(storage_uuids) == 0:

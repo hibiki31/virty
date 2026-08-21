@@ -14,7 +14,7 @@
               <v-card prepend-icon="mdi-cube-outline" title="Spec">
                 <v-table class="text-caption" density="compact">
                   <tbody align="right">
-                    <tr v-for="item in getSpecList()">
+                    <tr v-for="item in getSpecList()" :key="item.title">
                       <th>{{ item.title }}</th>
                       <td>{{ item.value }}</td>
                     </tr>
@@ -43,8 +43,6 @@ import { useRoute } from 'vue-router';
 
 const route = useRoute()
 const data = ref<schemas['Storage']>()
-
-const stateDeleteDialog = ref(false)
 
 function reload() {
   if ('uuid' in route.params) {

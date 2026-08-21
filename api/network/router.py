@@ -80,7 +80,7 @@ def update_network_pool(
         current_user: CurrentUser = Depends(get_current_user)
     ):
     pool_model = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==model.pool_id).one()
-    if model.port_name != None:
+    if model.port_name is not None:
         port_model = db.query(NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==model.network_uuid,
             NetworkPortgroupModel.name==model.port_name).one()
@@ -102,7 +102,7 @@ def delete_network_pool(
 
     net_pool = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==id).one_or_none()
     
-    if net_pool == None:
+    if net_pool is None:
         raise HTTPException(status_code=404, detail="network pool is not found")
     
     db.delete(net_pool)
@@ -120,16 +120,16 @@ def get_network(
     try:
         network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
     except NoResultFound:
-        raise_notfound(detial=f"Network not found: {uuid}")
+        raise_notfound(detail=f"Network not found: {uuid}")
 
     return network
 
 
 @app.get("/{uuid}/xml",response_model=NetworkXML)
 def get_network_xml(
+        uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        uuid:str = None
     ):
     try:
         with open(join(DATA_ROOT, "xml/network", f"{uuid}.xml")) as f:

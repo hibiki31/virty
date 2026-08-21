@@ -33,24 +33,20 @@
 - バージョンはリリース対象の変更でのみ更新し、更新時は`api/settings.py`と
   `vue/package.json`の値を同時に確認する。
 - 大きなHTML、OpenAPI、生成ファイルは全文を展開せず、`rg`、parser、対象範囲の抽出で調査する。
-- 秘密鍵、token、password、`api/tests/env*.json`、DB dumpをコミットしない。
+- 秘密鍵、token、password、`api/tests/env*.json`、external labの実config、DB dumpをコミットしない。
 
 ## 開発環境と検証
 
-- 利用可能なコンテナ環境を優先する。Docker Composeを使う場合は
-  `-p virty-task-name`の形式でproject名を分離し、他のworktreeのcontainer、network、volumeを共有しない。
-- API開発用Composeは`api/.devcontainer/compose.yml`である。
-  `compose.example.yml`は配布imageを使う実行例で、ソースbuild用Composeではない。
-- ルートの`dev.sh`は旧デプロイ更新スクリプトであり、OpenAPI生成や開発テストには使わない。
-- API変更では、API開発containerの`/workspaces/api`で先に`ruff check .`を実行し、必要な場合だけ変更対象へ
-  `--fix`を適用する。完了前にもう一度`ruff check .`を実行する。
-  関連pytestは隔離した統合テスト環境でだけ実行する。単なる確認のために`main.py`を直接起動しない。
-- Web変更では`cd vue && pnpm run type-check && pnpm run build`を実行し、必要に応じてlintする。
-  完了確認のためだけに開発serverを起動しない。
-- API/worker/image/network/storageを扱うpytestは、DB内容の削除や管理ノード上のresource作成・削除を行う。
-  本番・共有環境では実行しない。前提条件と安全な手順は`docs/development.md`を参照する。
+- 開発、型check、test、image buildはrepository rootの`./devctl`だけを入口とし、hostのPython、Node、pnpmや
+  raw Compose commandへ置き換えない。`devctl`がworktree固有のproject名とportを割り当てる。
+- 編集中は変更対象へ`./devctl quick api`または`./devctl quick web`を実行し、完了前は変更範囲にかかわらず
+  引数なしの`./devctl verify`を実行する。各checkは非修正modeであり、自動修正は対象fileを限定する。
+- API契約変更では`./devctl generate openapi`、Webのrouter/component/auto-import生成型変更では
+  `./devctl generate web-types`を使い、生成型を手編集しない。
+- `./devctl infra`は専用labの明示設定を必要とする破壊的な外部結合testである。利用者の明示許可なく実行せず、
+  本番・共有DB・共有nodeを指定しない。標準`quick`と`verify`は実機resourceを変更しない。
+- 完了確認だけを目的に開発serverを起動しない。詳細なcommand、timeout、test分類は`docs/development.md`を正本とする。
 - 文書だけの変更でも`git diff --check`と内部リンクの存在確認を行う。
-- 影響範囲別の詳しい検証手順は`docs/development.md`を正本とする。
 
 ## 完了とGit
 

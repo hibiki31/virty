@@ -6,7 +6,7 @@ from settings import SQLALCHEMY_DATABASE_URL
 
 # プリントでデバッグしやすいように
 class RepresentableBase(object):
-    def __repr__(self):
+    def __repr__(self) -> str:
         columns = ', '.join([
             '{0}={1}'.format(k, repr(self.__dict__[k]))
             for k in self.__dict__.keys() if k[0] != '_'
@@ -15,9 +15,10 @@ class RepresentableBase(object):
             self.__class__.__name__, columns
         )
     
-    def toDict(self):
-        model = {}
-        for column in self.__table__.columns:
+    def toDict(self) -> dict[str, str]:
+        model: dict[str, str] = {}
+        table = getattr(self, "__table__")
+        for column in table.columns:
             model[column.name] = str(getattr(self, column.name))
         return model
 

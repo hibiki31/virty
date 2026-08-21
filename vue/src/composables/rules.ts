@@ -7,9 +7,9 @@ export const required = (value: string) => !!value || "Required.";
 export const limitLength64 = (value: string) =>
   value.length <= 64 || "64 characters maximum.";
 export const limitLength32 = (value: string) =>
-  value.length <= 32 || "64 characters maximum.";
+  value.length <= 32 || "32 characters maximum.";
 export const limitLength16 = (value: string) =>
-  value.length <= 16 || "64 characters maximum.";
+  value.length <= 16 || "16 characters maximum.";
 
 const characterRestrictions = (value: string) => {
   const regex = /^[A-Za-z0-9-]*$/;
@@ -19,7 +19,7 @@ const characterRestrictions = (value: string) => {
 export const intValueRestrictions = (value: string) =>
   Number.isInteger(Number(value)) || "Only Int value";
 
-export const portTCP = (value: any): true | string => {
+export const portTCP = (value: unknown): true | string => {
   const port = Number(value);
   if (Number.isInteger(port) && port >= 0 && port < 65536) {
     return true;
@@ -27,9 +27,9 @@ export const portTCP = (value: any): true | string => {
   return "Only tcp port 0~65535";
 };
 
-export const vlan = (value: any): true | string => {
+export const vlan = (value: unknown): true | string => {
   const port = Number(value);
-  if (Number.isInteger(port) && port >= 1 && port < 4096) {
+  if (Number.isInteger(port) && port >= 1 && port <= 4094) {
     return true;
   }
   return "Only vlan 1~4094";

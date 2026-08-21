@@ -85,7 +85,7 @@ const itemsNodes = ref<typeListNode>(initNodeList)
 const items = ref<typeListImage>(initImageList)
 const imageSelected = ref<typeListImage["data"]>([])
 
-async function loadItems({ page = 1, itemsPerPage = 10, sortBy = "date" }) {
+async function loadItems({ page = 1, itemsPerPage = 10 }) {
   query.value.page = page
   query.value.limit = itemsPerPage
 

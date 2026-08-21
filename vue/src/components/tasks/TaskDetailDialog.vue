@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import type { typeListTask } from '@/composables/task'
-import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'
+import { toJST, getMethodColor, getResourceIcon } from '@/composables/task'
 
 
 const model = defineModel({ default: false })

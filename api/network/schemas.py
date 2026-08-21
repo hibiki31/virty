@@ -118,7 +118,7 @@ class NetworkForNetworkPool(BaseSchema):
 
 
 class NetworkPoolPort(BaseSchema):
-    name: str= None
+    name: str = None  # type: ignore[assignment]
     vlan_id: int | None = None
     network: NetworkForNetworkPool
     

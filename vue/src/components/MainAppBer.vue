@@ -18,19 +18,15 @@
 import { removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
 
-import { useRouter } from 'vue-router'
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
 
-const router = useRouter()
 const state = useStateStore()
 const auth = useAuthStore()
 
-// emit
-const emit = defineEmits(['getVideo'])
 const taskChecking = ref(false)
 const taskCount = ref(0)
 const taskHash = ref('')

@@ -78,7 +78,7 @@ def update_project(
         user: UserModel = db.query(
                 UserModel
             ).filter(
-                UserModel.id==request.user_id
+                UserModel.username==request.user_id
             ).one()
     except NoResultFound:
         raise  HTTPException(
@@ -91,7 +91,7 @@ def update_project(
     db.merge(project)
     db.commit()
 
-    project: ProjectModel = db.query(
+    project = db.query(
             ProjectModel
         ).filter(
             ProjectModel.id==request.project_id
