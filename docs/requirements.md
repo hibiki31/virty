@@ -33,6 +33,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 ### VM lifecycle
 
 - VMの一覧、詳細、libvirt XML、電源状態を確認できる。
+- VM詳細では、接続networkへの導線と、disk容量、pathから識別できるfile名を確認できる。
+  diskのfull pathは必要なときだけfile名chipから展開する。
 - storageとnetworkを選択し、空diskまたは既存imageのcopyからVMを作成できる。
 - cloud-init user data、CD-ROM、network interface、project割り当てを扱える。
 - VMの起動・停止・削除と、noVNC経由のconsole接続を提供する。

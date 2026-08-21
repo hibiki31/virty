@@ -250,13 +250,14 @@ class XmlEditor():
             ))
             
         for nic in self.xml.find('devices').findall('interface'):
+            source = nic.find("source")
             model.interface.append(DomainDetailXmlInterface(
                 type=nic.get("type"),
                 mac=nic.find("mac").get("address"),
-                bridge=nic.find("source").get("bridge", None),
-                network=nic.find("source").get("network", None) if nic.find("source") else None,
+                bridge=source.get("bridge", None) if source is not None else None,
+                network=source.get("network", None) if source is not None else None,
                 target=nic.find("target").get("dev",None) if nic.find("target") is not None else None,
-                port=nic.find("source").get("portgroup")
+                port=source.get("portgroup") if source is not None else None,
             ))
 
         for seclabel in self.xml.findall('seclabel'):
