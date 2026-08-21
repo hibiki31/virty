@@ -98,7 +98,12 @@
                     <tr v-for="item in data.interfaces" :key="`interface-${item.mac}`">
                       <td>{{ item.type }}</td>
                       <td>{{ item.mac }}</td>
-                      <td>{{ item.network }}</td>
+                      <td>
+                        <router-link v-if="item.networkUuid" :to="'/networks/' + item.networkUuid">
+                          {{ item.network }}
+                        </router-link>
+                        <span v-else>{{ item.network || '-' }}</span>
+                      </td>
                       <td>{{ item.bridge }}</td>
                       <td>{{ item.port }}</td>
                       <td>{{ item.target }}</td>
@@ -120,6 +125,7 @@
                     <tr>
                       <th class="text-left">Device</th>
                       <th class="text-left">Type</th>
+                      <th class="text-left">Size</th>
                       <th class="text-left">Source</th>
                       <th class="text-left">Target</th>
                       <th class="text-left">Actions</th>
@@ -129,7 +135,22 @@
                     <tr v-for="(itemDisk, index) in data.drives" :key="`itemDisk-${index}`">
                       <td>{{ itemDisk.device }}</td>
                       <td>{{ itemDisk.type }}</td>
-                      <td>{{ itemDisk.source }}</td>
+                      <td>{{ formatStorageCapacity(itemDisk.capacityGb) }}</td>
+                      <td>
+                        <template v-if="itemDisk.source">
+                          <v-chip size="small" variant="tonal" :aria-expanded="expandedStoragePaths.has(index)"
+                            @click="toggleStoragePath(index)" @keydown.enter="toggleStoragePath(index)"
+                            @keydown.space.prevent="toggleStoragePath(index)">
+                            {{ getStorageFileName(itemDisk.source) }}
+                          </v-chip>
+                          <v-expand-transition>
+                            <div v-if="expandedStoragePaths.has(index)" class="text-caption text-break mt-1 font-mono">
+                              {{ itemDisk.source }}
+                            </div>
+                          </v-expand-transition>
+                        </template>
+                        <span v-else>-</span>
+                      </td>
                       <td>{{ itemDisk.target }}</td>
                       <td>
                         <v-icon v-if="itemDisk.device == 'cdrom'"
@@ -165,7 +186,14 @@ import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
 const route = useRoute()
 import type { schemas } from '@/composables/schemas';
-import { vmPowerOff, vmPowerOn, openVNC, getPowerColor } from '@/composables/vm';
+import {
+  formatStorageCapacity,
+  getPowerColor,
+  getStorageFileName,
+  openVNC,
+  vmPowerOff,
+  vmPowerOn,
+} from '@/composables/vm';
 
 const data = ref<schemas['DomainDetail']>()
 const dataXML = ref<schemas['DomainXML']>()
@@ -175,6 +203,17 @@ const stateCdromDialog = ref(false)
 const stateNetworkDialog = ref(false)
 const deleteTarget = ref("")
 const changeMac = ref("")
+const expandedStoragePaths = ref(new Set<number>())
+
+function toggleStoragePath(index: number) {
+  const next = new Set(expandedStoragePaths.value)
+  if (next.has(index)) {
+    next.delete(index)
+  } else {
+    next.add(index)
+  }
+  expandedStoragePaths.value = next
+}
 
 async function reload() {
   console.debug("vm detail reload")

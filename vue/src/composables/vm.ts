@@ -98,3 +98,12 @@ export function getPowerColor(statusCode: number) {
   else if (statusCode === 20) return "purple";
   else return "yellow";
 }
+
+export function getStorageFileName(source: string) {
+  const normalizedSource = source.replace(/\/+$/, "");
+  return normalizedSource.split("/").pop() || source;
+}
+
+export function formatStorageCapacity(capacityGb: number | null | undefined) {
+  return capacityGb == null ? "-" : `${capacityGb} GB`;
+}

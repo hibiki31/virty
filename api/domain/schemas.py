@@ -12,6 +12,7 @@ class DomainDrive(BaseSchema):
     type: str | None = None
     source: str | None = None
     target: str | None = None
+    capacity_gb: int | None = None
 
 
 class DomainInterface(BaseSchema):
@@ -20,6 +21,7 @@ class DomainInterface(BaseSchema):
     target: str  | None = None
     bridge: str  | None = None
     network: str  | None = None
+    network_uuid: str | None = None
     port: str  | None = None
 
 

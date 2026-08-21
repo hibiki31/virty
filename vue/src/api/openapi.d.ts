@@ -1716,6 +1716,8 @@ export interface components {
             source?: string | null;
             /** Target */
             target?: string | null;
+            /** Capacitygb */
+            capacityGb?: number | null;
         };
         /** DomainForCreate */
         DomainForCreate: {
@@ -1776,6 +1778,8 @@ export interface components {
             bridge?: string | null;
             /** Network */
             network?: string | null;
+            /** Networkuuid */
+            networkUuid?: string | null;
             /** Port */
             port?: string | null;
         };
@@ -5691,39 +5695,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["User"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_user: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserForUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
