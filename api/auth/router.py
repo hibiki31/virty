@@ -105,11 +105,17 @@ def create_access_token(data: dict, expires_delta: timedelta):
 def get_current_user(
         security_scopes: SecurityScopes, 
         token: str = Depends(oauth2_scheme)
-    ):
+    ) -> CurrentUser:
     # ペイロード確認
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
+        if not isinstance(user_id, str):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Illegal jwt",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         scopes = payload.get("scopes", [])
     except jwt.exceptions.ExpiredSignatureError:
         raise HTTPException(
