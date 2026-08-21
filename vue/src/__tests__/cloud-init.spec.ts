@@ -33,8 +33,6 @@ describe("cloud-init YAML helper", () => {
       sshPasswordAuthentication: false,
       selectedPublicKeys: [],
       manualPublicKeys: "",
-      packageUpdate: false,
-      packages: "",
       script: "",
     });
     expect(validateCloudInitYaml(EMPTY_CLOUD_CONFIG)).toEqual({
@@ -89,6 +87,10 @@ user:
   gecos: Existing User
 chpasswd:
   expire: true
+package_update: true
+packages:
+  - curl
+  - vim
 unowned:
   nested: true
 `;
@@ -100,8 +102,6 @@ unowned:
       sshPasswordAuthentication: true,
       selectedPublicKeys: [ED25519_KEY],
       manualPublicKeys: `  ${ED25519_KEY}  \n${RSA_KEY}\n`,
-      packageUpdate: true,
-      packages: "curl\n vim \ncurl\n",
       script: "#!/bin/sh\necho hello\n",
     });
 
@@ -159,8 +159,8 @@ runcmd:
     });
     expect(data).not.toHaveProperty("password");
     expect(data).not.toHaveProperty("ssh_authorized_keys");
-    expect(data).not.toHaveProperty("package_update");
-    expect(data).not.toHaveProperty("packages");
+    expect(data).toHaveProperty("package_update", true);
+    expect(data).toHaveProperty("packages", ["curl"]);
     expect(data).not.toHaveProperty("runcmd");
 
     const onlyOwnedParents = successfulValue(
@@ -303,14 +303,19 @@ runcmd:
     );
   });
 
-  it("packageUpdate=falseでは既存package_updateを削除する", () => {
+  it("guided formの対象外であるpackage設定を保持する", () => {
     const yaml = successfulValue(
       mergeCloudInitForm(
-        "#cloud-config\npackage_update: true\ntimezone: UTC\n",
+        "#cloud-config\npackage_update: true\npackages:\n  - curl\ntimezone: UTC\n",
         createCloudInitFormState(),
       ),
     );
 
-    expect(parse(yaml)).toEqual({ timezone: "UTC", ssh_pwauth: false });
+    expect(parse(yaml)).toEqual({
+      package_update: true,
+      packages: ["curl"],
+      timezone: "UTC",
+      ssh_pwauth: false,
+    });
   });
 });

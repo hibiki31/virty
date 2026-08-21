@@ -192,6 +192,7 @@ const componentStubs: Record<string, Component> = {
   VCard: ContainerStub,
   VCardActions: ContainerStub,
   VCardText: ContainerStub,
+  VCardTitle: ContainerStub,
   VCheckbox: CheckboxStub,
   VCol: ContainerStub,
   VDialog: ContainerStub,
@@ -268,6 +269,9 @@ describe("VMAddDialog cloud-init support", () => {
   it("simple formの変更を警告し、Apply後にYAML tabへ切り替える", async () => {
     const wrapper = await mountDialog();
     await toggleCloudInit(wrapper, true);
+
+    expect(wrapper.find('[data-testid="cloud-init-package-update"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="cloud-init-packages"]').exists()).toBe(false);
 
     expect(wrapper.getComponent(TabsStub).props("modelValue")).toBe("simple");
     const tabs = wrapper.findAllComponents(TabStub);
