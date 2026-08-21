@@ -5,6 +5,7 @@ from fastapi.routing import APIRoute
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from auth.router import app as auth_router
+from dashboard.router import app as dashboard_router
 from domain.router import app as domain_router
 from domain.router_task import app as domain_task_router
 from exporter.router import app as exporter_router
@@ -48,6 +49,7 @@ tags_metadata = [
     },
     {"name": "users", "description": ""},
     {"name": "projects", "description": ""},
+    {"name": "dashboard", "description": ""},
     {"name": "tasks", "description": ""},
     {"name": "nodes", "description": ""},
     {"name": "nodes-task", "description": ""},
@@ -82,6 +84,7 @@ app.add_middleware(
 
 app.include_router(task_router)
 app.include_router(auth_router)
+app.include_router(dashboard_router)
 app.include_router(node_router)
 app.include_router(node_task_router)
 app.include_router(domain_router)
