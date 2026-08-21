@@ -1,5 +1,6 @@
 site_name: Vrity Document
 copyright: "&copy; 2019-2025 hibiki31"
+docs_dir: mkdocs
 
 theme:
   name: material

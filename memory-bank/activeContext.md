@@ -15,7 +15,7 @@
 | 2025-07-18 | - | Prometheusメトリクス/エクスポーター機能(#7) | exporter/, metrics |
 | 2025-06-27 | - | ISOイメージwget/ダウンロード機能(#49) | images関連 |
 | 2025-06-27 | - | JSONログサポート（LOG_MODE環境変数） | mixin/log.py |
-| 2025-06-22 | - | MkDocsドキュメント整備 | docs/ |
+| 2025-06-22 | - | MkDocsドキュメント整備 | mkdocs/ |
 | 2025-06-22 | - | バージョンv5.1.2リリース | settings.py, package.json |
 | 2025-05-17 | - | Vue Composition API移行・Vuetify3対応 | vue/src/ 全体 |
 | 2025-05-14 | - | OpenAPI型生成パイプライン構築 | dev.sh, api.d.ts |
