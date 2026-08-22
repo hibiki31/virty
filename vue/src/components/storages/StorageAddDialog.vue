@@ -20,7 +20,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" type="submit">ADD</v-btn>
+          <v-btn variant="text" @click="dialogState = false">Cancel</v-btn>
+          <v-btn color="primary" type="submit" :loading="loading">ADD</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
@@ -31,9 +32,12 @@
 import type { typeListNode } from '@/composables/nodes';
 import { initNodeList, getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
-import { notifyTask } from '@/composables/notify';
+import notify, { notifyTask } from '@/composables/notify';
+import { onMounted, reactive, ref } from 'vue';
+import r from '@/composables/rules';
 
 const dialogState = defineModel({ default: false })
+const loading = ref(false)
 
 const itemsNodes = ref<typeListNode>(initNodeList)
 const postData = reactive({
@@ -46,11 +50,21 @@ async function submit(event: Promise<{ valid: boolean }>) {
   if (!(await event).valid) {
     return
   }
-  apiClient.POST('/api/tasks/storages', { body: postData }).then((res) => {
+
+  loading.value = true
+  try {
+    const res = await apiClient.POST('/api/tasks/storages', { body: postData })
     if (res.data) {
       notifyTask(res.data[0].uuid)
+      dialogState.value = false
+    } else if (res.error) {
+      notify('error', 'Register Storage failed', res.error)
     }
-  })
+  } catch {
+    notify('error', 'Register Storage failed', 'Unable to reach the storage service')
+  } finally {
+    loading.value = false
+  }
 }
 
 

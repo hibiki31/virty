@@ -22,6 +22,32 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json-summary"],
       include: ["src/**/*.{ts,vue}"],
+      thresholds: {
+        "src/composables/auth.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
+        "src/composables/notify.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
+        "src/composables/pagination.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
+        "src/composables/taskPolling.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
+      },
       exclude: [
         // 生成物とtest自身はcoverage対象に含めない。
         "src/**/*.d.ts",
@@ -30,12 +56,6 @@ export default defineConfig({
         "src/main.ts",
         "src/plugins/**",
         "src/router/**",
-        // 現行画面から未参照で、削除済みaxios adapterへ依存するlegacy SFC。
-        "src/components/nodes/NodeRolePatch.vue",
-        "src/components/storages/StoragePoolAddDialog.vue",
-        "src/components/storages/StoragePoolJoinDialog.vue",
-        "src/components/vms/DomainAddTicketsDialog.vue",
-        "src/components/vms/DomainGroupPut.vue",
       ],
     },
   },

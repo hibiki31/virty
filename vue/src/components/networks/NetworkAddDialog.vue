@@ -1,12 +1,12 @@
 <template>
-  <v-dialog width="700" v-model="dialogState" color="black">
+  <v-dialog width="700" v-model="dialogState" data-testid="network-create-dialog" color="black">
     <v-form ref="formRef" @submit.prevent="submit">
       <v-card title="Create Network">
         <v-card-text>
           <!-- 基本 -->
           <v-row cols="12">
             <v-col>
-              <v-text-field variant="outlined" density="compact" label="Name" v-model="postData.name"
+              <v-text-field data-testid="network-name" variant="outlined" density="compact" label="Name" v-model="postData.name"
                 :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
                 counter="64"></v-text-field>
             </v-col>
@@ -69,7 +69,8 @@
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
-          <v-btn color="primary" type="submit" :loading="loading">CREATE</v-btn>
+          <v-btn data-testid="network-create-cancel" variant="text" @click="dialogState = false">Cancel</v-btn>
+          <v-btn data-testid="network-create-submit" color="primary" type="submit" :loading="loading">CREATE</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -79,11 +80,12 @@
 
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
+import { onMounted, reactive, ref } from 'vue';
+import r from '@/composables/rules';
 
 import { getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
-import { notifyTask } from '@/composables/notify';
-import { asyncSleep } from '@/composables/sleep';
+import notify, { notifyTask } from '@/composables/notify';
 
 const dialogState = defineModel({ default: false })
 const loading = ref(false)
@@ -99,7 +101,7 @@ const itemsForwardMode = [
   { title: "NAT", value: "nat" },
   { title: "OVS", value: "ovs" },
   { title: "Route", value: "route" },
-  { title: "Isorated", value: "isorated" },
+  { title: "Isolated", value: "isolated" },
 ]
 
 const itemsNodes = ref<schemas["NodePage"]>({ count: 0, data: [], })
@@ -125,7 +127,7 @@ const postData = reactive<schemas["NetworkForCreate"]>({
 function updateMode(value: string) {
 
   // IPを使用しないケース
-  if (value === 'isorated' || value === 'ovs') {
+  if (value === 'isolated' || value === 'ovs') {
     enableIP.value = false;
     enableDHCP.value = false;
     disableIP.value = true
@@ -161,17 +163,25 @@ async function submit(event: Promise<{ valid: boolean }>) {
     postData.dhcp = undefined
   }
 
-  if (enableBridge) {
+  if (enableBridge.value) {
     postData.bridgeName = bridgeName.value
+  } else {
+    postData.bridgeName = undefined
   }
 
-  const res = await apiClient.POST('/api/tasks/networks', { body: postData })
-  asyncSleep(500)
-  if (res.data) {
-    notifyTask(res.data[0].uuid)
-    dialogState.value = false
+  try {
+    const res = await apiClient.POST('/api/tasks/networks', { body: postData })
+    if (res.data) {
+      notifyTask(res.data[0].uuid)
+      dialogState.value = false
+    } else if (res.error) {
+      notify('error', 'Create Network failed', res.error)
+    }
+  } catch {
+    notify('error', 'Create Network failed', 'Unable to reach the network service')
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 onMounted(async () => {

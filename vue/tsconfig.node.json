@@ -3,12 +3,14 @@
   "include": [
     "vite.config.*",
     "vitest.config.*",
+    "e2e/**/*.ts",
     "cypress.config.*",
     "nightwatch.conf.*",
     "playwright.config.*"
   ],
   "compilerOptions": {
     "composite": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
 

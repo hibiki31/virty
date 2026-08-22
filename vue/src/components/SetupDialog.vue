@@ -22,8 +22,10 @@
 
 <script setup lang="ts">
 import notify from '@/composables/notify'
+import r from '@/composables/rules'
 import { apiClient } from '@/api'
 import { asyncSleep } from '@/composables/sleep';
+import { onMounted, ref } from 'vue';
 
 const dialogState = ref(false)
 const postData = ref({
@@ -35,26 +37,26 @@ const loading = ref(false)
 
 
 async function commit(event: Promise<{ valid: boolean }>) {
-  loading.value = true
-
   if (!(await event).valid) {
     return
   }
 
-  const res = await apiClient.POST("/api/auth/setup", { body: postData.value })
-  await asyncSleep(1000)
+  loading.value = true
+  try {
+    const res = await apiClient.POST("/api/auth/setup", { body: postData.value })
 
-  loading.value = false
-
-  if (res.response.ok) {
-    notify("success", "Setup successful")
-    await asyncSleep(500)
-    await reload()
-  } else if (res.error) {
-    notify("error", "Failed Setup", res.error)
+    if (res.response.ok) {
+      notify("success", "Setup successful")
+      await asyncSleep(500)
+      await reload()
+    } else if (res.error) {
+      notify("error", "Failed Setup", res.error)
+    }
+  } catch {
+    notify("error", "Failed Setup", "Unable to reach the setup service")
+  } finally {
+    loading.value = false
   }
-
-
 }
 
 async function reload() {

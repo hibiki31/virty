@@ -1,5 +1,6 @@
 import { apiClient } from "@/api";
 import type { paths } from "@/api/openapi";
+import { toApiPageQuery } from "@/composables/pagination";
 
 import { format, parseISO } from "date-fns";
 import { ja } from "date-fns/locale/ja";
@@ -17,10 +18,9 @@ export const initTaskList: typeListTask = {
 };
 
 export async function getTaskList(query: typeListTaskQuery) {
-  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/tasks", {
     params: {
-      query: query,
+      query: toApiPageQuery(query),
     },
   });
   if (res.data) {

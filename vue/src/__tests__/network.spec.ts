@@ -32,7 +32,7 @@ describe("network一覧API", () => {
         query: { admin: true, limit: 20, page: 0 },
       },
     });
-    expect(query.page).toBe(0);
+    expect(query.page).toBe(1);
   });
 
   it("response dataがない場合は空の一覧へfallbackする", async () => {

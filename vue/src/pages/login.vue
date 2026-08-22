@@ -32,6 +32,7 @@ import { useNotification } from '@kyvg/vue3-notification'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient } from '@/api'
 import { getCookie, removeCookie, setCookie } from 'typescript-cookie'
+import { onMounted, ref } from 'vue'
 
 // module
 const { notify } = useNotification()
@@ -45,20 +46,22 @@ const isLoadingLogin = ref(false)
 
 const login = async () => {
   isLoadingLogin.value = true
-  apiClient.POST('/api/auth', {
-    body: {
-      username: username.value,
-      password: password.value,
-      scope: ''
-    },
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    }
-  }).then((res) => {
+  try {
+    const res = await apiClient.POST('/api/auth', {
+      body: {
+        username: username.value,
+        password: password.value,
+        scope: ''
+      },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    })
+
     if (res.data) {
       setCookie('accessToken', res.data.access_token)
       auth.loginSuccess(res.data.access_token)
-      router.push((route.query.redirect as string | undefined) ?? '/')
+      await router.push((route.query.redirect as string | undefined) ?? '/')
       notify({
         type: 'success',
         title: 'Login successful',
@@ -68,17 +71,23 @@ const login = async () => {
       notify({
         type: 'error',
         title: 'Login fail',
-        text: typeof res.error.detail === "string" ? res.error.detail : 'known error',
+        text: typeof res.error?.detail === "string" ? res.error.detail : 'Unknown error',
       })
     }
-  }).finally(() => {
+  } catch {
+    notify({
+      type: 'error',
+      title: 'Login fail',
+      text: 'Unable to reach the authentication service',
+    })
+  } finally {
     isLoadingLogin.value = false
-  })
+  }
 }
 
 
 
-const validateToken = () => {
+const validateToken = async () => {
   const accessToken = getCookie('accessToken')
 
   if (!accessToken) {
@@ -89,11 +98,13 @@ const validateToken = () => {
 
   auth.token = accessToken
 
-  apiClient.GET('/api/auth/validate', {
-    headers: {
-      Authorization: 'Bearer ' + accessToken
-    }
-  }).then((res) => {
+  try {
+    const res = await apiClient.GET('/api/auth/validate', {
+      headers: {
+        Authorization: 'Bearer ' + accessToken
+      }
+    })
+
     if (res.response.ok) {
       notify({
         type: 'success',
@@ -101,7 +112,7 @@ const validateToken = () => {
         text: 'Token were valid',
       })
       auth.loginSuccess(accessToken)
-      router.push((route.query.redirect as string | undefined) ?? '/')
+      await router.push((route.query.redirect as string | undefined) ?? '/')
     } else {
       notify({
         type: 'error',
@@ -109,12 +120,20 @@ const validateToken = () => {
         text: 'Token have expired',
       })
       removeCookie('accessToken')
-      auth.$state.tokenValidated = true
+      auth.loginFailure()
     }
-  })
+  } catch {
+    notify({
+      type: 'error',
+      title: 'Login Failed',
+      text: 'Unable to validate the saved token',
+    })
+    removeCookie('accessToken')
+    auth.loginFailure()
+  }
 }
 
 onMounted(async () => {
-  validateToken()
+  await validateToken()
 })
 </script>

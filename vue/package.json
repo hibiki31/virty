@@ -16,6 +16,7 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "check:quick": "run-p lint type-check test",
     "check:full": "run-s check:web-types check:full:parallel",
     "check:full:parallel": "run-p lint type-check:full test:coverage"
@@ -36,6 +37,7 @@
     "yaml": "2.8.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.0",
     "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.9.0",
     "@vitejs/plugin-vue": "^5.2.3",

@@ -1,8 +1,8 @@
 <template>
   <v-dialog width="400" v-model="model">
     <v-card title="Register Node">
-      <v-card-text>
-        <v-form>
+      <v-form @submit.prevent="addNode">
+        <v-card-text>
           <v-text-field variant="outlined" density="comfortable" v-model="postData.name" label="Name"
             :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
             counter="64"></v-text-field>
@@ -16,24 +16,29 @@
             counter="128"></v-text-field>
           <v-checkbox color="primary" density="comfortable" v-model="postData.libvirtRole"
             label='Provisioning as kvm host'></v-checkbox>
-        </v-form>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="primary" @click="addNode">Register</v-btn>
-      </v-card-actions>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn variant="text" @click="model = false">Cancel</v-btn>
+          <v-btn color="primary" type="submit" :loading="loading">Register</v-btn>
+        </v-card-actions>
+      </v-form>
     </v-card>
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { apiClient } from '@/api';
 import { useNotification } from '@kyvg/vue3-notification'
+import type { components } from '@/api/openapi';
+import { reactive, ref } from 'vue';
+import r from '@/composables/rules';
 
 const { notify } = useNotification()
 
 const model = defineModel({ default: false })
+const loading = ref(false)
 
-const postData = reactive({
+const postData = reactive<components['schemas']['NodeForCreate']>({
   name: '',
   userName: '',
   domain: '',
@@ -43,8 +48,12 @@ const postData = reactive({
 })
 
 
-const addNode = () => {
-  apiClient.POST('/api/tasks/nodes', { body: postData }).then((res) => {
+const addNode = async (event: Promise<{ valid: boolean }>) => {
+  if (!(await event).valid) return
+
+  loading.value = true
+  try {
+    const res = await apiClient.POST('/api/tasks/nodes', { body: postData })
     if (res.response.ok) {
       notify({
         type: 'success',
@@ -56,10 +65,18 @@ const addNode = () => {
       notify({
         type: 'error',
         title: 'Join Node failed',
-        text: res.error.detail
+        text: typeof res.error?.detail === 'string' ? res.error.detail : 'Unknown error'
       })
     }
-  })
+  } catch {
+    notify({
+      type: 'error',
+      title: 'Join Node failed',
+      text: 'Unable to reach the node service'
+    })
+  } finally {
+    loading.value = false
+  }
 }
 
 

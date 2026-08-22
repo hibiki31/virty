@@ -21,9 +21,8 @@ meta:
 </route>
 
 <script lang="ts" setup>
-import type { schemas } from '@/composables/schemas'
-import type { paths } from "@/api/openapi";
-import { apiClient } from '@/api'
+import { ref } from 'vue'
+import { getUserList, initUserList, type UserListQuery } from '@/composables/user'
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
@@ -37,15 +36,14 @@ const headers = [
   { title: 'publickeys', value: 'publickeys' },
 ]
 
-const query = ref<NonNullable<paths["/api/networks"]["get"]["parameters"]["query"]>>({
+const query = ref<UserListQuery>({
   admin: true,
   limit: 20,
   page: 1,
   nameLike: "",
-  nodeNameLike: "",
 })
 
-const items = ref<schemas['UserPage']>({ count: 0, data: [] })
+const items = ref(initUserList)
 
 async function loadItems({ page = 1, itemsPerPage = 10 }) {
   query.value.page = page
@@ -57,20 +55,11 @@ async function loadItems({ page = 1, itemsPerPage = 10 }) {
 async function reload() {
   loading.value = true
 
-  query.value.page = (query.value.page || 1) - 1;
-  const res = await apiClient.GET("/api/users", {
-    params: {
-      query: query.value,
-    },
-  });
-
-  if (res.data) {
-    items.value = res.data;
-  } else {
-    items.value = { count: 0, data: [] }
+  try {
+    items.value = await getUserList(query.value)
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
 
 useReloadListener(async () => {

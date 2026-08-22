@@ -1,6 +1,7 @@
 import { apiClient } from "@/api";
 import type { schemas } from "./schemas";
 import type { paths } from "@/api/openapi";
+import { toApiPageQuery } from "@/composables/pagination";
 
 export type typeListStorageQuery = NonNullable<
   paths["/api/storages"]["get"]["parameters"]["query"]
@@ -20,10 +21,9 @@ export function getAvailableColoer(capa: number, available: number) {
 }
 
 export async function getStorageList(query: typeListStorageQuery) {
-  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/storages", {
     params: {
-      query: query,
+      query: toApiPageQuery(query),
     },
   });
   if (res.data) {

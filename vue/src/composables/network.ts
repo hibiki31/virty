@@ -1,5 +1,6 @@
 import { apiClient } from "@/api";
 import type { paths, components } from "@/api/openapi";
+import { toApiPageQuery } from "@/composables/pagination";
 
 export type typeListNetwork =
   paths["/api/networks"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -14,10 +15,9 @@ export const initNetworkList: typeListNetwork = {
 };
 
 export async function getNetworkList(query: typeListNetworkQuery) {
-  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/networks", {
     params: {
-      query: query,
+      query: toApiPageQuery(query),
     },
   });
   if (res.data) {

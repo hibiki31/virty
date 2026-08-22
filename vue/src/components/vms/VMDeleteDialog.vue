@@ -39,18 +39,22 @@ const loading = ref(false)
 async function submit() {
   if (props.item) {
     loading.value = true
-    const res = await apiClient.DELETE('/api/tasks/vms/{uuid}', { params: { path: { uuid: props.item.uuid } } })
+    try {
+      const res = await apiClient.DELETE('/api/tasks/vms/{uuid}', { params: { path: { uuid: props.item.uuid } } })
 
-    if (res.response.ok) {
-      notify('success', 'Delete VM successful', 'Wait until the task is completed')
-      await asyncSleep(600)
-      router.push("/vms")
+      if (res.response.ok) {
+        notify('success', 'Delete VM successful', 'Wait until the task is completed')
+        model.value = false
+        await asyncSleep(600)
+        await router.push("/vms")
+      } else if (res.error) {
+        notify('error', 'Delete VM failed', res.error)
+      }
+    } catch {
+      notify('error', 'Delete VM failed', 'Unable to reach the VM service')
+    } finally {
+      loading.value = false
     }
-    if (res.error) {
-      notify('error', 'Delete VM failed', res.error)
-    }
-    model.value = false
-    loading.value = false
   }
 }
 </script>

@@ -17,6 +17,8 @@
 <script lang="ts" setup>
 import { removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
+import { applyTaskPollingSnapshot, createTaskPoller } from '@/composables/taskPolling'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
@@ -27,56 +29,57 @@ import notify from '@/composables/notify'
 const state = useStateStore()
 const auth = useAuthStore()
 
-const taskChecking = ref(false)
 const taskCount = ref(0)
-const taskHash = ref('')
 const enableAutoReload = ref(true)
 
 const logout = async () => {
   removeAuth()
+  auth.loginFailure()
   notify('success', 'You have been logged out', 'You will be redirected to the login page.')
 
   await asyncSleep(200)
   location.reload()
 }
 
-const taskCheck = async () => {
-  // 複数実行されてる場合は終了
-  if (taskChecking.value) {
-    return
-  }
-  taskChecking.value = true;
-
-  while (true) {
-    // 未認証の場合は待ち
-    if (!auth.authed) {
-      await asyncSleep(1000)
-      continue;
-    }
+const taskPoller = createTaskPoller({
+  isAuthenticated: () => auth.authed,
+  async request(referenceHash, signal) {
     const res = await apiClient.GET('/api/tasks/incomplete', {
       params: {
         query: {
-          referenceHash: taskHash.value,
+          referenceHash,
           admin: true
         }
-      }
+      },
+      signal,
     })
-    if (res.data) {
-      taskHash.value = res.data.hash
-      state.task_uuids = res.data.uuids
 
-      // リロードをトリガーする条件
-      if ((taskCount.value > res.data.count) && enableAutoReload.value) {
-        notify("info", "Realod", "Reloading due to task completion")
-        setTimeout(() => (state.trigger()), 100)
-      }
-      taskCount.value = res.data.count
+    if (!res.data) {
+      throw new Error('incomplete taskの取得に失敗しました')
     }
-  }
-}
+
+    return res.data
+  },
+  onSnapshot(snapshot, previousCount) {
+    applyTaskPollingSnapshot(snapshot, previousCount, enableAutoReload.value, {
+      notifyReload: () => notify("info", "Reload", "Reloading due to task completion"),
+      setTaskCount: (count) => {
+        taskCount.value = count
+      },
+      setTaskUuids: (uuids) => {
+        state.task_uuids = uuids
+      },
+      triggerReload: () => state.trigger(),
+    })
+  },
+})
 
 onMounted(() => {
-  taskCheck()
+  taskPoller.start()
+})
+
+onBeforeUnmount(() => {
+  taskPoller.stop()
 })
 
 </script>

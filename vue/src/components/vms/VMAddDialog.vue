@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialogState" width="calc(100% - 32px)" max-width="1100">
+  <v-dialog v-model="dialogState" data-testid="vm-create-dialog" width="calc(100% - 32px)" max-width="1100">
     <v-form class="vm-create-dialog__form" @submit.prevent="submit">
       <v-card class="vm-create-dialog">
         <v-card-title class="d-flex align-center px-4 py-3">
@@ -14,13 +14,13 @@
             <h3 class="vm-create-dialog__section-title">Basic</h3>
             <v-row class="ma-n1">
               <v-col cols="12" md="5" class="pa-1">
-                <v-text-field v-model="postData.name" variant="outlined" density="compact" label="Name"
+                <v-text-field v-model="postData.name" data-testid="vm-name" variant="outlined" density="compact" label="Name"
                   hide-details="auto"
                   :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
                   @change="() => { if (postData.cloudInit) { postData.cloudInit.hostname = postData.name } }"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6" md="3" class="pa-1">
-                <v-select v-model="postData.nodeName" variant="outlined" density="compact" label="Node"
+                <v-select v-model="postData.nodeName" data-testid="vm-node" variant="outlined" density="compact" label="Node"
                   hide-details="auto" :items="itemsNodes.data" :rules="[r.required]" item-title="name"
                   item-value="name"></v-select>
               </v-col>
@@ -54,7 +54,7 @@
                   hide-details="auto" :rules="[r.required]"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6" :md="disk.type === 'copy' ? 3 : 8" class="pa-1">
-                <v-select v-model="disk.savePoolUuid" variant="outlined" density="compact" label="Destination pool"
+                <v-select v-model="disk.savePoolUuid" data-testid="vm-destination-pool" variant="outlined" density="compact" label="Destination pool"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
@@ -79,7 +79,7 @@
             </div>
             <v-row v-for="(nic, index) in postData.interface" :key="index" class="ma-n1 align-center">
               <v-col cols="10" :md="checkOVS(nic.networkUuid) ? 6 : 11" class="pa-1">
-                <v-select v-model="nic.networkUuid" variant="outlined" density="compact" label="Network"
+                <v-select v-model="nic.networkUuid" data-testid="vm-network" variant="outlined" density="compact" label="Network"
                   hide-details="auto" :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)"
                   item-title="name" item-value="uuid" :rules="[r.required]"></v-select>
               </v-col>
@@ -194,8 +194,8 @@
 
         <v-divider></v-divider>
         <v-card-actions class="justify-end px-4 py-2">
-          <v-btn variant="text" @click="dialogState = false">Cancel</v-btn>
-          <v-btn color="primary" type="submit" :loading="loading">Create</v-btn>
+          <v-btn data-testid="vm-create-cancel" variant="text" @click="dialogState = false">Cancel</v-btn>
+          <v-btn data-testid="vm-create-submit" color="primary" type="submit" :loading="loading">Create</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -220,9 +220,8 @@ import { initStorageList, getStorageList } from '@/composables/storage';
 import type { typeListImage, typeListImageQuery } from '@/composables/image';
 import { initImageList, getImageList } from '@/composables/image';
 import { apiClient } from '@/api';
-import { notifyTask } from '@/composables/notify';
+import notify, { notifyTask } from '@/composables/notify';
 import type { schemas } from '@/composables/schemas';
-import { asyncSleep } from '@/composables/sleep';
 import {
   EMPTY_CLOUD_CONFIG,
   createCloudInitFormState,
@@ -294,19 +293,21 @@ async function submit(event: Promise<{ valid: boolean }>) {
     }
   }
 
-  const res = await apiClient.POST('/api/tasks/vms', { body: postData })
+  loading.value = true
+  try {
+    const res = await apiClient.POST('/api/tasks/vms', { body: postData })
 
-  if (res.data) {
-    notifyTask(res.data[0].uuid)
-    dialogState.value = false
+    if (res.data) {
+      notifyTask(res.data[0].uuid)
+      dialogState.value = false
+    } else if (res.error) {
+      notify('error', 'Create VM failed', res.error)
+    }
+  } catch {
+    notify('error', 'Create VM failed', 'Unable to reach the VM service')
+  } finally {
+    loading.value = false
   }
-
-  asyncSleep(500)
-  if (res.data) {
-    notifyTask(res.data[0].uuid)
-    dialogState.value = false
-  }
-  loading.value = false
 }
 
 function togleCloudInit(value: unknown) {

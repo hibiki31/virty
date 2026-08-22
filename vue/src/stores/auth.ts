@@ -37,5 +37,12 @@ export const useAuthStore = defineStore("auth", {
       this.tokenValidated = true;
       this.authed = true;
     },
+    loginFailure() {
+      this.token = "";
+      this.username = "";
+      this.scopes = [];
+      this.tokenValidated = true;
+      this.authed = false;
+    },
   },
 });

@@ -1,5 +1,6 @@
 import { apiClient } from "@/api";
 import type { paths } from "@/api/openapi";
+import { toApiPageQuery } from "@/composables/pagination";
 
 export type typeListImage =
   paths["/api/images"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -14,10 +15,8 @@ export const initImageList: typeListImage = {
 };
 
 export async function getImageList(query: typeListImageQuery) {
-  query.page = (query.page || 1) - 1;
-
   const res = await apiClient.GET("/api/images", {
-    params: { query: query },
+    params: { query: toApiPageQuery(query) },
   });
   if (res.data) {
     return res.data;

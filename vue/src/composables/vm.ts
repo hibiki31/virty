@@ -1,5 +1,6 @@
 import { apiClient } from "@/api";
 import type { paths, components } from "@/api/openapi";
+import { toApiPageQuery } from "@/composables/pagination";
 
 export type bodyPostVM = components["schemas"]["DomainForCreate"];
 export type typeListVM =
@@ -40,10 +41,9 @@ export const itemsCPU = [
 ];
 
 export async function getVMList(query: typeListVMQuery) {
-  query.page = (query.page || 1) - 1;
   const res = await apiClient.GET("/api/vms", {
     params: {
-      query: query,
+      query: toApiPageQuery(query),
     },
   });
   if (res.data) {

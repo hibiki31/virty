@@ -12,12 +12,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
   apiPost: vi.fn(),
-  asyncSleep: vi.fn(),
   auth: { username: "alice" },
   getImageList: vi.fn(),
   getNetworkList: vi.fn(),
   getNode: vi.fn(),
   getStorageList: vi.fn(),
+  notify: vi.fn(),
   notifyTask: vi.fn(),
 }));
 
@@ -49,11 +49,8 @@ vi.mock("@/composables/image", () => ({
 }));
 
 vi.mock("@/composables/notify", () => ({
+  default: mocks.notify,
   notifyTask: mocks.notifyTask,
-}));
-
-vi.mock("@/composables/sleep", () => ({
-  asyncSleep: mocks.asyncSleep,
 }));
 
 vi.mock("@/stores/auth", () => ({
@@ -68,11 +65,13 @@ const ContainerStub = defineComponent({
 const ButtonStub = defineComponent({
   name: "VBtn",
   inheritAttrs: false,
-  props: { type: String },
+  props: { loading: Boolean, type: String },
   emits: ["click"],
   template:
     '<button v-bind="$attrs" :type="type || \'button\'" @click="$emit(\'click\')"><slot /></button>',
 });
+
+let formValid = true;
 
 const FormStub = defineComponent({
   name: "VForm",
@@ -85,7 +84,7 @@ const FormStub = defineComponent({
           onSubmit(event: Event) {
             event.preventDefault();
             const submitEvent = Object.assign(
-              Promise.resolve({ valid: true }),
+              Promise.resolve({ valid: formValid }),
               { preventDefault() {} }
             );
             emit("submit", submitEvent);
@@ -256,6 +255,7 @@ function getCheckboxStub(wrapper: VueWrapper, testId: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  formValid = true;
   mocks.auth.username = "alice";
   mocks.getNode.mockResolvedValue({ count: 0, data: [] });
   mocks.getNetworkList.mockResolvedValue({ count: 0, data: [] });
@@ -263,6 +263,82 @@ beforeEach(() => {
   mocks.getImageList.mockResolvedValue({ count: 0, data: [] });
   mocks.apiGet.mockResolvedValue({ data: { count: 0, data: [] } });
   mocks.apiPost.mockResolvedValue({ data: [{ uuid: "task-1" }] });
+});
+
+describe("VMAddDialog submit", () => {
+  it("invalid formではrequestを送らない", async () => {
+    formValid = false;
+    const wrapper = await mountDialog();
+
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("基本VM payloadを1回送りtask通知後に閉じる", async () => {
+    mocks.getNode.mockResolvedValue({ count: 1, data: [{ name: "node-1" }] });
+    mocks.getStorageList.mockResolvedValue({
+      count: 1,
+      data: [{ name: "pool-1", nodeName: "node-1", uuid: "pool-1" }],
+    });
+    mocks.getNetworkList.mockResolvedValue({
+      count: 1,
+      data: [{ name: "net-1", nodeName: "node-1", type: "bridge", uuid: "net-1" }],
+    });
+    const wrapper = await mountDialog();
+
+    await wrapper.get('[data-testid="vm-name"] input').setValue("vm-1");
+    getSelectStub(wrapper, "vm-node").vm.$emit("update:modelValue", "node-1");
+    wrapper
+      .findAllComponents(SelectStub)
+      .find((item) => item.props("label") === "Destination pool")!
+      .vm.$emit("update:modelValue", "pool-1");
+    wrapper
+      .findAllComponents(SelectStub)
+      .find((item) => item.props("label") === "Network")!
+      .vm.$emit("update:modelValue", "net-1");
+    await flushPromises();
+
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost).toHaveBeenCalledOnce();
+    expect(mocks.apiPost.mock.calls[0][1].body).toMatchObject({
+      cloudInit: null,
+      name: "vm-1",
+      nodeName: "node-1",
+      disks: [{ savePoolUuid: "pool-1", type: "empty" }],
+      interface: [{ networkUuid: "net-1", type: "network" }],
+    });
+    expect(mocks.notifyTask).toHaveBeenCalledOnce();
+    expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
+  });
+
+  it("API errorを通知して開いたままloadingを解除する", async () => {
+    mocks.apiPost.mockResolvedValue({ error: { detail: "conflict" } });
+    const wrapper = await mountDialog();
+
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.notify).toHaveBeenCalledWith(
+      "error",
+      "Create VM failed",
+      { detail: "conflict" },
+    );
+    expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+    expect(wrapper.getComponent(ButtonStub).props("loading")).toBe(false);
+  });
+
+  it("Cancelでrequestなしに閉じる", async () => {
+    const wrapper = await mountDialog();
+
+    await wrapper.get('[data-testid="vm-create-cancel"]').trigger("click");
+
+    expect(mocks.apiPost).not.toHaveBeenCalled();
+    expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
+  });
 });
 
 describe("VMAddDialog cloud-init support", () => {

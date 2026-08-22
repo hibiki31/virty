@@ -18,7 +18,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" type="submit">ADD</v-btn>
+          <v-btn variant="text" @click="model = false">Cancel</v-btn>
+          <v-btn color="primary" type="submit" :loading="loading">ADD</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
@@ -29,10 +30,13 @@
 import type { schemas } from '@/composables/schemas';
 import { initNodeList, getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
-import { notifyTask } from '@/composables/notify';
+import notify, { notifyTask } from '@/composables/notify';
 import { getStorageList, initStorageList, type typeListStorageQuery } from '@/composables/storage';
+import { onMounted, reactive, ref, watch } from 'vue';
+import r from '@/composables/rules';
 
 const model = defineModel({ default: false })
+const loading = ref(false)
 
 const itemsNodes = ref<schemas['NodePage']>(initNodeList)
 const itemsStorages = ref<schemas['StoragePage']>(initStorageList)
@@ -47,10 +51,19 @@ async function submit(event: Promise<{ valid: boolean }>) {
   if (!(await event).valid) {
     return
   }
-  const res = await apiClient.POST('/api/tasks/images/download', { body: postData })
-  if (res.data) {
-    notifyTask(res.data[0].uuid)
-    model.value = false
+  loading.value = true
+  try {
+    const res = await apiClient.POST('/api/tasks/images/download', { body: postData })
+    if (res.data) {
+      notifyTask(res.data[0].uuid)
+      model.value = false
+    } else if (res.error) {
+      notify('error', 'Download Image failed', res.error)
+    }
+  } catch {
+    notify('error', 'Download Image failed', 'Unable to reach the image service')
+  } finally {
+    loading.value = false
   }
 }
 
