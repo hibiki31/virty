@@ -962,7 +962,7 @@ export interface paths {
          * Metrics
          * @description Endpoint that serves Prometheus metrics.
          */
-        get: operations["metrics_api_metrics_fastapi_get"];
+        get: operations["metrics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1312,8 +1312,6 @@ export interface components {
         };
         /** DomainProjectForUpdate */
         DomainProjectForUpdate: {
-            /** Uuid */
-            uuid: string;
             /** Projectid */
             projectId: string;
         };
@@ -1472,7 +1470,7 @@ export interface components {
              * Forwardmode
              * @enum {string}
              */
-            forwardMode: "bridge" | "ovs" | "nat" | "route" | "isorated";
+            forwardMode: "bridge" | "ovs" | "nat" | "route" | "isolated";
             /** Bridgename */
             bridgeName?: string | null;
             dhcp?: components["schemas"]["NetworkDHCPForCreate"] | null;
@@ -1994,25 +1992,10 @@ export interface components {
         };
         /** UserForUpdate */
         UserForUpdate: {
-            /** Username */
-            username: string;
-            /**
-             * Scopes
-             * @default []
-             */
+            /** Scopes */
             scopes: components["schemas"]["UserScope"][];
-            /**
-             * Projects
-             * @default []
-             */
-            projects: components["schemas"]["UserProject"][];
-            /**
-             * Publickeys
-             * @default []
-             */
+            /** Publickeys */
             publickeys: components["schemas"]["UserPublickey"][];
-            /** Password */
-            password: string;
         };
         /** UserPage */
         UserPage: {
@@ -2051,6 +2034,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /** Version */
         Version: {
@@ -2481,7 +2468,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["NodeForCreate"];
             };
@@ -2726,7 +2713,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["DomainForCreate"];
             };
@@ -2792,7 +2779,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["PowerStatusForUpdateDomain"];
             };
@@ -2897,7 +2884,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkForUpdateDomain"];
             };
@@ -2965,7 +2952,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["StorageMetadataForUpdate"];
             };
@@ -3115,7 +3102,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["StorageForCreate"];
             };
@@ -3570,7 +3557,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkForCreate"];
             };
@@ -3605,7 +3592,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkOVSForCreate"];
             };
@@ -3638,7 +3625,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkProviderForCreate"];
             };
@@ -3800,7 +3787,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["User"];
                 };
             };
             /** @description Validation Error */
@@ -3818,7 +3805,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                username: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3833,7 +3822,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["User"];
                 };
             };
             /** @description Validation Error */
@@ -4168,7 +4157,7 @@ export interface operations {
             };
         };
     };
-    metrics_api_metrics_fastapi_get: {
+    metrics: {
         parameters: {
             query?: never;
             header?: never;

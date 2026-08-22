@@ -20,9 +20,9 @@ logger = setup_logger(__name__)
 @app.post("", response_model=List[Task])
 def create_storage(
         req: Request,
+        body: StorageForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: StorageForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)
@@ -31,7 +31,7 @@ def create_storage(
 
     task_put_list = TaskManager(db=db)
     task_put_list.select('put', 'storage', 'list')
-    task_put_list.commit(user=cu, req=req)
+    task_put_list.commit(user=cu, dep_uuid=task.model.uuid)
 
     return [task.model, task_put_list.model]
 

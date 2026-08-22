@@ -129,6 +129,38 @@ def test_fake_mode_returns_deterministic_protocol_implementations(
     assert download.body_size("https://no-network.invalid/image") == 0
 
 
+@pytest.mark.parametrize(
+    ("backend", "operation"),
+    [
+        (FakeAnsibleBackend, "node_infomation"),
+        (FakeSSHBackend, "get_node_cpu_core"),
+        (FakeLibvirtBackend, "domain_data"),
+        (FakeDownloadMetadataBackend, "body_size"),
+    ],
+)
+def test_fake_backends_can_inject_operation_failure(
+    backend: type[
+        FakeAnsibleBackend
+        | FakeSSHBackend
+        | FakeLibvirtBackend
+        | FakeDownloadMetadataBackend
+    ],
+    operation: str,
+) -> None:
+    failure = TimeoutError(f"{operation} test failure")
+    fake = backend(failures={operation: failure})
+
+    with pytest.raises(TimeoutError, match=f"{operation} test failure"):
+        if isinstance(fake, FakeAnsibleBackend):
+            fake.node_infomation()
+        elif isinstance(fake, FakeSSHBackend):
+            fake.get_node_cpu_core()
+        elif isinstance(fake, FakeLibvirtBackend):
+            fake.domain_data()
+        else:
+            fake.body_size("https://no-network.invalid/image")
+
+
 def test_backend_mode_defaults_to_production_and_rejects_unknown(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

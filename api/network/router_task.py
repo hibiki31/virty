@@ -34,9 +34,9 @@ def refresh_networks(
 @app.post("", response_model=List[Task])
 def create_network(
         req: Request,
+        body: NetworkForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)
@@ -55,9 +55,9 @@ def create_network(
 def create_network_ovs(
         uuid: str,
         req: Request,
+        body: NetworkOVSForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkOVSForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)
@@ -74,9 +74,9 @@ def create_network_ovs(
 @app.post("/providers", response_model=List[Task])
 def create_network_providers(
         req: Request,
+        body: NetworkProviderForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkProviderForCreate = None,  # type: ignore[assignment]
     ):
 
     task = TaskManager(db=db)

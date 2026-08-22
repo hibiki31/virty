@@ -65,7 +65,12 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
             )
             row.vnc_port = temp.vnc_port
             for interface in temp.interface:
-                row.interfaces.append(DomainInterfaceModel(**interface.dict(), domain_uuid=temp.uuid))
+                row.interfaces.append(
+                    DomainInterfaceModel(
+                        **interface.model_dump(),
+                        domain_uuid=temp.uuid,
+                    )
+                )
             
             for disk in temp.disk:
                 db_image = db.query(ImageModel).filter(
@@ -74,7 +79,12 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
                 if db_image is not None:
                     db_image.domain_uuid=temp.uuid
                     db.merge(db_image)
-                row.drives.append(DomainDriveModel(domain_uuid=temp.uuid,**disk.dict()))
+                row.drives.append(
+                    DomainDriveModel(
+                        domain_uuid=temp.uuid,
+                        **disk.model_dump(),
+                    )
+                )
             db.merge(row)
         # ノードが変わる前に一度コミット
         db.commit()

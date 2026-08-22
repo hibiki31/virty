@@ -14,7 +14,7 @@ def create_network(body: NetworkForCreate, node: NodeModel):
 
     editor.network_base(name=body.name, bridge=body.bridge_name)
 
-    if body.forward_mode == "isorated":
+    if body.forward_mode == "isolated":
         editor.network_forward(None)
     elif body.forward_mode == "ovs":
         editor.network_ovs()

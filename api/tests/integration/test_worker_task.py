@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
@@ -6,9 +7,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from mixin.database import SessionLocal
+from module.backends import FakeAnsibleBackend
+from node import tasks as node_tasks
 from node.models import NodeModel
 from task.models import TaskModel
+from task.schemas import TaskRequest
 from user.models import UserModel
+from worker import exec_task, run_scheduler
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
@@ -94,6 +99,99 @@ def test_api_enqueued_node_and_reload_tasks_finish(api_client: TestClient) -> No
             node = db.query(NodeModel).filter(NodeModel.name == node_name).one()
             assert node.domain == "no-network.invalid"
             assert node.ansible_facts == {"virty_backend": "fake"}
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(NodeModel).filter(NodeModel.name == node_name).delete()
+            db.query(TaskModel).filter(TaskModel.user_id == username).delete()
+            db.query(UserModel).filter(UserModel.username == username).delete()
+
+
+def test_worker_records_backend_failure_and_stops_dependent_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    suffix = uuid4().hex
+    username = f"worker-failure-{suffix}"
+    node_name = f"worker-failure-node-{suffix}"
+    failed_task_uuid = str(uuid4())
+    dependent_task_uuid = str(uuid4())
+    request = TaskRequest(
+        path_param={},
+        body={
+            "name": node_name,
+            "description": "fake backend failure integration test",
+            "domain": "no-network.invalid",
+            "userName": "fake-user",
+            "port": 22,
+            "libvirtRole": False,
+        },
+    ).model_dump_json()
+
+    fake_backend = FakeAnsibleBackend(
+        failures={"node_infomation": TimeoutError("Ansible test timeout")}
+    )
+    monkeypatch.setattr(
+        node_tasks,
+        "create_ansible_backend",
+        lambda **_kwargs: fake_backend,
+    )
+
+    try:
+        with SessionLocal.begin() as db:
+            db.add(UserModel(username=username, hashed_password="test-only"))
+            db.flush()
+            db.add(
+                TaskModel(
+                    uuid=failed_task_uuid,
+                    post_time=datetime.now().astimezone(),
+                    user_id=username,
+                    status="test",
+                    resource="node",
+                    object="root",
+                    method="post",
+                    request=request,
+                )
+            )
+
+        exec_task(task_manager=node_tasks.worker_task, task_uuid=failed_task_uuid)
+
+        with SessionLocal.begin() as db:
+            failed_task = (
+                db.query(TaskModel)
+                .filter(TaskModel.uuid == failed_task_uuid)
+                .one()
+            )
+            assert failed_task.status == "error"
+            assert failed_task.message == "Ansible test timeout"
+            assert failed_task.log is not None
+            assert "TimeoutError: Ansible test timeout" in failed_task.log
+
+            dependent_task = TaskModel(
+                uuid=dependent_task_uuid,
+                post_time=datetime.now().astimezone(),
+                user_id=username,
+                status="wait",
+                resource="node",
+                object="root",
+                method="post",
+                request=request,
+            )
+            dependent_task.dependence_uuid = failed_task_uuid
+            db.add(dependent_task)
+
+        run_scheduler(task_manager=node_tasks.worker_task)
+
+        with SessionLocal() as db:
+            dependent_task = (
+                db.query(TaskModel)
+                .filter(TaskModel.uuid == dependent_task_uuid)
+                .one()
+            )
+            assert dependent_task.status == "error"
+            assert dependent_task.message == "depended task faile"
+            assert (
+                db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
+                is None
+            )
     finally:
         with SessionLocal.begin() as db:
             db.query(NodeModel).filter(NodeModel.name == node_name).delete()

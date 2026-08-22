@@ -76,11 +76,11 @@ def get_storages(
 
 @app.patch("")
 def update_storage_metadata(
+        request_model: StorageMetadataForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        request_model: StorageMetadataForUpdate = None,  # type: ignore[assignment]
     ):
-    db.merge(StorageMetadataModel(**request_model.dict()))
+    db.merge(StorageMetadataModel(**request_model.model_dump()))
     db.commit()
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
 

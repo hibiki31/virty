@@ -58,7 +58,11 @@ def delete_flavor(
         db: Session = Depends(get_db),
     ):
     
-    deleted_model = db.query(FlavorModel).filter(FlavorModel.id==flavor_id).one()
+    deleted_model = (
+        db.query(FlavorModel).filter(FlavorModel.id == flavor_id).one_or_none()
+    )
+    if deleted_model is None:
+        raise HTTPException(status_code=404, detail="Flavor not found")
     db.query(FlavorModel).filter(FlavorModel.id==flavor_id).delete()
     db.commit()
 

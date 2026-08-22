@@ -101,7 +101,19 @@ class HttpDownloadMetadataBackend:
         return url_body_size(url=url, foce_range=force_range)
 
 
-class FakeAnsibleBackend:
+class _FaultInjectableFake:
+    """標準testが外部接続なしで失敗経路を選択するための共通基盤。"""
+
+    def __init__(self, failures: Mapping[str, Exception] | None = None) -> None:
+        self._failures = dict(failures or {})
+
+    def _raise_failure(self, operation: str) -> None:
+        failure = self._failures.get(operation)
+        if failure is not None:
+            raise failure
+
+
+class FakeAnsibleBackend(_FaultInjectableFake):
     """外部processを起動せず固定値を返すverify専用実装。"""
 
     def run(
@@ -110,6 +122,7 @@ class FakeAnsibleBackend:
         extravars: Mapping[str, Any] | None = None,
         timeout: int = 900,
     ) -> AnsibleRunResult:
+        self._raise_failure("run")
         return AnsibleRunResult(
             status="successful",
             rc=0,
@@ -119,31 +132,39 @@ class FakeAnsibleBackend:
         )
 
     def node_infomation(self) -> Mapping[str, Any]:
+        self._raise_failure("node_infomation")
         return {"virty_backend": "fake"}
 
 
-class FakeSSHBackend:
+class FakeSSHBackend(_FaultInjectableFake):
     """SSH接続を行わないverify専用実装。"""
 
     def run_cmd(self, command: str) -> RemoteCommandResult:
+        self._raise_failure("run_cmd")
         return RemoteCommandResult(stdout="", stderr="", rc=0)
 
     def get_node_mem(self) -> float:
+        self._raise_failure("get_node_mem")
         return 8.0
 
     def get_node_cpu_core(self) -> str:
+        self._raise_failure("get_node_cpu_core")
         return "4"
 
     def get_node_libvirt_version(self) -> str:
+        self._raise_failure("get_node_libvirt_version")
         return "fake-libvirt-1.0"
 
     def get_node_qemu_version(self) -> str:
+        self._raise_failure("get_node_qemu_version")
         return "fake-qemu-1.0"
 
     def get_node_cpu_name(self) -> str:
+        self._raise_failure("get_node_cpu_name")
         return "Virty Fake CPU"
 
     def get_node_os_release(self) -> Mapping[str, str]:
+        self._raise_failure("get_node_os_release")
         return {
             "ID_LIKE": "debian",
             "PRETTY_NAME": "Virty Fake Linux",
@@ -151,34 +172,43 @@ class FakeSSHBackend:
         }
 
 
-class FakeLibvirtBackend:
+class FakeLibvirtBackend(_FaultInjectableFake):
     """libvirt資源を変更せず空のinventoryを返すverify専用実装。"""
 
     def domain_data(self) -> list[dict[str, Any]]:
+        self._raise_failure("domain_data")
         return []
 
     def storages_data(self, token: str, uuids: list[str] | None = None) -> list[Any]:
+        self._raise_failure("storages_data")
         return []
 
     def image_delete(self, storage_uuid: str, image_name: str, secure: bool = False) -> None:
+        self._raise_failure("image_delete")
         return None
 
     def network_data(self) -> list[Any]:
+        self._raise_failure("network_data")
         return []
 
     def domain_define(self, xml_str: str) -> None:
+        self._raise_failure("domain_define")
         return None
 
     def domain_undefine(self, uuid: str) -> None:
+        self._raise_failure("domain_undefine")
         return None
 
     def domain_destroy(self, uuid: str) -> None:
+        self._raise_failure("domain_destroy")
         return None
 
     def domain_poweron(self, uuid: str) -> None:
+        self._raise_failure("domain_poweron")
         return None
 
     def domain_cdrom(self, uuid: str, target: str | None = None, path: str = "") -> None:
+        self._raise_failure("domain_cdrom")
         return None
 
     def domain_network(
@@ -188,31 +218,39 @@ class FakeLibvirtBackend:
         port: str | None,
         mac: str,
     ) -> None:
+        self._raise_failure("domain_network")
         return None
 
     def storage_define(self, xml_str: str) -> None:
+        self._raise_failure("storage_define")
         return None
 
     def storage_undefine(self, uuid: str) -> None:
+        self._raise_failure("storage_undefine")
         return None
 
     def network_define(self, xml_str: str) -> None:
+        self._raise_failure("network_define")
         return None
 
     def network_undefine(self, uuid: str) -> None:
+        self._raise_failure("network_undefine")
         return None
 
     def network_ovs_add(self, uuid: str, name: str, vlan: int) -> None:
+        self._raise_failure("network_ovs_add")
         return None
 
     def network_ovs_delete(self, uuid: str, name: str) -> None:
+        self._raise_failure("network_ovs_delete")
         return None
 
 
-class FakeDownloadMetadataBackend:
+class FakeDownloadMetadataBackend(_FaultInjectableFake):
     """HTTP requestを行わないverify専用実装。"""
 
     def body_size(self, url: str, force_range: bool = False) -> int | None:
+        self._raise_failure("body_size")
         return 0
 
 

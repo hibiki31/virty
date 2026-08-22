@@ -19,9 +19,9 @@ logger = setup_logger(__name__)
 @app.post("", response_model=List[Task])
 def create_node(
         req: Request,
+        body: NodeForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NodeForCreate = None,  # type: ignore[assignment]
     ):
     
     res_task = []
@@ -83,4 +83,4 @@ def update_node_role(
     task.select('patch', 'node', 'role')
     task.commit(user=current_user, req=req, body=body)
     
-    return [ task.model ]
+    return task.model

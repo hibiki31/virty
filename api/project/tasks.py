@@ -16,16 +16,16 @@ logger = setup_logger(__name__)
 def post_project_root(db: Session, model: TaskModel, req: TaskRequest):
 
     body = ProjectForCreate.model_validate(req.body)
+    user_ids = set(body.user_ids)
+    user_ids.add(model.user_id)
+    users = db.query(UserModel).filter(UserModel.username.in_(user_ids)).all()
+    if {user.username for user in users} != user_ids:
+        raise ValueError("指定されたユーザーが見つかりません")
 
-    project = ProjectModel(
-        name=body.project_name
-    )
+    project = ProjectModel(name=body.project_name)
+    project.users = users
     db.add(project)
     db.commit()
-
-    for user in body.user_ids:
-        project.users.append(db.query(UserModel).filter(UserModel.username==user).one())
-    project.users.append(db.query(UserModel).filter(UserModel.username==model.user_id).one())
     
     # nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="ovs")).all()
 

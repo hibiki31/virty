@@ -63,8 +63,9 @@ class UserForCreate(User):
             raise ValueError('Password must contain lower-case, upper-case, digit and symbol')
         return v
 
-class UserForUpdate(UserForCreate):
-    pass
+class UserForUpdate(BaseSchema):
+    scopes: List[UserScope]
+    publickeys: List[UserPublickey]
 
 class UserInDB(UserBase):
     hashed_password: str

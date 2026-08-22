@@ -46,9 +46,9 @@ def refresh_vms(
 @app.post("", response_model=List[Task])
 def create_vm(
         req: Request,
+        body: DomainForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: DomainForCreate = None,  # type: ignore[assignment]
     ):
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -87,9 +87,9 @@ def delete_vm(
 def update_vm_power_status(
         uuid: str,
         req: Request,
+        body: PowerStatusForUpdateDomain,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: PowerStatusForUpdateDomain = None,  # type: ignore[assignment]
     ):
     
     task = TaskManager(db=db)
@@ -199,7 +199,7 @@ def update_vm_project(
         db: Session = Depends(get_db),
     ):
     try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid==request.uuid).one()
+        vm = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
     except NoResultFound:
         raise_notfound(detail="Not found vm or group")
@@ -214,9 +214,9 @@ def update_vm_project(
 def update_vm_network(
         uuid: str,
         req: Request,
+        body: NetworkForUpdateDomain,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-        body: NetworkForUpdateDomain = None,  # type: ignore[assignment]
     ):
     """
     **Power off required**

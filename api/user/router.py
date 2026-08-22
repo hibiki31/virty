@@ -9,7 +9,14 @@ from mixin.exception import raise_notfound
 from mixin.log import setup_logger
 from user.functions import overwrite_user_scopes
 from user.models import UserModel, UserPublickeyModel, UserScopeModel
-from user.schemas import TokenData, UserForCreate, UserForQuery, UserForUpdate, UserPage
+from user.schemas import (
+    TokenData,
+    User,
+    UserForCreate,
+    UserForQuery,
+    UserForUpdate,
+    UserPage,
+)
 
 logger = setup_logger(__name__)
 app = APIRouter(prefix="/api/users", tags=["users"])
@@ -20,7 +27,7 @@ def get_current_user(current_user: CurrentUser = Depends(require_current_user)):
     return current_user
 
 
-@app.post("")
+@app.post("", response_model=User)
 def create_user(
         request: UserForCreate,
         db: Session = Depends(get_db),
@@ -44,29 +51,43 @@ def create_user(
         hashed_password=get_password_hash(request.password),
     )
 
+    user_model.scopes.append(UserScopeModel(name="user"))
     db.add(user_model)
-    db.add(UserScopeModel(user_id=user_model.username,name="user"))
 
     db.commit()
+    db.refresh(
+        user_model,
+        attribute_names=["scopes", "projects", "publickeys"],
+    )
 
     return user_model
 
-@app.put("/{username}")
+@app.put("/{username}", response_model=User)
 def update_user(
+        username: str,
         request: UserForUpdate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(require_current_user),
     ):
     try:
-        user_model = db.query(UserModel).filter(UserModel.username==request.username).one()
+        user_model = db.query(UserModel).filter(UserModel.username == username).one()
     except NoResultFound:
         raise_notfound()
-    
-    user_model.publickeys = [UserPublickeyModel(name=key.name, publickey=key.publickey) for key in request.publickeys]
 
+    user_model.publickeys = [
+        UserPublickeyModel(name=key.name, publickey=key.publickey)
+        for key in request.publickeys
+    ]
+    overwrite_user_scopes(
+        db=db,
+        user=user_model,
+        new_scope_names=[scope.name for scope in request.scopes],
+    )
     db.commit()
-    
-    overwrite_user_scopes(db=db, username=request.username, new_scope_names=[scope.name for scope in request.scopes])
+    db.refresh(
+        user_model,
+        attribute_names=["scopes", "projects", "publickeys"],
+    )
 
     return user_model
 

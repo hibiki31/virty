@@ -95,7 +95,6 @@ class DomainPatchCore(BaseSchema):
 
 
 class DomainProjectForUpdate(BaseSchema):
-    uuid: str
     project_id: str
 
 

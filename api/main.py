@@ -13,6 +13,7 @@ from flavor.router import app as flavor_router
 from images.router import app as image_router
 from images.router_task import app as image_task_router
 from mixin.log import setup_logger
+from mixin.prometheus import install_prometheus_route_compatibility
 from mixin.router import app as mixin_router
 from network.router import app as network_router
 from network.router_task import app as network_task_router
@@ -29,16 +30,10 @@ from user.router import app as user_router
 logger = setup_logger(__name__)
 
 
-def use_route_names_as_operation_ids(app: FastAPI) -> None:
-    """
-    Simplify operation IDs so that generated API clients have simpler function
-    names.
+def operation_id_from_route_name(route: APIRoute) -> str:
+    """生成clientとの互換性を保つためroute名をoperation IDにする。"""
 
-    Should be called only after all routes have been added.
-    """
-    for route in app.routes:
-        if isinstance(route, APIRoute):
-            route.operation_id = route.name  # in this case, 'read_items'
+    return route.name
 
 
 tags_metadata = [
@@ -71,7 +66,8 @@ app = FastAPI(
     docs_url="/api",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    servers=[{"url": "", "description": "Default"}]
+    servers=[{"url": "", "description": "Default"}],
+    generate_unique_id_function=operation_id_from_route_name,
 )
 
 app.add_middleware(
@@ -102,8 +98,7 @@ app.include_router(flavor_router)
 app.include_router(exporter_router)
 app.include_router(mixin_router)
 
-use_route_names_as_operation_ids(app)
-
+install_prometheus_route_compatibility()
 Instrumentator(
     excluded_handlers=["/metrics"],
 ).instrument(app).expose(app=app, endpoint="/api/metrics-fastapi", tags=["metrics"])

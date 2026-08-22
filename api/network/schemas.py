@@ -59,7 +59,7 @@ class NetworkForCreate(BaseSchema):
     node_name: str
     title: str | None = None
     description: str | None = None
-    forward_mode: Literal[ 'bridge', 'ovs', 'nat', 'route', 'isorated']
+    forward_mode: Literal["bridge", "ovs", "nat", "route", "isolated"]
     bridge_name: str | None = None
     dhcp: NetworkDHCPForCreate | None = None
     ip: NetworkIPForCreate | None = None
