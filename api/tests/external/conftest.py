@@ -1,67 +1,39 @@
 """専用labだけで実行できる破壊的testの安全境界。"""
 
-import json
 import os
-import re
 import shlex
-import time
-from pathlib import Path, PurePosixPath
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
-
-
-class User(BaseModel):
-    username: str
-    password: str
-    publickey: str
-
-
-class Project(BaseModel):
-    name: str
-
-
-class Server(BaseModel):
-    name: str
-    domain: str
-    username: str
-
-
-class Storage(BaseModel):
-    name: str
-    path: str
-
-
-class Networks(BaseModel):
-    name: str
-    type: str
-    octet: int
-
-
-class VM(BaseModel):
-    name: str
-    image: str
-    network: str
-
-
-class EnvConfig(BaseModel):
-    allow_destructive: bool
-    lab_id: str
-    username: str
-    password: str
-    users: list[User]
-    projects: list[Project]
-    key: str
-    pub: str
-    servers: list[Server]
-    storages: list[Storage]
-    networks: list[Networks]
-    vms: list[VM]
-    image_url: str
-    iso_url: str
+from tests.external.support.config import (
+    EnvConfig,
+    InfraConfigError,
+    apply_run_prefix,
+    derive_resource_name,
+    load_infra_config_file,
+    validate_infra_config,
+    validate_run_id,
+)
+from tests.external.support.manifest import (
+    CleanupPlanner,
+    build_expected_manifest_entries,
+    infra_project_id,
+    initialize_manifest,
+    load_manifest,
+    mark_current_entry_removed,
+    manifest_path,
+)
+from tests.external.support.remote_inventory import (
+    RemoteInventoryError,
+    assert_remote_path_absent,
+    delete_manifest_libvirt_target,
+    logical_libvirt_name,
+    remote_inventory_manager,
+)
+from tests.external.support.task_poller import wait_for_tasks
 
 
 def _load_infra_config() -> EnvConfig:
@@ -69,74 +41,13 @@ def _load_infra_config() -> EnvConfig:
     run_id = os.getenv("VIRTY_TEST_RUN_ID", "")
     if not config_path:
         raise pytest.UsageError("VIRTY_INFRA_CONFIGを指定してください")
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{5,31}", run_id):
-        raise pytest.UsageError("VIRTY_TEST_RUN_IDは6〜32文字の小文字英数字と'-'で指定してください")
-
-    path = Path(config_path)
-    if not path.is_file():
-        raise pytest.UsageError(f"専用lab設定が存在しません: {path}")
     try:
-        config = EnvConfig.model_validate_json(path.read_text(encoding="utf-8"))
+        validate_run_id(run_id)
+        config = load_infra_config_file(config_path)
         validate_infra_config(config)
-    except (OSError, ValueError) as exc:
-        raise pytest.UsageError(f"専用lab設定が不正です: {exc}") from exc
-    return _apply_run_prefix(config, run_id)
-
-
-def validate_infra_config(config: EnvConfig) -> None:
-    """資源作成前に、external suiteが暗黙に要求する設定を検証する。"""
-
-    if config.allow_destructive is not True or not config.lab_id.strip():
-        raise ValueError("allow_destructive=trueかつlab_id付きの専用lab設定が必要です")
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", config.lab_id):
-        raise ValueError("lab_idの形式が不正です")
-
-    collections = {
-        "servers": config.servers,
-        "storages": config.storages,
-        "networks": config.networks,
-        "vms": config.vms,
-        "users": config.users,
-        "projects": config.projects,
-    }
-    for label, resources in collections.items():
-        if not resources:
-            raise ValueError(f"{label}を1件以上指定してください")
-        names = [resource.name if hasattr(resource, "name") else resource.username for resource in resources]
-        if len(names) != len(set(names)):
-            raise ValueError(f"{label}の名前は重複できません")
-
-    for suffix in ("test-cloud", "test-iso", "test-img"):
-        if not any(storage.name.endswith(suffix) for storage in config.storages):
-            raise ValueError(f"storagesに末尾{suffix!r}の定義が必要です")
-    if not any(network.name.endswith("test-nat") for network in config.networks):
-        raise ValueError("networksに末尾'test-nat'の定義が必要です")
-    if any(not PurePosixPath(storage.path).is_absolute() for storage in config.storages):
-        raise ValueError("storage pathは管理node上の絶対pathで指定してください")
-
-    for label, url in {
-        "image_url": config.image_url,
-        "iso_url": config.iso_url,
-    }.items():
-        parsed = urlparse(url)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-            raise ValueError(f"{label}はhttp(s)の絶対URLで指定してください")
-    if not config.key.strip() or not config.pub.strip():
-        raise ValueError("keyとpubを空にできません")
-
-
-def _apply_run_prefix(config: EnvConfig, run_id: str) -> EnvConfig:
-    """同じ専用lab内でtest資源名とpathをrunごとに分離する。"""
-
-    config.username = f"{run_id}-{config.username}"
-    for resource in [*config.projects, *config.servers, *config.storages, *config.networks, *config.vms]:
-        resource.name = f"{run_id}-{resource.name}"
-    for user in config.users:
-        user.username = f"{run_id}-{user.username}"
-    for storage in config.storages:
-        path = PurePosixPath(storage.path)
-        storage.path = str(path.with_name(f"{run_id}-{path.name}"))
-    return config
+        return apply_run_prefix(config, run_id)
+    except InfraConfigError as exc:
+        raise pytest.UsageError(str(exc)) from None
 
 
 def _cleanup_marker() -> Path:
@@ -146,6 +57,27 @@ def _cleanup_marker() -> Path:
             "/workspace/api/data/infra-cleanup-armed",
         )
     )
+
+
+def _write_cleanup_marker(path: Path, run_prefix: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
+    try:
+        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(run_prefix)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        os.chmod(path, 0o600)
+        directory_descriptor = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_descriptor)
+        finally:
+            os.close(directory_descriptor)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _remote_paths(env: EnvConfig, run_prefix: str) -> list[str]:
@@ -162,19 +94,19 @@ def _remote_paths(env: EnvConfig, run_prefix: str) -> list[str]:
 def assert_no_remote_collisions(env: EnvConfig, run_prefix: str) -> None:
     """作成・cleanupを許可する前に、run専用名/pathが未使用だと確認する。"""
 
-    from module.paramikolib import ParamikoManager
-
     expected_pools = {storage.name for storage in env.storages}
     expected_networks = {network.name for network in env.networks}
 
-    for server in env.servers:
-        expected_vms = {f"{vm.name}-{server.name}" for vm in env.vms}
-        manager = ParamikoManager(
+    for server_index, server in enumerate(env.servers):
+        expected_vms = {
+            derive_resource_name(run_prefix, vm.name, server.name)
+            for vm in env.vms
+        }
+        with remote_inventory_manager(
             user=server.username,
             domain=server.domain,
-            port=22,
-        )
-        try:
+            server_index=server_index,
+        ) as manager:
             inventories = {
                 "storage": (
                     expected_pools,
@@ -190,11 +122,17 @@ def assert_no_remote_collisions(env: EnvConfig, run_prefix: str) -> None:
                 ),
             }
             for label, (expected, raw_names) in inventories.items():
-                collision = expected.intersection(raw_names.splitlines())
+                kind = "vm" if label == "VM" else label
+                actual = {
+                    logical_libvirt_name(kind, raw_name)
+                    for raw_name in raw_names.splitlines()
+                }
+                collision = expected.intersection(actual)
                 if collision:
-                    raise RuntimeError(
-                        f"既存{label}とrun IDが衝突しています: "
-                        f"{server.name}/{sorted(collision)}"
+                    raise RemoteInventoryError(
+                        "remote collision detected: "
+                        f"kind={kind} server_index={server_index} "
+                        f"count={len(collision)}"
                     )
 
             for remote_path in _remote_paths(env, run_prefix):
@@ -203,12 +141,10 @@ def assert_no_remote_collisions(env: EnvConfig, run_prefix: str) -> None:
                     f"{shlex.quote(remote_path)}; then printf present; fi"
                 )
                 if result.stdout == "present":
-                    raise RuntimeError(
-                        "既存remote pathとrun IDが衝突しています: "
-                        f"{server.name}:{remote_path}"
+                    raise RemoteInventoryError(
+                        "remote collision detected: "
+                        f"kind=remote-path server_index={server_index} count=1"
                     )
-        finally:
-            manager.close()
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
@@ -233,21 +169,38 @@ def run_prefix() -> str:
 
 
 @pytest.fixture(scope="session", autouse=True)
+def resource_manifest_guard(env: EnvConfig, run_prefix: str):
+    """API/local/remote mutationより前にcollisionとallowlistを固定する。"""
+
+    marker = _cleanup_marker()
+    marker.unlink(missing_ok=True)
+    assert_no_remote_collisions(env, run_prefix)
+    initialize_manifest(
+        manifest_path(),
+        run_id=run_prefix,
+        lab_id=env.lab_id,
+        project_id=infra_project_id(),
+        entries=build_expected_manifest_entries(
+            env,
+            run_prefix,
+            _remote_paths(env, run_prefix),
+        ),
+    )
+    _write_cleanup_marker(marker, run_prefix)
+    yield
+
+
+@pytest.fixture(scope="session", autouse=True)
 def cleanup_run_resources(
+    resource_manifest_guard,
     env: EnvConfig,
     client: TestClient,
     run_prefix: str,
     installed_sshkeys,
 ):
-    """失敗・中断後も、このrunが作成した専用lab資源だけを後始末する。"""
+    """全teardownをmanifest plannerの依存順序へ一本化する。"""
 
-    marker = _cleanup_marker()
-    marker.unlink(missing_ok=True)
-    assert_no_remote_collisions(env, run_prefix)
-    marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.write_text(run_prefix, encoding="utf-8")
     yield
-
     cleanup_resources(env, client, run_prefix)
 
 
@@ -261,62 +214,223 @@ def cleanup_resources(
     from mixin.database import SessionLocal
     from module.ansiblelib import AnsibleManager
     from project.models import ProjectModel
-    from tests.external.fixtures.network import delete_network
-    from tests.external.fixtures.node import delete_node
-    from tests.external.fixtures.storage import delete_storage
-    from tests.external.fixtures.vm import delete_vm
+    from tests.external.fixtures.network import (
+        delete_network_target,
+        reload_networks,
+    )
+    from tests.external.fixtures.node import delete_node_target
+    from tests.external.fixtures.storage import delete_storage_target
+    from tests.external.fixtures.vm import delete_vm_target, reload_vms
     from user.models import UserModel
 
     failures: list[str] = []
+    project_id = infra_project_id()
+    manifest = load_manifest(
+        manifest_path(),
+        expected_run_id=run_prefix,
+        expected_lab_id=env.lab_id,
+        expected_project_id=project_id,
+    )
+    planner = CleanupPlanner(manifest)
+    server_indexes = {server.name: index for index, server in enumerate(env.servers)}
+    servers = {server.name: server for server in env.servers}
 
-    def cleanup(label: str, action) -> None:
+    def cleanup(label: str, entry, action) -> None:
+        if not planner.allows(entry):
+            failures.append(f"{label}: manifest allowlist error")
+            return
         try:
             action()
-        except Exception as exc:
-            failures.append(f"{label}: {exc}")
+            mark_current_entry_removed(env, entry)
+        except Exception:
+            failures.append(f"{label}: cleanup failed")
 
-    # 依存関係の逆順で削除する。nodeは最後まで接続先として保持する。
-    cleanup("VM", lambda: delete_vm(env, client, skipp=True))
-    cleanup("network", lambda: delete_network(env, client, skipp=True))
-    cleanup("storage", lambda: delete_storage(env, client, skipp=True))
+    @contextmanager
+    def muted_ansible_logging():
+        import module.ansiblelib as ansiblelib
 
-    remote_paths = _remote_paths(env, run_prefix)
-    for server in env.servers:
-        for remote_path in remote_paths:
-            cleanup(
-                f"remote path {server.name}:{remote_path}",
-                lambda server=server, remote_path=remote_path: AnsibleManager(
+        previous = ansiblelib.logger.disabled
+        ansiblelib.logger.disabled = True
+        try:
+            yield
+        finally:
+            ansiblelib.logger.disabled = previous
+
+    for entry in planner.pending_entries():
+        server_index = server_indexes.get(entry.node) if entry.node is not None else None
+        label = (
+            f"{entry.kind}[server_index={server_index}]"
+            if server_index is not None
+            else entry.kind
+        )
+        if entry.kind == "vm":
+            assert entry.node is not None and entry.name is not None
+
+            def delete_vm(entry=entry) -> None:
+                mapped_server_index = server_indexes[entry.node or ""]
+                server = servers[entry.node or ""]
+                try:
+                    reload_vms(env, client)
+                except Exception:
+                    # reload不能でもmanifest exact remote fallbackへ進む。
+                    pass
+                deleted_uuid = delete_vm_target(
+                    client,
+                    node_name=entry.node or "",
+                    vm_name=entry.name or "",
+                    resource_uuid=entry.resource_uuid,
+                )
+                with remote_inventory_manager(
                     user=server.username,
                     domain=server.domain,
-                ).run(
-                    playbook_name="pb_deleteinnode",
-                    extravars={
-                        "host": f"{server.username}@{server.domain}",
-                        "file": remote_path,
-                    },
-                    timeout=120,
+                    server_index=mapped_server_index,
+                ) as remote:
+                    delete_manifest_libvirt_target(
+                        remote,
+                        kind="vm",
+                        name=entry.name or "",
+                        resource_uuid=entry.resource_uuid or deleted_uuid,
+                        server_index=mapped_server_index,
+                    )
+
+            cleanup(
+                label,
+                entry,
+                delete_vm,
+            )
+        elif entry.kind == "network":
+            assert entry.node is not None and entry.name is not None
+
+            def delete_network(entry=entry) -> None:
+                mapped_server_index = server_indexes[entry.node or ""]
+                server = servers[entry.node or ""]
+                try:
+                    reload_networks(env, client)
+                except Exception:
+                    # reload不能でもmanifest exact remote fallbackへ進む。
+                    pass
+                deleted_uuid = delete_network_target(
+                    client,
+                    node_name=entry.node or "",
+                    network_name=entry.name or "",
+                    resource_uuid=entry.resource_uuid,
+                )
+                with remote_inventory_manager(
+                    user=server.username,
+                    domain=server.domain,
+                    server_index=mapped_server_index,
+                ) as remote:
+                    delete_manifest_libvirt_target(
+                        remote,
+                        kind="network",
+                        name=entry.name or "",
+                        resource_uuid=entry.resource_uuid or deleted_uuid,
+                        server_index=mapped_server_index,
+                    )
+
+            cleanup(
+                label,
+                entry,
+                delete_network,
+            )
+        elif entry.kind == "storage":
+            assert entry.node is not None and entry.name is not None
+
+            def delete_storage(entry=entry) -> None:
+                mapped_server_index = server_indexes[entry.node or ""]
+                server = servers[entry.node or ""]
+                deleted_uuid = delete_storage_target(
+                    client,
+                    node_name=entry.node or "",
+                    storage_name=entry.name or "",
+                    resource_uuid=entry.resource_uuid,
+                )
+                with remote_inventory_manager(
+                    user=server.username,
+                    domain=server.domain,
+                    server_index=mapped_server_index,
+                ) as remote:
+                    delete_manifest_libvirt_target(
+                        remote,
+                        kind="storage",
+                        name=entry.name or "",
+                        resource_uuid=entry.resource_uuid or deleted_uuid,
+                        server_index=mapped_server_index,
+                    )
+
+            cleanup(
+                label,
+                entry,
+                delete_storage,
+            )
+        elif entry.kind == "remote_path":
+            assert entry.node is not None and entry.path is not None
+            server = next(
+                (server for server in env.servers if server.name == entry.node),
+                None,
+            )
+            if server is None:
+                failures.append(f"{label}: server mapping failed")
+                continue
+
+            def delete_remote_path(server=server, remote_path=entry.path) -> None:
+                with muted_ansible_logging():
+                    AnsibleManager(
+                        user=server.username,
+                        domain=server.domain,
+                    ).run(
+                        playbook_name="pb_deleteinnode",
+                        extravars={
+                            "host": f"{server.username}@{server.domain}",
+                            "file": remote_path,
+                        },
+                        timeout=120,
+                    )
+                with remote_inventory_manager(
+                    user=server.username,
+                    domain=server.domain,
+                    server_index=server_indexes[server.name],
+                ) as remote:
+                    assert_remote_path_absent(
+                        remote,
+                        path=remote_path or "",
+                        server_index=server_indexes[server.name],
+                    )
+
+            cleanup(label, entry, delete_remote_path)
+        elif entry.kind == "project":
+            assert entry.name is not None
+
+            def delete_project(name=entry.name) -> None:
+                with SessionLocal.begin() as db:
+                    db.query(ProjectModel).filter(ProjectModel.name == name).delete(
+                        synchronize_session=False
+                    )
+
+            cleanup(label, entry, delete_project)
+        elif entry.kind == "node":
+            assert entry.name is not None
+            cleanup(
+                label,
+                entry,
+                lambda entry=entry: delete_node_target(
+                    client,
+                    entry.name or "",
                 ),
             )
+        elif entry.kind == "user":
+            assert entry.name is not None
 
-    def cleanup_projects() -> None:
-        with SessionLocal.begin() as db:
-            db.query(ProjectModel).filter(
-                ProjectModel.name.startswith(f"{run_prefix}-")
-            ).delete(synchronize_session=False)
+            def delete_user(name=entry.name) -> None:
+                with SessionLocal.begin() as db:
+                    db.query(UserModel).filter(UserModel.username == name).delete(
+                        synchronize_session=False
+                    )
 
-    def cleanup_users() -> None:
-        with SessionLocal.begin() as db:
-            db.query(UserModel).filter(
-                UserModel.username.startswith(f"{run_prefix}-")
-            ).delete(synchronize_session=False)
-
-    cleanup("project", cleanup_projects)
-    cleanup("node", lambda: delete_node(env, client))
-    cleanup("user", cleanup_users)
+            cleanup(label, entry, delete_user)
 
     if failures:
         pytest.fail("external test資源のcleanupに失敗しました: " + "; ".join(failures))
-    _cleanup_marker().unlink(missing_ok=True)
 
 
 @pytest.fixture(scope="session")
@@ -327,7 +441,11 @@ def gust_client() -> TestClient:
 
 
 @pytest.fixture(scope="session")
-def client(env: EnvConfig, gust_client: TestClient) -> TestClient:
+def client(
+    resource_manifest_guard,
+    env: EnvConfig,
+    gust_client: TestClient,
+) -> TestClient:
     return create_authenticated_client(env, gust_client)
 
 
@@ -356,29 +474,7 @@ def create_authenticated_client(
 
 def wait_tasks(resp: Any, client: TestClient) -> str:
     timeout = float(os.getenv("VIRTY_EXTERNAL_TASK_TIMEOUT_SECONDS", "900"))
-    deadline = time.monotonic() + timeout
-    for task in resp.json():
-        uuid = task["uuid"]
-        last_task: dict[str, Any] = {}
-        while time.monotonic() < deadline:
-            task_response = client.get(f"/api/tasks/{uuid}")
-            task_response.raise_for_status()
-            last_task = task_response.json()
-            status = last_task["status"]
-            if status in {"error", "lost"}:
-                raise RuntimeError(
-                    f"task uuid={uuid}, status={status}, "
-                    f"message={last_task.get('message')}, log={last_task.get('log')}"
-                )
-            if status == "finish":
-                break
-            time.sleep(0.5)
-        else:
-            raise TimeoutError(
-                f"taskが{timeout:.0f}秒以内に完了しませんでした: "
-                f"uuid={uuid}, status={last_task.get('status')}, "
-                f"message={last_task.get('message')}, log={last_task.get('log')}"
-            )
+    wait_for_tasks(resp, client, timeout_seconds=timeout)
     return "finish"
 
 

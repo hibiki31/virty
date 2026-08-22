@@ -32,7 +32,8 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 | container shell | `./devctl shell api\|web` | 対象の開発containerへ入る |
 | 終了・掃除 | `./devctl down` / `./devctl clean` | 現worktreeのprojectだけを停止・削除 |
 | 生成型更新 | `./devctl generate openapi\|web-types` | 明示した追跡済み生成型だけを更新 |
-| 実機test | `./devctl infra --config /absolute/path/env.json` | 専用labで外部結合testを直列実行 |
+| 実機の事前確認 | `./devctl infra preflight --config /absolute/path/env.json` | lab資源を変更せず、設定と到達性を確認 |
+| 実機test | `./devctl infra --config /absolute/path/env.json [--scenario SCENARIO]` | 承認済み専用labで指定scenarioを実行 |
 
 各コマンドは前提を検査し、失敗した検査の非0終了codeを保持する。`quick`と`verify`はsourceを
 自動修正しない。修正commandを使う場合はcontainer shellから対象fileを限定し、差分をreviewする。
@@ -43,7 +44,8 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 
 - check serviceはhost portを公開しない。開発用Web/APIとpgAdminは`127.0.0.1`の自動割当portだけを使う。
 - `quick` serviceはnetwork namespaceを持たず、`verify` serviceは外部へrouteしないinternal networkだけを使う。
-- 開発DBと依存cacheはCompose project配下のnamed volume、verify用DBはtmpfsを使う。
+- 開発DB、external実機testの復旧用DB、依存cacheはCompose project配下のnamed volume、
+  verify用DBはtmpfsを使う。external DB volumeはscenario、cleanup、独立inventoryがすべて成功した場合だけ削除する。
 - 開発serviceの前にproject内のone-shot初期化serviceがSSH/data/node_modules volumeをhost UID/GIDへ揃える。
 - `container_name`、固定volume `name`、external volumeを使わず、Compose projectによる分離を保持する。
 - PostgreSQLは配布環境と同じ18系を使い、healthcheck成功後にmigrationとtestを開始する。
@@ -71,6 +73,8 @@ FastAPI schemaから生成したWeb OpenAPI型も一時volume内で追跡版と�
 pytestは`unit`、`integration`、`external`を物理的に分ける。標準testpathsはunitとintegrationだけで、
 externalを暗黙に収集しない。testは単独実行可能で、file名順、共有DBの残存状態、実行中workerへ依存させない。
 unitは10秒、integrationは60秒、fake task待機は30秒を上限とし、timeout時はtask UUID、status、logを出す。
+認証、user、project、flavorのようにlab固有adapterを使わないAPI契約は`integration`で検証し、
+external suiteへ重複させない。
 
 ### Web
 
@@ -87,6 +91,14 @@ unitは10秒、integrationは60秒、fake task待機は30秒を上限とし、ti
 
 coverage summaryは`verify web`とCIのlogへ記録するが、既存codeへ根拠のない一律閾値は設定しない。新規・変更する処理には、
 境界値、失敗path、API response変換を対象にしたtestを追加する。
+認証、API error整形、pagination、task pollingのように複数画面へ影響する共通処理はpure helperへ分離し、
+lines/statements 90%以上、branches/functions 80%以上を対象moduleの回帰gateとする。全体coverageは
+重要flowの代替指標にせず、同じ対象範囲の推移を比較するために記録する。
+
+実browserを必要とするWeb受入は`verify web`だけで実行し、`quick web`へ含めない。Playwrightは
+production bundleを配信するWeb imageへ接続し、browser側の`page.route`で必要なAPI responseを
+deterministicにinterceptする。別のAPI stub serviceは起動しない。認証redirect、一覧から詳細への遷移、
+主要dialogのdesktop/narrow viewportを少数のcritical flowとして確認し、external labへは接続しない。
 
 ### 2026-08-22の基準計測
 
@@ -105,6 +117,9 @@ wall timeは環境比較用の基準であり、性能SLOではない。
 warm logでは`apt`、`pip install`、`pnpm install`の再実行がなく、API/Web各componentの型checkは1回だった。
 引数なしquickはcomponent別実行時間の合計ではなく、並列実行時間で完了した。初回実装時の権限不備を含む
 失敗計測は基準値へ採用せず、修正後の成功runだけを記録している。
+テスト拡充後の件数、coverage、wall timeは最新`master`統合後に最終再計測する。
+統合前の作業branchで確認したVitest 94件とPlaywright 3 flowは暫定値であり、この表の
+2026-08-22基準値を更新後の確定値として扱わない。
 
 ## 実機SSH・Ansible・libvirt test
 
@@ -114,15 +129,28 @@ storageは自動分離されないため、次の条件をすべて満たす場�
 - 設定受け入れ手順は`api/tests/external/README.md`を正本とする。`infra-config.example.json`を基に
   repository rootのignored directory `.secrets/`内へ`infra-config.json`を作成し、directoryを`0700`、fileを`0600`にする。
 - operatorが必要なSSH接続と空き容量を事前確認する。`devctl`のpreflightはnested構造、専用lab宣言、
-  URL、path、必須resource suffixを資源作成前に検査する。
+  URL、path、必須resource suffix、SSH/SFTP/sudo、Ansible facts、qemu/libvirt、容量と衝突を
+  lab資源を変更せずreadiness phaseで検査する。
 - resource名へrun IDを付け、既存resourceをskip、再利用、削除しない。
 - cleanupを有効化する前に、管理nodeのexact resource名とremote pathをread-onlyでinventoryし、衝突時は終了する。
 - testを直列実行し、fixture finalizerに加えて独立cleanup containerを`devctl`の終了trapから再実行する。
   成功・失敗・INT・TERMのすべてでrun IDに一致する資源だけを回収する。
 - worker待機、Ansible、downloadに有限timeoutを設ける。
 
-設定不足、共有環境の疑い、既存resourceとの衝突があれば変更前にfail closedする。cleanup失敗時は診断用の
-Compose project、DB、SSH volumeを削除せず、同じconfig、run ID、projectを使う復旧commandを表示する。
+設定検証、task応答のpolling、resource名の導出、cleanup判断はlabへ接続しないunit testの対象にする。
+mutation前にproject-scoped volumeのversion付きmanifestへexact resource名、node、remote pathを記録し、
+作成成功後にAPI UUIDを追記する。cleanupはmanifestを唯一の削除allowlistとし、configとrun IDからの再構築は
+read-only診断に限定する。cleanup後は別processがDB、virsh inventory、remote pathをread-onlyで確認し、
+run所有資源が残る場合はprojectとvolumeを保持する。
+
+`devctl infra preflight`は設定fileと親directoryが実行user所有かつ`0600`/`0700`であることを先に検査し、
+設定、SSH/SFTP、passwordless sudo、容量、download metadata、exact collisionをlab側への変更なしで検査する。
+破壊的scenarioは`happy`、`task-failure`、`worker-stop`、`signal-int`、`signal-term`を同一lab lock下で直列実行し、
+各scenarioを別run IDへ分離する。signal scenarioは子processの130/143終了とcleanup完了の両方を成功条件にする。
+
+設定不足、共有環境の疑い、既存resourceとの衝突があれば変更前にfail closedする。scenario、cleanup、
+または独立inventoryが失敗した場合は診断用のCompose project、DB、SSH volume、manifestを削除せず、
+同じconfig、run ID、projectを使う復旧commandを表示する。
 実機test未実施の場合は、標準verifyの結果と未実施理由を完了報告へ記載する。
 
 ## API契約と生成型

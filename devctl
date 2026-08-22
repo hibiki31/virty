@@ -9,9 +9,13 @@ readonly COMPOSE_FILE="${ROOT_DIR}/compose.dev.yml"
 declare -a COMPOSE_FILES=(--file "${COMPOSE_FILE}")
 declare -a TEMP_PATHS=()
 declare -a CHILD_PIDS=()
+declare -a CHILD_PROCESS_GROUPS=()
 ACTIVE_PROJECT=""
 ACTIVE_PROFILE=""
 INFRA_CLEANUP_ENABLED=0
+SIGNAL_CHILD_PID_FILE=""
+SIGNAL_CHILD_PROJECT=""
+SIGNAL_CHILD_PROCESS_GROUP=""
 
 die() {
   printf 'エラー: %s\n' "$*" >&2
@@ -29,8 +33,9 @@ Usage:
   ./devctl shell api|web
   ./devctl ports
   ./devctl clean
-  ./devctl generate openapi|web-types
-  ./devctl infra --config /absolute/path/to/env.json
+  ./devctl generate openapi|web-types|web-lock
+  ./devctl infra preflight --config /absolute/path/to/env.json
+  ./devctl infra --config /absolute/path/to/env.json [--scenario SCENARIO]
   ./devctl infra cleanup --config /absolute/path/to/env.json --run-id ID --project NAME
   ./devctl project
 
@@ -48,21 +53,67 @@ compose_project() {
   docker compose "${COMPOSE_FILES[@]}" --project-name "${project}" "$@"
 }
 
+running_project_container_ids() {
+  local project="$1"
+  local service="${2:-}"
+  local -a filters=(
+    --filter "label=com.docker.compose.project=${project}"
+  )
+
+  if [[ -n "${service}" ]]; then
+    filters+=(--filter "label=com.docker.compose.service=${service}")
+  fi
+  docker ps --quiet "${filters[@]}"
+}
+
+terminate_project_containers_with_term() {
+  local project="$1"
+  local service="$2"
+  local timeout_seconds="$3"
+  local deadline=$((SECONDS + timeout_seconds))
+  local container_id running
+  local -A signalled=()
+
+  while true; do
+    running="$(running_project_container_ids "${project}" "${service}")" || return 1
+    [[ -n "${running}" ]] || return 0
+
+    while IFS= read -r container_id; do
+      [[ -n "${container_id}" ]] || continue
+      if [[ -z "${signalled[${container_id}]:-}" ]]; then
+        docker kill --signal TERM "${container_id}" >/dev/null 2>&1 || true
+        signalled["${container_id}"]=1
+      fi
+    done <<<"${running}"
+
+    ((SECONDS < deadline)) || return 124
+    sleep 1
+  done
+}
+
 cleanup_active_project() {
+  local project profile
+
   if [[ -z "${ACTIVE_PROJECT}" ]]; then
     return
   fi
 
-  if [[ "${ACTIVE_PROFILE}" == "quick" ]]; then
+  project="${ACTIVE_PROJECT}"
+  profile="${ACTIVE_PROFILE}"
+
+  if [[ "${profile}" == "external" ]]; then
+    terminate_project_containers_with_term "${project}" "" 60 || return $?
+  fi
+
+  if [[ "${profile}" == "quick" ]]; then
     docker compose "${COMPOSE_FILES[@]}" \
-      --project-name "${ACTIVE_PROJECT}" \
-      --profile quick \
-      down --remove-orphans >/dev/null 2>&1 || true
+      --project-name "${project}" \
+      --profile quick down --remove-orphans >/dev/null 2>&1 || return $?
   else
     docker compose "${COMPOSE_FILES[@]}" \
-      --project-name "${ACTIVE_PROJECT}" \
-      --profile "${ACTIVE_PROFILE}" \
-      down --volumes --remove-orphans --rmi local >/dev/null 2>&1 || true
+      --project-name "${project}" \
+      --profile "${profile}" \
+      down --volumes --remove-orphans --rmi local >/dev/null 2>&1 || return $?
   fi
   ACTIVE_PROJECT=""
   ACTIVE_PROFILE=""
@@ -75,9 +126,20 @@ cleanup_infra_resources() {
 
   printf 'external test資源をrun IDでcleanupします...\n' >&2
   if ! compose_project "${ACTIVE_PROJECT}" --profile external \
+    up --detach --wait --wait-timeout 90 infra-worker; then
+    printf 'エラー: cleanup用DB/workerを起動できませんでした。\n' >&2
+    return 1
+  fi
+  if ! compose_project "${ACTIVE_PROJECT}" --profile external \
     run --rm --no-deps -T infra-cleanup; then
     printf 'エラー: external test資源のcleanupに失敗しました。project=%s run_id=%s\n' \
       "${ACTIVE_PROJECT}" "${VIRTY_TEST_RUN_ID:-unknown}" >&2
+    return 1
+  fi
+  printf 'cleanup後の独立inventoryを確認します...\n' >&2
+  if ! compose_project "${ACTIVE_PROJECT}" --profile external \
+    run --rm --no-deps -T infra-verify-clean; then
+    printf 'エラー: run所有資源が0件であることを確認できませんでした。\n' >&2
     return 1
   fi
   INFRA_CLEANUP_ENABLED=0
@@ -85,17 +147,59 @@ cleanup_infra_resources() {
 
 cleanup() {
   local status=$?
-  local path
+  local path child_pid process_group wait_status
   local preserve_project=0
+  local defer_project_removal_to_signal_parent=0
+  local infra_was_armed="${INFRA_CLEANUP_ENABLED}"
+  local child_shutdown_unconfirmed=0
 
   trap - EXIT INT TERM
 
+  refresh_signal_process_group || true
+  if [[ -n "${SIGNAL_CHILD_PID_FILE}" && \
+    -z "${SIGNAL_CHILD_PROCESS_GROUP}" ]]; then
+    child_shutdown_unconfirmed=1
+    if ((${#CHILD_PIDS[@]} > 0)); then
+      kill -s TERM "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
+    fi
+  fi
+  for process_group in "${CHILD_PROCESS_GROUPS[@]}"; do
+    kill -s TERM -- "-${process_group}" >/dev/null 2>&1 || true
+  done
   if ((${#CHILD_PIDS[@]} > 0)); then
-    kill "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
-    wait "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
+    if ((${#CHILD_PROCESS_GROUPS[@]} == 0)) && \
+      [[ -z "${SIGNAL_CHILD_PID_FILE}" ]]; then
+      kill -s TERM "${CHILD_PIDS[@]}" >/dev/null 2>&1 || true
+    fi
+    for child_pid in "${CHILD_PIDS[@]}"; do
+      if wait_for_child_with_deadline "${child_pid}" 300 >/dev/null 2>&1; then
+        :
+      else
+        wait_status=$?
+        ((wait_status == 124)) && child_shutdown_unconfirmed=1
+      fi
+    done
+  fi
+  for process_group in "${CHILD_PROCESS_GROUPS[@]}"; do
+    if ! wait_for_process_group_with_deadline "${process_group}" 300; then
+      child_shutdown_unconfirmed=1
+    fi
+  done
+  if [[ "${ACTIVE_PROFILE}" == "external" && -n "${ACTIVE_PROJECT}" ]]; then
+    if ! terminate_project_containers_with_term \
+      "${ACTIVE_PROJECT}" infra-test 60; then
+      child_shutdown_unconfirmed=1
+    fi
   fi
 
-  if ! cleanup_infra_resources; then
+  if ((child_shutdown_unconfirmed == 1)); then
+    status=1
+    preserve_project=1
+    INFRA_CLEANUP_ENABLED=0
+    printf 'エラー: 子processの停止を確認できないためexternal cleanupを実行しません。project=%s\n' \
+      "${SIGNAL_CHILD_PROJECT:-${ACTIVE_PROJECT:-unknown}}" >&2
+    printf '手動で子processと専用labの状態を確認してください。\n' >&2
+  elif ! cleanup_infra_resources; then
     status=1
     preserve_project=1
     printf 'project/volumeを診断とcleanup再試行用に保持します: %s\n' \
@@ -104,8 +208,40 @@ cleanup() {
       "${VIRTY_INFRA_CONFIG_HOST:-CONFIG}" \
       "${VIRTY_TEST_RUN_ID:-RUN_ID}" "${ACTIVE_PROJECT}" >&2
   fi
-  if ((preserve_project == 0)); then
-    cleanup_active_project
+  if ((infra_was_armed == 1 && status != 0)); then
+    case "${VIRTY_INFRA_SCENARIO:-}" in
+      signal-int)
+        ((status == 130)) || preserve_project=1
+        ;;
+      signal-term)
+        ((status == 143)) || preserve_project=1
+        ;;
+      *) preserve_project=1 ;;
+    esac
+  fi
+  if [[ "${VIRTY_INFRA_SIGNAL_CHILD:-0}" == "1" && \
+    -n "${ACTIVE_PROJECT}" && "${preserve_project}" == "0" ]]; then
+    # signal childはcleanupと独立inventoryまでを担当する。project/volume削除は
+    # 親processが130/143を確認してから行い、終了値不一致時の診断を保持する。
+    preserve_project=1
+    defer_project_removal_to_signal_parent=1
+  fi
+  if ((preserve_project == 0)) && ! cleanup_active_project; then
+    status=1
+    preserve_project=1
+    printf 'エラー: project containerの安全な停止または削除に失敗しました。\n' >&2
+  fi
+  if ((preserve_project == 1)) && [[ -n "${ACTIVE_PROJECT}" ]]; then
+    if ((defer_project_removal_to_signal_parent == 1)); then
+      printf 'signal親processの終了値確認までproject/DB/SSH volume/manifestを保持します: %s\n' \
+        "${ACTIVE_PROJECT}" >&2
+    else
+      printf '失敗診断用にproject/DB/SSH volume/manifestを保持します: %s\n' \
+        "${ACTIVE_PROJECT}" >&2
+    fi
+    if ! terminate_project_containers_with_term "${ACTIVE_PROJECT}" "" 60; then
+      printf 'エラー: project containerの停止を確認できません。手動確認が必要です。\n' >&2
+    fi
   fi
 
   for path in "${TEMP_PATHS[@]}"; do
@@ -124,7 +260,7 @@ trap 'exit 143' TERM
 require_base_tools() {
   local tool
 
-  for tool in docker realpath sha256sum install id mktemp sed date chmod flock; do
+  for tool in docker realpath sha256sum install id mktemp sed date chmod flock stat setsid ps; do
     command -v "${tool}" >/dev/null 2>&1 || die "${tool}が見つかりません"
   done
   docker compose version >/dev/null 2>&1 || die "Docker Compose pluginが利用できません"
@@ -176,12 +312,13 @@ enable_ci_cache() {
     emit_cache_service openapi-contract-verify web-development
     emit_cache_service api-verify api-check
     emit_cache_service api-production-verify api-production
-    emit_cache_service infra-preflight api-development
+    emit_cache_service infra-preflight api-check
     emit_cache_service infra-volume-init api-development
     emit_cache_service infra-migrate api-development
     emit_cache_service infra-worker api-development
     emit_cache_service infra-test api-check
     emit_cache_service infra-cleanup api-check
+    emit_cache_service infra-verify-clean api-check
     emit_cache_service web web-development
     emit_cache_service web-volume-init web-development
     emit_cache_service web-quick web-development
@@ -189,6 +326,8 @@ enable_ci_cache() {
     emit_cache_service web-types web-development
     emit_cache_service web-verify web-check
     emit_cache_service web-production-verify web-production
+    emit_cache_service web-e2e-server web-production
+    emit_cache_service web-e2e web-playwright
     emit_cache_service proxy proxy-production
     emit_cache_service proxy-production-verify proxy-production
   } >"${override}"
@@ -289,6 +428,7 @@ verify_runtime() {
       compose_project "${project}" --profile verify run --rm -T api-verify
       ;;
     web)
+      compose_project "${project}" --profile verify run --rm -T web-e2e
       # testはbuild layerで一度だけ実行し、cache hit時も保存済みsummaryをlogへ出す。
       compose_project "${project}" --profile verify run --rm --no-deps -T \
         web-verify node -e \
@@ -315,13 +455,13 @@ run_verify() {
 
   case "${component}" in
     all)
-      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify proxy-production-verify)
+      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify web-e2e-server web-e2e proxy-production-verify)
       ;;
     api)
       services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify)
       ;;
     web)
-      services=(openapi-schema-verify openapi-contract-verify web-verify web-production-verify)
+      services=(openapi-schema-verify openapi-contract-verify web-verify web-production-verify web-e2e-server web-e2e)
       ;;
     proxy)
       services=(proxy-production-verify)
@@ -424,9 +564,12 @@ run_generate() {
   local target="${1:-}"
   local project generated_dir
 
-  (($# == 1)) || die "generateにはopenapiまたはweb-typesを1つ指定してください"
-  validate_component "${target}" openapi web-types
+  (($# == 1)) || die "generateにはopenapi、web-types、web-lockのいずれかを1つ指定してください"
+  validate_component "${target}" openapi web-types web-lock
   project="$(project_base)-quick"
+  acquire_quick_lock "${project}"
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE=quick
 
   case "${target}" in
     openapi)
@@ -462,7 +605,12 @@ run_generate() {
       install -m 0664 "${generated_dir}/typed-router.d.ts" \
         "${ROOT_DIR}/vue/src/typed-router.d.ts"
       ;;
+    web-lock)
+      compose_project "${project}" --profile quick run --rm --no-deps -T web-lock
+      ;;
   esac
+
+  cleanup_active_project
 }
 
 acquire_lab_lock() {
@@ -475,11 +623,92 @@ acquire_lab_lock() {
   lock_path="${TMPDIR:-/tmp}/virty-infra-${digest:0:16}.lock"
 
   exec {INFRA_LOCK_FD}>"${lock_path}"
-  flock -n "${INFRA_LOCK_FD}" || die "lab ${lab_id} は別のinfra testが利用中です"
+  flock -n "${INFRA_LOCK_FD}" || die "同じlab IDは別のinfra testが利用中です"
+}
+
+validate_infra_config_permissions() {
+  local config="$1"
+  local parent file_mode parent_mode file_owner parent_owner expected_owner
+
+  parent="${config%/*}"
+  [[ -n "${parent}" ]] || parent="/"
+  file_mode="$(stat -c '%a' -- "${config}")" \
+    || die "infra configのpermissionを確認できません"
+  parent_mode="$(stat -c '%a' -- "${parent}")" \
+    || die "infra config directoryのpermissionを確認できません"
+  file_owner="$(stat -c '%u' -- "${config}")" \
+    || die "infra configのownerを確認できません"
+  parent_owner="$(stat -c '%u' -- "${parent}")" \
+    || die "infra config directoryのownerを確認できません"
+  expected_owner="$(id -u)"
+
+  [[ "${file_mode}" == "600" ]] \
+    || die "infra configはmode 0600である必要があります（現在: ${file_mode}）"
+  [[ "${parent_mode}" == "700" ]] \
+    || die "infra config directoryはmode 0700である必要があります（現在: ${parent_mode}）"
+  [[ "${file_owner}" == "${expected_owner}" && "${parent_owner}" == "${expected_owner}" ]] \
+    || die "infra configとdirectoryは実行userが所有している必要があります"
+}
+
+prepare_infra_config() {
+  local config="$1"
+  local canonical_config
+
+  [[ "${config}" == /* ]] || die "infra configは絶対pathで指定してください"
+  canonical_config="$(realpath -e -- "${config}")" || die "infra configが存在しません"
+  [[ -f "${canonical_config}" && -r "${canonical_config}" ]] \
+    || die "infra configを読み取れません"
+  validate_infra_config_permissions "${canonical_config}"
+  printf '%s\n' "${canonical_config}"
+}
+
+run_infra_readiness() {
+  local project="$1"
+
+  compose_project "${project}" --profile external run \
+    --rm --no-deps -T infra-volume-init >/dev/null
+  compose_project "${project}" --profile external run \
+    --rm --no-deps -T infra-readiness
+}
+
+run_infra_preflight() {
+  local config="" canonical_config project lab_id
+
+  while (($# > 0)); do
+    case "$1" in
+      --config)
+        (($# >= 2)) || die "--configのpathがありません"
+        [[ -z "${config}" ]] || die "--configは1回だけ指定してください"
+        config="$2"
+        shift 2
+        ;;
+      *) die "infra preflightの未対応optionです: $1" ;;
+    esac
+  done
+
+  [[ -n "${config}" ]] || die "infra preflightには --config /absolute/path が必要です"
+  canonical_config="$(prepare_infra_config "${config}")"
+  project="$(project_base)-infra-preflight-$(date -u +%s)-$$"
+  export VIRTY_INFRA_CONFIG_HOST="${canonical_config}"
+  export VIRTY_TEST_RUN_ID="preflight"
+  export VIRTY_INFRA_PROJECT="${project}"
+  export VIRTY_INFRA_SCENARIO="preflight"
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE="external"
+
+  compose_project "${project}" --profile external build \
+    infra-preflight infra-volume-init infra-readiness >&2
+  lab_id="$(compose_project "${project}" --profile external run --rm --no-deps -T infra-preflight)"
+  [[ "${lab_id}" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$ ]] \
+    || die "infra preflightが有効なlab_idを返しませんでした"
+  acquire_lab_lock "${lab_id}"
+  run_infra_readiness "${project}" >&2
+  printf 'infra preflight成功（設定値は表示していません）\n'
+  cleanup_active_project
 }
 
 run_infra_cleanup() {
-  local config="" run_id="" project="" canonical_config prefix
+  local config="" run_id="" project="" canonical_config prefix lab_id
 
   while (($# > 0)); do
     case "$1" in
@@ -503,15 +732,22 @@ run_infra_cleanup() {
   done
 
   [[ "${config}" == /* ]] || die "infra cleanup configは絶対pathで指定してください"
-  canonical_config="$(realpath -e -- "${config}")" || die "infra configが存在しません"
-  [[ -f "${canonical_config}" && -r "${canonical_config}" ]] \
-    || die "infra configを読み取れません"
+  canonical_config="$(prepare_infra_config "${config}")"
   [[ "${run_id}" =~ ^[a-z0-9][a-z0-9-]{5,31}$ ]] || die "run IDの形式が不正です"
   prefix="$(project_base)-infra-"
   [[ "${project}" == "${prefix}"* ]] || die "別worktreeのinfra projectはcleanupできません"
 
   export VIRTY_INFRA_CONFIG_HOST="${canonical_config}"
   export VIRTY_TEST_RUN_ID="${run_id}"
+  export VIRTY_INFRA_PROJECT="${project}"
+  export VIRTY_INFRA_SCENARIO="cleanup"
+  compose_project "${project}" --profile external build \
+    infra-preflight infra-cleanup infra-verify-clean infra-worker \
+    infra-migrate infra-volume-init >&2
+  lab_id="$(compose_project "${project}" --profile external run --rm --no-deps -T infra-preflight)"
+  [[ "${lab_id}" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$ ]] \
+    || die "infra preflightが有効なlab_idを返しませんでした"
+  acquire_lab_lock "${lab_id}"
   ACTIVE_PROJECT="${project}"
   ACTIVE_PROFILE=external
   INFRA_CLEANUP_ENABLED=1
@@ -519,13 +755,388 @@ run_infra_cleanup() {
   cleanup_active_project
 }
 
+wait_for_infra_checkpoint() {
+  local project="$1"
+  local child_pid="$2"
+  local timeout_seconds="$3"
+  local expected_phase="$4"
+  local elapsed=0 process_state
+
+  while ((elapsed < timeout_seconds)); do
+    if compose_project "${project}" --profile external exec -T infra-worker \
+      python -m tests.external.support.scenario check "${expected_phase}" \
+      >/dev/null 2>&1; then
+      return 0
+    fi
+    process_state="$(ps -o stat= -p "${child_pid}" 2>/dev/null || true)"
+    if ! kill -0 "${child_pid}" >/dev/null 2>&1 || \
+      [[ "${process_state}" == Z* ]]; then
+      return 2
+    fi
+    sleep 1
+    ((elapsed += 1))
+  done
+  return 1
+}
+
+wait_for_child_with_deadline() {
+  local child_pid="$1"
+  local timeout_seconds="$2"
+  local deadline=$((SECONDS + timeout_seconds))
+  local process_state wait_status
+
+  while kill -0 "${child_pid}" >/dev/null 2>&1; do
+    process_state="$(ps -o stat= -p "${child_pid}" 2>/dev/null || true)"
+    [[ "${process_state}" == Z* ]] && break
+    ((SECONDS < deadline)) || return 124
+    sleep 1
+  done
+
+  if wait "${child_pid}"; then
+    return 0
+  else
+    wait_status=$?
+  fi
+  return "${wait_status}"
+}
+
+wait_for_process_group_with_deadline() {
+  local process_group="$1"
+  local timeout_seconds="$2"
+  local deadline=$((SECONDS + timeout_seconds))
+
+  while kill -0 -- "-${process_group}" >/dev/null 2>&1; do
+    ((SECONDS < deadline)) || return 124
+    sleep 1
+  done
+}
+
+refresh_signal_process_group() {
+  local session_pid="" process_group="" session_id=""
+
+  [[ -z "${SIGNAL_CHILD_PROCESS_GROUP}" ]] || return 0
+  [[ -n "${SIGNAL_CHILD_PID_FILE}" && -f "${SIGNAL_CHILD_PID_FILE}" ]] || return 1
+  IFS= read -r session_pid <"${SIGNAL_CHILD_PID_FILE}" || return 1
+  [[ "${session_pid}" =~ ^[1-9][0-9]*$ ]] || return 1
+  process_group="$(ps -o pgid= -p "${session_pid}" 2>/dev/null || true)"
+  session_id="$(ps -o sid= -p "${session_pid}" 2>/dev/null || true)"
+  process_group="${process_group//[[:space:]]/}"
+  session_id="${session_id//[[:space:]]/}"
+  [[ "${process_group}" == "${session_pid}" && \
+    "${session_id}" == "${session_pid}" ]] || return 1
+
+  SIGNAL_CHILD_PROCESS_GROUP="${session_pid}"
+  CHILD_PROCESS_GROUPS=("${session_pid}")
+}
+
+wait_for_signal_process_group_handshake() {
+  local child_pid="$1"
+  local timeout_seconds="$2"
+  local deadline=$((SECONDS + timeout_seconds))
+  local process_state
+
+  while ((SECONDS < deadline)); do
+    if refresh_signal_process_group; then
+      return 0
+    fi
+    process_state="$(ps -o stat= -p "${child_pid}" 2>/dev/null || true)"
+    if ! kill -0 "${child_pid}" >/dev/null 2>&1 || \
+      [[ "${process_state}" == Z* ]]; then
+      return 2
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+clear_signal_child_tracking() {
+  CHILD_PIDS=()
+  CHILD_PROCESS_GROUPS=()
+  SIGNAL_CHILD_PID_FILE=""
+  SIGNAL_CHILD_PROJECT=""
+  SIGNAL_CHILD_PROCESS_GROUP=""
+}
+
+terminate_tracked_signal_child() {
+  local child_pid="$1"
+  local timeout_seconds="$2"
+  local child_wait_status=0 group_wait_status=0
+
+  refresh_signal_process_group || return 124
+  [[ -n "${SIGNAL_CHILD_PROCESS_GROUP}" ]] || return 124
+  kill -s TERM -- "-${SIGNAL_CHILD_PROCESS_GROUP}" >/dev/null 2>&1 || true
+  if wait_for_child_with_deadline "${child_pid}" "${timeout_seconds}"; then
+    child_wait_status=0
+  else
+    child_wait_status=$?
+  fi
+  if wait_for_process_group_with_deadline \
+    "${SIGNAL_CHILD_PROCESS_GROUP}" "${timeout_seconds}"; then
+    group_wait_status=0
+  else
+    group_wait_status=$?
+  fi
+  if ((child_wait_status == 124 || group_wait_status == 124)); then
+    return 124
+  fi
+  clear_signal_child_tracking
+}
+
+stop_signal_project_containers() {
+  local project="$1"
+
+  if terminate_project_containers_with_term "${project}" "" 60; then
+    return 0
+  fi
+  printf 'エラー: signal scenarioのproject container停止を確認できません: %s\n' \
+    "${project}" >&2
+  return 124
+}
+
+run_signal_scenario_parent() {
+  local canonical_config="$1"
+  local scenario="$2"
+  local signal_name expected_status run_id project child_pid handshake_status
+  local checkpoint_status child_status
+  local signal_pid_file session_pid
+
+  case "${scenario}" in
+    signal-int)
+      signal_name=INT
+      expected_status=130
+      ;;
+    signal-term)
+      signal_name=TERM
+      expected_status=143
+      ;;
+    *) die "signal scenarioが不正です: ${scenario}" ;;
+  esac
+
+  run_id="run-$(date -u +%Y%m%d%H%M%S)-$$-${RANDOM}"
+  project="$(project_base)-infra-$(date -u +%s)-$$-${RANDOM}"
+  signal_pid_file="$(mktemp "${TMPDIR:-/tmp}/virty-infra-signal.XXXXXX")"
+  chmod 0600 "${signal_pid_file}"
+  register_temp_path "${signal_pid_file}"
+  VIRTY_INFRA_SIGNAL_CHILD=1 \
+  VIRTY_INFRA_SIGNAL_PID_FILE="${signal_pid_file}" \
+  VIRTY_INFRA_RUN_ID_OVERRIDE="${run_id}" \
+  VIRTY_INFRA_PROJECT_OVERRIDE="${project}" \
+    setsid --fork --wait bash -ceu '
+      signal_pid_file="$1"
+      shift
+      [[ -f "${signal_pid_file}" && ! -L "${signal_pid_file}" ]]
+      printf "%s\n" "$$" >"${signal_pid_file}"
+      exec "$@"
+    ' bash "${signal_pid_file}" "${ROOT_DIR}/devctl" infra \
+      --config "${canonical_config}" --scenario "${scenario}" &
+  child_pid=$!
+  CHILD_PIDS=("${child_pid}")
+  SIGNAL_CHILD_PID_FILE="${signal_pid_file}"
+  SIGNAL_CHILD_PROJECT="${project}"
+
+  if wait_for_signal_process_group_handshake "${child_pid}" 30; then
+    handshake_status=0
+  else
+    handshake_status=$?
+  fi
+  if ((handshake_status != 0)); then
+    if ! terminate_tracked_signal_child "${child_pid}" 60; then
+      die "signal子processのPID/PGID handshakeを確認できません（external cleanupを抑止、手動確認が必要: ${project}）"
+    fi
+    stop_signal_project_containers "${project}" \
+      || die "signal子process停止後のproject静止を確認できません（手動確認が必要: ${project}）"
+    die "signal子processのPID/PGID handshakeに失敗しました"
+  fi
+
+  if wait_for_infra_checkpoint \
+    "${project}" "${child_pid}" 300 signal-resource-created; then
+    checkpoint_status=0
+  else
+    checkpoint_status=$?
+  fi
+  session_pid="${SIGNAL_CHILD_PROCESS_GROUP}"
+  if ((checkpoint_status != 0)); then
+    if ! terminate_tracked_signal_child "${child_pid}" 300; then
+      die "signal送信前の子process停止を確認できません（手動確認が必要: ${project}）"
+    fi
+    stop_signal_project_containers "${project}" \
+      || die "signal送信前のproject静止を確認できません（手動確認が必要: ${project}）"
+    if ((checkpoint_status == 2)); then
+      die "signal送信前に子infra processが終了しました"
+    fi
+    die "resource作成checkpointを300秒以内に確認できませんでした"
+  fi
+
+  [[ -n "${session_pid}" ]] \
+    || die "signal scenarioのsession processを確認できませんでした"
+  if ! kill -s "${signal_name}" -- "-${session_pid}"; then
+    terminate_tracked_signal_child "${child_pid}" 300 \
+      || die "signal送信失敗後の子process停止を確認できません（手動確認が必要: ${project}）"
+    stop_signal_project_containers "${project}" \
+      || die "signal送信失敗後のproject静止を確認できません（手動確認が必要: ${project}）"
+    die "${scenario}を子processへ送信できませんでした"
+  fi
+  if wait_for_child_with_deadline "${child_pid}" 900; then
+    child_status=0
+  else
+    child_status=$?
+  fi
+  if ((child_status == 124)); then
+    if ! terminate_tracked_signal_child "${child_pid}" 300; then
+      die "${scenario}の子process停止を確認できません（external cleanupを抑止、手動確認が必要: ${project}）"
+    fi
+    stop_signal_project_containers "${project}" \
+      || die "${scenario} timeout後のproject静止を確認できません（手動確認が必要: ${project}）"
+    die "${scenario}の子processが900秒以内に終了しませんでした（projectを保持: ${project}）"
+  fi
+  if ! wait_for_process_group_with_deadline "${session_pid}" 60; then
+    terminate_tracked_signal_child "${child_pid}" 300 \
+      || die "${scenario}終了後のprocess group停止を確認できません（手動確認が必要: ${project}）"
+    stop_signal_project_containers "${project}" \
+      || die "${scenario}終了後のproject静止を確認できません（手動確認が必要: ${project}）"
+    die "${scenario}終了後に残ったprocess groupをTERM停止しました（projectを保持: ${project}）"
+  fi
+  clear_signal_child_tracking
+  if [[ "${child_status}" != "${expected_status}" ]]; then
+    stop_signal_project_containers "${project}" \
+      || die "${scenario}終了値不一致後のproject静止を確認できません（手動確認が必要: ${project}）"
+    die "${scenario}の子process終了値が不正です（期待: ${expected_status}, 実際: ${child_status}; projectを保持: ${project}）"
+  fi
+  ACTIVE_PROJECT="${project}"
+  ACTIVE_PROFILE=external
+  cleanup_active_project \
+    || die "${scenario}成功後のproject/volume削除に失敗しました"
+  printf '%s成功: 子process=%s、cleanupと残存確認=成功\n' "${scenario}" "${child_status}"
+}
+
+terminate_child_process_with_term() {
+  local child_pid="$1"
+  local timeout_seconds="$2"
+  local wait_status=0
+
+  kill -s TERM "${child_pid}" >/dev/null 2>&1 || true
+  if wait_for_child_with_deadline "${child_pid}" "${timeout_seconds}"; then
+    wait_status=0
+  else
+    wait_status=$?
+  fi
+  ((wait_status != 124))
+}
+
+terminate_worker_scenario_process() {
+  local project="$1"
+  local scenario_pid="$2"
+  local timeout_seconds="$3"
+  local host_stopped=0 container_stopped=0
+
+  if terminate_child_process_with_term "${scenario_pid}" "${timeout_seconds}"; then
+    host_stopped=1
+  fi
+  if terminate_project_containers_with_term \
+    "${project}" infra-test "${timeout_seconds}"; then
+    container_stopped=1
+  fi
+  if ((host_stopped == 1 && container_stopped == 1)); then
+    CHILD_PIDS=()
+    return 0
+  fi
+  return 124
+}
+
+run_worker_stop_scenario() {
+  local project="$1"
+  local scenario_pid checkpoint_status scenario_status
+
+  compose_project "${project}" --profile external run --rm -T infra-test \
+    pytest tests/external/scenarios/test_worker_stop.py &
+  scenario_pid=$!
+  CHILD_PIDS=("${scenario_pid}")
+
+  if wait_for_infra_checkpoint \
+    "${project}" "${scenario_pid}" 300 worker-task-started; then
+    checkpoint_status=0
+  else
+    checkpoint_status=$?
+  fi
+  if ((checkpoint_status != 0)); then
+    terminate_worker_scenario_process "${project}" "${scenario_pid}" 60 \
+      || die "worker-stop test processの停止を確認できません（external cleanupを抑止）"
+    die "worker停止用checkpointを確認できませんでした"
+  fi
+
+  if ! terminate_project_containers_with_term "${project}" infra-worker 60; then
+    terminate_worker_scenario_process "${project}" "${scenario_pid}" 60 \
+      || die "worker/containerの停止を確認できません（external cleanupを抑止）"
+    die "infra-workerのTERM停止を確認できませんでした"
+  fi
+  # worker再起動時のscheduler初期化が実行中taskをlostへ遷移させる。
+  # scenario側がlostを待てるよう、test processを待つ前に再起動する。
+  if compose_project "${project}" --profile external up \
+    --detach --wait --wait-timeout 90 infra-worker; then
+    if compose_project "${project}" --profile external exec -T infra-worker \
+      python -m tests.external.support.scenario write worker-restarted; then
+      :
+    else
+      terminate_worker_scenario_process "${project}" "${scenario_pid}" 60 \
+        || die "worker再起動失敗後のtest process停止を確認できません"
+      die "worker再起動後のcontrol markerを書き込めませんでした"
+    fi
+  else
+    terminate_worker_scenario_process "${project}" "${scenario_pid}" 60 \
+      || die "worker再起動失敗後のtest process停止を確認できません"
+    die "infra-workerを再起動できませんでした"
+  fi
+  if wait_for_child_with_deadline "${scenario_pid}" 300; then
+    scenario_status=0
+  else
+    scenario_status=$?
+  fi
+  if ((scenario_status == 124)); then
+    terminate_worker_scenario_process "${project}" "${scenario_pid}" 60 \
+      || die "worker-stop timeout後のtest process停止を確認できません（external cleanupを抑止）"
+    die "worker-stop scenarioが300秒以内に終了しませんでした"
+  fi
+  CHILD_PIDS=()
+  terminate_project_containers_with_term "${project}" infra-test 30 \
+    || die "worker-stop終了後のinfra-test container停止を確認できません"
+  ((scenario_status == 0))
+}
+
+run_external_scenario() {
+  local project="$1"
+  local scenario="$2"
+
+  case "${scenario}" in
+    happy)
+      compose_project "${project}" --profile external run --rm -T infra-test
+      ;;
+    task-failure)
+      compose_project "${project}" --profile external run --rm -T infra-test \
+        pytest tests/external/scenarios/test_task_failure.py
+      ;;
+    worker-stop)
+      run_worker_stop_scenario "${project}"
+      ;;
+    signal-int|signal-term)
+      compose_project "${project}" --profile external run --rm -T infra-test \
+        pytest tests/external/scenarios/test_signal.py
+      ;;
+    *) die "infra scenarioが不正です: ${scenario}" ;;
+  esac
+}
+
 run_infra() {
-  local config=""
+  local config="" scenario="happy"
   local canonical_config run_id project lab_id
 
   if [[ "${1:-}" == "cleanup" ]]; then
     shift
     run_infra_cleanup "$@"
+    return
+  fi
+  if [[ "${1:-}" == "preflight" ]]; then
+    shift
+    run_infra_preflight "$@"
     return
   fi
 
@@ -537,21 +1148,50 @@ run_infra() {
         config="$2"
         shift 2
         ;;
+      --scenario)
+        (($# >= 2)) || die "--scenarioの値がありません"
+        scenario="$2"
+        shift 2
+        ;;
       *)
         die "infraの未対応optionです: $1"
         ;;
     esac
   done
 
-  [[ -n "${config}" ]] || die "infraには --config /absolute/path が必要です"
-  [[ "${config}" == /* ]] || die "infra configは絶対pathで指定してください"
-  canonical_config="$(realpath -e -- "${config}")" || die "infra configが存在しません"
-  [[ -f "${canonical_config}" && -r "${canonical_config}" ]] || die "infra configを読み取れません"
+  case "${scenario}" in
+    happy|task-failure|worker-stop|signal-int|signal-term) ;;
+    *) die "infra scenarioが不正です: ${scenario}" ;;
+  esac
 
-  run_id="run-$(date -u +%Y%m%d%H%M%S)-$$-${RANDOM}"
-  project="$(project_base)-infra-$(date -u +%s)-$$"
+  [[ -n "${config}" ]] || die "infraには --config /absolute/path が必要です"
+  canonical_config="$(prepare_infra_config "${config}")"
+
+  if [[ "${scenario}" == signal-* && "${VIRTY_INFRA_SIGNAL_CHILD:-0}" != "1" ]]; then
+    run_signal_scenario_parent "${canonical_config}" "${scenario}"
+    return
+  fi
+
+  if [[ "${VIRTY_INFRA_SIGNAL_CHILD:-0}" == "1" ]]; then
+    local signal_session_pid=""
+    [[ "${VIRTY_INFRA_SIGNAL_PID_FILE:-}" == "${TMPDIR:-/tmp}/virty-infra-signal."* ]] \
+      || die "signal scenarioのPID fileが不正です"
+    [[ -f "${VIRTY_INFRA_SIGNAL_PID_FILE}" && ! -L "${VIRTY_INFRA_SIGNAL_PID_FILE}" ]] \
+      || die "signal scenarioのPID fileを確認できません"
+    IFS= read -r signal_session_pid <"${VIRTY_INFRA_SIGNAL_PID_FILE}" \
+      || die "signal scenarioのsession PIDを確認できません"
+    [[ "${signal_session_pid}" == "$$" ]] \
+      || die "signal scenarioのsession identityが一致しません"
+  fi
+
+  run_id="${VIRTY_INFRA_RUN_ID_OVERRIDE:-run-$(date -u +%Y%m%d%H%M%S)-$$-${RANDOM}}"
+  project="${VIRTY_INFRA_PROJECT_OVERRIDE:-$(project_base)-infra-$(date -u +%s)-$$}"
+  [[ "${run_id}" =~ ^[a-z0-9][a-z0-9-]{5,31}$ ]] || die "run IDの形式が不正です"
+  [[ "${project}" == "$(project_base)-infra-"* ]] || die "infra projectの形式が不正です"
   export VIRTY_INFRA_CONFIG_HOST="${canonical_config}"
   export VIRTY_TEST_RUN_ID="${run_id}"
+  export VIRTY_INFRA_PROJECT="${project}"
+  export VIRTY_INFRA_SCENARIO="${scenario}"
 
   ACTIVE_PROJECT="${project}"
   ACTIVE_PROFILE="external"
@@ -564,9 +1204,11 @@ run_infra() {
   acquire_lab_lock "${lab_id}"
 
   compose_project "${project}" --profile external build \
-    infra-cleanup infra-test infra-worker infra-migrate infra-volume-init
+    infra-cleanup infra-verify-clean infra-test infra-worker infra-migrate \
+    infra-volume-init infra-readiness
+  run_infra_readiness "${project}"
   INFRA_CLEANUP_ENABLED=1
-  compose_project "${project}" --profile external run --rm -T infra-test
+  run_external_scenario "${project}" "${scenario}"
 }
 
 main() {

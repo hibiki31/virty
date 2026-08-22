@@ -49,6 +49,10 @@ x-infra-test-environment: &infra-test-environment
   SQLALCHEMY_DATABASE_URL: postgresql://postgres:password@infra-db:5432/virty_test
   VIRTY_INFRA_CONFIG: /run/secrets/infra-config.json
   VIRTY_INFRA_CLEANUP_MARKER: /workspace/api/data/infra-cleanup-armed
+  VIRTY_INFRA_MANIFEST: /workspace/api/data/infra-resource-manifest.json
+  VIRTY_INFRA_PHASE_MARKER: /workspace/api/data/infra-phase
+  VIRTY_INFRA_PROJECT: ${VIRTY_INFRA_PROJECT:-unset}
+  VIRTY_INFRA_SCENARIO: ${VIRTY_INFRA_SCENARIO:-happy}
   VIRTY_TESTING: "1"
   VIRTY_TEST_RUN_ID: ${VIRTY_TEST_RUN_ID:-unset}
 
@@ -326,6 +330,21 @@ services:
     volumes:
       - ${VIRTY_GENERATED_DIR:-/tmp}:/generated
 
+  web-lock:
+    image: node:24-bullseye@sha256:e98b72e72be9ca56f9467559af60619f738b736c0622b7a9afa39d8fc6fed2b5
+    profiles: [quick]
+    working_dir: /workspace/vue
+    command:
+      - bash
+      - -euc
+      - corepack pnpm install --lockfile-only
+    environment:
+      CI: "true"
+      HOME: /tmp/virty-web-home
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./vue:/workspace/vue
+
   db-test:
     image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
     profiles: [verify]
@@ -450,6 +469,35 @@ services:
     command: ["true"]
     network_mode: none
 
+  web-e2e-server:
+    build: *web-production-build
+    profiles: [verify]
+    networks:
+      verify-internal:
+        aliases:
+          - api
+          - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  web-e2e:
+    build:
+      context: ./vue
+      dockerfile: Dockerfile.playwright
+    profiles: [verify]
+    working_dir: /workspace/vue
+    command: ["pnpm", "run", "test:e2e"]
+    environment:
+      PLAYWRIGHT_BASE_URL: http://web-e2e-server
+    networks: [verify-internal]
+    depends_on:
+      web-e2e-server:
+        condition: service_healthy
+
   proxy-production-verify:
     build:
       context: ./proxy
@@ -461,24 +509,27 @@ services:
     build: *api-check-build
     profiles: [external]
     working_dir: /workspace/api
-    command:
-      - python
-      - -c
-      - |
-        from pathlib import Path
-
-        from tests.external.conftest import EnvConfig, validate_infra_config
-
-        path = "/run/secrets/infra-config.json"
-        try:
-            config = EnvConfig.model_validate_json(Path(path).read_text(encoding="utf-8"))
-            validate_infra_config(config)
-        except (OSError, ValueError) as exc:
-            raise SystemExit(f"infra設定を読み込めません: {exc}") from exc
-        print(config.lab_id)
+    command: ["python", "-m", "tests.external.preflight", "config"]
+    environment: *infra-test-environment
     user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
     volumes:
       - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+
+  infra-readiness:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["python", "-m", "tests.external.preflight", "readiness"]
+    environment: *infra-test-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data
+      - infra-ssh:/tmp/virty-home/.ssh
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+    depends_on:
+      infra-volume-init:
+        condition: service_completed_successfully
 
   infra-db:
     image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
@@ -488,8 +539,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
     healthcheck: *postgres-healthcheck
-    tmpfs:
-      - /var/lib/postgresql
+    volumes:
+      - infra-db-data:/var/lib/postgresql
 
   infra-volume-init:
     build: *api-development-build
@@ -535,7 +586,10 @@ services:
     build: *api-development-build
     profiles: [external]
     working_dir: /workspace/api
-    command: ["python", "worker.py"]
+    command:
+      - bash
+      - -ceu
+      - rm -f /tmp/virty-worker-ready && exec python worker.py
     environment:
       <<: *infra-test-environment
       VIRTY_WORKER_READY_FILE: /tmp/virty-worker-ready
@@ -583,12 +637,26 @@ services:
       - infra-ssh:/tmp/virty-home/.ssh
       - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
 
+  infra-verify-clean:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["python", "-m", "tests.external.verify_cleanup"]
+    environment: *infra-test-environment
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    volumes:
+      - ./api:/workspace/api
+      - infra-data:/workspace/api/data:ro
+      - infra-ssh:/tmp/virty-home/.ssh:ro
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
+
 volumes:
   api-data:
   api-quick-cache:
   api-ssh:
   db-data:
   infra-data:
+  infra-db-data:
   infra-ssh:
   openapi-contract:
   pgadmin-data:

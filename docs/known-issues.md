@@ -25,7 +25,14 @@
 | worktree間のport、container、network、volume、DB、依存cache衝突 | canonical pathのSHAからCompose project名を生成し、portをloopback自動割当にする | 2 worktreeでの`up`、`quick`、`verify`、片側`clean` |
 | image tagやpost-create installによる環境drift | base imageをtagとdigestで固定し、Python依存lockと`pnpm --frozen-lockfile`をbuild layerへ入れる | `./devctl quick`、production image build |
 | 標準testからSSH、Ansible、libvirt、downloadへ接続 | backend factory、deterministic fake、networkなしquick、internal network verifyを使う | `./devctl verify api` |
-| 実機testによる既存lab資源の再利用・削除 | run ID、exact name、read-only collision preflight、serial lock、独立cleanupを必須化する | `./devctl infra --config ...`のpreflight |
+| API-001: pathと異なるuser更新、または部分commit | path `username`を更新対象の正本とし、`scopes`と`publickeys`を単一transactionで更新する | user API integration、OpenAPI drift check |
+| API-002: 必須bodyの欠落をoptionalと公開 | VM、network、node、storageの対象9 endpointを必須bodyに統一し、欠落時の422を契約化する | API contract integration、OpenAPI drift check |
+| API-003: Pydantic warningによるschema driftの見逃し | FastAPI互換versionを固定し、対象warningをpytestでerrorにする | `./devctl quick api`、`./devctl verify api` |
+| WEB-002: 未参照legacy SFCが削除済みaxios adapterへ依存 | 対象5 SFCを削除し、coverageの個別除外も外す | ESLint、forced型check、Vitest、production build |
+| TEST-001: lab不要な契約とexternal helperの静的不備 | externalをRuff対象にし、auth/user/project/flavorを標準integrationへ移管する | `./devctl quick api`、`./devctl verify api` |
+| TEST-002: worker外部処理の失敗pathを未検証 | SSH timeout、Ansible nonzero、libvirt例外、download metadata失敗をproduction handler境界で注入し、親taskの`error`と後続非実行を検証する | worker failure integration |
+| INFRA-002: cleanupが想定名の再構築だけに依存 | mutation前のversion付きmanifestと作成UUIDを永続化し、manifestだけを削除allowlistにする | manifest/cleanup unit test、`infra cleanup`後の独立inventory |
+| 実機testによる既存lab資源の再利用・削除 | run ID、exact name、lab側read-only preflight、serial lock、manifest-only cleanupを必須化する | `./devctl infra preflight --config ...`、external support unit test |
 | CIがimage buildだけを行いlint・test失敗を見逃す | API、Web、Proxy jobがcomponent別`devctl verify`を実行し、publish前にも同じgateを置く | GitHub Actions workflow |
 
 ## 未解決の課題
@@ -45,53 +52,6 @@
 - 完了条件: pristine環境で全commandが成功し、cold/warm時間、dependency cache hit、型check各1回、
   worktree資源の非共有をCI artifactまたは保守記録で確認できる。
 
-### API-001: 利用者更新endpointがpathのusernameを使用しない
-
-- 優先度: P1
-- 状態: 未解決
-- 影響: `PUT /api/users/{username}`のpathと実際の更新対象が一致しない。handlerはbodyの
-  `request.username`で対象を選ぶため、URLと異なる利用者を更新できる。生成OpenAPIにもpath parameterが
-  現れず、clientが正しい契約を構築できない。またpublic keyをcommitした後にscopeを別commitで更新するため、
-  後半が失敗すると利用者情報が部分更新される。
-- 根拠: [`api/user/router.py`](../api/user/router.py)の`update_user`と
-  [`api/user/schemas.py`](../api/user/schemas.py)の`UserForUpdate`。
-- 改善方針: handlerへ`username: str`を受け取り、検索とscope更新の対象をpath値へ統一する。
-  `UserForUpdate`は`UserForCreate`を継承せず、更新可能な`scopes`と`publickeys`だけを持つschemaへ分離する。
-  public keyとscopeは一つのtransactionで更新する。
-- 完了条件: path以外の利用者を変更できないintegration test、存在しない利用者の404、OpenAPIと
-  `vue/src/api/openapi.d.ts`の再生成、失敗時に部分更新しないtestが同じ変更で成功する。
-
-### API-002: request bodyの型とoptional契約が一致しない
-
-- 優先度: P1
-- 状態: 未解決
-- 影響: VM、network、node、storageの9 endpointは非optional model型へ`None`をdefault指定しており、
-  OpenAPIではbodyがoptionalだがhandlerはmodelを前提に処理する。現在は既存wire contractを変えないため
-  `type: ignore[assignment]`を使用しており、型checkだけではbody欠落時の挙動を保証できない。
-- 根拠: [`api/domain/router_task.py`](../api/domain/router_task.py)、
-  [`api/network/router_task.py`](../api/network/router_task.py)、
-  [`api/node/router_task.py`](../api/node/router_task.py)、
-  [`api/storage/router.py`](../api/storage/router.py)、
-  [`api/storage/router_task.py`](../api/storage/router_task.py)。
-- 改善方針: endpointごとにbodyを必須にするか、`Model | None`として欠落を明示処理するかを決定する。
-  暗黙のcontract変更を避け、client影響を確認して段階的に移行する。
-- 完了条件: body欠落時のstatusを固定するcontract test、行単位ignoreの削除、OpenAPI生成差分のreview、
-  Web利用箇所の型checkが成功する。
-
-### API-003: schema生成時にPydantic warningが発生する
-
-- 優先度: P2
-- 状態: 未解決
-- 影響: `./devctl verify api`のintegration testで`UnsupportedFieldAttributeWarning`が24件発生する。
-  現時点のtestは成功するが、alias metadataが無視される可能性をwarningが示しており、将来の
-  FastAPI/Pydantic更新時にrequest・response名が変わっても見落としやすい。
-- 根拠: 認証とworker integrationで`username`、`password`、node field等のalias生成時に再現する。
-  現在の固定versionは[`api/requirements.lock`](../api/requirements.lock)を正本とする。原因がapplication
-  schema、FastAPIのdependency wrapping、version組合せのどこにあるかは未切り分けである。
-- 改善方針: 最小schemaでwarningを再現し、camelCaseの入力・出力・OpenAPIをassertする。
-  原因に応じてschema宣言または互換versionを修正する。
-- 完了条件: warningが0件となり、対象warningをerror扱いにしてもunit/integration/OpenAPI生成が成功する。
-
 ### TYPE-001: production backend内部がmypy対象外である
 
 - 優先度: P2
@@ -109,83 +69,37 @@
 
 - 優先度: P2
 - 状態: 未解決
-- 影響: 2026-08-22の全src基準はstatements 6.99%、branches 6.54%、functions 3.95%、lines 7.29%である。
-  validation、認証middleware、task変換、pagination、主要dialog smokeは開始したが、主要page、失敗response、
-  form submit、router遷移の回帰検出は限定的である。
+- 影響: 拡充後の作業branchでVitest 94件とPlaywright 3 flowは成功し、認証、API error、
+  pagination、task polling、VM/network/node/storage/image dialogの主要分岐を標準verifyへ取り込んだ。
+  ただし全srcのcoverageにglobal gateは置いておらず、未抽出のpage/componentには依然として
+  測定とtestの薄い範囲が残る。94件と現在のcoverageは最新`master`統合前の暫定値であり、
+  統合後に`./devctl verify web`で最終再計測する。
 - 根拠: [`vue/vitest.config.mts`](../vue/vitest.config.mts)と
-  [`vue/src/__tests__/`](../vue/src/__tests__)。実測手順と環境は[development.md](development.md)に記録する。
-- 改善方針: 変更するmoduleへ境界値と失敗pathのtestを追加し、認証、resource操作dialog、task表示、
-  API error通知を優先する。低い現状値に合わせた一律閾値は置かず、対象moduleの根拠が揃ってから
-  module別または変更差分のgateを導入する。
-- 完了条件: 主要な利用者flowごとに最低1つの自動testがあり、coverage推移をCIで比較できる。
-
-### WEB-002: 未参照componentが削除済みAPI adapterへ依存する
-
-- 優先度: P2
-- 状態: 未解決
-- 影響: 5つのlegacy SFCが存在しない`@/axios/index`をimportする。現行routeから未参照のためbuildは通るが、
-  再利用すると直ちに失敗し、coverage toolもparseできないため明示除外している。
-- 根拠: `NodeRolePatch.vue`、`StoragePoolAddDialog.vue`、`StoragePoolJoinDialog.vue`、
-  `DomainAddTicketsDialog.vue`、`DomainGroupPut.vue`と[`vue/vitest.config.mts`](../vue/vitest.config.mts)。
-- 改善方針: route・component参照を再確認し、不要なら削除する。必要なら`openapi-fetch`を使う現行
-  [`vue/src/api/index.ts`](../vue/src/api/index.ts)へ移行し、component testを追加する。
-- 完了条件: `@/axios/index`参照とcoverage除外がなくなり、lint、forced型check、Vitest、production buildが成功する。
-
-### TEST-001: external suiteの静的検査範囲が限定的である
-
-- 優先度: P2
-- 状態: 未解決
-- 影響: standard quickはexternal PythonのAST parseを行うが、`tests/external`はRuffとmypyの対象外である。
-  endpoint typo、response未assert、fixture順序依存など、実機labを使わず検出できる不具合が残りやすい。
-- 根拠: [`api/pyproject.toml`](../api/pyproject.toml)と
-  [`api/tests/unit/test_source_contracts.py`](../api/tests/unit/test_source_contracts.py)。
-- 改善方針: endpointとpayloadのcontractをfake integrationへ移し、externalにはproduction adapter固有の確認だけを残す。
-  external helperを段階的にRuff対象へ入れ、設定modelとcleanup判断はunit testする。
-- 完了条件: external sourceのRuffが成功し、主要endpointのpath・status・response assertionをlabなしで検証できる。
-
-### TEST-002: fake backendの失敗pathをintegration testしていない
-
-- 優先度: P2
-- 状態: 未解決
-- 影響: 現行fake backendは成功値または空inventoryだけを返し、worker integrationもtaskが`finish`する
-  happy pathを確認する。SSH timeout、Ansible nonzero、libvirt例外、download metadata失敗時にtaskが
-  `error`へ遷移し、message・logを残し、依存taskを誤実行しないことを標準verifyで保証していない。
-- 根拠: [`api/module/backends.py`](../api/module/backends.py)のfake実装と
-  [`api/tests/integration/test_worker_task.py`](../api/tests/integration/test_worker_task.py)。
-- 改善方針: 呼出単位でtimeout、例外、nonzero、遅延を選べるfault-injectable fakeを追加する。
-  production adapterの例外型をbackend境界で正規化し、workerの診断情報と依存task状態をintegration testする。
-- 完了条件: backend失敗scenarioが30秒以内に終了し、task UUID、`error` status、message、logをassertでき、
-  後続taskが外部操作を実行しない。
+  [`vue/src/__tests__/`](../vue/src/__tests__)、[`vue/e2e/`](../vue/e2e/)。実測手順と環境は
+  [development.md](development.md)に記録する。
+- 改善方針: 全体値は推移値として記録し、根拠のないglobal閾値は置かない。抽出済みの認証、
+  error整形、pagination、poller helperだけはlines/statements 90%、branches/functions 80%でgateし、
+  今後触るpage/componentへ境界値と失敗pathのtestを追加する。
+- 完了条件: 最新`master`統合後のVitest件数・coverage・Playwright 3 flowを再計測し、
+  主要な利用者flowごとに自動testがあり、対象helper gateとcoverage推移を標準verifyで確認できる。
 
 ### INFRA-001: production adapterを使う専用lab testが未実測である
 
 - 優先度: P1
 - 状態: 未解決
 - 影響: fail-closed preflight、fake integration、cleanup判断は検証済みだが、実SSH、Ansible、libvirt、
-  image downloadを組み合わせたsuiteは専用lab設定がないため未実行である。OS、libvirt、network、storage固有の
-  差異と、実worker停止時の診断・cleanupは標準verifyだけでは保証できない。また、`become`でroot所有のpathを
-  作成する処理に対し、cleanup playbookが`become`を使わない経路があり、通常の非root SSH userでは
-  run資源を削除できない可能性がある。
+  image downloadを組み合わせたsuiteはまだ実行していない。OS、libvirt、network、storage固有の
+  差異と、実worker停止・INT・TERM時の診断とcleanupは標準verifyだけでは保証できない。
+  提供済みlocal configは親directoryがmode `0775`、fileがmode `0664`であり、`devctl`が求める
+  `0700`/`0600`を満たさないため、現状のままではpreflightもfail closedする。
 - 根拠: [`api/tests/external/`](../api/tests/external/)と
   [`api/tests/external/infra-config.example.json`](../api/tests/external/infra-config.example.json)。
-- 改善方針: 作成とcleanupの権限境界を揃えたうえでdisposableな専用labを用意し、通常成功、task失敗、
-  worker停止、INT/TERMを順番に実測する。credentialや管理node固有値はrepositoryへ保存しない。
-- 完了条件: 非root SSH userを含む各scenarioが有限時間で診断付き終了し、run ID資源とremote pathが
-  0件になることを独立inventoryで確認する。
-
-### INFRA-002: cleanupが作成資源の永続manifestを持たない
-
-- 優先度: P2
-- 状態: 未解決
-- 影響: 現行cleanupはcollision preflight後、configとrun IDからexact resource名・pathを再構築する。
-  通常の衝突や部分一致削除は防げるが、run途中でconfigが失われた場合や、APIが返したUUIDと想定名が
-  ずれた場合に「実際に作成成功した資源」だけを証明してcleanupする台帳がない。
-- 根拠: [`api/tests/external/conftest.py`](../api/tests/external/conftest.py)、
-  [`api/tests/external/cleanup.py`](../api/tests/external/cleanup.py)、[`devctl`](../devctl)のinfra cleanup。
-- 改善方針: 作成成功直後にresource種別、UUID、node、exact pathをproject-scoped volumeのmanifestへ追記し、
-  cleanupはmanifestを第一の対象にする。config/run ID再構築はread-only診断用fallbackに限定する。
-- 完了条件: 部分作成、途中失敗、config変更、cleanup再試行をunit/fake integrationで再現し、manifest記載外の
-  resourceを削除しないことを確認する。
+- 改善方針: operatorが設定のmetadataを`0700`/`0600`へ修正した後、標準verifyと
+  read-only preflightの成功を確認し、破壊的実行の別承認を得る。各scenarioは新しいrun IDで
+  `happy`、`task-failure`、`worker-stop`、`signal-int`、`signal-term`の順に直列実測する。
+  credentialや管理node固有値はrepositoryへ保存しない。
+- 完了条件: 5 scenarioが有限時間で診断付き終了し、各run後にrun ID所有の
+  DB resource、libvirt resource、remote pathが0件になることを独立inventoryで確認する。
 
 ## 更新規則
 

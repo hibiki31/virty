@@ -1,15 +1,23 @@
 from storage.schemas import Storage, StorageMetadataForUpdate
-from tests.external.fixtures.storage import create_storage, delete_storage
 
 
-def test_delete_storage(env, client, created_storage):
-    delete_storage(env, client)
+def test_storage_inventory(env, created_storage) -> None:
+    expected = {
+        (storage.name, server.name)
+        for server in env.servers
+        for storage in env.storages
+    }
+    actual = {
+        (storage.name, storage.node_name)
+        for storage in created_storage.data
+        if (storage.name, storage.node_name) in expected
+    }
+    if actual != expected:
+        raise AssertionError(
+            f"storage inventory mismatch: count={len(actual.symmetric_difference(expected))}"
+        )
 
 
-def test_post_storage_ok(env, client, deleted_storage):
-    create_storage(env, client)
-    
-    
 def test_change_metadata(env, client, created_storage):
     for storage in created_storage.data:
         if storage.name.endswith("test-cloud"):
@@ -39,10 +47,10 @@ def test_change_metadata(env, client, created_storage):
             "/api/storages",
             json=req_data.model_dump(by_alias=True),
         )
-        assert response.status_code == 200, response.text
+        response.raise_for_status()
 
         read_response = client.get(f"/api/storages/{storage.uuid}")
-        assert read_response.status_code == 200, read_response.text
+        read_response.raise_for_status()
         updated = Storage.model_validate(read_response.json())
         assert updated.meta_data is not None
         assert updated.meta_data.rool == req_data.rool
