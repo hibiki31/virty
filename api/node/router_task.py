@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
+from resource_authorization import require_admin
 from task.functions import TaskManager
 from task.schemas import Task
 
@@ -22,8 +23,9 @@ def create_node(
         body: NodeForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-    
+):
+    cu.verify_scope(["node.manage"])
+    require_admin(cu)
     res_task = []
     
     task = TaskManager(db=db)
@@ -63,8 +65,9 @@ def delete_node(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["node.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='node', object='root')
     task.commit(user=cu, req=req, param={"name": name})
@@ -78,7 +81,9 @@ def update_node_role(
         req: Request,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    current_user.verify_scope(["node.manage"])
+    require_admin(current_user)
     task = TaskManager(db=db)
     task.select('patch', 'node', 'role')
     task.commit(user=current_user, req=req, body=body)

@@ -11,12 +11,14 @@ fixable = ["ALL"]
 python_version = "3.12"
 plugins = ["sqlalchemy.ext.mypy.plugin"]
 files = [
+    "agent",
     "main.py",
     "models.py",
     "settings.py",
     "worker.py",
     "ansible",
     "auth",
+    "dashboard",
     "domain",
     "exporter",
     "flavor",

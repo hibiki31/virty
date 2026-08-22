@@ -75,6 +75,35 @@ def test_planned_partial_creation_is_cleanup_allowlisted(tmp_path) -> None:
     ) is False
 
 
+def test_cleanup_planner_groups_pending_entries_by_dependency_tier(tmp_path) -> None:
+    path = tmp_path / "manifest.json"
+    entries = [
+        _entries()[0],
+        ManifestEntry(
+            kind="vm",
+            node=f"{RUN_ID}-node",
+            name=f"{RUN_ID}-second-vm-node",
+        ),
+        *_entries()[1:],
+    ]
+    manifest = initialize_manifest(
+        path,
+        run_id=RUN_ID,
+        lab_id=LAB_ID,
+        project_id=PROJECT_ID,
+        entries=entries,
+    )
+
+    tiers = CleanupPlanner(manifest).pending_tiers()
+
+    assert [[entry.kind for entry in tier] for tier in tiers] == [
+        ["vm", "vm"],
+        ["storage"],
+        ["remote_path"],
+        ["node"],
+    ]
+
+
 def test_created_uuid_is_recorded_but_not_part_of_target_identity(tmp_path) -> None:
     path = tmp_path / "manifest.json"
     _initialize(path)

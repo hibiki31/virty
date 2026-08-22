@@ -100,6 +100,25 @@ describe("認証navigation", () => {
     ).toBeUndefined();
   });
 
+  it("管理者限定routeは認証redirect後にadmin scopeを検査する", () => {
+    const agentRoute = {
+      path: "/agent",
+      fullPath: "/agent",
+      requiresAdmin: true,
+    };
+
+    expect(resolveAuthNavigation(false, agentRoute, [])).toEqual({
+      path: "/login",
+      query: { redirect: "/agent" },
+    });
+    expect(resolveAuthNavigation(true, agentRoute, ["user"])).toEqual({
+      path: "/",
+    });
+    expect(
+      resolveAuthNavigation(true, agentRoute, ["user", "admin", "vm.read"]),
+    ).toBeUndefined();
+  });
+
   it("token cookieを設定・削除する", () => {
     setAxios("token");
     removeAuth();

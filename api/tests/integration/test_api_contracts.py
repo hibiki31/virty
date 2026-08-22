@@ -14,7 +14,7 @@ from mixin.database import SessionLocal
 from node.models import NodeModel
 from project.models import ProjectModel
 from task.models import TaskModel
-from user.models import UserModel
+from user.models import UserModel, UserScopeModel
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
@@ -32,9 +32,17 @@ REQUIRED_BODY_OPERATIONS = [
 ]
 
 
-def _headers(username: str) -> dict[str, str]:
+def _headers(
+    username: str,
+    scopes: list[str] | None = None,
+    projects: list[str] | None = None,
+) -> dict[str, str]:
     token = create_access_token(
-        data={"sub": username, "scopes": ["user", "admin"], "projects": []},
+        data={
+            "sub": username,
+            "scopes": scopes if scopes is not None else ["admin"],
+            "projects": projects if projects is not None else [],
+        },
         expires_delta=timedelta(hours=1),
     )
     return {"Authorization": f"Bearer {token}"}
@@ -58,15 +66,24 @@ def test_mutation_request_bodies_are_required(
     request_path: str,
     schema_path: str,
 ) -> None:
-    response = api_client.request(
-        method.upper(),
-        request_path,
-        headers=_headers("body-contract-user"),
-    )
-    assert response.status_code == 422, response.text
+    username = f"body-contract-{uuid4().hex}"
+    try:
+        with SessionLocal.begin() as db:
+            db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
 
-    operation = api_client.get("/api/openapi.json").json()["paths"][schema_path][method]
-    assert operation["requestBody"]["required"] is True
+        response = api_client.request(
+            method.upper(),
+            request_path,
+            headers=_headers(username),
+        )
+        assert response.status_code == 422, response.text
+
+        operation = api_client.get("/api/openapi.json").json()["paths"][schema_path][method]
+        assert operation["requestBody"]["required"] is True
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(UserModel).filter(UserModel.username == username).delete()
 
 
 def test_openapi_operation_ids_remain_route_names(api_client: TestClient) -> None:
@@ -89,12 +106,27 @@ def test_openapi_operation_ids_remain_route_names(api_client: TestClient) -> Non
 
 
 def test_prometheus_uses_templated_route_name(api_client: TestClient) -> None:
-    response = api_client.get("/api/version")
-    assert response.status_code == 200, response.text
+    username = f"metrics-contract-{uuid4().hex}"
+    try:
+        with SessionLocal.begin() as db:
+            db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="metrics.read"))
 
-    metrics = api_client.get("/api/metrics-fastapi")
-    assert metrics.status_code == 200, metrics.text
-    assert 'handler="/api/version"' in metrics.text
+        response = api_client.get("/api/version")
+        assert response.status_code == 200, response.text
+
+        unauthenticated = api_client.get("/api/metrics-fastapi")
+        assert unauthenticated.status_code == 401
+
+        metrics = api_client.get(
+            "/api/metrics-fastapi",
+            headers=_headers(username, ["metrics.read"]),
+        )
+        assert metrics.status_code == 200, metrics.text
+        assert 'handler="/api/version"' in metrics.text
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(UserModel).filter(UserModel.username == username).delete()
 
 
 def test_node_role_returns_one_task_and_storage_reload_depends_on_create(
@@ -107,6 +139,7 @@ def test_node_role_returns_one_task_and_storage_reload_depends_on_create(
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
 
         role_response = api_client.patch(
             "/api/tasks/nodes/roles",
@@ -160,6 +193,7 @@ def test_network_create_accepts_isolated_and_rejects_obsolete_typo(
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
 
         valid_response = api_client.post(
             "/api/tasks/networks",
@@ -204,6 +238,7 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
             db.add(ProjectModel(
                 id=project_id,
                 name=f"vm-project-{suffix}",
@@ -253,7 +288,7 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
         response = api_client.patch(
             f"/api/tasks/vms/{target_uuid}/project",
             headers=_headers(username),
-            json={"uuid": other_uuid, "projectId": project_id},
+            json={"projectId": project_id},
         )
         assert response.status_code == 200, response.text
 

@@ -16,7 +16,7 @@ export default defineConfig({
   test: {
     clearMocks: true,
     environment: "jsdom",
-    include: ["src/**/*.spec.ts"],
+    include: ["src/**/*.spec.ts", "e2e/**/*.unit.ts"],
     restoreMocks: true,
     coverage: {
       provider: "v8",

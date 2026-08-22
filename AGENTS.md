@@ -54,7 +54,8 @@
 
 - 開発、型check、test、image buildはrepository rootの`./devctl`だけを入口とし、hostのPython、Node、pnpmや
   raw Compose commandへ置き換えない。`devctl`がworktree固有のproject名とportを割り当てる。
-- 編集中は変更対象へ`./devctl quick api`または`./devctl quick web`を実行し、完了前は変更範囲にかかわらず
+- 編集中は変更対象へ`./devctl quick api`、`./devctl quick web`、または`./devctl quick mcp`を実行し、
+  完了前は変更範囲にかかわらず
   引数なしの`./devctl verify`を実行する。各checkは非修正modeであり、自動修正は対象fileを限定する。
 - API契約変更では`./devctl generate openapi`、Webのrouter/component/auto-import生成型変更では
   `./devctl generate web-types`を使い、生成型を手編集しない。

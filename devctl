@@ -25,8 +25,8 @@ die() {
 usage() {
   cat <<'EOF'
 Usage:
-  ./devctl quick [api|web]
-  ./devctl verify [api|web|proxy]
+  ./devctl quick [api|web|mcp]
+  ./devctl verify [api|web|proxy|mcp]
   ./devctl up [--tools]
   ./devctl down
   ./devctl logs [service ...]
@@ -95,7 +95,7 @@ cleanup_active_project() {
   local project profile
 
   if [[ -z "${ACTIVE_PROJECT}" ]]; then
-    return
+    return 0
   fi
 
   project="${ACTIVE_PROJECT}"
@@ -117,6 +117,7 @@ cleanup_active_project() {
   fi
   ACTIVE_PROJECT=""
   ACTIVE_PROFILE=""
+  return 0
 }
 
 cleanup_infra_resources() {
@@ -124,6 +125,12 @@ cleanup_infra_resources() {
     return 0
   fi
 
+  printf 'external cleanup identityをread-onlyで検証します...\n' >&2
+  if ! compose_project "${ACTIVE_PROJECT}" --profile external \
+    run --rm --no-deps -T infra-cleanup-guard; then
+    printf 'エラー: cleanup marker/manifest identityを検証できませんでした。\n' >&2
+    return 1
+  fi
   printf 'external test資源をrun IDでcleanupします...\n' >&2
   if ! compose_project "${ACTIVE_PROJECT}" --profile external \
     up --detach --wait --wait-timeout 90 infra-worker; then
@@ -260,11 +267,174 @@ trap 'exit 143' TERM
 require_base_tools() {
   local tool
 
-  for tool in docker realpath sha256sum install id mktemp sed date chmod flock stat setsid ps; do
+  for tool in awk base64 docker realpath sha256sum install id ln mkfifo mktemp mv rm \
+    sed sleep date chmod flock grep head tr stat setsid ps; do
     command -v "${tool}" >/dev/null 2>&1 || die "${tool}が見つかりません"
   done
   docker compose version >/dev/null 2>&1 || die "Docker Compose pluginが利用できません"
   [[ -f "${COMPOSE_FILE}" ]] || die "${COMPOSE_FILE} が見つかりません"
+}
+
+random_base64_key() {
+  head -c 32 /dev/urandom | base64 | tr -d '\n'
+}
+
+random_hex_secret() {
+  local digest
+
+  digest="$(head -c 32 /dev/urandom | sha256sum)"
+  printf '%s' "${digest%% *}"
+}
+
+validate_local_credentials_file() {
+  local env_file="$1"
+  local expected_owner="$2"
+  local file_mode file_owner
+
+  if [[ ! -e "${env_file}" && ! -L "${env_file}" ]]; then
+    return 0
+  fi
+  if [[ -L "${env_file}" || ! -f "${env_file}" ]]; then
+    printf '開発credential fileはregular non-symlink fileである必要があります: %s\n' \
+      "${env_file}" >&2
+    return 1
+  fi
+  file_mode="$(stat -c '%a' -- "${env_file}")" || return 1
+  file_owner="$(stat -c '%u' -- "${env_file}")" || return 1
+  if [[ "${file_mode}" != "600" ]]; then
+    printf '開発credential fileはmode 0600である必要があります（現在: %s）\n' \
+      "${file_mode}" >&2
+    return 1
+  fi
+  if [[ "${file_owner}" != "${expected_owner}" ]]; then
+    printf '開発credential fileは実行userが所有している必要があります\n' >&2
+    return 1
+  fi
+}
+
+validate_infra_cleanup_guard_contract() {
+  local guard_service cleanup_definition guard_line worker_line
+
+  guard_service="$(awk '
+    /^  infra-cleanup-guard:$/ { in_guard = 1 }
+    in_guard && /^  infra-cleanup:$/ { exit }
+    in_guard { print }
+  ' "${COMPOSE_FILE}")"
+  [[ "${guard_service}" == *'command: ["python", "-m", "tests.external.cleanup", "guard"]'* ]] \
+    || return 1
+  [[ "${guard_service}" == *'network_mode: none'* ]] || return 1
+  [[ "${guard_service}" == *'infra-data:/workspace/api/data:ro'* ]] || return 1
+  [[ "${guard_service}" == *'/run/secrets/infra-config.json:ro'* ]] || return 1
+  [[ "${guard_service}" != *'infra-ssh:'* ]] || return 1
+  [[ "${guard_service}" != *'SQLALCHEMY_DATABASE_URL'* ]] || return 1
+  [[ "${guard_service}" != *'depends_on:'* ]] || return 1
+
+  cleanup_definition="$(declare -f cleanup_infra_resources)"
+  guard_line="$(awk '/infra-cleanup-guard/ { print NR; exit }' <<<"${cleanup_definition}")"
+  worker_line="$(awk '/infra-worker/ { print NR; exit }' <<<"${cleanup_definition}")"
+  [[ "${guard_line}" =~ ^[0-9]+$ && "${worker_line}" =~ ^[0-9]+$ ]] || return 1
+  ((guard_line < worker_line))
+}
+
+run_devctl_contract_tests() {
+  local test_dir regular_file symlink_file fifo_file missing_file expected_owner
+
+  test_dir="$(mktemp -d "${TMPDIR:-/tmp}/virty-devctl-contract.XXXXXX")"
+  register_temp_path "${test_dir}"
+  regular_file="${test_dir}/credentials.env"
+  symlink_file="${test_dir}/credentials-link.env"
+  fifo_file="${test_dir}/credentials-fifo.env"
+  missing_file="${test_dir}/missing.env"
+  expected_owner="$(id -u)"
+
+  if ! cleanup_active_project; then
+    die "空project cleanupのcontract testに失敗しました"
+  fi
+
+  install -m 0600 /dev/null "${regular_file}"
+  validate_local_credentials_file "${missing_file}" "${expected_owner}" \
+    || die "不存在credential fileのcontract testに失敗しました"
+  validate_local_credentials_file "${regular_file}" "${expected_owner}" \
+    || die "regular credential fileのcontract testに失敗しました"
+
+  chmod 0644 "${regular_file}"
+  if validate_local_credentials_file \
+    "${regular_file}" "${expected_owner}" >/dev/null 2>&1; then
+    die "credential modeのcontract testに失敗しました"
+  fi
+  chmod 0600 "${regular_file}"
+
+  ln -s "${regular_file}" "${symlink_file}"
+  if validate_local_credentials_file \
+    "${symlink_file}" "${expected_owner}" >/dev/null 2>&1; then
+    die "credential symlinkのcontract testに失敗しました"
+  fi
+
+  mkfifo "${fifo_file}"
+  if validate_local_credentials_file \
+    "${fifo_file}" "${expected_owner}" >/dev/null 2>&1; then
+    die "credential special fileのcontract testに失敗しました"
+  fi
+
+  if validate_local_credentials_file \
+    "${regular_file}" "$((expected_owner + 1))" >/dev/null 2>&1; then
+    die "credential ownerのcontract testに失敗しました"
+  fi
+
+  validate_infra_cleanup_guard_contract \
+    || die "external cleanup guardのcontract testに失敗しました"
+}
+
+ensure_local_credentials() {
+  local env_file env_lock digest temp_file
+  local agent_signing_key agent_task_key dev_secret db_password pgadmin_password
+
+  env_file="${ROOT_DIR}/.env"
+
+  digest="$(printf '%s' "${ROOT_DIR}" | sha256sum)"
+  digest="${digest%% *}"
+  env_lock="${TMPDIR:-/tmp}/virty-env-${digest:0:16}.lock"
+  exec {LOCAL_ENV_LOCK_FD}>"${env_lock}"
+  flock "${LOCAL_ENV_LOCK_FD}" || die "開発credential用lockを取得できません"
+  validate_local_credentials_file "${env_file}" "$(id -u)" \
+    || die "${env_file}を安全に利用できません"
+
+  if [[ -f "${env_file}" ]] \
+    && grep -q '^VIRTY_AGENT_LEASE_SIGNING_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_AGENT_TASK_ENCRYPTION_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_SECRET_KEY=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_DB_PASSWORD=.' "${env_file}" \
+    && grep -q '^VIRTY_DEV_PGADMIN_PASSWORD=.' "${env_file}"; then
+    flock -u "${LOCAL_ENV_LOCK_FD}" || die "開発credential用lockを解放できません"
+    exec {LOCAL_ENV_LOCK_FD}>&-
+    return
+  fi
+
+  agent_signing_key="$(random_base64_key)"
+  agent_task_key="$(random_base64_key)"
+  dev_secret="$(random_base64_key)"
+  db_password="$(random_hex_secret)"
+  pgadmin_password="$(random_hex_secret)"
+  temp_file="$(mktemp "${env_file}.XXXXXX")"
+  register_temp_path "${temp_file}"
+
+  if [[ -f "${env_file}" ]]; then
+    awk '!/^(VIRTY_AGENT_LEASE_SIGNING_KEY|VIRTY_AGENT_TASK_ENCRYPTION_KEY|VIRTY_DEV_SECRET_KEY|VIRTY_DEV_DB_PASSWORD|VIRTY_DEV_PGADMIN_PASSWORD)=/' \
+      "${env_file}" >"${temp_file}"
+  fi
+  {
+    printf 'VIRTY_AGENT_LEASE_SIGNING_KEY=%s\n' "${agent_signing_key}"
+    printf 'VIRTY_AGENT_TASK_ENCRYPTION_KEY=%s\n' "${agent_task_key}"
+    printf 'VIRTY_DEV_SECRET_KEY=%s\n' "${dev_secret}"
+    printf 'VIRTY_DEV_DB_PASSWORD=%s\n' "${db_password}"
+    printf 'VIRTY_DEV_PGADMIN_PASSWORD=%s\n' "${pgadmin_password}"
+  } >>"${temp_file}"
+  chmod 0600 "${temp_file}"
+  mv -- "${temp_file}" "${env_file}"
+  validate_local_credentials_file "${env_file}" "$(id -u)" \
+    || die "生成した${env_file}のmetadataが不正です"
+  flock -u "${LOCAL_ENV_LOCK_FD}" || die "開発credential用lockを解放できません"
+  exec {LOCAL_ENV_LOCK_FD}>&-
 }
 
 project_base() {
@@ -317,6 +487,7 @@ enable_ci_cache() {
     emit_cache_service infra-migrate api-development
     emit_cache_service infra-worker api-development
     emit_cache_service infra-test api-check
+    emit_cache_service infra-cleanup-guard api-check
     emit_cache_service infra-cleanup api-check
     emit_cache_service infra-verify-clean api-check
     emit_cache_service web web-development
@@ -326,10 +497,12 @@ enable_ci_cache() {
     emit_cache_service web-types web-development
     emit_cache_service web-verify web-check
     emit_cache_service web-production-verify web-production
-    emit_cache_service web-e2e-server web-production
+    emit_cache_service web-e2e-server web-e2e-http
     emit_cache_service web-e2e web-playwright
     emit_cache_service proxy proxy-production
     emit_cache_service proxy-production-verify proxy-production
+    emit_cache_service mcp-quick mcp-development
+    emit_cache_service mcp-verify mcp-check
   } >"${override}"
 
   COMPOSE_FILES+=(--file "${override}")
@@ -379,16 +552,18 @@ run_quick() {
   local -a services=()
 
   (($# <= 1)) || die "quickの引数が多すぎます"
-  validate_component "${component}" all api web
+  validate_component "${component}" all api web mcp
+  run_devctl_contract_tests
   project="$(project_base)-quick"
   acquire_quick_lock "${project}"
   ACTIVE_PROJECT="${project}"
   ACTIVE_PROFILE=quick
 
   case "${component}" in
-    all) services=(api-quick web-quick) ;;
+    all) services=(api-quick web-quick mcp-quick) ;;
     api) services=(api-quick) ;;
     web) services=(web-quick) ;;
+    mcp) services=(mcp-quick) ;;
   esac
 
   compose_project "${project}" --profile quick build "${services[@]}"
@@ -397,6 +572,8 @@ run_quick() {
     run_labeled api compose_project "${project}" --profile quick run --rm --no-deps -T api-quick &
     CHILD_PIDS+=("$!")
     run_labeled web compose_project "${project}" --profile quick run --rm --no-deps -T web-quick &
+    CHILD_PIDS+=("$!")
+    run_labeled mcp compose_project "${project}" --profile quick run --rm --no-deps -T mcp-quick &
     CHILD_PIDS+=("$!")
     wait_for_children || die "quick checkに失敗しました"
   else
@@ -437,6 +614,10 @@ verify_runtime() {
     proxy)
       # Proxy確認はimage build内で完結する。
       ;;
+    mcp)
+      # helper testはcheck image build内で完結する。
+      compose_project "${project}" --profile verify run --rm --no-deps -T mcp-verify
+      ;;
   esac
 }
 
@@ -446,7 +627,8 @@ run_verify() {
   local -a services=()
 
   (($# <= 1)) || die "verifyの引数が多すぎます"
-  validate_component "${component}" all api web proxy
+  validate_component "${component}" all api web proxy mcp
+  run_devctl_contract_tests
 
   run_id="$(date -u +%s)-$$-${RANDOM}"
   project="$(project_base)-verify-${run_id}"
@@ -455,7 +637,7 @@ run_verify() {
 
   case "${component}" in
     all)
-      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify web-e2e-server web-e2e proxy-production-verify)
+      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify web-e2e-server web-e2e proxy-production-verify mcp-verify)
       ;;
     api)
       services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify)
@@ -466,11 +648,14 @@ run_verify() {
     proxy)
       services=(proxy-production-verify)
       ;;
+    mcp)
+      services=(mcp-verify)
+      ;;
   esac
 
   compose_project "${project}" --profile verify build "${services[@]}"
 
-  if [[ "${component}" != "proxy" ]]; then
+  if [[ "${component}" == "all" || "${component}" == "api" || "${component}" == "web" ]]; then
     compose_project "${project}" --profile verify run --rm -T openapi-contract-verify
   fi
 
@@ -478,6 +663,8 @@ run_verify() {
     run_labeled api verify_runtime "${project}" api &
     CHILD_PIDS+=("$!")
     run_labeled web verify_runtime "${project}" web &
+    CHILD_PIDS+=("$!")
+    run_labeled mcp verify_runtime "${project}" mcp &
     CHILD_PIDS+=("$!")
     wait_for_children || die "verifyに失敗しました"
   else
@@ -742,7 +929,7 @@ run_infra_cleanup() {
   export VIRTY_INFRA_PROJECT="${project}"
   export VIRTY_INFRA_SCENARIO="cleanup"
   compose_project "${project}" --profile external build \
-    infra-preflight infra-cleanup infra-verify-clean infra-worker \
+    infra-preflight infra-cleanup-guard infra-cleanup infra-verify-clean infra-worker \
     infra-migrate infra-volume-init >&2
   lab_id="$(compose_project "${project}" --profile external run --rm --no-deps -T infra-preflight)"
   [[ "${lab_id}" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$ ]] \
@@ -1204,7 +1391,7 @@ run_infra() {
   acquire_lab_lock "${lab_id}"
 
   compose_project "${project}" --profile external build \
-    infra-cleanup infra-verify-clean infra-test infra-worker infra-migrate \
+    infra-cleanup-guard infra-cleanup infra-verify-clean infra-test infra-worker infra-migrate \
     infra-volume-init infra-readiness
   run_infra_readiness "${project}"
   INFRA_CLEANUP_ENABLED=1
@@ -1215,6 +1402,7 @@ main() {
   local command="${1:-}"
 
   require_base_tools
+  ensure_local_credentials
   export VIRTY_HOST_UID="$(id -u)"
   export VIRTY_HOST_GID="$(id -g)"
   enable_ci_cache

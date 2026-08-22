@@ -155,7 +155,7 @@ def test_vm_copy_failure_blocks_dependent_backends_and_is_cleanup_safe(
     assert parent.status == "error"
     assert parent.message is not None or parent.log is not None
     assert all(snapshot.status == "error" for snapshot in dependents)
-    assert all(snapshot.message == "depended task faile" for snapshot in dependents)
+    assert all(snapshot.message == "依存先taskが失敗しました" for snapshot in dependents)
 
     inventory_response = client.get(
         "/api/vms",

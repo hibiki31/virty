@@ -20,9 +20,17 @@ CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM development AS check
 RUN pnpm run check:full
 
-# 本番環境
-FROM nginx:stable-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46 AS production
-COPY nginx.conf /etc/nginx/nginx.conf
+# 配信runtime
+FROM nginx:stable-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46 AS web-runtime
 COPY --from=check /workspace/vue/dist /usr/share/nginx/html
-EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
+
+# Playwright専用のHTTP配信環境。production TLS設定とは共有しない。
+FROM web-runtime AS e2e-http
+COPY nginx.e2e.conf /etc/nginx/nginx.conf
+EXPOSE 80
+
+# 本番環境。既定build targetをproductionに保つため最後に配置する。
+FROM web-runtime AS production
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80 443

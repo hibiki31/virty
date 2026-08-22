@@ -53,6 +53,9 @@ class HeaderOnlyClient:
     def __exit__(self, *args: object) -> None:
         return None
 
+    def head(self, url: str) -> HeaderOnlyResponse:
+        return HeaderOnlyResponse({})
+
     def get(self, url: str, headers: dict[str, str]) -> HeaderOnlyResponse:
         return HeaderOnlyResponse({})
 
@@ -118,6 +121,12 @@ def test_fake_mode_returns_deterministic_protocol_implementations(
     assert isinstance(ansible, FakeAnsibleBackend)
     assert isinstance(ansible, AnsibleBackend)
     assert ansible.node_infomation() == {"virty_backend": "fake"}
+    result = ansible.run(
+        "commom/download_file_in_node",
+        extravars={"url": "https://example.invalid/signed?token=secret"},
+        sensitive_keys={"url"},
+    )
+    assert result.status == "successful"
     assert isinstance(ssh, FakeSSHBackend)
     assert isinstance(ssh, SSHBackend)
     assert ssh.get_node_cpu_core() == "4"

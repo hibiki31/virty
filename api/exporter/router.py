@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from auth.router import CurrentUser, get_current_user
 from domain.models import DomainModel
 from mixin.database import get_db
 from task.models import TaskModel
@@ -70,8 +71,10 @@ class ExpoterEditor():
     }
 )
 def get_metrics(
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user: CurrentUser = Depends(get_current_user),
     ):
+    current_user.verify_scope(["metrics.read"])
     vm_metric = db.query(
         func.count(DomainModel.uuid), 
         func.sum(DomainModel.core),

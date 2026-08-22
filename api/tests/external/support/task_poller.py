@@ -12,8 +12,16 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 
 TERMINAL_SUCCESS = "finish"
-TERMINAL_FAILURES = {"error", "lost"}
-KNOWN_STATUSES = {"wait", "init", "start", TERMINAL_SUCCESS, *TERMINAL_FAILURES}
+TERMINAL_FAILURES = {"error", "lost", "cancelled", "unknown"}
+KNOWN_STATUSES = {
+    "wait",
+    "init",
+    "start",
+    "reconciling",
+    "cancel_requested",
+    TERMINAL_SUCCESS,
+    *TERMINAL_FAILURES,
+}
 
 
 class HttpResponse(Protocol):

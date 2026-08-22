@@ -16,12 +16,14 @@ export function removeAuth(): void {
 type AuthNavigationTarget = {
   fullPath: string;
   path: string;
+  requiresAdmin?: boolean;
 };
 
-/** 認証状態に応じたrouter guardの遷移先を返す。 */
+/** 認証状態と管理者限定metaに応じたrouter guardの遷移先を返す。 */
 export function resolveAuthNavigation(
   authed: boolean,
   to: AuthNavigationTarget,
+  scopes: readonly string[] = [],
 ): RouteLocationRaw | undefined {
   if (authed && to.path === "/login") {
     return { path: "/" };
@@ -32,6 +34,10 @@ export function resolveAuthNavigation(
       path: "/login",
       query: { redirect: to.fullPath },
     };
+  }
+
+  if (to.requiresAdmin === true && !hasAdminScope(scopes)) {
+    return { path: "/" };
   }
 
   return undefined;

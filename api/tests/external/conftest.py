@@ -2,6 +2,7 @@
 
 import os
 import shlex
+from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ from tests.external.support.config import (
 )
 from tests.external.support.manifest import (
     CleanupPlanner,
+    ManifestEntry,
     build_expected_manifest_entries,
     infra_project_id,
     initialize_manifest,
@@ -89,6 +91,22 @@ def _remote_paths(env: EnvConfig, run_prefix: str) -> list[str]:
         f"/var/lib/libvirt/test/{run_prefix}-unit",
         *(storage.path for storage in env.storages),
     ]
+
+
+def _run_cleanup_tiers(
+    planner: CleanupPlanner,
+    cleanup_entry: Callable[[ManifestEntry], bool],
+) -> bool:
+    """同一tierを完遂し、失敗したtierより下位のcleanupを遮断する。"""
+
+    for tier in planner.pending_tiers():
+        tier_succeeded = True
+        for entry in tier:
+            if not cleanup_entry(entry):
+                tier_succeeded = False
+        if not tier_succeeded:
+            return False
+    return True
 
 
 def assert_no_remote_collisions(env: EnvConfig, run_prefix: str) -> None:
@@ -235,15 +253,21 @@ def cleanup_resources(
     server_indexes = {server.name: index for index, server in enumerate(env.servers)}
     servers = {server.name: server for server in env.servers}
 
-    def cleanup(label: str, entry, action) -> None:
+    def cleanup(
+        label: str,
+        entry: ManifestEntry,
+        action: Callable[[], None],
+    ) -> bool:
         if not planner.allows(entry):
             failures.append(f"{label}: manifest allowlist error")
-            return
+            return False
         try:
             action()
             mark_current_entry_removed(env, entry)
         except Exception:
             failures.append(f"{label}: cleanup failed")
+            return False
+        return True
 
     @contextmanager
     def muted_ansible_logging():
@@ -256,7 +280,7 @@ def cleanup_resources(
         finally:
             ansiblelib.logger.disabled = previous
 
-    for entry in planner.pending_entries():
+    def cleanup_entry(entry: ManifestEntry) -> bool:
         server_index = server_indexes.get(entry.node) if entry.node is not None else None
         label = (
             f"{entry.kind}[server_index={server_index}]"
@@ -293,7 +317,7 @@ def cleanup_resources(
                         server_index=mapped_server_index,
                     )
 
-            cleanup(
+            return cleanup(
                 label,
                 entry,
                 delete_vm,
@@ -328,7 +352,7 @@ def cleanup_resources(
                         server_index=mapped_server_index,
                     )
 
-            cleanup(
+            return cleanup(
                 label,
                 entry,
                 delete_network,
@@ -358,7 +382,7 @@ def cleanup_resources(
                         server_index=mapped_server_index,
                     )
 
-            cleanup(
+            return cleanup(
                 label,
                 entry,
                 delete_storage,
@@ -371,7 +395,7 @@ def cleanup_resources(
             )
             if server is None:
                 failures.append(f"{label}: server mapping failed")
-                continue
+                return False
 
             def delete_remote_path(server=server, remote_path=entry.path) -> None:
                 with muted_ansible_logging():
@@ -397,7 +421,7 @@ def cleanup_resources(
                         server_index=server_indexes[server.name],
                     )
 
-            cleanup(label, entry, delete_remote_path)
+            return cleanup(label, entry, delete_remote_path)
         elif entry.kind == "project":
             assert entry.name is not None
 
@@ -407,10 +431,10 @@ def cleanup_resources(
                         synchronize_session=False
                     )
 
-            cleanup(label, entry, delete_project)
+            return cleanup(label, entry, delete_project)
         elif entry.kind == "node":
             assert entry.name is not None
-            cleanup(
+            return cleanup(
                 label,
                 entry,
                 lambda entry=entry: delete_node_target(
@@ -427,7 +451,11 @@ def cleanup_resources(
                         synchronize_session=False
                     )
 
-            cleanup(label, entry, delete_user)
+            return cleanup(label, entry, delete_user)
+
+        raise AssertionError("未対応のmanifest resource kindです")
+
+    _run_cleanup_tiers(planner, cleanup_entry)
 
     if failures:
         pytest.fail("external test資源のcleanupに失敗しました: " + "; ".join(failures))

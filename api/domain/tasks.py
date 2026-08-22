@@ -1,4 +1,3 @@
-import os
 import re
 from time import time
 
@@ -16,7 +15,7 @@ from storage.models import (
     ImageModel,
     StorageModel,
 )
-from task.functions import TaskBase
+from task.functions import TaskBase, is_agent_task
 from task.models import TaskModel
 from task.schemas import TaskRequest
 
@@ -50,20 +49,35 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
         domains = manager.domain_data()
 
         for domain in domains:
-            editor = xmllib.XmlEditor("str",domain['xml'])
+            safe_xml = xmllib.redact_domain_xml_secrets(domain['xml'])
+            editor = xmllib.XmlEditor("str", safe_xml)
             editor.dump_file("domain")
             temp = editor.domain_parse()
+            existing = (
+                db.query(DomainModel)
+                .filter(DomainModel.uuid == temp.uuid)
+                .one_or_none()
+            )
             
             row = DomainModel(
-                uuid = temp.uuid,
-                name = re.sub(r'(.*)@.*',r'\1', temp.name),
-                core = temp.vcpu,
-                memory = temp.memory,
-                status = domain['status'],
-                node_name = node.name,
-                update_token = token,
+                uuid=temp.uuid,
+                name=re.sub(r"(.*)@.*", r"\1", temp.name),
+                core=temp.vcpu,
+                memory=temp.memory,
+                status=domain["status"],
+                node_name=node.name,
+                update_token=token,
             )
-            row.vnc_port = temp.vnc_port
+            row.vnc_port = (
+                str(temp.vnc_port) if temp.vnc_port is not None else None
+            )
+            row.description = existing.description if existing is not None else None
+            row.owner_user_id = (
+                existing.owner_user_id if existing is not None else None
+            )
+            row.owner_project_id = (
+                existing.owner_project_id if existing is not None else None
+            )
             for interface in temp.interface:
                 row.interfaces.append(
                     DomainInterfaceModel(
@@ -98,10 +112,23 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
 
 @worker_task(key="post.vm.root")
 def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
-    body = DomainForCreate.model_validate(req.body)
+    body: DomainForCreate
+    if is_agent_task(model):
+        from agent.input_models import AgentDomainForCreate
 
-    if body.type == "ticket":
-        Exception("Ticket type is not allowed in this API")
+        body = AgentDomainForCreate.model_validate(req.body)
+    else:
+        body = DomainForCreate.model_validate(req.body)
+
+    if body.type != "manual":
+        raise ValueError("このendpointではmanual作成だけを利用できます")
+
+    owner_project_id = getattr(body, "project_id", None)
+    if is_agent_task(model):
+        from project.models import ProjectModel
+
+        if db.get(ProjectModel, owner_project_id) is None:
+            raise ValueError("VM owner projectがありません")
 
     # データベースから情報とってきて確認も行う
     domains = db.query(DomainModel).filter(DomainModel.name==body.name).all()
@@ -126,7 +153,6 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         memory_mega_byte=body.memory_mega_byte,
         core=body.cpu,
         vnc_port=0,
-        vnc_passwd=None
     )
     
     # ネットワークインターフェイス
@@ -134,6 +160,8 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         net = db.query(NetworkModel).filter(
             NetworkModel.uuid==interface_model.network_uuid
             ).one()
+        if net.node_name != node.name:
+            raise Exception("request network belongs to another node")
 
         editor.domain_interface_add(
             network_name=str(net.name),
@@ -151,6 +179,8 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
                 ).one()
         except NoResultFound:
             raise Exception("request storage pool uuid not found")
+        if new_pool.node_name != node.name:
+            raise Exception("request destination storage belongs to another node")
 
         create_image_path = f'{new_pool.path}/{model.user_id}_{body.name}_{device_name}_{domain_uuid}.img'
         editor.domain_device_image_add(image_path=create_image_path, target_device=device_name)
@@ -164,11 +194,16 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
             if device_model.original_name is None:
                 raise ValueError("copy diskにはoriginal_nameが必要です")
             try:
-                pool_model:StorageModel = db.query(StorageModel).filter(StorageModel.uuid==device_model.original_pool_uuid).one()
+                source_image = db.query(ImageModel).filter(
+                    ImageModel.storage_uuid == device_model.original_pool_uuid,
+                    ImageModel.name == device_model.original_name,
+                ).one()
             except NoResultFound:
-                raise Exception("request src pool uuid not found")
+                raise Exception("request source image not found")
+            if source_image.storage.node_name != node.name:
+                raise Exception("request source image belongs to another node")
 
-            from_image_path = os.path.join(pool_model.path, device_model.original_name)
+            from_image_path = source_image.path
             
             ex_vars = {
                 "src": from_image_path,
@@ -182,36 +217,43 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 
     # Cloud-init
     if body.cloud_init is not None:
-        # iso作成
         cloudinit_manager = cloudinitlib.CloudInitManager(domain_uuid,body.cloud_init.hostname)
-        cloudinit_manager.custom_user_data(body.cloud_init.userData)
-        iso_path = cloudinit_manager.make_iso()
+        try:
+            cloudinit_manager.custom_user_data(body.cloud_init.userData)
+            iso_path = cloudinit_manager.make_iso()
 
-        # cloud-initのisoを保存するpoolを探してたけどやめた
-        # try:
-        #     query = db.query(StorageModel).join(NodeModel).outerjoin(StorageMetadataModel)
-        #     query = query.filter(NodeModel.name==node.name).filter(StorageMetadataModel.rool=="init-iso")
-        #     init_pool_model:StorageModel = query.one()
-        # except:
-        #     raise Exception("cloud-init pool not found")
-        # send_path = f"{init_pool_model.path}/{domain_uuid}.iso"
-        
-        # /var/virtyで固定
-        send_path = f"/var/virty/cloud-init/{domain_uuid}.iso"
+            # /var/virtyで固定
+            send_path = f"/var/virty/cloud-init/{domain_uuid}.iso"
 
-        ansible_manager.run(playbook_name="commom/make_dir_recurse",extravars={"path":"/var/virty/cloud-init/"})
-        ansible_manager.run(
-            playbook_name="commom/copy_virty_to_node",
-            extravars={
-                "src": iso_path,
-                "dst":send_path
-        })
-        editor.domain_cdrom(target=None,path=send_path)
+            ansible_manager.run(playbook_name="commom/make_dir_recurse",extravars={"path":"/var/virty/cloud-init/"})
+            ansible_manager.run(
+                playbook_name="commom/copy_virty_to_node",
+                extravars={
+                    "src": iso_path,
+                    "dst":send_path
+            })
+            editor.domain_cdrom(target=None,path=send_path)
+        finally:
+            cloudinit_manager.cleanup()
 
 
     # ノードに接続してlibvirtでXMLを登録
     libvirt_backend = create_libvirt_backend(node_model=node)
     libvirt_backend.domain_define(xml_str=editor.dump_str())
+
+    # 後続inventory refreshでも所有者を失わないよう、定義直後にmetadataを残す。
+    created_domain = DomainModel(
+        uuid=domain_uuid,
+        name=body.name,
+        core=body.cpu,
+        memory=body.memory_mega_byte,
+        status=5,
+        node_name=body.node_name,
+    )
+    created_domain.owner_user_id = model.user_id
+    created_domain.owner_project_id = owner_project_id
+    created_domain.vnc_port = "0"
+    db.merge(created_domain)
 
     model.message = f"Virtual machine ({body.name}@{model.user_id}) has been added successfully"
 

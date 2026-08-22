@@ -13,8 +13,8 @@ class TokenRFC6749Response(BaseModel):
 
 class TokenData(BaseSchema):
     id: Optional[str] | None = None
-    scopes: List[str] = []
-    role: List[str] = []
+    scopes: List[str] = Field(default_factory=list)
+    role: List[str] = Field(default_factory=list)
 
 
 class UserBase(BaseSchema):
@@ -38,9 +38,9 @@ class UserForQuery(GetPagination):
 
 class User(BaseSchema):
     username: str
-    scopes: List[UserScope] = []
-    projects: List[UserProject] = []
-    publickeys: List[UserPublickey] = []
+    scopes: List[UserScope] = Field(default_factory=list)
+    projects: List[UserProject] = Field(default_factory=list)
+    publickeys: List[UserPublickey] = Field(default_factory=list)
 
 
 class UserPage(BaseSchema):
@@ -51,7 +51,8 @@ class UserForCreate(User):
     password: str = Field(
         min_length=8,
         max_length=128,
-        pattern=r'^[^\s]+$'
+        pattern=r'^[^\s]+$',
+        json_schema_extra={"writeOnly": True},
     )
     
     @field_validator('password')

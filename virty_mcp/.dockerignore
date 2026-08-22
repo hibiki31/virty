@@ -1,0 +1,11 @@
+.pytest_cache/
+.ruff_cache/
+.venv/
+.coverage
+coverage.xml
+htmlcov/
+.env
+.env.*
+config.toml
+**/__pycache__/
+**/*.pyc

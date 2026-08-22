@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mixin.database import Base
@@ -22,7 +23,6 @@ class DomainModel(Base):
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     update_token: Mapped[str] = Column(String)
     vnc_port: Mapped[str | None] = mapped_column(String, nullable=True)
-    vnc_password: Mapped[str | None] = mapped_column(String, nullable=True)
     
     # Cache
     storage_used: Mapped[int] = Column(Integer, default=0)
@@ -35,9 +35,17 @@ class DomainModel(Base):
     node: Mapped["NodeModel"] = relationship('NodeModel')
     node_name: Mapped[str] = Column(String, ForeignKey('nodes.name', onupdate='CASCADE', ondelete='CASCADE'))
     owner_user: Mapped["UserModel | None"] = relationship("UserModel")
-    owner_user_id: Mapped[str | None] = mapped_column(String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    owner_user_id: Mapped[str | None] = mapped_column(
+        String,
+        ForeignKey('users.username', onupdate='CASCADE', ondelete='SET NULL'),
+        nullable=True,
+    )
     owner_project: Mapped["ProjectModel | None"] = relationship("ProjectModel")
-    owner_project_id: Mapped[str | None] = mapped_column(String, ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    owner_project_id: Mapped[str | None] = mapped_column(
+        String,
+        ForeignKey('projects.id', onupdate='CASCADE', ondelete='SET NULL'),
+        nullable=True,
+    )
 
 class DomainInterfaceModel(Base):
     __tablename__ = "domains_interfaces"
@@ -59,3 +67,25 @@ class DomainDriveModel(Base):
     type: Mapped[str] = Column(String)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     update_token: Mapped[str] = Column(String)
+
+
+class DomainConsoleTicketModel(Base):
+    """noVNC resolverだけが一度消費できるopaque ticket。"""
+
+    __tablename__ = "domain_console_tickets"
+
+    token_hash: Mapped[str] = Column(String(64), primary_key=True)
+    domain_uuid: Mapped[str] = Column(
+        String,
+        ForeignKey("domains.uuid", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    actor_id: Mapped[str] = Column(String, nullable=False)
+    created_at: Mapped[datetime] = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    expires_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=False, index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

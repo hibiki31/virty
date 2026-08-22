@@ -7,6 +7,7 @@ from mixin.log import setup_logger
 from project.schemas import (
     ProjectForCreate,
 )
+from resource_authorization import require_admin
 from task.functions import TaskManager
 
 app = APIRouter(prefix="/api/tasks/projects", tags=["projects-tasks"])
@@ -19,7 +20,9 @@ def create_project(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    cu.verify_scope(["project.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='project', object='root')
     task.commit(user=cu, req=req, body=body)
@@ -33,7 +36,9 @@ def delete_project(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    cu.verify_scope(["project.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='project', object='root')
     task.commit(user=cu, req=req, param={"project_id": project_id})

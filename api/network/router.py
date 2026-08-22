@@ -3,12 +3,17 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import raise_notfound
 from mixin.log import setup_logger
+from resource_authorization import (
+    allowed_network_ids,
+    allowed_network_pool_ids,
+    get_authorized_network,
+    get_authorized_network_pool,
+    require_admin,
+)
 from settings import DATA_ROOT
 
 from .models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
@@ -31,9 +36,12 @@ def get_networks(
         param: NetworkForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-    
+):
+    current_user.verify_scope(["network.read"])
     query = db.query(NetworkModel)
+    allowed_networks = allowed_network_ids(db, current_user)
+    if allowed_networks is not None:
+        query = query.filter(NetworkModel.uuid.in_(allowed_networks))
     
     if param.name_like:
         query = query.filter(NetworkModel.name.like(f'%{param.name_like}%'))
@@ -56,9 +64,13 @@ def get_networks(
 def get_network_pools(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-    ):
-
-    return db.query(NetworkPoolModel).all()
+):
+    current_user.verify_scope(["network.read"])
+    query = db.query(NetworkPoolModel)
+    allowed_pools = allowed_network_pool_ids(db, current_user)
+    if allowed_pools is not None:
+        query = query.filter(NetworkPoolModel.id.in_(allowed_pools))
+    return query.all()
 
 
 @app.post("/pools")
@@ -66,7 +78,9 @@ def create_network_pool(
         model: NetworkPoolForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-    ):
+):
+    current_user.verify_scope(["network.manage"])
+    require_admin(current_user)
     pool_model = NetworkPoolModel(name=model.name)
     db.add(pool_model)
     db.commit()
@@ -78,8 +92,10 @@ def update_network_pool(
         model: NetworkPoolForUpdate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-    ):
-    pool_model = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==model.pool_id).one()
+):
+    current_user.verify_scope(["network.manage"])
+    pool_model = get_authorized_network_pool(db, model.pool_id, current_user)
+    get_authorized_network(db, model.network_uuid, current_user)
     if model.port_name is not None:
         port_model = db.query(NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==model.network_uuid,
@@ -97,13 +113,9 @@ def delete_network_pool(
         id: int,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-    cu.verify_scope(["admin.network.pools"])
-
-    net_pool = db.query(NetworkPoolModel).filter(NetworkPoolModel.id==id).one_or_none()
-    
-    if net_pool is None:
-        raise HTTPException(status_code=404, detail="network pool is not found")
+):
+    cu.verify_scope(["network.manage"])
+    net_pool = get_authorized_network_pool(db, id, cu)
     
     db.delete(net_pool)
     db.commit()
@@ -116,13 +128,9 @@ def get_network(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-    try:
-        network: NetworkModel = db.query(NetworkModel).filter(NetworkModel.uuid==uuid).one()
-    except NoResultFound:
-        raise_notfound(detail=f"Network not found: {uuid}")
-
-    return network
+):
+    current_user.verify_scope(["network.read"])
+    return get_authorized_network(db, uuid, current_user)
 
 
 @app.get("/{uuid}/xml",response_model=NetworkXML)
@@ -130,7 +138,9 @@ def get_network_xml(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+):
+    current_user.verify_scope(["network.read"])
+    get_authorized_network(db, uuid, current_user)
     try:
         with open(join(DATA_ROOT, "xml/network", f"{uuid}.xml")) as f:
             domain_xml = NetworkXML(xml=f.read())

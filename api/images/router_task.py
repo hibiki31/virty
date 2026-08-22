@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
+from resource_authorization import get_authorized_storage, require_admin
 from task.functions import TaskManager
 from task.schemas import Task
 
@@ -22,7 +23,9 @@ def refresh_images(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    cu.verify_scope(["image.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='put', resource='storage', object='list')
     task.commit(user=cu, req=req)
@@ -36,8 +39,9 @@ def download_image(
         body: ImageDownloadForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["image.manage"])
+    get_authorized_storage(db, body.storage_uuid, cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='image', object='download')
     task.commit(user=cu, req=req, body=body)

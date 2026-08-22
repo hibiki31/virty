@@ -2,7 +2,10 @@
   gather_facts: no
   become: yes
   tasks:
-    - name: image download
-      get_url:
+    - name: image download without overwriting an existing file
+      no_log: true
+      secure_download:
         url: "{{ url }}"
         dest: "{{ dest }}"
+        agent_hardened: "{{ agent_hardened | default(false) | bool }}"
+        allowed_hosts: "{{ allowed_hosts | default([]) }}"

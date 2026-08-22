@@ -24,6 +24,7 @@
 | test失敗の終了code消失、syntax errorの見逃し | `devctl`が終了codeを集約し、unit contractがexternalを含むPython sourceをAST解析する | `./devctl quick api` |
 | worktree間のport、container、network、volume、DB、依存cache衝突 | canonical pathのSHAからCompose project名を生成し、portをloopback自動割当にする | 2 worktreeでの`up`、`quick`、`verify`、片側`clean` |
 | image tagやpost-create installによる環境drift | base imageをtagとdigestで固定し、Python依存lockと`pnpm --frozen-lockfile`をbuild layerへ入れる | `./devctl quick`、production image build |
+| 開発credential fileのmode・owner・file種別が安全でない | `devctl`が実行user所有のregular non-symlink fileかつ`0600`だけを受理し、境界self-testを標準check前に行う | `./devctl quick`、`./devctl verify` |
 | 標準testからSSH、Ansible、libvirt、downloadへ接続 | backend factory、deterministic fake、networkなしquick、internal network verifyを使う | `./devctl verify api` |
 | API-001: pathと異なるuser更新、または部分commit | path `username`を更新対象の正本とし、`scopes`と`publickeys`を単一transactionで更新する | user API integration、OpenAPI drift check |
 | API-002: 必須bodyの欠落をoptionalと公開 | VM、network、node、storageの対象9 endpointを必須bodyに統一し、欠落時の422を契約化する | API contract integration、OpenAPI drift check |
@@ -31,9 +32,9 @@
 | WEB-002: 未参照legacy SFCが削除済みaxios adapterへ依存 | 対象5 SFCを削除し、coverageの個別除外も外す | ESLint、forced型check、Vitest、production build |
 | TEST-001: lab不要な契約とexternal helperの静的不備 | externalをRuff対象にし、auth/user/project/flavorを標準integrationへ移管する | `./devctl quick api`、`./devctl verify api` |
 | TEST-002: worker外部処理の失敗pathを未検証 | SSH timeout、Ansible nonzero、libvirt例外、download metadata失敗をproduction handler境界で注入し、親taskの`error`と後続非実行を検証する | worker failure integration |
-| INFRA-002: cleanupが想定名の再構築だけに依存 | mutation前のversion付きmanifestと作成UUIDを永続化し、manifestだけを削除allowlistにする | manifest/cleanup unit test、`infra cleanup`後の独立inventory |
+| INFRA-002: cleanupが想定名の再構築だけに依存 | mutation前のversion付きmanifestと作成UUIDを永続化し、manifestだけを削除allowlistにする。DB/worker起動前のidentity guardと依存tier間のfailure barrierも必須化する | manifest/cleanup unit test、`infra cleanup`後の独立inventory |
 | 実機testによる既存lab資源の再利用・削除 | run ID、exact name、lab側read-only preflight、serial lock、manifest-only cleanupを必須化する | `./devctl infra preflight --config ...`、external support unit test |
-| CIがimage buildだけを行いlint・test失敗を見逃す | API、Web、Proxy jobがcomponent別`devctl verify`を実行し、publish前にも同じgateを置く | GitHub Actions workflow |
+| CIがimage buildだけを行いlint・test失敗を見逃す | API、Web、Proxy、MCP jobがcomponent別`devctl verify`を実行し、publish前にも同じgateを置く | GitHub Actions workflow |
 
 ## 未解決の課題
 
@@ -69,19 +70,19 @@
 
 - 優先度: P2
 - 状態: 未解決
-- 影響: 拡充後の作業branchでVitest 94件とPlaywright 3 flowは成功し、認証、API error、
+- 影響: 最新`master`統合後にVitest 100件とPlaywright 3 flowは成功し、認証、API error、
   pagination、task polling、VM/network/node/storage/image dialogの主要分岐を標準verifyへ取り込んだ。
   ただし全srcのcoverageにglobal gateは置いておらず、未抽出のpage/componentには依然として
-  測定とtestの薄い範囲が残る。94件と現在のcoverageは最新`master`統合前の暫定値であり、
-  統合後に`./devctl verify web`で最終再計測する。
+  測定とtestの薄い範囲が残る。全体coverageの実測はstatements 43.17%、branches 45.65%、
+  functions 36.24%、lines 44.74%である。
 - 根拠: [`vue/vitest.config.mts`](../vue/vitest.config.mts)と
   [`vue/src/__tests__/`](../vue/src/__tests__)、[`vue/e2e/`](../vue/e2e/)。実測手順と環境は
   [development.md](development.md)に記録する。
 - 改善方針: 全体値は推移値として記録し、根拠のないglobal閾値は置かない。抽出済みの認証、
   error整形、pagination、poller helperだけはlines/statements 90%、branches/functions 80%でgateし、
   今後触るpage/componentへ境界値と失敗pathのtestを追加する。
-- 完了条件: 最新`master`統合後のVitest件数・coverage・Playwright 3 flowを再計測し、
-  主要な利用者flowごとに自動testがあり、対象helper gateとcoverage推移を標準verifyで確認できる。
+- 完了条件: 残る主要利用者flowへ自動testを追加し、対象helper gateとcoverage推移を標準verifyで
+  継続確認できる。全体値だけを目的に、重要度の低いtestを水増ししない。
 
 ### INFRA-001: production adapterを使う専用lab testが未実測である
 

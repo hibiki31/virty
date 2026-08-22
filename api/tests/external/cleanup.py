@@ -2,6 +2,8 @@
 
 import os
 import stat
+import sys
+from collections.abc import Sequence
 
 from tests.external.conftest import (
     _cleanup_marker,
@@ -43,12 +45,30 @@ def _validate_cleanup_guard(env: EnvConfig, run_prefix: str) -> None:
     )
 
 
+def _load_guarded_context() -> tuple[EnvConfig, str]:
+    env = _load_infra_config()
+    run_prefix = os.environ["VIRTY_TEST_RUN_ID"]
+    _validate_cleanup_guard(env, run_prefix)
+    return env, run_prefix
+
+
+def guard_only() -> None:
+    """DB・SSH・networkへ接続せずcleanup identityだけを検証する。"""
+
+    try:
+        _load_guarded_context()
+    except KeyboardInterrupt:
+        raise
+    except BaseException:
+        raise SystemExit(
+            "external cleanup guard failed: kind=validation count=1"
+        ) from None
+
+
 def main() -> None:
     try:
-        env = _load_infra_config()
-        run_prefix = os.environ["VIRTY_TEST_RUN_ID"]
         # auth setup/SSH key POSTを含む全mutationより先にidentityを固定する。
-        _validate_cleanup_guard(env, run_prefix)
+        env, run_prefix = _load_guarded_context()
         client = create_authenticated_client(env)
         key_response = client.post(
             "/api/nodes/key",
@@ -62,5 +82,17 @@ def main() -> None:
         raise SystemExit("external cleanup failed: kind=setup count=1") from None
 
 
-if __name__ == "__main__":
+def cli(argv: Sequence[str] | None = None) -> None:
+    """秘密値や不正な引数本文を診断へ含めないcleanup CLI。"""
+
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args == ["guard"]:
+        guard_only()
+        return
+    if args:
+        raise SystemExit("external cleanup failed: kind=usage count=1") from None
     main()
+
+
+if __name__ == "__main__":
+    cli()

@@ -17,6 +17,8 @@ def post_project_root(db: Session, model: TaskModel, req: TaskRequest):
 
     body = ProjectForCreate.model_validate(req.body)
     user_ids = set(body.user_ids)
+    if model.user_id is None:
+        raise ValueError("taskの実行userが見つかりません")
     user_ids.add(model.user_id)
     users = db.query(UserModel).filter(UserModel.username.in_(user_ids)).all()
     if {user.username for user in users} != user_ids:

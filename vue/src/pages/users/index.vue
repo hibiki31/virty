@@ -17,7 +17,8 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - VMs
+  title: Virty - Users
+  requiresAdmin: true
 </route>
 
 <script lang="ts" setup>
@@ -37,7 +38,6 @@ const headers = [
 ]
 
 const query = ref<UserListQuery>({
-  admin: true,
   limit: 20,
   page: 1,
   nameLike: "",

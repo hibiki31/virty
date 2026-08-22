@@ -365,6 +365,19 @@ class CleanupPlanner:
         entries = [entry for entry in self.manifest.entries if entry.state != "removed"]
         return sorted(entries, key=lambda entry: CLEANUP_ORDER[entry.kind])
 
+    def pending_tiers(self) -> list[list[ManifestEntry]]:
+        """依存資源へ進む前に成否を確定できるcleanup tierを返す。"""
+
+        tiers: list[list[ManifestEntry]] = []
+        previous_order: int | None = None
+        for entry in self.pending_entries():
+            entry_order = CLEANUP_ORDER[entry.kind]
+            if previous_order != entry_order:
+                tiers.append([])
+                previous_order = entry_order
+            tiers[-1].append(entry)
+        return tiers
+
     def all_entries(self) -> list[ManifestEntry]:
         """独立inventory用にremovedを含む全allowlistを返す。"""
 

@@ -7,11 +7,19 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import NoResultFound, raise_notfound
 from mixin.log import setup_logger
-from network.models import NetworkModel
+from node.models import NodeModel
 from project.models import ProjectModel
+from resource_authorization import (
+    allowed_node_names,
+    get_authorized_network,
+    get_authorized_storage,
+    require_admin,
+)
+from storage.models import ImageModel, StorageModel
 from task.functions import TaskManager
 from task.schemas import Task
 
+from .authorization import get_authorized_domain
 from .models import DomainModel
 from .schemas import (
     CdromForUpdateDomain,
@@ -34,8 +42,9 @@ def refresh_vms(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["vm.read"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='put', resource='vm', object='list')
     task.commit(user=cu, req=req)
@@ -49,7 +58,56 @@ def create_vm(
         body: DomainForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
+):
+    cu.verify_scope(["vm.create"])
+    node = db.query(NodeModel).filter(NodeModel.name == body.node_name).one_or_none()
+    allowed_nodes = allowed_node_names(db, cu)
+    if node is None or (
+        allowed_nodes is not None and node.name not in allowed_nodes
     ):
+        raise HTTPException(status_code=404, detail="Node not found")
+    for interface in body.interface:
+        network = get_authorized_network(
+            db,
+            interface.network_uuid,
+            cu,
+        )
+        if network.node_name != node.name:
+            raise HTTPException(
+                status_code=400,
+                detail="Network must belong to the selected node",
+            )
+    for disk in body.disks:
+        destination = get_authorized_storage(
+            db,
+            disk.save_pool_uuid,
+            cu,
+        )
+        if destination.node_name != node.name:
+            raise HTTPException(
+                status_code=400,
+                detail="Destination storage must belong to the selected node",
+            )
+        if disk.type == "copy":
+            if disk.original_pool_uuid is None or disk.original_name is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Copy source storage and image are required",
+                )
+            get_authorized_storage(db, disk.original_pool_uuid, cu)
+            source = (
+                db.query(ImageModel)
+                .filter(
+                    ImageModel.storage_uuid == disk.original_pool_uuid,
+                    ImageModel.name == disk.original_name,
+                )
+                .one_or_none()
+            )
+            if source is None or source.storage.node_name != node.name:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Source image must belong to the selected node",
+                )
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
     task.commit(user=cu, req=req, body=body)
@@ -71,7 +129,9 @@ def delete_vm(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
+):
+    cu.verify_scope(["vm.delete"])
+    get_authorized_domain(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='vm', object='root')
     task.commit(user=cu, req=req, param={"uuid": uuid})
@@ -90,8 +150,9 @@ def update_vm_power_status(
         body: PowerStatusForUpdateDomain,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-    
+):
+    cu.verify_scope(["vm.power"])
+    get_authorized_domain(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='power')
     task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
@@ -111,15 +172,30 @@ def control_vm_cdrom(
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
 
-    ):
+):
     """
     umount
     - path = null
-    
     mount
     - path = iso file path
     """
-    
+    cu.verify_scope(["vm.attach"])
+    domain = get_authorized_domain(db, uuid, cu)
+
+    if body.path:
+        image = (
+            db.query(ImageModel)
+            .join(StorageModel, ImageModel.storage_uuid == StorageModel.uuid)
+            .filter(
+                ImageModel.path == body.path,
+                StorageModel.node_name == domain.node_name,
+            )
+            .one_or_none()
+        )
+        if image is None:
+            raise HTTPException(status_code=404, detail="CD-ROM image not found")
+        get_authorized_storage(db, image.storage_uuid, cu)
+
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='cdrom')
     task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
@@ -197,7 +273,11 @@ def update_vm_project(
         request: DomainProjectForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+):
+    current_user.verify_scope(["vm.project"])
+    get_authorized_domain(db, uuid, current_user)
+    if not current_user.can_access_project(request.project_id):
+        raise HTTPException(status_code=403, detail="Project is outside the granted scope")
     try:
         vm = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
@@ -217,21 +297,22 @@ def update_vm_network(
         body: NetworkForUpdateDomain,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+):
     """
     **Power off required**
 
     Exception: Cannot switch the OVS while the VM is runningOperation not supported: unable to change config on 'network' network type
     """
 
+    cu.verify_scope(["vm.attach"])
+    vm = get_authorized_domain(db, uuid, cu)
     
-    vm = db.query(DomainModel).filter(DomainModel.uuid==uuid).one_or_none()
-    if vm is None:
-        raise HTTPException(status_code=404, detail="domain not found")
-    
-    net = db.query(NetworkModel).filter(NetworkModel.uuid==body.network_uuid).one_or_none()
-    if net is None:
-        raise HTTPException(status_code=400, detail="network uuid is worng")
+    net = get_authorized_network(db, body.network_uuid, cu)
+    if net.node_name != vm.node_name:
+        raise HTTPException(
+            status_code=400,
+            detail="Network must belong to the VM node",
+        )
 
     # タスクを追加
     task = TaskManager(db=db)

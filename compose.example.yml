@@ -1,3 +1,5 @@
+# compose.ymlへcopyし、全VIRTY_*変数を権限を制限したenvironment fileに設定する。
+# TLS証明書のpathにはhost上の絶対pathを指定する。
 services:
   api:
     image: hibiki31/virty-api
@@ -8,6 +10,13 @@ services:
       APP_ROOT: "/opt/app"
       DATA_ROOT: "/opt/data"
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
+      SECRET_KEY: "${VIRTY_SECRET_KEY:?VIRTY_SECRET_KEY is required}"
+      AGENT_LEASE_SIGNING_KEY: "${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}"
+      AGENT_TASK_ENCRYPTION_KEY: "${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}"
+      AGENT_PUBLIC_BASE_URL: "${VIRTY_PUBLIC_URL:?VIRTY_PUBLIC_URL is required}"
+      AGENT_WEBAUTHN_ORIGIN: "${VIRTY_PUBLIC_URL:?VIRTY_PUBLIC_URL is required}"
+      AGENT_WEBAUTHN_RP_ID: "${VIRTY_WEBAUTHN_RP_ID:?VIRTY_WEBAUTHN_RP_ID is required}"
+      AGENT_IMAGE_DOWNLOAD_ALLOWED_HOSTS: "${VIRTY_AGENT_IMAGE_DOWNLOAD_ALLOWED_HOSTS:-}"
     restart: always
   worker:
     image: hibiki31/virty-api
@@ -18,19 +27,29 @@ services:
       APP_ROOT: "/opt/app"
       DATA_ROOT: "/opt/data"
       SQLALCHEMY_DATABASE_URL: "postgresql://postgres:password@db:5432/mydatabase"
+      SECRET_KEY: "${VIRTY_SECRET_KEY:?VIRTY_SECRET_KEY is required}"
+      AGENT_LEASE_SIGNING_KEY: "${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}"
+      AGENT_TASK_ENCRYPTION_KEY: "${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}"
+      AGENT_PUBLIC_BASE_URL: "${VIRTY_PUBLIC_URL:?VIRTY_PUBLIC_URL is required}"
+      AGENT_WEBAUTHN_ORIGIN: "${VIRTY_PUBLIC_URL:?VIRTY_PUBLIC_URL is required}"
+      AGENT_WEBAUTHN_RP_ID: "${VIRTY_WEBAUTHN_RP_ID:?VIRTY_WEBAUTHN_RP_ID is required}"
+      AGENT_IMAGE_DOWNLOAD_ALLOWED_HOSTS: "${VIRTY_AGENT_IMAGE_DOWNLOAD_ALLOWED_HOSTS:-}"
     restart: always
     command: python3 /opt/app/worker.py
   web:
     image: hibiki31/virty-web
-    ports: 
-      - 0.0.0.0:8765:80
+    ports:
+      - "${VIRTY_BIND_ADDRESS:?VIRTY_BIND_ADDRESS is required}:8765:443"
+    volumes:
+      - "${VIRTY_TLS_CERT:?VIRTY_TLS_CERT is required}:/etc/virty/tls/tls.crt:ro"
+      - "${VIRTY_TLS_KEY:?VIRTY_TLS_KEY is required}:/etc/virty/tls/tls.key:ro"
     restart: always
     environment:
       VITE_API_BASE_URL: ""
   proxy:
     image: hibiki31/virty-proxy
     restart: always
-    command: websockify --verbose --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
+    command: websockify --web /usr/share/novnc/ --token-plugin JSONTokenApi --token-source "http://api:8000/api/vms/vnc/%s" 5999
   db:
     image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
     volumes:

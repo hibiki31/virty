@@ -22,9 +22,13 @@ from user.models import (
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
 
 
-def _headers(username: str, scopes: list[str]) -> dict[str, str]:
+def _headers(
+    username: str,
+    scopes: list[str],
+    projects: list[str] | None = None,
+) -> dict[str, str]:
     token = create_access_token(
-        data={"sub": username, "scopes": scopes, "projects": []},
+        data={"sub": username, "scopes": scopes, "projects": projects or []},
         expires_delta=timedelta(hours=1),
     )
     return {"Authorization": f"Bearer {token}"}
@@ -61,6 +65,30 @@ def test_dashboard_requires_authentication(api_client: TestClient) -> None:
     assert response.status_code == 401
 
 
+def test_dashboard_requires_resource_read_scopes(api_client: TestClient) -> None:
+    username = f"dashboard-scope-{uuid4().hex}"
+
+    try:
+        with SessionLocal.begin() as db:
+            db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="vm.read"))
+
+        response = api_client.get(
+            "/api/dashboard",
+            headers=_headers(username, ["vm.read"]),
+        )
+
+        assert response.status_code == 403
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(UserScopeModel).filter(
+                UserScopeModel.user_id == username
+            ).delete(synchronize_session=False)
+            db.query(UserModel).filter(UserModel.username == username).delete(
+                synchronize_session=False
+            )
+
+
 def test_dashboard_returns_zero_summaries_for_empty_inventory(
     api_client: TestClient,
 ) -> None:
@@ -69,13 +97,17 @@ def test_dashboard_returns_zero_summaries_for_empty_inventory(
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
-            db.add(UserScopeModel(user_id=username, name="user"))
+            db.add_all([
+                UserScopeModel(user_id=username, name="user"),
+                UserScopeModel(user_id=username, name="admin"),
+            ])
 
         response = api_client.get(
             "/api/dashboard",
             headers=_headers(username, ["user"]),
         )
         assert response.status_code == 200, response.text
+        assert response.headers["cache-control"] == "no-store"
         body = response.json()
 
         assert body["visibility"] == "assigned"
@@ -141,7 +173,7 @@ def test_dashboard_normalizes_nullable_cached_values(
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
-            db.add(UserScopeModel(user_id=username, name="user"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
             db.flush()
             db.execute(StorageModel.__table__.insert(), [
                 {
@@ -228,7 +260,7 @@ def test_dashboard_normalizes_nullable_cached_values(
 
         response = api_client.get(
             "/api/dashboard",
-            headers=_headers(username, ["user"]),
+            headers=_headers(username, ["admin"]),
         )
         assert response.status_code == 200, response.text
         body = response.json()
@@ -425,7 +457,6 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
                     update_token="dashboard-test",
                     node_name=node_names[index % len(node_names)],
                 )
-                vm.vnc_password = private_value
                 vm.owner_user_id = owner_user_id
                 vm.owner_project_id = owner_project_id
                 vms.append(vm)
@@ -512,16 +543,16 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
             ])
 
             regular_task_values = [
-                ("start", now - timedelta(minutes=1)),
-                ("start", now - timedelta(minutes=2)),
-                ("start", now - timedelta(minutes=3)),
+                ("reconciling", now - timedelta(minutes=1)),
+                ("cancel_requested", now - timedelta(minutes=2)),
+                ("unknown", now - timedelta(minutes=3)),
                 ("error", now - timedelta(minutes=4)),
                 ("lost", now - timedelta(minutes=5)),
                 ("finish", now - timedelta(minutes=6)),
                 ("finish", now - timedelta(minutes=7)),
                 ("error", now - timedelta(hours=25)),
             ]
-            db.add_all([
+            regular_tasks = [
                 _task(
                     uuid=task_uuids[index],
                     user_id=regular_user,
@@ -530,7 +561,9 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
                     private_value=private_value,
                 )
                 for index, (status, post_time) in enumerate(regular_task_values)
-            ])
+            ]
+            regular_tasks[5].archived_at = now
+            db.add_all(regular_tasks)
             db.add_all([
                 _task(
                     uuid=task_uuids[8],
@@ -550,9 +583,10 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
 
         regular_response = api_client.get(
             "/api/dashboard",
-            headers=_headers(regular_user, ["user"]),
+            headers=_headers(regular_user, ["user"], [project_id]),
         )
         assert regular_response.status_code == 200, regular_response.text
+        assert regular_response.headers["cache-control"] == "no-store"
         regular = regular_response.json()
 
         assert regular["visibility"] == "assigned"
@@ -579,27 +613,26 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
                 "unknown": 1,
             },
         }
-        assert regular["storages"]["count"] == 5
-        assert regular["storages"]["capacityGib"] == 300
-        assert regular["storages"]["usedGib"] == 255
-        assert regular["storages"]["availableGib"] == 45
-        assert regular["storages"]["highUsageCount"] == 2
-        highest_usage = regular["storages"]["highestUsage"]
-        assert len(highest_usage) == 4
-        assert [pool["usagePercent"] for pool in highest_usage] == [90.0, 85.0, 80.0, None]
-        assert highest_usage[-1]["name"] == f"d-zero-{suffix}"
-        assert regular["networks"] == {
-            "count": 3,
-            "portGroupCount": 3,
-            "types": [
-                {"name": "nat", "count": 2},
-                {"name": "openvswitch", "count": 1},
-            ],
+        assert regular["storages"] == {
+            "count": 0,
+            "capacityGib": 0,
+            "usedGib": 0,
+            "availableGib": 0,
+            "highUsageCount": 0,
+            "highestUsage": [],
         }
-        assert regular["images"] == {"count": 2}
+        assert regular["networks"] == {
+            "count": 0,
+            "portGroupCount": 0,
+            "types": [],
+        }
+        assert regular["images"] == {"count": 0}
         assert regular["tasks"]["incompleteCount"] == 3
         assert regular["tasks"]["failedLast24Hours"] == 2
-        assert [task["uuid"] for task in regular["tasks"]["recent"]] == task_uuids[:6]
+        assert [task["uuid"] for task in regular["tasks"]["recent"]] == [
+            *task_uuids[:5],
+            task_uuids[6],
+        ]
         assert {task["userId"] for task in regular["tasks"]["recent"]} == {regular_user}
         for task in regular["tasks"]["recent"]:
             assert set(task) == {
@@ -614,6 +647,16 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
             }
         assert private_value not in regular_response.text
 
+        narrowed_response = api_client.get(
+            "/api/dashboard",
+            headers=_headers(regular_user, ["user"]),
+        )
+        assert narrowed_response.status_code == 200, narrowed_response.text
+        narrowed = narrowed_response.json()
+        assert narrowed["visibility"] == "assigned"
+        assert narrowed["vms"]["count"] == 3
+        assert narrowed["nodes"]["count"] == 1
+
         admin_response = api_client.get(
             "/api/dashboard",
             headers=_headers(admin_user, ["user", "admin"]),
@@ -626,6 +669,29 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
         assert admin["vms"]["core"] == 19
         assert admin["vms"]["memoryGib"] == 18.5
         assert admin["vms"]["statuses"]["running"] == 2
+        assert admin["storages"]["count"] == 5
+        assert admin["storages"]["capacityGib"] == 300
+        assert admin["storages"]["usedGib"] == 255
+        assert admin["storages"]["availableGib"] == 45
+        assert admin["storages"]["highUsageCount"] == 2
+        highest_usage = admin["storages"]["highestUsage"]
+        assert len(highest_usage) == 4
+        assert [pool["usagePercent"] for pool in highest_usage] == [
+            90.0,
+            85.0,
+            80.0,
+            None,
+        ]
+        assert highest_usage[-1]["name"] == f"d-zero-{suffix}"
+        assert admin["networks"] == {
+            "count": 3,
+            "portGroupCount": 3,
+            "types": [
+                {"name": "nat", "count": 2},
+                {"name": "openvswitch", "count": 1},
+            ],
+        }
+        assert admin["images"] == {"count": 2}
         assert admin["tasks"]["incompleteCount"] == 4
         assert admin["tasks"]["failedLast24Hours"] == 3
         assert len(admin["tasks"]["recent"]) == 6

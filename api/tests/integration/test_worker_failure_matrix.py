@@ -27,6 +27,7 @@ from task.functions import TaskBase
 from task.models import TaskModel
 from task.schemas import TaskRequest
 from user.models import UserModel
+import worker as worker_module
 from worker import exec_task, run_scheduler
 
 
@@ -417,6 +418,12 @@ def test_production_worker_handlers_record_fault_and_block_dependency(
     setup: FaultSetup | None = None
 
     try:
+        # Composeの別processで動くworkerには拾わせず、このprocessだけでfaultを注入する。
+        monkeypatch.setattr(
+            worker_module,
+            "QUEUED_STATUSES",
+            frozenset({*worker_module.QUEUED_STATUSES, "test"}),
+        )
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="test-only"))
             db.flush()
@@ -490,7 +497,7 @@ def test_production_worker_handlers_record_fault_and_block_dependency(
                 .one()
             )
             assert dependent.status == "error"
-            assert dependent.message == "depended task faile"
+            assert dependent.message == "依存先taskが失敗しました"
             _assert_no_product_mutation(db, fault_name, setup)
 
         assert setup.fault_calls == [

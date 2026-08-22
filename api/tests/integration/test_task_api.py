@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from auth.router import create_access_token
 from mixin.database import SessionLocal
 from task.models import TaskModel
-from user.models import UserModel
+from user.models import UserModel, UserScopeModel
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
@@ -43,6 +43,11 @@ def test_get_tasks_respects_user_visibility_and_admin_override(
             db.add_all([
                 UserModel(username=username, hashed_password="unused")
                 for username in usernames
+            ])
+            db.add_all([
+                UserScopeModel(user_id=regular_user, name="user"),
+                UserScopeModel(user_id=other_user, name="user"),
+                UserScopeModel(user_id=admin_user, name="admin"),
             ])
             db.flush()
             own_task = TaskModel(
@@ -115,6 +120,9 @@ def test_get_tasks_respects_user_visibility_and_admin_override(
             db.query(TaskModel).filter(TaskModel.uuid.in_(task_uuids)).delete(
                 synchronize_session=False
             )
+            db.query(UserScopeModel).filter(
+                UserScopeModel.user_id.in_(usernames)
+            ).delete(synchronize_session=False)
             db.query(UserModel).filter(UserModel.username.in_(usernames)).delete(
                 synchronize_session=False
             )

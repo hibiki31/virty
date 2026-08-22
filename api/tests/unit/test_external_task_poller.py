@@ -113,7 +113,7 @@ def test_http_error_is_wrapped_without_original_body_or_cause() -> None:
     assert caught.value.__cause__ is None
 
 
-@pytest.mark.parametrize("status", ["error", "lost"])
+@pytest.mark.parametrize("status", ["error", "lost", "cancelled", "unknown"])
 def test_failure_state_keeps_details_off_display(status: str) -> None:
     task_uuid = str(uuid4())
     secret_seed = "sensitive-worker-log"
@@ -131,6 +131,18 @@ def test_failure_state_keeps_details_off_display(status: str) -> None:
     assert secret_seed not in str(caught.value)
     assert task_uuid not in str(caught.value)
     assert caught.value.snapshots[task_uuid].log == secret_seed
+
+
+@pytest.mark.parametrize("status", ["reconciling", "cancel_requested"])
+def test_known_inflight_status_continues_polling(status: str) -> None:
+    task_uuid = str(uuid4())
+    client = SequenceClient(
+        {task_uuid: [_snapshot(task_uuid, status), _snapshot(task_uuid, "finish")]}
+    )
+
+    snapshots = wait_for_tasks(_enqueue(task_uuid), client, poll_interval=0.01)
+
+    assert snapshots[0].status == "finish"
 
 
 def test_timeout_reports_safe_state_and_is_finite() -> None:

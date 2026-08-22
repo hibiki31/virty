@@ -26,27 +26,59 @@ x-web-production-build: &web-production-build
   context: ./vue
   target: production
 
+x-web-e2e-http-build: &web-e2e-http-build
+  context: ./vue
+  target: e2e-http
+
+x-mcp-development-build: &mcp-development-build
+  context: .
+  dockerfile: virty_mcp/Dockerfile
+  target: development
+
+x-mcp-check-build: &mcp-check-build
+  context: .
+  dockerfile: virty_mcp/Dockerfile
+  target: check
+
 x-api-dev-environment: &api-dev-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: http://localhost:8000
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: http://localhost:3000
+  AGENT_WEBAUTHN_RP_ID: localhost
   HOME: /tmp/virty-home
   IS_DEV: "true"
   LOG_MODE: TEXT
   PYTHONPATH: /workspace/api
-  SQLALCHEMY_DATABASE_URL: postgresql://postgres:password@db:5432/virty_dev
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db:5432/virty_dev
 
 x-api-test-environment: &api-test-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: https://virty.test
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: https://virty.test
+  AGENT_WEBAUTHN_RP_ID: virty.test
   IS_DEV: "true"
   LOG_MODE: TEXT
   PYTHONPATH: /workspace/api
-  SQLALCHEMY_DATABASE_URL: postgresql://postgres:password@db-test:5432/virty_test
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db-test:5432/virty_test
   VIRTY_BACKEND_MODE: fake
   VIRTY_TESTING: "1"
 
 x-infra-test-environment: &infra-test-environment
+  AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+  AGENT_PUBLIC_BASE_URL: https://virty.test
+  AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
+  AGENT_WEBAUTHN_ORIGIN: https://virty.test
+  AGENT_WEBAUTHN_RP_ID: virty.test
   HOME: /tmp/virty-home
   IS_DEV: "true"
   LOG_MODE: TEXT
   PYTHONPATH: /workspace/api
-  SQLALCHEMY_DATABASE_URL: postgresql://postgres:password@infra-db:5432/virty_test
+  SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@infra-db:5432/virty_test
   VIRTY_INFRA_CONFIG: /run/secrets/infra-config.json
   VIRTY_INFRA_CLEANUP_MARKER: /workspace/api/data/infra-cleanup-armed
   VIRTY_INFRA_MANIFEST: /workspace/api/data/infra-resource-manifest.json
@@ -69,7 +101,7 @@ services:
     profiles: [dev]
     environment:
       POSTGRES_DB: virty_dev
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
       POSTGRES_USER: postgres
     healthcheck: *postgres-healthcheck
     volumes:
@@ -213,7 +245,6 @@ services:
     profiles: [dev]
     command:
       - websockify
-      - --verbose
       - --web
       - /usr/share/novnc/
       - --token-plugin
@@ -238,7 +269,7 @@ services:
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_DEFAULT_EMAIL: virty-dev@example.local
-      PGADMIN_DEFAULT_PASSWORD: virty-dev
+      PGADMIN_DEFAULT_PASSWORD: ${VIRTY_DEV_PGADMIN_PASSWORD:?VIRTY_DEV_PGADMIN_PASSWORD is required}
     volumes:
       - pgadmin-data:/var/lib/pgadmin
       - ./api/.devcontainer/config/servers.json:/pgadmin4/servers.json:ro
@@ -260,11 +291,14 @@ services:
       - -lc
       - ruff check . && mypy && pytest -o cache_dir=/cache/pytest tests/unit
     environment:
+      AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
+      AGENT_TASK_ENCRYPTION_KEY: ${VIRTY_AGENT_TASK_ENCRYPTION_KEY:?VIRTY_AGENT_TASK_ENCRYPTION_KEY is required}
       IS_DEV: "true"
       LOG_MODE: TEXT
       MYPY_CACHE_DIR: /cache/mypy
       PYTHONPATH: /workspace/api
       RUFF_CACHE_DIR: /cache/ruff
+      SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
     network_mode: none
     volumes:
       - api-quick-cache:/cache
@@ -279,6 +313,13 @@ services:
     network_mode: none
     volumes:
       - web-quick-cache:/workspace/vue/node_modules/.tmp
+
+  mcp-quick:
+    build: *mcp-development-build
+    profiles: [quick]
+    working_dir: /workspace/virty/virty_mcp
+    command: ["bash", "-lc", "ruff check . && pytest"]
+    network_mode: none
 
   api-openapi:
     build: *api-development-build
@@ -295,6 +336,7 @@ services:
       IS_DEV: "true"
       LOG_MODE: TEXT
       PYTHONPATH: /workspace/api
+      SECRET_KEY: ${VIRTY_DEV_SECRET_KEY:?VIRTY_DEV_SECRET_KEY is required}
     network_mode: none
     volumes:
       - ./api:/workspace/api
@@ -350,7 +392,7 @@ services:
     profiles: [verify]
     environment:
       POSTGRES_DB: virty_test
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
       POSTGRES_USER: postgres
     healthcheck: *postgres-healthcheck
     networks: [verify-internal]
@@ -470,13 +512,9 @@ services:
     network_mode: none
 
   web-e2e-server:
-    build: *web-production-build
+    build: *web-e2e-http-build
     profiles: [verify]
-    networks:
-      verify-internal:
-        aliases:
-          - api
-          - proxy
+    networks: [verify-internal]
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
       interval: 1s
@@ -501,6 +539,12 @@ services:
   proxy-production-verify:
     build:
       context: ./proxy
+    profiles: [verify]
+    command: ["true"]
+    network_mode: none
+
+  mcp-verify:
+    build: *mcp-check-build
     profiles: [verify]
     command: ["true"]
     network_mode: none
@@ -536,7 +580,7 @@ services:
     profiles: [external]
     environment:
       POSTGRES_DB: virty_test
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
       POSTGRES_USER: postgres
     healthcheck: *postgres-healthcheck
     volumes:
@@ -623,6 +667,24 @@ services:
     depends_on:
       infra-worker:
         condition: service_healthy
+
+  infra-cleanup-guard:
+    build: *api-check-build
+    profiles: [external]
+    working_dir: /workspace/api
+    command: ["python", "-m", "tests.external.cleanup", "guard"]
+    environment:
+      PYTHONPATH: /workspace/api
+      VIRTY_INFRA_CONFIG: /run/secrets/infra-config.json
+      VIRTY_INFRA_CLEANUP_MARKER: /workspace/api/data/infra-cleanup-armed
+      VIRTY_INFRA_MANIFEST: /workspace/api/data/infra-resource-manifest.json
+      VIRTY_INFRA_PROJECT: ${VIRTY_INFRA_PROJECT:-unset}
+      VIRTY_TEST_RUN_ID: ${VIRTY_TEST_RUN_ID:-unset}
+    user: "${VIRTY_HOST_UID:-1000}:${VIRTY_HOST_GID:-1000}"
+    network_mode: none
+    volumes:
+      - infra-data:/workspace/api/data:ro
+      - ${VIRTY_INFRA_CONFIG_HOST:-/dev/null}:/run/secrets/infra-config.json:ro
 
   infra-cleanup:
     build: *api-check-build

@@ -15,6 +15,11 @@ pnpm、PostgreSQLをhostへ導入しない。repository rootの`./devctl`を唯�
 
 `devctl`はworktreeの絶対pathからproject名を自動生成する。同じrepositoryの別worktreeはcontainer、
 network、volume、依存cache、host portを共有しない。利用者が`-p`や空きportを選ぶ必要はない。
+`devctl`は初回実行時にJWT、Agent lease、task暗号化、PostgreSQLの開発credentialを生成し、
+worktree固有のignored `/.env`へ`0600`で保存する。追跡fileに固定keyやpasswordを置かず、
+このcredential fileを別worktreeやproductionと共有しない。既存fileは実行user所有のregular
+non-symlink fileかつ`0600`の場合だけ利用し、`quick`と`verify`はmode、owner、symlink、special fileの
+contract self-testをcontainer起動前に行う。
 API/WebのDev Containerも同じroot Compose serviceを使う。初期化scriptはcanonicalなrepository pathの
 SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのignored `.env`へ保存する。他の環境値は
 保持するため、同名directoryの別worktreeとも資源を共有しない。remote userと共有serviceはhost UID/GIDへ
@@ -22,11 +27,12 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 
 | 目的 | コマンド | 実行内容 |
 |---|---|---|
-| 編集中の高速確認 | `./devctl quick` | APIとWebの安全なcheckを並列実行 |
+| 編集中の高速確認 | `./devctl quick` | API、Web、MCP helperの安全なcheckを並列実行 |
 | APIだけ高速確認 | `./devctl quick api` | Ruff、mypy、unit test |
 | Webだけ高速確認 | `./devctl quick web` | ESLint、incremental型check、Vitest |
-| 完了前の必須確認 | `./devctl verify` | API、Web、Proxyの完全検証とimage build |
-| 対象限定の完全確認 | `./devctl verify api\|web\|proxy` | CIや原因調査用。完了時は引数なしを使う |
+| MCPだけ高速確認 | `./devctl quick mcp` | Ruff、unit・contract test |
+| 完了前の必須確認 | `./devctl verify` | API、Web、Proxy、MCP helperの完全検証とimage build |
+| 対象限定の完全確認 | `./devctl verify api\|web\|proxy\|mcp` | CIや原因調査用。完了時は引数なしを使う |
 | 常駐環境 | `./devctl up` | DB、API、worker、Viteを起動しURLを表示 |
 | 状態確認 | `./devctl ports` / `./devctl logs [service]` | 割当portまたはlogを表示 |
 | container shell | `./devctl shell api\|web` | 対象の開発containerへ入る |
@@ -96,30 +102,29 @@ lines/statements 90%以上、branches/functions 80%以上を対象moduleの回�
 重要flowの代替指標にせず、同じ対象範囲の推移を比較するために記録する。
 
 実browserを必要とするWeb受入は`verify web`だけで実行し、`quick web`へ含めない。Playwrightは
-production bundleを配信するWeb imageへ接続し、browser側の`page.route`で必要なAPI responseを
-deterministicにinterceptする。別のAPI stub serviceは起動しない。認証redirect、一覧から詳細への遷移、
-主要dialogのdesktop/narrow viewportを少数のcritical flowとして確認し、external labへは接続しない。
+production buildと同じbundleをHTTP専用test runtimeで配信し、browser側の`page.route`で必要なAPI responseを
+deterministicにinterceptする。本番runtimeのTLS強制設定は変更せず、別のAPI stub serviceも起動しない。
+認証redirect、一覧から詳細への遷移、主要dialogのdesktop/narrow viewportを少数のcritical flowとして確認し、
+external labへは接続しない。
 
 ### 2026-08-22の基準計測
 
-Docker Engine 29.7.2、Compose 5.4.0、x86_64、8 CPU、62.7 GiB memoryの開発hostで計測した。
-base imageは取得済みで、cold相当はdevelopment Dockerfile変更により依存layerから再buildした値である。
-wall timeは環境比較用の基準であり、性能SLOではない。
+最新`master`統合後、Docker Engine 29.7.2、Compose 5.4.0、x86_64、8 CPU、62.7 GiB memoryの
+開発hostで再計測した。base imageと依存layerは取得済みであり、wall timeは性能SLOではなく同じhostでの
+環境比較用基準である。
 
-| 実行 | wall time | 確認内容 |
-|---|---:|---|
-| `./devctl quick` cold相当 | 50.90秒 | API/Web development・check layerを再buildして成功 |
-| `./devctl quick` warm | 12.00秒 | install layerはcache hit、API/Webを並列実行 |
-| `./devctl quick api` warm | 9.28秒 | Ruff、mypy、unit testを各1回 |
-| `./devctl quick web` warm | 14.19秒 | ESLint、incremental型check、Vitestを各1回 |
-| `./devctl verify` warm | 75.31秒 | migration、integration、生成型drift、coverage、3 production image |
+| 実行 | 確認した基準 |
+|---|---|
+| `./devctl quick api` | Ruff、mypy 136 source、unit 221件成功、Pydantic warning 0 |
+| `./devctl quick web` | ESLint、incremental型check、Vitest 23 file・100件成功 |
+| `./devctl verify api` | migration、OpenAPI drift 0、unit・integration 262件、production image成功 |
+| `./devctl verify web` | Vitest 100件、Playwright 3 flow、OpenAPI・Web生成型drift 0、production image成功 |
+| `./devctl verify` | API 262件、Web 100件、Playwright 3 flow、MCP 51件、Proxyを含め約110秒で成功 |
 
-warm logでは`apt`、`pip install`、`pnpm install`の再実行がなく、API/Web各componentの型checkは1回だった。
-引数なしquickはcomponent別実行時間の合計ではなく、並列実行時間で完了した。初回実装時の権限不備を含む
-失敗計測は基準値へ採用せず、修正後の成功runだけを記録している。
-テスト拡充後の件数、coverage、wall timeは最新`master`統合後に最終再計測する。
-統合前の作業branchで確認したVitest 94件とPlaywright 3 flowは暫定値であり、この表の
-2026-08-22基準値を更新後の確定値として扱わない。
+Web全体coverageはstatements 43.17%、branches 45.65%、functions 36.24%、lines 44.74%である。
+個別gateは`auth.ts`と`pagination.ts`が全指標100%、`notify.ts`がstatements/lines 92.30%、
+branches 85.71%、functions 100%、`taskPolling.ts`がstatements 94.11%、branches 84%、
+functions/lines 100%で成功した。引数なし`verify`はAPI、Web、MCPを並列実行し、外部labへ接続しない。
 
 ## 実機SSH・Ansible・libvirt test
 
@@ -140,7 +145,9 @@ storageは自動分離されないため、次の条件をすべて満たす場�
 設定検証、task応答のpolling、resource名の導出、cleanup判断はlabへ接続しないunit testの対象にする。
 mutation前にproject-scoped volumeのversion付きmanifestへexact resource名、node、remote pathを記録し、
 作成成功後にAPI UUIDを追記する。cleanupはmanifestを唯一の削除allowlistとし、configとrun IDからの再構築は
-read-only診断に限定する。cleanup後は別processがDB、virsh inventory、remote pathをread-onlyで確認し、
+read-only診断に限定する。cleanup開始時はDB migrationやworker起動より先にmarkerとmanifest identityを
+networkなしで検証する。VMなど同じ依存tierはまとめて回収し、そのtierに失敗があればnetwork、storage、
+nodeなど下位tierへ進まない。cleanup後は別processがDB、virsh inventory、remote pathをread-onlyで確認し、
 run所有資源が残る場合はprojectとvolumeを保持する。
 
 `devctl infra preflight`は設定fileと親directoryが実行user所有かつ`0600`/`0700`であることを先に検査し、
@@ -177,12 +184,59 @@ host portやhost pnpmを使わず、最後だけhost userとして追跡fileへi
 既存revisionを履歴から消したり書き換えたりしない。`alembic downgrade base`やversion file削除を含む
 legacy scriptは通常手順に使わない。
 
+## Agent APIとMCP helperの安全検証
+
+Agent APIのunit・contract testは固定clock、fake WebAuthn verifier、fake task adapterを使い、
+SSH、Ansible、libvirt、downloadのproduction backendへ接続しない。次の境界を標準checkから外さない。
+
+- principal、scope、project、node、resourceの認可matrixと既存REST経路
+- WebAuthn challenge replay、RP ID・origin不一致、device鍵・DPoP不一致
+- lease期限・失効・変更上限、global/device kill switch、breaker、同時実行上限
+- idempotency keyの同時retry、request hash相違、stale generation、取消、worker crash、`unknown`
+- 監査保存失敗時のfail closedと、秘密入力が監査event・task logへ残らないこと
+- VM名、description、task logのprompt injection文字列がpolicy判断を変えないこと
+- project pool外のstorage、network、image、flavor、nodeをAgentと既存RESTの双方が拒否すること
+- image downloadのDNS rebinding、private・link-local address、redirect、同時downloadを拒否し、
+  no-clobber失敗後も既存dataと一時file cleanupが保たれること
+
+SQLiteで完結するtestは`tests/unit`、PostgreSQLのunique constraint、advisory lock、transaction競合を
+必要とするtestは`tests/integration`へ置く。後者はworkerが利用するDBと分離したfresh DBで実行し、
+共有DBやproduction workerへ接続しない。
+
+`virty-mcp`はAPI imageと分離したPython packageである。helperのcontract testはmemory credential storeと
+fake HTTP transportを使い、実端末のcredential storeやVirtyへ接続しない。stdoutをMCP JSON-RPC以外へ
+使わないこと、API/helper catalogのbyte一致、schema、DPoP、Tasks fallback、秘密値redactionを検査する。
+helperのcheckもhost Pythonから直接実行せず、`./devctl quick mcp`または
+`./devctl verify mcp`のnetworkなしone-shot serviceで実行する。helperの変更に加え、
+APIの管理routeやAgent catalogの変更でもMCPのCI gateを起動する。
+
+`AGENT_TASK_ENCRYPTION_KEY`はAES-256用の32 byteをbase64またはbase64url化した値とする。
+hex 32 byte値はbase64として48 byteに復号されるため使用しない。test用固定値とproduction secretを分離し、
+秘密鍵やlease tokenを設定file、log、test artifactへ保存しない。
+
 ## CI、文書、Git
 
-- CIはAPI、Web、Proxyを分離して`./devctl verify <component>`を実行する。tag publishも同じverifyを
+- CIはAPI、Web、Proxy、MCP helperを分離して`./devctl verify <component>`を実行する。tag publishも同じverifyを
   registry loginより前に必須化し、component別cache scopeを使う。
 - `docs/development.md`を手順の正本とし、component READMEやCIへcommand列を複製しない。
 - 文書だけの変更でも`git diff --check`と内部linkの存在を確認する。
 - 完了前に引数なしの`./devctl verify`を実行する。実行できない項目と理由は明記する。
 - commit前に`git status --short`、`git diff`、`git diff --cached --check`、staged diffを確認する。
 - release時だけ`api/settings.py`と`vue/package.json`のversion整合を確認する。
+
+## Agent機能のproduction導入
+
+production以外の管理nodeへ向けたcanaryがない場合、機能flagを段階的に有効化すること自体を
+WebAuthn付き管理操作として扱う。
+
+1. 最初の7日間は`shadow_mode=true`かつmutation停止でreadとpolicy・監査結果だけを評価する。
+2. R1を有効化し、単一resourceの低risk操作、retry、取消、breakerを確認する。
+3. R2を有効化し、対象制約とgeneration conflictを確認する。
+4. R3は同時1件を維持し、削除・network変更の残存riskを運用者が明示的に受容した場合だけ有効化する。
+
+既存RESTやWeb UIから同じresourceを変更するときは、先にAgent global controlでmutationを停止する。
+同期REST mutationはAgentのtarget reservationへ参加しないため、移行期間中の同時変更を安全とは扱わない。
+
+backup、snapshot、帯域外network復旧がない環境では、補償統制が働いても削除後の復元や管理network断からの
+復旧を保証できない。`allow_delete_without_recovery`と`allow_network_change_without_oob`を
+恒常的な既定値として有効にしない。

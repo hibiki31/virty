@@ -10,7 +10,7 @@ from flavor.models import FlavorModel
 from mixin.database import SessionLocal
 from project.models import ProjectModel
 from task.models import TaskModel
-from user.models import UserModel
+from user.models import UserModel, UserScopeModel
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
@@ -52,6 +52,7 @@ def test_project_crud_task_status_path_and_validation(
                 UserModel(username=username, hashed_password="unused")
                 for username in [creator, member, added_member]
             ])
+            db.add(UserScopeModel(user_id=creator, name="admin"))
 
         invalid_create = api_client.post(
             "/api/tasks/projects",
@@ -185,6 +186,7 @@ def test_flavor_create_list_delete_path_and_validation(
     try:
         with SessionLocal.begin() as db:
             db.add(UserModel(username=username, hashed_password="unused"))
+            db.add(UserScopeModel(user_id=username, name="admin"))
 
         invalid_create = api_client.post(
             "/api/flavors",

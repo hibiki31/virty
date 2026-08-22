@@ -67,10 +67,27 @@ export function vmPowerOn(uuid: string) {
   });
 }
 
-export function openVNC(uuid: string) {
-  window.open(
-    `/novnc/vnc.html?resize=remote&autoconnect=true&path=novnc/websockify?token=${uuid}`
-  );
+export async function openVNC(uuid: string) {
+  const consoleWindow = window.open("about:blank", "_blank");
+  if (consoleWindow) consoleWindow.opener = null;
+
+  const response = await apiClient.POST("/api/vms/{uuid}/console-ticket", {
+    params: { path: { uuid } },
+  });
+  if (!response.data) {
+    consoleWindow?.close();
+    return;
+  }
+
+  const token = encodeURIComponent(response.data.token);
+  const consoleUrl =
+    `/novnc/vnc.html?resize=remote&autoconnect=true` +
+    `&path=novnc/websockify?token=${token}`;
+  if (consoleWindow) {
+    consoleWindow.location.href = consoleUrl;
+  } else {
+    window.open(consoleUrl, "_blank", "noopener,noreferrer");
+  }
 }
 
 export function getPowerColor(statusCode: number) {

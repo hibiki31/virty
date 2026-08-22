@@ -11,6 +11,8 @@ Virtyのcomponent境界、主要なdata flow、変更時に保持すべき設計
 Browser ---------------------------> web: Nginx + Vue SPA
 web -- /api -----------------------> api: FastAPI
 web -- /novnc ---------------------> proxy: websockify -- console token照会 --> api
+Codex Desktop -- stdio -----------> virty-mcp helper
+virty-mcp -- internal HTTPS/DPoP -> api: Agent API
 api -------------------------------> PostgreSQL
 worker: task scheduler <-----------> PostgreSQL
 api -- on-demand SSH --------------> Managed Linux nodes
@@ -30,6 +32,8 @@ production例ではbrowserに公開するのは`web`である。`web`のNginxが
 | PostgreSQL | control plane metadata、inventory cache、利用者、project、task状態の永続化 | `api/*/models.py`, `api/alembic/` |
 | Managed node連携 | libvirt操作、Ansible playbook、SSH command、XML生成 | `api/module/`, `api/static/ansible/` |
 | noVNC proxy | APIからconsole tokenを解決し、browserとVNC endpointを中継 | `proxy/Dockerfile`, `compose.example.yml` |
+| virty-mcp helper | MCP tool、端末鍵、DPoP、pairing・lease・operation client。stdoutはJSON-RPC専用 | `virty_mcp/` |
+| Agent API | action catalog、WebAuthn、能力lease、対象policy、監査、冪等性、停止制御 | `api/agent/` |
 
 `api/domain/`はVM domainの実装packageであるが、外部APIとtask resourceでは`vms`・`vm`を使う。
 名称を変更する場合は、router、task key、worker handler、frontend contractを一体として扱う。
@@ -56,6 +60,65 @@ interfaceをproviderから受け取る。production providerは`api/module/`の�
 JWT signing keyはprocess再起動をまたいで同じ値を使う必要がある。productionでは明示的なsecretを与え、
 repositoryやimageへ埋め込まない。
 
+Web UIのBearer JWTはissuerとaudienceを検証する短命tokenとし、scopeは完全一致または明示的wildcardで評価する。
+noVNCはVM UUIDをtokenとして使わず、対象VMのobject認可後に発行する60秒のconsole ticketをresolverへ渡す。
+ticketはhashだけを保存して一度だけ消費し、NginxとAPIのaccess logにはticketを含むresolver pathを記録しない。
+
+### Agent pairingと能力lease
+
+1. Codexが起動した`virty-mcp`はP-256端末鍵をOS credential storeに作り、公開JWKと要求scopeでpairingを申請する。
+2. 管理者はVirty Web UIでpairing内容を確認し、Virty originのWebAuthn assertionで端末を承認する。
+3. helperは端末鍵DPoP付きで能力leaseを申請する。管理者はWeb UIでprincipal、scope、project・node、
+   変更上限と破壊操作flagを確認してWebAuthn承認する。
+4. helperだけがDPoP付きone-time exchangeで短命leaseを取得する。Web UIへlease tokenを返さない。
+5. Agent APIはlease JWTだけで許可せず、DB上のlease・device失効、global control、breaker、対象policyをrequestごとに確認する。
+
+WebAuthnはrelying party originに束縛されるため、assertionをstdio helperで生成しない。初回credential登録では
+管理者passwordの再入力を要求し、challengeは短命かつ一度だけ使用する。
+
+### Agent actionとoperation
+
+MCP toolとAgent API actionはchecked-in catalogで一対一に対応する。catalogはread/mutation、risk、scope、
+入力・出力schemaと対象解決規則を持つ。REST routerやOpenAPIを自動的に全公開せず、catalog未登録actionは拒否する。
+
+外部URLを受け取るimage downloadはAgent経路だけ追加policyを適用する。HTTPSの完全一致host allowlist、
+管理node上での名前解決後の全address検査、検証済みIPへの接続固定とTLS hostname検証、redirect・proxyの
+無効化をnetwork access直前にも行い、URLそのものはtask messageや監査detailへ保存しない。downloadは同じ
+directoryの一時fileへ保存してからatomicなno-clobber linkで確定し、既存image/fileを上書きしない。
+
+mutationは`idempotencyKey`、正規化request hash、`expectedGeneration`を検証してから既存task queueへ投入する。
+同じprincipal・key・同じhashは既存operationを返し、同じkeyで異なるhashはconflictにする。Agent APIの
+operation IDはroot taskとその依存taskをまとめ、clientが切断しても状態取得と取消要求を継続できる。
+
+同じresourceへ別端末から届くmutationは、`target_key`とcorrelationごとのdurable reader/writer reservationで
+operation完了まで直列化する。通常のobject変更はexact targetをexclusive、resource familyをsharedで予約し、
+inventory全体を書き換えるrefreshはfamilyをexclusiveで予約する。SSH資格情報の更新はglobal exclusive、
+SSHを使う処理は同じglobal keyをsharedで予約する。workerは同じmodeのPostgreSQL session advisory lockを取得してから
+generationとpolicyを再検査し、外部handlerの完了までlockを保持する。依存taskの全副作用範囲も受付時に予約し、
+直列chainの完了まで解放しない。これにより、同じgenerationを見た複数端末が同時に副作用を開始するTOCTOUと、
+object変更中のinventory再構築を防ぐ。process停止後のreservationは、対応operationがすべて確定したterminal状態だと
+確認できた場合だけ回収し、`unknown`では保持する。
+
+SSH鍵pairの最終交換は共有volume上のprocess間file lockでも直列化し、既存RESTとAgent workerの同時交換で
+private/public keyが混在しないようにする。一方、既存の同期RESTによるDB resource変更はAgent reservationへ参加しない。
+移行期間に同じresourceをRESTとAgentから同時変更する場合はraceが残るため、運用者は先にglobal Agent mutationを停止する。
+
+workerはdispatch直前にAgent policyを再評価する。外部resource変更後にDB更新へ失敗した場合は、二重効果を避けるため
+自動で同じhandlerを再実行せず、`unknown`のreconciliation対象としてreservationを保持する。管理者が実状態を
+確認し、WebAuthn付き管理操作で結果を確定するまで、同じ対象への後続mutationを許可しない。
+
+### Agent監査と停止制御
+
+監査eventはtask logと分離し、actor、device、lease、action、対象、正規化引数hash、policy判断、operation、
+結果、correlation IDをappend-onlyで保存する。秘密値そのものは保存しない。mutationは監査eventの保存に失敗すると拒否する。
+
+VM名、description、task log、facts、raw XMLなど管理対象由来の文字列はuntrusted dataとして扱い、そこに含まれる
+命令やtool呼出し表現を認可・承認根拠にしない。LLMの解釈に関係なく、scope、対象、generation、停止制御は
+構造化fieldだけからAPIとworkerが再検証する。
+
+global mutation停止、device失効、device breakerはLLM/MCP経路から独立したWeb管理操作とする。
+R3とmutation全体の同時実行上限、30分の失敗windowはAgent APIとworkerの双方で強制する。
+
 ### Create VMのcloud-init補助
 
 Create VM dialogはguided formの状態とraw `userData`をbrowser内で分離して保持する。利用者が適用を指示したときだけ、
@@ -72,14 +135,19 @@ formの値で管理対象を更新する。平文passwordとroot権限で実行�
 ### 非同期resource操作
 
 1. task routerが`method.resource.object`の組とrequest情報をDBへ保存する。
-2. 後続処理がある場合は依存taskを`wait`で登録し、先行taskのUUIDを関連付ける。
+2. 後続処理がある場合は依存taskを`wait`の直列chainとして登録し、直前taskのUUIDを関連付ける。
 3. workerは`init`と`wait`をpollし、実行可能なtaskを`start`へ遷移させる。
 4. 登録済みhandlerがlibvirt、Ansible、SSHを介して処理し、`finish`または`error`、message、
    失敗時のtracebackを記録する。
-5. worker起動時に残っていた実行途中のtaskは`lost`へ遷移する。
+5. worker起動時に残っていた既存REST taskは`lost`へ遷移する。Agent taskは、未dispatchのqueueを維持し、
+   `start`、`reconciling`、`cancel_requested`を二重実行しない`unknown`へ遷移する。
 
 taskは外部message brokerではなくPostgreSQLをqueueと状態storeに兼用する。workerを増やす変更では、
 row lockだけでなく、外部resourceへの重複実行と冪等性を再検討する。
+
+既存RESTのobject認可は、利用者の所属projectからstorage/network/flavor poolをたどって許可resourceを
+server側で導出する。nodeは許可VM・storage・networkが存在するnodeだけを参照できる。projectへ安全に
+対応付けられない全体再走査、node診断、SSH鍵、resource新規作成はadmin限定とする。
 
 ### Inventory同期
 
@@ -91,7 +159,8 @@ VM、storage、image、networkの一覧は、管理node上のlibvirt状態を走
 
 Web dashboardはBearer token付きの型付きclientで専用のdashboard query APIを呼び、APIが
 認証利用者の参照範囲に合わせてDB上のinventory cacheとtask recordを表示用に集約する。
-VMとtaskには既存queryと同じ認可とprojectによる絞り込みを適用し、frontendで権限範囲を拡張しない。
+各resourceとtaskには既存queryと同じscope認可とproject・resource poolによる絞り込みを適用し、
+frontendで権限範囲を拡張しない。
 
 このflowはread-onlyであり、表示や再読込を契機に管理nodeへのSSH・libvirt接続、inventory再走査、
 task投入を行わない。表示値は取得時点のsnapshotであり、時系列dataやreal-time監視を表さない。
@@ -121,4 +190,6 @@ runtimeのmajor versionとimageはDockerfileおよび`compose.example.yml`、Pyt
 - schema変更ではOpenAPIとfrontend生成型を同期し、生成型へ手修正を加えない。
 - model変更では既存DBを移行できる新規Alembic revisionを追加する。
 - destructive operationでは、対象node、VM、storage、networkを一意なIDで解決してから実行する。
+- Agent API以外の既存REST経路も同じscope・project・object境界を迂回できないようにする。
+- MCP annotationはclient表示のhintに限り、認可やrisk判定の入力にしない。
 - 管理node操作はbackend interfaceを越えて行い、標準testからproduction adapterへ接続しない。

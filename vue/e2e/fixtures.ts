@@ -1,4 +1,5 @@
 import { test as base, type Page, type Route } from "@playwright/test";
+import { playwrightBaseURL } from "./base-url";
 
 const encoded = (value: object): string =>
   Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -188,8 +189,9 @@ export const test = base.extend<Fixtures>({
   },
 
   authenticatedPage: async ({ api: _api, context, page }, use) => {
-    const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4173";
-    await context.addCookies([{ name: "accessToken", url: baseURL, value: accessToken }]);
+    await context.addCookies([
+      { name: "accessToken", url: playwrightBaseURL, value: accessToken },
+    ]);
     await use(page);
   },
 });

@@ -10,6 +10,7 @@ from mixin.database import SessionLocal
 from network.models import NetworkModel
 from node.models import NodeModel
 from storage.models import ImageModel, StorageModel
+from user.models import UserModel, UserScopeModel
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
@@ -22,8 +23,11 @@ def test_vm_detail_resolves_network_and_disk_capacity(api_client: TestClient) ->
     network_uuid = str(uuid4())
     storage_uuid = str(uuid4())
     image_path = f"/var/lib/libvirt/images/{suffix}.qcow2"
+    username = f"vm-detail-user-{suffix}"
 
     with SessionLocal.begin() as db:
+        db.add(UserModel(username=username, hashed_password="unused"))
+        db.add(UserScopeModel(user_id=username, name="admin"))
         db.add(NodeModel(
             name=node_name,
             description="VM detail integration test",
@@ -112,7 +116,7 @@ def test_vm_detail_resolves_network_and_disk_capacity(api_client: TestClient) ->
         db.add(image)
 
     token = create_access_token(
-        {"sub": f"vm-detail-user-{suffix}", "scopes": ["admin"], "projects": []},
+        {"sub": username, "scopes": ["admin"], "projects": []},
         timedelta(minutes=5),
     )
     try:
@@ -154,3 +158,5 @@ def test_vm_detail_resolves_network_and_disk_capacity(api_client: TestClient) ->
             db.query(StorageModel).filter(StorageModel.uuid == storage_uuid).delete()
             db.query(NetworkModel).filter(NetworkModel.uuid == network_uuid).delete()
             db.query(NodeModel).filter(NodeModel.name == node_name).delete()
+            db.query(UserScopeModel).filter(UserScopeModel.user_id == username).delete()
+            db.query(UserModel).filter(UserModel.username == username).delete()

@@ -49,6 +49,7 @@ nav:
   - Home: index.md
   - Setup:
     - setup/minimum.md
+    - setup/nginx.md
     - setup/vlan.md
     - setup/ceph.md
   - Example:

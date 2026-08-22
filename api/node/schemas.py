@@ -1,5 +1,7 @@
 from typing import List
 
+from pydantic import Field
+
 from mixin.schemas import BaseSchema, GetPagination
 
 
@@ -80,7 +82,10 @@ class NodeInfo(BaseSchema):
 
 
 class SSHKeyPair(BaseSchema):
-    private_key: str | None = None
+    private_key: str | None = Field(
+        default=None,
+        json_schema_extra={"writeOnly": True},
+    )
     public_key: str| None = None
     generate: bool | None = None
 

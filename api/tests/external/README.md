@@ -132,7 +132,9 @@ node、remote pathをproject-scoped volumeのmanifestへ原子的に永続化す
 再構築はread-only診断にだけ使用する。破損、identity不一致、未記録targetではfail closedし、削除しない。
 
 終了時はfixture finalizerとhost trapのcleanupが同じmanifestを読み、VM、network、storage、remote path、
-project、node、userの依存順で冪等に回収する。作成時に`become`を使うremote pathはcleanupでも同じ境界を使う。
+project、node、userの依存順で冪等に回収する。cleanupはDB migrationとworker起動より先にmarkerとmanifest
+identityをnetworkなしで検証し、同じ依存tierを完遂した時点で失敗があれば下位tierを削除しない。
+作成時に`become`を使うremote pathはcleanupでも同じ境界を使う。
 cleanup後は別serviceがmanifestのremovedを含む全targetについて、DB、virshのname/UUID、remote pathを
 read-onlyで再inventoryする。manifest記載外でも同じrun ID prefixを持つDB・virsh資源は診断対象に含め、
 すべて0件になった場合だけrunを成功とする。削除allowlist自体はmanifest記載targetから拡張しない。

@@ -13,6 +13,7 @@ from node.models import NodeModel
 from task.models import TaskModel
 from task.schemas import TaskRequest
 from user.models import UserModel
+import worker as worker_module
 from worker import exec_task, run_scheduler
 
 
@@ -129,6 +130,12 @@ def test_worker_records_backend_failure_and_stops_dependent_task(
     fake_backend = FakeAnsibleBackend(
         failures={"node_infomation": TimeoutError("Ansible test timeout")}
     )
+    # Composeの別processで動くworkerには拾わせず、このprocessのexec_taskだけで実行する。
+    monkeypatch.setattr(
+        worker_module,
+        "QUEUED_STATUSES",
+        frozenset({*worker_module.QUEUED_STATUSES, "test"}),
+    )
     monkeypatch.setattr(
         node_tasks,
         "create_ansible_backend",
@@ -187,7 +194,7 @@ def test_worker_records_backend_failure_and_stops_dependent_task(
                 .one()
             )
             assert dependent_task.status == "error"
-            assert dependent_task.message == "depended task faile"
+            assert dependent_task.message == "依存先taskが失敗しました"
             assert (
                 db.query(NodeModel).filter(NodeModel.name == node_name).one_or_none()
                 is None

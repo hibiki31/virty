@@ -41,6 +41,7 @@ def test_user_crud_status_path_and_validation(api_client: TestClient) -> None:
                 UserModel(username=caller, hashed_password="unchanged"),
                 UserModel(username=other, hashed_password="unchanged"),
             ])
+            db.add(UserScopeModel(user_id=caller, name="admin"))
 
         create_response = api_client.post(
             "/api/users",
@@ -128,6 +129,7 @@ def test_update_user_uses_path_and_accepts_only_update_fields(
                 for username in usernames
             ])
             db.add_all([
+                UserScopeModel(user_id=caller, name="admin"),
                 UserScopeModel(user_id=target, name="user"),
                 UserScopeModel(user_id=other, name="user"),
             ])
@@ -198,7 +200,10 @@ def test_update_user_rolls_back_publickeys_when_scope_update_fails(
                 UserModel(username=username, hashed_password="unchanged")
                 for username in usernames
             ])
-            db.add(UserScopeModel(user_id=target, name="user"))
+            db.add_all([
+                UserScopeModel(user_id=caller, name="admin"),
+                UserScopeModel(user_id=target, name="user"),
+            ])
             db.add(UserPublickeyModel(
                 user_id=target,
                 name="original",

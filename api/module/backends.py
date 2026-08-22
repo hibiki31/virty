@@ -20,6 +20,8 @@ class AnsibleBackend(Protocol):
         playbook_name: str,
         extravars: Mapping[str, Any] | None = None,
         timeout: int = 900,
+        *,
+        sensitive_keys: set[str] | None = None,
     ) -> AnsibleRunResult: ...
 
     def node_infomation(self) -> Mapping[str, Any]: ...
@@ -121,6 +123,8 @@ class FakeAnsibleBackend(_FaultInjectableFake):
         playbook_name: str,
         extravars: Mapping[str, Any] | None = None,
         timeout: int = 900,
+        *,
+        sensitive_keys: set[str] | None = None,
     ) -> AnsibleRunResult:
         self._raise_failure("run")
         return AnsibleRunResult(

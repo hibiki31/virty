@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from resource_authorization import require_admin
+from task.functions import ARCHIVABLE_STATUSES, archive_terminal_tasks
 from task.models import TaskModel
 from task.schemas import (
     Task,
@@ -31,11 +33,12 @@ def get_tasks(
         admin: bool = False,
     ):
 
-    query = db.query(TaskModel)
+    query = db.query(TaskModel).filter(TaskModel.archived_at.is_(None))
 
     if admin:
-        current_user.verify_scope(["admin.tasks"])
+        current_user.verify_scope(["task.read.any"])
     else:
+        current_user.verify_scope(["task.read.self"])
         query = query.filter(TaskModel.user_id==current_user.id)
 
     if param.resource:
@@ -50,6 +53,9 @@ def get_tasks(
                 TaskModel.status=="wait",
                 TaskModel.status=="init",
                 TaskModel.status=="start",
+                TaskModel.status=="reconciling",
+                TaskModel.status=="cancel_requested",
+                TaskModel.status=="unknown",
             ))
         else:
             query = query.filter(TaskModel.status==param.status)
@@ -59,6 +65,8 @@ def get_tasks(
     query = query.order_by(desc(TaskModel.post_time))
     if param.limit > 0:
         task = query.limit(param.limit).offset(int(param.limit*param.page)).all()
+    else:
+        task = query.all()
     
     return { "count": count, "data": task }
 
@@ -67,16 +75,15 @@ def get_tasks(
 def delete_tasks(
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-    current_user.verify_scope(["admin"])
-    model = db.query(TaskModel).all()
-    db.query(TaskModel).delete()
+):
+    current_user.verify_scope(["task.manage"])
+    require_admin(current_user)
+    # Agent/legacyとも確定済み履歴だけを非表示にし、ledger rowは保持する。
+    model = archive_terminal_tasks(db)
     db.commit()
 
     return model
 
-
-EXCLUDED_STATUSES = ("error", "lost", "finish")
 
 def _calc_hash(rows: list[tuple[str, str]]) -> str:
     # rows=(uuid,status)
@@ -91,11 +98,16 @@ def get_incomplete_tasks(
     ):
 
     if param.admin:
-        current_user.verify_scope(["admin.tasks"])
+        current_user.verify_scope(["task.read.any"])
+    else:
+        current_user.verify_scope(["task.read.self"])
     
     base_query = (
         db.query(TaskModel.uuid, TaskModel.status)
-          .filter(not_(TaskModel.status.in_(EXCLUDED_STATUSES)))
+          .filter(
+              TaskModel.archived_at.is_(None),
+              not_(TaskModel.status.in_(ARCHIVABLE_STATUSES)),
+          )
           .order_by(TaskModel.uuid)
     )
     
@@ -128,9 +140,21 @@ def get_task(
         uuid: str,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-    task = db.query(TaskModel).filter(TaskModel.uuid==uuid).one_or_none()
+):
+    can_read_any = current_user.verify_scope(["task.read.any"], return_bool=True)
+    if not can_read_any:
+        current_user.verify_scope(["task.read.self"])
+    task = (
+        db.query(TaskModel)
+        .filter(
+            TaskModel.uuid == uuid,
+            TaskModel.archived_at.is_(None),
+        )
+        .one_or_none()
+    )
     if task is None:
+        raise HTTPException(status_code=404, detail="task uuid not found")
+    if not can_read_any and task.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="task uuid not found")
     
     return task

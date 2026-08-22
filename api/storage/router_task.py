@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
+from resource_authorization import get_authorized_storage, require_admin
 from task.functions import TaskManager
 from task.schemas import Task
 
@@ -23,8 +24,9 @@ def create_storage(
         body: StorageForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
-
+):
+    cu.verify_scope(["storage.manage"])
+    require_admin(cu)
     task = TaskManager(db=db)
     task.select(method='post', resource='storage', object='root')
     task.commit(user=cu, req=req, body=body)
@@ -42,8 +44,9 @@ def delete_storage(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["storage.manage"])
+    get_authorized_storage(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='storage', object='root')
     task.commit(user=cu, req=req, param={"uuid": uuid})
@@ -58,8 +61,9 @@ def delete_image(
         req: Request,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ):
-
+):
+    cu.verify_scope(["image.manage"])
+    get_authorized_storage(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='image', object='root')
     task.commit(user=cu, req=req, param={"uuid": uuid, "name": name})

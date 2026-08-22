@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       api: ${{ steps.filter.outputs.api }}
+      mcp: ${{ steps.filter.outputs.mcp }}
       proxy: ${{ steps.filter.outputs.proxy }}
       web: ${{ steps.filter.outputs.web }}
     steps:
@@ -55,6 +56,7 @@ jobs:
           changed="$(git diff --name-only "${base_sha}" "${head_sha}")"
           shared=false
           api=false
+          mcp=false
           web=false
           proxy=false
 
@@ -70,9 +72,16 @@ jobs:
           if [[ "${shared}" == true ]] || grep -Eq '^proxy/' <<<"${changed}"; then
             proxy=true
           fi
+          # helper contractはAPIの管理routeとAgent catalogも照合する。
+          # root .dockerignoreはmcpのroot build contextに影響する。
+          if [[ "${shared}" == true ]] \
+            || grep -Eq '^(api/|virty_mcp/|\.dockerignore$)' <<<"${changed}"; then
+            mcp=true
+          fi
 
           {
             printf 'api=%s\n' "${api}"
+            printf 'mcp=%s\n' "${mcp}"
             printf 'proxy=%s\n' "${proxy}"
             printf 'web=%s\n' "${web}"
           } >>"${GITHUB_OUTPUT}"
@@ -118,3 +127,17 @@ jobs:
         uses: ./.github/actions/expose-github-runtime
       - name: Production image verification
         run: ./devctl verify proxy
+
+  mcp:
+    name: MCP helper verify
+    needs: changes
+    if: needs.changes.outputs.mcp == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: ./.github/actions/expose-github-runtime
+      - name: Full verification
+        run: ./devctl verify mcp

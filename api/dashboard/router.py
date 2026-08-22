@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Query, Session
 
@@ -9,7 +9,11 @@ from domain.models import DomainModel
 from mixin.database import get_db
 from network.models import NetworkModel, NetworkPortgroupModel
 from node.models import AssociationNodeToRoleModel, NodeModel
-from project.models import ProjectModel
+from resource_authorization import (
+    allowed_network_ids,
+    allowed_node_names,
+    allowed_storage_ids,
+)
 from storage.models import ImageModel, StorageModel
 from task.models import TaskModel
 
@@ -36,20 +40,39 @@ VM_STATUS_FIELDS = {
     10: "deleted",
     20: "lost_node",
 }
-INCOMPLETE_TASK_STATUSES = ("wait", "init", "start")
+INCOMPLETE_TASK_STATUSES = (
+    "wait",
+    "init",
+    "start",
+    "reconciling",
+    "cancel_requested",
+    "unknown",
+)
 FAILED_TASK_STATUSES = ("error", "lost")
 
 
-def _get_node_summary(db: Session) -> DashboardNodeSummary:
-    node_count, node_core, node_memory = db.query(
+def _get_node_summary(
+    db: Session,
+    allowed_nodes: set[str] | None,
+) -> DashboardNodeSummary:
+    node_query = db.query(
         func.count(NodeModel.name),
         func.coalesce(func.sum(NodeModel.core), 0),
         func.coalesce(func.sum(NodeModel.memory), 0),
-    ).one()
-    role_rows = db.query(
+    )
+    if allowed_nodes is not None:
+        node_query = node_query.filter(NodeModel.name.in_(allowed_nodes))
+    node_count, node_core, node_memory = node_query.one()
+
+    role_query = db.query(
         AssociationNodeToRoleModel.role_name,
         func.count(AssociationNodeToRoleModel.node_name),
-    ).group_by(AssociationNodeToRoleModel.role_name).all()
+    )
+    if allowed_nodes is not None:
+        role_query = role_query.filter(
+            AssociationNodeToRoleModel.node_name.in_(allowed_nodes)
+        )
+    role_rows = role_query.group_by(AssociationNodeToRoleModel.role_name).all()
     roles = [
         DashboardBreakdown(name=name, count=count)
         for name, count in sorted(role_rows, key=lambda row: (-row[1], row[0]))
@@ -73,9 +96,7 @@ def _get_visible_vms(
         return query
     return query.filter(or_(
         DomainModel.owner_user_id == current_user.id,
-        DomainModel.owner_project.has(
-            ProjectModel.users.any(username=current_user.id)
-        ),
+        DomainModel.owner_project_id.in_(current_user.projects),
     ))
 
 
@@ -118,14 +139,22 @@ def _get_vm_summary(
     )
 
 
-def _get_storage_summary(db: Session) -> DashboardStorageSummary:
-    storage_rows = db.query(
+def _get_storage_summary(
+    db: Session,
+    allowed_storages: set[str] | None,
+) -> DashboardStorageSummary:
+    storage_query = db.query(
         StorageModel.uuid,
         StorageModel.name,
         StorageModel.node_name,
         StorageModel.capacity,
         StorageModel.available,
-    ).all()
+    )
+    if allowed_storages is not None:
+        storage_query = storage_query.filter(
+            StorageModel.uuid.in_(allowed_storages)
+        )
+    storage_rows = storage_query.all()
 
     pools: list[DashboardStoragePool] = []
     capacity_gib = 0
@@ -173,11 +202,17 @@ def _get_storage_summary(db: Session) -> DashboardStorageSummary:
     )
 
 
-def _get_network_summary(db: Session) -> DashboardNetworkSummary:
-    type_rows = db.query(
+def _get_network_summary(
+    db: Session,
+    allowed_networks: set[str] | None,
+) -> DashboardNetworkSummary:
+    type_query = db.query(
         NetworkModel.type,
         func.count(NetworkModel.uuid),
-    ).group_by(NetworkModel.type).all()
+    )
+    if allowed_networks is not None:
+        type_query = type_query.filter(NetworkModel.uuid.in_(allowed_networks))
+    type_rows = type_query.group_by(NetworkModel.type).all()
     type_counts: dict[str, int] = {}
     for name, count in type_rows:
         normalized_name = name or "unknown"
@@ -186,7 +221,12 @@ def _get_network_summary(db: Session) -> DashboardNetworkSummary:
         DashboardBreakdown(name=name, count=count)
         for name, count in sorted(type_counts.items(), key=lambda row: (-row[1], row[0]))
     ]
-    port_group_count = db.query(func.count(NetworkPortgroupModel.name)).scalar() or 0
+    port_group_query = db.query(func.count(NetworkPortgroupModel.name))
+    if allowed_networks is not None:
+        port_group_query = port_group_query.filter(
+            NetworkPortgroupModel.network_uuid.in_(allowed_networks)
+        )
+    port_group_count = port_group_query.scalar() or 0
 
     return DashboardNetworkSummary(
         count=sum(item.count for item in network_types),
@@ -195,13 +235,23 @@ def _get_network_summary(db: Session) -> DashboardNetworkSummary:
     )
 
 
+def _get_image_summary(
+    db: Session,
+    allowed_storages: set[str] | None,
+) -> DashboardImageSummary:
+    query = db.query(ImageModel)
+    if allowed_storages is not None:
+        query = query.filter(ImageModel.storage_uuid.in_(allowed_storages))
+    return DashboardImageSummary(count=query.count())
+
+
 def _get_task_summary(
     db: Session,
     current_user: CurrentUser,
     is_admin: bool,
     generated_at: datetime,
 ) -> DashboardTaskSummary:
-    query = db.query(TaskModel)
+    query = db.query(TaskModel).filter(TaskModel.archived_at.is_(None))
     if not is_admin:
         query = query.filter(TaskModel.user_id == current_user.id)
 
@@ -258,19 +308,35 @@ def _get_task_summary(
 
 @app.get("", response_model=DashboardResponse)
 def get_dashboard(
+    response: Response,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> DashboardResponse:
     generated_at = datetime.now(UTC)
-    is_admin = "admin" in current_user.scopes
+    is_admin = current_user.verify_scope(["admin"], return_bool=True)
+    current_user.verify_scope([
+        "vm.read",
+        "node.read",
+        "storage.read",
+        "image.read",
+        "network.read",
+    ])
+    current_user.verify_scope([
+        "task.read.any" if is_admin else "task.read.self"
+    ])
+
+    visible_storages = allowed_storage_ids(db, current_user)
+    visible_networks = allowed_network_ids(db, current_user)
+    visible_nodes = allowed_node_names(db, current_user)
+    response.headers["Cache-Control"] = "no-store"
 
     return DashboardResponse(
         generated_at=generated_at,
         visibility="all" if is_admin else "assigned",
-        nodes=_get_node_summary(db),
+        nodes=_get_node_summary(db, visible_nodes),
         vms=_get_vm_summary(db, current_user, is_admin),
-        storages=_get_storage_summary(db),
-        networks=_get_network_summary(db),
-        images=DashboardImageSummary(count=db.query(ImageModel).count()),
+        storages=_get_storage_summary(db, visible_storages),
+        networks=_get_network_summary(db, visible_networks),
+        images=_get_image_summary(db, visible_storages),
         tasks=_get_task_summary(db, current_user, is_admin, generated_at),
     )

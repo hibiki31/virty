@@ -38,7 +38,15 @@ router.isReady().then(() => {
 router.beforeEach((to) => {
   const auth = useAuthStore();
 
-  return resolveAuthNavigation(auth.authed, to);
+  return resolveAuthNavigation(
+    auth.authed,
+    {
+      fullPath: to.fullPath,
+      path: to.path,
+      requiresAdmin: to.meta.requiresAdmin === true,
+    },
+    auth.scopes,
+  );
 });
 
 const DEFAULT_TITLE = "Virty Console";

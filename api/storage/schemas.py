@@ -154,7 +154,7 @@ class StoragePoolForCreate(BaseSchema):
 
 
 class StoragePoolForUpdate(BaseSchema):
-    id:str
+    id: int
     storage_uuids: List[str]
 
 

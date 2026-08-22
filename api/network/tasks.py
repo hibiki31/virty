@@ -25,6 +25,7 @@ from .schemas import (
 
 worker_task = TaskBase()
 logger = setup_logger(__name__)
+NETWORK_PROVIDER_HTTP_TIMEOUT_SECONDS = 10.0
 
 
 @worker_task(key="put.network.list")
@@ -175,8 +176,12 @@ def post_network_vxlan_internal(db: Session, model: TaskModel, req: TaskRequest)
 
 
 @worker_task(key="post.network.provider")
-def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
-    body = NetworkProviderForCreate.model_validate(req)
+def post_network_provider(
+    db: Session,
+    model: TaskModel,
+    req: TaskRequest,
+) -> None:
+    body = NetworkProviderForCreate.model_validate(req.body)
     
     vni = randint(1,2**24)
     # VNIの16新数ゼロ梅
@@ -206,22 +211,28 @@ def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
     
     nodes = db.query(NodeModel).filter(NodeModel.roles.any(role_name="vxlan_overlay")).order_by(NodeModel.name).all()
 
-    def find_role(roles):
-        return [role for role in roles if role.role_name == "vxlan_overlay"][0]
-
     # Network node to Worker node
     counter = 0
     for node in nodes:
         if node.name == body.network_node:
             continue
-        node_extra = find_role(node.roles).extra_json
+        node_extra = next(
+            role.extra_json
+            for role in node.roles
+            if role.role_name == "vxlan_overlay"
+        )
 
         req_data = {
             "vni": vni,
             "node_id": counter,
             "remote_ip": node_extra['local_ip']
         }
-        resp = httpx.post(url=f'http://{network_node.domain}:8766/vxlan', json=req_data)
+        resp = httpx.post(
+            url=f'http://{network_node.domain}:8766/vxlan',
+            json=req_data,
+            timeout=NETWORK_PROVIDER_HTTP_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
         logger.info(resp)
         counter += 1
 
@@ -229,6 +240,11 @@ def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
     for node in nodes:
         if node.name == body.network_node:
             continue
+        node_extra = next(
+            role.extra_json
+            for role in node.roles
+            if role.role_name == "vxlan_overlay"
+        )
         editor = xmllib.XmlEditor("static","net_internal")
         editor.network_internal(name=f'vbr-{net_id}')
         xml = editor.dump_str()
@@ -240,5 +256,10 @@ def post_network_provider(db: Session, model: TaskModel, req: TaskRequest):
             "node_id": 0,
             "remote_ip": node_extra['network_node_ip']
         }
-        resp = httpx.post(url=f'http://{node.domain}:8766/vxlan', json=req_data)
+        resp = httpx.post(
+            url=f'http://{node.domain}:8766/vxlan',
+            json=req_data,
+            timeout=NETWORK_PROVIDER_HTTP_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
         logger.info(resp)

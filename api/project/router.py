@@ -13,6 +13,7 @@ from project.schemas import (
     ProjectForUpdate,
     ProjectPage,
 )
+from resource_authorization import get_authorized_project
 from user.models import UserModel
 
 app = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -25,8 +26,8 @@ def get_projects(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
         admin: bool = False,
-    ):
-
+):
+    current_user.verify_scope(["project.read"])
     res = []
 
     query = db.query(
@@ -68,7 +69,9 @@ def update_project(
         request: ProjectForUpdate, 
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-    ):
+):
+    current_user.verify_scope(["project.manage"])
+    get_authorized_project(db, request.project_id, current_user)
     try:
         project: ProjectModel = db.query(
                 ProjectModel

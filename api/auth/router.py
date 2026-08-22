@@ -1,20 +1,26 @@
 from datetime import UTC, datetime, timedelta
-from typing import List
+from typing import Any
+from uuid import uuid4
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm,
     SecurityScopes,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from mixin.database import get_db
 from mixin.exception import NoResultFound
 from mixin.log import setup_logger
-from settings import SECRET_KEY
+from settings import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    JWT_AUDIENCE,
+    JWT_ISSUER,
+    SECRET_KEY,
+)
 from user.models import UserModel, UserScopeModel
 from user.schemas import UserResponse
 
@@ -23,107 +29,168 @@ from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 
 logger = setup_logger(__name__)
 
+if SECRET_KEY is None:
+    # settingsでも検査するが、JWT libraryへ渡す型をこの境界で確定する。
+    raise RuntimeError("JWT署名鍵が設定されていません")
+JWT_SECRET_KEY: str = SECRET_KEY
+
 
 app = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-scopes_dict = {
-    "admin": {
-        "storage": {},
-        "network": {
-            "delete": None,
-            "create": None,
-        }
-    },
-    "user": {
-    }
+OAUTH_SCOPES = {
+    "admin": "すべての管理操作（後方互換用）",
+    "user": "一般利用者の基本権限（後方互換用）",
+    "inventory.read": "インベントリの参照",
+    "vm.read": "仮想マシンの参照",
+    "vm.create": "仮想マシンの作成",
+    "vm.power": "仮想マシンの電源操作",
+    "vm.attach": "仮想マシンの媒体・ネットワーク変更",
+    "vm.delete": "仮想マシンの削除",
+    "vm.project": "仮想マシンのプロジェクト変更",
+    "node.read": "ノードの参照",
+    "node.manage": "ノードの変更",
+    "node.credentials": "ノード接続鍵の投入",
+    "storage.read": "ストレージの参照",
+    "storage.manage": "ストレージの変更",
+    "image.read": "イメージの参照",
+    "image.manage": "イメージの変更",
+    "network.read": "ネットワークの参照",
+    "network.manage": "ネットワークの変更",
+    "project.read": "所属プロジェクトの参照",
+    "project.manage": "プロジェクトの変更",
+    "flavor.read": "フレーバーの参照",
+    "flavor.manage": "フレーバーの変更",
+    "task.read.self": "自身のタスクの参照",
+    "task.read.any": "すべてのタスクの参照",
+    "task.manage": "タスクの取消・削除",
+    "identity.manage": "利用者と権限の管理",
+    "metrics.read": "メトリクスの参照",
+}
+
+LEGACY_USER_SCOPES = {
+    "inventory.read",
+    "vm.read",
+    "vm.power",
+    "node.read",
+    "storage.read",
+    "image.read",
+    "network.read",
+    "project.read",
+    "flavor.read",
+    "task.read.self",
 }
 
 
-scopes_list = []
-
-
-def scopes_list_generator(argd, scope=None):
-    for k in sorted(argd.keys(), reverse=False):
-        if scope is None:
-            gen_scope = k
-        else:
-            gen_scope = scope + "." + k
-        scopes_list.append(gen_scope)
-        if (isinstance(argd[k],dict)):
-            scopes_list_generator(argd[k], gen_scope)  
-    return scopes_list
-
-scopes_list_generator(scopes_dict)
+def scope_grants(granted_scope: str, required_scope: str) -> bool:
+    """完全一致または明示的な末尾wildcardだけを許可する。"""
+    if granted_scope == "admin":
+        return True
+    if granted_scope == "user":
+        return required_scope in LEGACY_USER_SCOPES
+    if granted_scope == required_scope:
+        return True
+    if granted_scope.endswith(".*"):
+        namespace = granted_scope[:-2]
+        return required_scope.startswith(f"{namespace}.")
+    return False
 
 
 class CurrentUser(BaseModel):
     id: str
     token: str
-    scopes: List[str] = []
-    projects: List[str] = []
-    def verify_scope(self, scopes, return_bool=False):
-        # 要求Scopeでループ
-        for request_scope in scopes:
-            match_scoped = False
-            # 持っているScopeでループ
-            for having_scope in self.scopes:
-                if having_scope in request_scope:
-                    match_scoped = True
-            # 持っているScopeが権限を持たない場合終了
-            if not match_scoped:
+    scopes: list[str] = Field(default_factory=list)
+    token_scopes: list[str] | None = None
+    projects: list[str] = Field(default_factory=list)
+
+    def verify_scope(self, scopes: list[str], return_bool: bool = False) -> bool:
+        for required_scope in scopes:
+            granted_by_database = any(
+                scope_grants(scope, required_scope) for scope in self.scopes
+            )
+            granted_by_token = self.token_scopes is None or any(
+                scope_grants(scope, required_scope) for scope in self.token_scopes
+            )
+            if not (granted_by_database and granted_by_token):
                 if return_bool:
                     return False
-                else:
-                    raise HTTPException(
-                            status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Not enough permissions",
-                            headers={"WWW-Authenticate": "Bearer"},
-                        )
-        # すべての要求Scopeをクリア
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not enough permissions",
+                )
         return True
+
+    def can_access_project(self, project_id: str | None) -> bool:
+        return (
+            self.verify_scope(["admin"], return_bool=True)
+            or project_id is None
+            or project_id in self.projects
+        )
 
 # JWTトークンの設定
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 28
 
 # oAuth2の設定
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/auth",
     auto_error=False,
-    scopes={"admin": "Have all authority", "user": "User authority"},
+    scopes=OAUTH_SCOPES,
 )
 
-def create_access_token(data: dict, expires_delta: timedelta):
+
+def create_access_token(data: dict[str, Any], expires_delta: timedelta) -> str:
     to_encode = data.copy()
+    now = datetime.now(UTC)
     expire = datetime.now(UTC) + expires_delta
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    to_encode.update({
+        "aud": JWT_AUDIENCE,
+        "exp": expire,
+        "iat": now,
+        "iss": JWT_ISSUER,
+        "jti": str(uuid4()),
+    })
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def get_current_user(
-        security_scopes: SecurityScopes, 
-        token: str = Depends(oauth2_scheme)
-    ) -> CurrentUser:
-    # ペイロード確認
+    security_scopes: SecurityScopes,
+    token: str | None = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> CurrentUser:
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET_KEY,
+            algorithms=[ALGORITHM],
+            audience=JWT_AUDIENCE,
+            issuer=JWT_ISSUER,
+        )
         user_id = payload.get("sub")
-        if not isinstance(user_id, str):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Illegal jwt",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        scopes = payload.get("scopes", [])
+        token_scopes = payload.get("scopes", [])
+        token_projects = payload.get("projects", [])
+        if (
+            not isinstance(user_id, str)
+            or not user_id
+            or not isinstance(token_scopes, list)
+            or not isinstance(token_projects, list)
+            or not all(isinstance(scope, str) for scope in token_scopes)
+            or not all(isinstance(project, str) for project in token_projects)
+        ):
+            raise jwt.InvalidTokenError("required claims are invalid")
     except jwt.exceptions.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Signature has expired",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    except jwt.exceptions.DecodeError:
+    except jwt.exceptions.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Illegal jwt",
@@ -131,19 +198,28 @@ def get_current_user(
         )
     
     
-    for request_scope in security_scopes.scopes:
-        match_scoped = False
-        for having_scope in scopes:
-            if request_scope in having_scope:
-                match_scoped = True
-        if not match_scoped:
-            raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Not enough permissions",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
+    user = db.query(UserModel).filter(UserModel.username == user_id).one_or_none()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is no longer active",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    return CurrentUser(id=user_id, token=token, scopes=scopes)
+    # token発行後の権限変更・端末失効を即時反映するためDBを正本にする。
+    current_user = CurrentUser(
+        id=user_id,
+        token=token,
+        scopes=[scope.name for scope in user.scopes],
+        token_scopes=token_scopes,
+        projects=[
+            project.id
+            for project in user.projects
+            if project.id in token_projects
+        ],
+    )
+    current_user.verify_scope(security_scopes.scopes)
+    return current_user
 
 
 @app.post(
@@ -179,6 +255,7 @@ def api_auth_setup(
 # "application/x-www-form-urlencoded": components["schemas"]["Body_login"];
 @app.post("", response_model=TokenRFC6749Response, operation_id="login")
 def login(
+        response: Response,
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
     ):
@@ -201,11 +278,14 @@ def login(
             },
         expires_delta=access_token_expires,
     )
+    response.headers["Cache-Control"] = "no-store"
     return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @app.get("/validate", tags=["auth"], response_model=AuthValidateResponse)
 def validate_token(
-        current_user: CurrentUser = Security(get_current_user, scopes=["user"])
+        response: Response,
+        current_user: CurrentUser = Depends(get_current_user)
     ):
+    response.headers["Cache-Control"] = "no-store"
     return {"access_token": current_user.token, "username": current_user.id, "token_type": "Bearer"}

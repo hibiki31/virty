@@ -89,6 +89,65 @@ def test_manual_cleanup_validates_manifest_before_api_mutation(
     assert calls == ["manifest", "client", "key", "cleanup"]
 
 
+def test_guard_cli_is_read_only_and_silent(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    marker = tmp_path / "infra-cleanup-armed"
+    manifest = tmp_path / "manifest.json"
+    _write_cleanup_marker(marker, RUN_ID)
+    calls: list[str] = []
+    env = _env()
+
+    monkeypatch.setenv("VIRTY_TEST_RUN_ID", RUN_ID)
+    monkeypatch.setattr(external_cleanup, "_cleanup_marker", lambda: marker)
+    monkeypatch.setattr(external_cleanup, "manifest_path", lambda: manifest)
+    monkeypatch.setattr(external_cleanup, "infra_project_id", lambda: "project-id")
+    monkeypatch.setattr(external_cleanup, "_load_infra_config", lambda: env)
+    monkeypatch.setattr(
+        external_cleanup,
+        "load_manifest",
+        lambda *_args, **_kwargs: calls.append("manifest"),
+    )
+    monkeypatch.setattr(
+        external_cleanup,
+        "create_authenticated_client",
+        lambda _env: pytest.fail("guard CLIがAPI mutationへ進みました"),
+    )
+
+    external_cleanup.cli(["guard"])
+
+    assert calls == ["manifest"]
+    assert capsys.readouterr() == ("", "")
+
+
+def test_guard_cli_failure_hides_marker_and_argument_content(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    marker = tmp_path / "infra-cleanup-armed"
+    sentinel = "secret-marker-content"
+    marker.write_text(sentinel, encoding="utf-8")
+    marker.chmod(0o600)
+
+    monkeypatch.setenv("VIRTY_TEST_RUN_ID", RUN_ID)
+    monkeypatch.setattr(external_cleanup, "_cleanup_marker", lambda: marker)
+    monkeypatch.setattr(external_cleanup, "_load_infra_config", _env)
+
+    with pytest.raises(SystemExit) as guard_error:
+        external_cleanup.cli(["guard"])
+    assert str(guard_error.value) == (
+        "external cleanup guard failed: kind=validation count=1"
+    )
+    assert sentinel not in str(guard_error.value)
+
+    with pytest.raises(SystemExit) as usage_error:
+        external_cleanup.cli([sentinel])
+    assert str(usage_error.value) == "external cleanup failed: kind=usage count=1"
+    assert sentinel not in str(usage_error.value)
+
+
 def test_invalid_cleanup_marker_blocks_mutation_without_exposing_content(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

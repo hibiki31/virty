@@ -4,8 +4,7 @@ from fastapi import HTTPException
 from fastapi.security import SecurityScopes
 
 from auth.function import get_password_hash, verify_password
-from auth.router import ALGORITHM, get_current_user
-from settings import SECRET_KEY
+from auth.router import ALGORITHM, JWT_SECRET_KEY, get_current_user
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.timeout(10)]
@@ -22,7 +21,7 @@ def test_password_hash_round_trip() -> None:
 
 
 def test_get_current_user_rejects_token_without_subject() -> None:
-    token = jwt.encode({"scopes": []}, SECRET_KEY, algorithm=ALGORITHM)
+    token = jwt.encode({"scopes": []}, JWT_SECRET_KEY, algorithm=ALGORITHM)
 
     with pytest.raises(HTTPException) as exc_info:
         get_current_user(SecurityScopes(), token)
