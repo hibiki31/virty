@@ -18,8 +18,6 @@ export interface CloudInitFormState {
   sshPasswordAuthentication: boolean;
   selectedPublicKeys: string[];
   manualPublicKeys: string;
-  packageUpdate: boolean;
-  packages: string;
   script: string;
 }
 
@@ -52,8 +50,6 @@ type NormalizedForm = {
   passwordExpires: boolean;
   sshPasswordAuthentication: boolean;
   publicKeys: string[];
-  packageUpdate: boolean;
-  packages: string[];
   script: string;
 };
 
@@ -70,8 +66,6 @@ export function createCloudInitFormState(): CloudInitFormState {
     sshPasswordAuthentication: false,
     selectedPublicKeys: [],
     manualPublicKeys: "",
-    packageUpdate: false,
-    packages: "",
     script: "",
   };
 }
@@ -292,8 +286,6 @@ function normalizeForm(form: CloudInitFormState): NormalizedForm | CloudInitFail
     passwordExpires: form.passwordExpires,
     sshPasswordAuthentication: form.sshPasswordAuthentication,
     publicKeys,
-    packageUpdate: form.packageUpdate,
-    packages: [...new Set(splitNonEmptyLines(form.packages))],
     script: form.script.replace(/\r\n?/g, "\n").replace(/\n+$/, ""),
   };
 }
@@ -447,18 +439,6 @@ export function mergeCloudInitForm(
     root.set("ssh_authorized_keys", normalized.publicKeys);
   } else {
     root.delete("ssh_authorized_keys");
-  }
-
-  if (normalized.packageUpdate) {
-    root.set("package_update", true);
-  } else {
-    root.delete("package_update");
-  }
-
-  if (normalized.packages.length > 0) {
-    root.set("packages", normalized.packages);
-  } else {
-    root.delete("packages");
   }
 
   if (normalized.script.trim() !== "") {

@@ -155,6 +155,16 @@ VM、storage、image、networkの一覧は、管理node上のlibvirt状態を走
 走査ごとの更新tokenで現在見つかったresourceを識別し、見つからなかった古いcacheを除去する。
 したがってDBだけを編集しても管理nodeの実状態は変わらず、次の走査で上書きされ得る。
 
+### Dashboard snapshot
+
+Web dashboardはBearer token付きの型付きclientで専用のdashboard query APIを呼び、APIが
+認証利用者の参照範囲に合わせてDB上のinventory cacheとtask recordを表示用に集約する。
+各resourceとtaskには既存queryと同じscope認可とproject・resource poolによる絞り込みを適用し、
+frontendで権限範囲を拡張しない。
+
+このflowはread-onlyであり、表示や再読込を契機に管理nodeへのSSH・libvirt接続、inventory再走査、
+task投入を行わない。表示値は取得時点のsnapshotであり、時系列dataやreal-time監視を表さない。
+
 ### API契約とfrontend型
 
 application schemaの多くは共通baseでcamelCase aliasを生成し、OAuth2の固定形式などは例外とする。

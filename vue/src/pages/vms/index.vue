@@ -43,9 +43,12 @@ meta:
 import type { typeListVM, typeListVMQuery } from '@/composables/vm'
 import { initVMList, getVMList } from '@/composables/vm'
 import { apiClient } from '@/api'
+import { hasAdminScope } from '@/composables/auth'
 import notify from '@/composables/notify'
 import { getPowerColor } from '@/composables/vm'
+import { useAuthStore } from '@/stores/auth'
 
+const auth = useAuthStore()
 const loading = ref(false)
 const stateCreateDialog = ref(false)
 const itemsPerPage = ref(20)
@@ -63,7 +66,7 @@ const headers = [
 ]
 
 const query = ref<typeListVMQuery>({
-  admin: true,
+  admin: hasAdminScope(auth.scopes),
   limit: 20,
   page: 1,
   nameLike: "",

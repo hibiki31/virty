@@ -18,6 +18,7 @@ files = [
     "worker.py",
     "ansible",
     "auth",
+    "dashboard",
     "domain",
     "exporter",
     "flavor",

@@ -55,8 +55,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
   diskのfull pathは必要なときだけfile名chipから展開する。
 - storageとnetworkを選択し、空diskまたは既存imageのcopyからVMを作成できる。
 - cloud-init user data、CD-ROM、network interface、project割り当てを扱える。
-- WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、package更新・install一覧、
-  初回起動scriptをcloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
+- WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、初回起動scriptを
+  cloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
 - guided formは明示的な適用操作で管理対象の設定だけをraw user dataへ一方向にmergeし、その他の設定を保持する。
   raw YAMLを送信内容の正本として適用後も自由に編集でき、raw側の変更をformへ逆同期しない。
 - cloud-init user dataは`#cloud-config`から始まる単一のYAML mappingとして厳密に検証し、不正な内容を
@@ -97,7 +97,10 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 Web UIには、login・初期設定、VM、node、storage、image、network、利用者一覧、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
 projectとflavorはbackend APIおよび一部の関連操作に存在するが、独立した管理画面は現時点で提供しない。
-dashboardは入口のみであり、集計dashboardを提供済みとは扱わない。
+dashboardは、認証利用者が参照できるVM、node、storage、image、network、taskの件数、状態、容量を、
+DB上のinventory cacheとtask recordから集約した現在値のsnapshotとして表示する。
+表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。
+集計対象は各APIの認可とprojectによる絞り込みに従い、利用者が参照できないresourceを含めない。
 
 ## 品質上の不変条件
 

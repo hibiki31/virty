@@ -55,6 +55,7 @@ def get_tasks(
                 TaskModel.status=="start",
                 TaskModel.status=="reconciling",
                 TaskModel.status=="cancel_requested",
+                TaskModel.status=="unknown",
             ))
         else:
             query = query.filter(TaskModel.status==param.status)
