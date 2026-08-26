@@ -8,19 +8,24 @@ Virtyのcomponent境界、主要なdata flow、変更時に保持すべき設計
 ## System context
 
 ```text
-Browser ---------------------------> web: Nginx + Vue SPA
+Browser -- HTTP -------------------> web: Nginx + Vue SPA
+Browser -- HTTPS --> operator TLS proxy -- HTTP --> web
 web -- /api -----------------------> api: FastAPI
 web -- /novnc ---------------------> proxy: websockify -- console token照会 --> api
-Codex Desktop -- stdio -----------> virty-mcp helper
-virty-mcp -- internal HTTPS/DPoP -> api: Agent API
+Codex Desktop -- stdio ------------> virty-mcp helper
+virty-mcp -- HTTPS/DPoP --> operator TLS proxy --> web --> api: Agent API
 api -------------------------------> PostgreSQL
 worker: task scheduler <-----------> PostgreSQL
 api -- on-demand SSH --------------> Managed Linux nodes
 worker -- SSH / Ansible / libvirt -> Managed Linux nodes
 ```
 
-production例ではbrowserに公開するのは`web`である。`web`のNginxが同一originのAPIとnoVNCを
-内部serviceへ転送する。`proxy`はreverse proxy用Nginxではなく、noVNCのwebsockify serviceである。
+配布する`web`はHTTPで待ち受け、そのNginxが同一originのAPIとnoVNCを内部serviceへ転送する。
+TLSが必要な環境では、運用者が管理するreverse proxyまたはload balancerを`web`の前段に置く。
+同一hostでTLS終端する場合は`web`をloopbackへbindし、別hostの場合はprivate interfaceとfirewallで
+TLS proxyだけから到達可能にする。`VIRTY_PUBLIC_URL`は内部HTTP URLではなくbrowserから見えるoriginを
+表し、AgentのDPoPとWebAuthn検証もこの固定値を使う。`proxy`はreverse proxy用Nginxではなく、
+noVNCのwebsockify serviceである。
 
 ## Componentの責務
 

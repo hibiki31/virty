@@ -103,7 +103,8 @@ lines/statements 90%以上、branches/functions 80%以上を対象moduleの回�
 
 実browserを必要とするWeb受入は`verify web`だけで実行し、`quick web`へ含めない。Playwrightは
 production buildと同じbundleをHTTP専用test runtimeで配信し、browser側の`page.route`で必要なAPI responseを
-deterministicにinterceptする。本番runtimeのTLS強制設定は変更せず、別のAPI stub serviceも起動しない。
+deterministicにinterceptする。production Nginx設定は別のsmoke testで構文とHTTP配信を確認し、
+別のAPI stub serviceは起動しない。
 認証redirect、一覧から詳細への遷移、主要dialogのdesktop/narrow viewportを少数のcritical flowとして確認し、
 external labへは接続しない。
 

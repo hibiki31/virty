@@ -1,5 +1,5 @@
 # compose.ymlへcopyし、全VIRTY_*変数を権限を制限したenvironment fileに設定する。
-# TLS証明書のpathにはhost上の絶対pathを指定する。
+# WebはHTTPで待ち受ける。TLSが必要な場合は利用者が外部reverse proxyで終端する。
 services:
   api:
     image: hibiki31/virty-api
@@ -39,10 +39,7 @@ services:
   web:
     image: hibiki31/virty-web
     ports:
-      - "${VIRTY_BIND_ADDRESS:?VIRTY_BIND_ADDRESS is required}:8765:443"
-    volumes:
-      - "${VIRTY_TLS_CERT:?VIRTY_TLS_CERT is required}:/etc/virty/tls/tls.crt:ro"
-      - "${VIRTY_TLS_KEY:?VIRTY_TLS_KEY is required}:/etc/virty/tls/tls.key:ro"
+      - "${VIRTY_BIND_ADDRESS:?VIRTY_BIND_ADDRESS is required}:8765:80"
     restart: always
     environment:
       VITE_API_BASE_URL: ""

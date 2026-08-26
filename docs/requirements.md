@@ -110,6 +110,9 @@ DB上のinventory cacheとtask recordから集約した現在値のsnapshotと�
 - DB schema変更はAlembicで再現可能にし、既存環境と新規環境の両方をupgradeできるようにする。
 - frontendが利用するAPI型はOpenAPIから生成し、backend契約と同じ変更で同期する。
 - 永続dataはcontainer imageの外に置き、再作成後もDB、管理data、SSH鍵を保持できるようにする。
+- 配布WebはHTTPで待ち受け、TLS終端は運用者が外部reverse proxyまたはload balancerで任意に行う。
+  平文HTTPはloopbackまたは信頼済み閉域だけで使用し、AgentのWebAuthn承認とproduction MCP接続には
+  browserから見えるHTTPS originを用意する。
 - 管理node上の削除、disk操作、network変更は破壊的であり得るため、対象を明示して実行する。
 - Agent経由のmutationは監査書込み失敗時にfail closedとし、global停止、端末失効、端末別breakerを
   AI経路とは独立して操作できるようにする。

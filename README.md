@@ -17,20 +17,18 @@ The author is not responsible for any damage caused by the use of this software.
 
 ### Quick Start
 
-Virty requires an HTTPS name and a certificate trusted by the administrator's browser.
-The WebAuthn and device-bound Agent API must not be exposed directly to the internet.
-Bind the service to a private interface and use a certificate whose SAN contains the
-same FQDN as `VIRTY_PUBLIC_URL` and `VIRTY_WEBAUTHN_RP_ID`.
+The bundled web container listens over HTTP. Keep direct HTTP access on loopback or a
+trusted private network. TLS is optional and is terminated by an operator-managed reverse
+proxy or load balancer. The WebAuthn and device-bound Agent API require an HTTPS origin in
+production and must not be exposed directly to the internet.
 
 ```
 mkdir virty
 cd virty
 wget https://raw.githubusercontent.com/hibiki31/virty/refs/heads/master/compose.example.yml -O compose.yml
-export VIRTY_BIND_ADDRESS="192.0.2.10"
-export VIRTY_PUBLIC_URL="https://virty.internal:8765"
-export VIRTY_WEBAUTHN_RP_ID="virty.internal"
-export VIRTY_TLS_CERT="/absolute/path/to/tls.crt"
-export VIRTY_TLS_KEY="/absolute/path/to/tls.key"
+export VIRTY_BIND_ADDRESS="127.0.0.1"
+export VIRTY_PUBLIC_URL="http://localhost:8765"
+export VIRTY_WEBAUTHN_RP_ID="localhost"
 export VIRTY_SECRET_KEY="$(openssl rand -hex 32)"
 export VIRTY_AGENT_LEASE_SIGNING_KEY="$(openssl rand -hex 32)"
 export VIRTY_AGENT_TASK_ENCRYPTION_KEY="$(openssl rand -base64 32)"
@@ -41,7 +39,9 @@ docker compose up -d
 
 Store these values in a root-readable environment file before a production restart;
 generating new signing keys invalidates active sessions and Agent leases. Once activated,
-access `https://virty.internal:8765` with a browser on the private network.
+access `http://localhost:8765`. For remote access or Agent operations, follow the
+[external HTTPS setup](mkdocs/setup/nginx.md), bind Virty to the proxy-facing interface,
+and set `VIRTY_PUBLIC_URL` to the browser-visible HTTPS origin.
 
 
 ### Preparation of managed nodes

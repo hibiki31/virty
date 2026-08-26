@@ -267,7 +267,7 @@ trap 'exit 143' TERM
 require_base_tools() {
   local tool
 
-  for tool in awk base64 docker realpath sha256sum install id ln mkfifo mktemp mv rm \
+  for tool in awk base64 docker env realpath sha256sum install id ln mkfifo mktemp mv rm \
     sed sleep date chmod flock grep head tr stat setsid ps; do
     command -v "${tool}" >/dev/null 2>&1 || die "${tool}が見つかりません"
   done
@@ -336,6 +336,32 @@ validate_infra_cleanup_guard_contract() {
   ((guard_line < worker_line))
 }
 
+validate_distribution_compose_contract() {
+  local rendered_file="$1"
+  local web_definition
+
+  if ! env -u VIRTY_TLS_CERT -u VIRTY_TLS_KEY \
+    VIRTY_BIND_ADDRESS=127.0.0.1 \
+    VIRTY_PUBLIC_URL=http://localhost:8765 \
+    VIRTY_WEBAUTHN_RP_ID=localhost \
+    VIRTY_SECRET_KEY=0123456789abcdef0123456789abcdef \
+    VIRTY_AGENT_LEASE_SIGNING_KEY=0123456789abcdef0123456789abcdef \
+    VIRTY_AGENT_TASK_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef \
+    docker compose --env-file /dev/null --file "${ROOT_DIR}/compose.example.yml" \
+      config >"${rendered_file}"; then
+    return 1
+  fi
+
+  web_definition="$(awk '
+    /^  web:$/ { in_web = 1 }
+    in_web && /^  [[:alnum:]_.-]+:$/ && $1 != "web:" { exit }
+    in_web { print }
+  ' "${rendered_file}")"
+  [[ "${web_definition}" == *'target: 80'* ]] || return 1
+  [[ "${web_definition}" == *'published: "8765"'* ]] || return 1
+  [[ "${web_definition}" != *'/etc/virty/tls/'* ]]
+}
+
 run_devctl_contract_tests() {
   local test_dir regular_file symlink_file fifo_file missing_file expected_owner
 
@@ -346,6 +372,10 @@ run_devctl_contract_tests() {
   fifo_file="${test_dir}/credentials-fifo.env"
   missing_file="${test_dir}/missing.env"
   expected_owner="$(id -u)"
+
+  validate_distribution_compose_contract \
+    "${test_dir}/compose.example.rendered.yml" \
+    || die "配布ComposeのHTTP起動contract testに失敗しました"
 
   if ! cleanup_active_project; then
     die "空project cleanupのcontract testに失敗しました"
@@ -605,6 +635,8 @@ verify_runtime() {
       compose_project "${project}" --profile verify run --rm -T api-verify
       ;;
     web)
+      compose_project "${project}" --profile verify run --rm --no-deps -T \
+        web-production-verify
       compose_project "${project}" --profile verify run --rm -T web-e2e
       # testはbuild layerで一度だけ実行し、cache hit時も保存済みsummaryをlogへ出す。
       compose_project "${project}" --profile verify run --rm --no-deps -T \

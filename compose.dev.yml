@@ -508,7 +508,17 @@ services:
   web-production-verify:
     build: *web-production-build
     profiles: [verify]
-    command: ["true"]
+    command:
+      - sh
+      - -ceu
+      - |
+        nginx -t
+        nginx
+        wget -qO- http://127.0.0.1/ >/dev/null
+        nginx -s quit
+    extra_hosts:
+      - api=127.0.0.1
+      - proxy=127.0.0.1
     network_mode: none
 
   web-e2e-server:
