@@ -1,17 +1,26 @@
 <template>
   <v-card>
-    <network-add-dialog v-model="stateCreateDialog"></network-add-dialog>
+    <network-add-dialog v-if="isAdmin" v-model="stateCreateDialog"></network-add-dialog>
     <v-card-actions>
-      <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.networks.actions.rescan') }}</v-btn>
-      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
+      <v-btn v-if="isAdmin" prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.networks.actions.rescan') }}</v-btn>
+      <v-btn v-if="isAdmin" prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">{{ t('pages.networks.actions.create') }}</v-btn>
+      <v-spacer />
+      <project-filter-select
+        :model-value="query.projectId"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
       <template v-slot:item.uuid="{ item }">
-        <router-link :to="'/networks/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
+        <router-link :to="{
+          path: `/networks/${item.uuid}`,
+          query: query.projectId ? { projectId: query.projectId } : {},
+        }" style="font-family: monospace;">{{ item.uuid }}</router-link>
       </template>
 
       <template v-slot:item.type="{ value }">
@@ -39,9 +48,16 @@ import { booleanLabel, translateDomainValue, translationRef } from '@/composable
 import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network'
 import { getNetworkList, initNetworkList } from '@/composables/network'
 import { useI18n } from 'vue-i18n'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
 
 
 const loading = ref(false)
+const auth = useAuthStore()
+const isAdmin = hasAdminScope(auth.scopes)
+const route = useRoute()
+const router = useRouter()
 const stateCreateDialog = ref(false)
 
 const { t } = useI18n({ useScope: 'global' })
@@ -58,9 +74,10 @@ const headers = computed(() => [
 
 const items = ref<typeListNetwork>(initNetworkList)
 const query = ref<NonNullable<typeListNetworkQuery>>({
-  admin: true,
+  admin: isAdmin,
   limit: 20,
-  page: 1
+  page: 1,
+  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
 })
 
 
@@ -84,6 +101,16 @@ async function reload() {
   loading.value = true
   items.value = await getNetworkList(query.value)
   loading.value = false
+}
+
+async function updateProjectFilter(value: string | null) {
+  query.value.projectId = value
+  query.value.page = 1
+  const routeQuery = { ...route.query }
+  if (value) routeQuery.projectId = value
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  await reload()
 }
 
 useReloadListener(() => {

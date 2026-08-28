@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import tuple_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
@@ -8,10 +9,12 @@ from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from node.models import NodeModel
+from project.models import ProjectModel
 from resource_authorization import (
-    allowed_storage_ids,
-    get_authorized_flavor,
-    get_authorized_storage,
+    allowed_image_keys,
+    get_member_project,
+    get_project_storage,
+    project_flavor_ids,
 )
 from storage.models import ImageModel, StorageMetadataModel, StorageModel
 
@@ -34,6 +37,8 @@ def get_images(
         db: Session = Depends(get_db),
 ):
     current_user.verify_scope(["image.read"])
+    if param.project_id is not None:
+        get_member_project(db, param.project_id, current_user)
     query = db.query(
         ImageModel,
         DomainModel
@@ -46,9 +51,11 @@ def get_images(
     ).outerjoin(
         FlavorModel
     )
-    allowed_storages = allowed_storage_ids(db, current_user)
-    if allowed_storages is not None:
-        query = query.filter(StorageModel.uuid.in_(allowed_storages))
+    visible_images = allowed_image_keys(db, current_user, param.project_id)
+    query = query.filter(tuple_(
+        ImageModel.storage_uuid,
+        ImageModel.path,
+    ).in_(visible_images))
 
     if param.pool_uuid:
         query = query.filter(StorageModel.uuid==param.pool_uuid)
@@ -92,15 +99,44 @@ def get_images(
     return {"count": count, "data": res}
 
 
-@app.patch("")
+@app.patch("", response_model=Image)
 def update_image_flavor(
         req: ImageForUpdateImageFlavor,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
 ):
     current_user.verify_scope(["image.manage"])
-    get_authorized_storage(db, req.storage_uuid, current_user)
-    get_authorized_flavor(db, req.flavor_id, current_user)
+    get_member_project(db, req.project_id, current_user)
+    locked_project_id = (
+        db.query(ProjectModel.id)
+        .filter(ProjectModel.id == req.project_id)
+        .with_for_update()
+        .scalar()
+    )
+    if locked_project_id is None:
+        raise ApiError(
+            404,
+            ApiErrorCode.PROJECT_NOT_FOUND,
+            "The project was not found.",
+        )
+    storage = get_project_storage(
+        db,
+        req.project_id,
+        req.storage_uuid,
+        current_user,
+    )
+    if storage.node_name != req.node_name:
+        raise ApiError(
+            404,
+            ApiErrorCode.IMAGE_NOT_FOUND,
+            "The image was not found.",
+        )
+    if req.flavor_id not in project_flavor_ids(db, req.project_id):
+        raise ApiError(
+            404,
+            ApiErrorCode.FLAVOR_NOT_FOUND,
+            "The flavor was not found.",
+        )
     image_model = db.query(ImageModel).filter(
         ImageModel.storage_uuid==req.storage_uuid,
         ImageModel.path==req.path
@@ -111,11 +147,13 @@ def update_image_flavor(
             ApiErrorCode.IMAGE_NOT_FOUND,
             "The image was not found.",
         )
+    if db.get(FlavorModel, req.flavor_id) is None:
+        raise ApiError(
+            404,
+            ApiErrorCode.FLAVOR_NOT_FOUND,
+            "The flavor was not found.",
+        )
     image_model.flavor_id = req.flavor_id
     db.commit()
-
-    res = image_model = db.query(ImageModel).filter(
-        ImageModel.storage_uuid==req.storage_uuid,
-        ImageModel.path==req.path
-        ).one()
-    return res
+    db.refresh(image_model)
+    return image_model

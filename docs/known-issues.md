@@ -58,7 +58,7 @@
 - 優先度: P2
 - 状態: 未解決
 - 影響: maintained API code 74 fileはmypyを通るが、第三者stub不足とlegacy実装のため
-  `ansiblelib`、`cloudinitlib`、`ovslib`、`paramikolib`、`virtlib`、`xmllib`内部はdirect checkから除外される。
+  `ansiblelib`、`cloudinitlib`、`paramikolib`、`virtlib`、`xmllib`内部はdirect checkから除外される。
   Protocol境界の利用側は検査できても、production adapter内部の型不整合はruntimeまで残り得る。
 - 根拠: [`api/pyproject.toml`](../api/pyproject.toml)のmypy `exclude`と`follow_imports = "skip"`。
 - 改善方針: 利用中adapterと未使用legacy moduleを分類し、未使用codeは削除する。利用中adapterは

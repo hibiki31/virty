@@ -83,6 +83,7 @@ def test_vm_detail_resolves_network_and_disk_capacity(api_client: TestClient) ->
             storage_used=40,
         )
         domain.vnc_port = "-1"
+        domain.owner_user_id = username
         db.add(domain)
         db.flush()
 

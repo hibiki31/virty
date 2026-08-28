@@ -100,7 +100,8 @@ def test_auth_setup_and_generic_execution_are_not_exposed() -> None:
 
 def test_all_tool_schemas_are_valid_strict_root_objects() -> None:
     catalog = ActionCatalog.load_default()
-    assert len(catalog.actions) == 63
+    assert len(catalog.actions) == 69
+    assert catalog.get_by_action("network.provider.create") is None
     for action in catalog.actions:
         tool = action.as_mcp_tool()
         Draft202012Validator.check_schema(tool["inputSchema"])
@@ -149,6 +150,14 @@ def test_all_nested_input_objects_are_closed_and_sensitive_cloud_init_is_write_o
     image_download = catalog.get_by_action("image.download")
     assert image_download is not None
     assert image_download.input_schema["properties"]["imageUrl"]["writeOnly"] is True
+
+    grant_candidates = catalog.get_by_action(
+        "project.resource-grant-candidates.get",
+    )
+    assert grant_candidates is not None
+    assert grant_candidates.mutation is False
+    assert grant_candidates.risk == "R0"
+    assert grant_candidates.required == ("projectId",)
 
 
 def test_catalog_order_and_identifiers_are_deterministic_and_unique() -> None:

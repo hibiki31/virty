@@ -14,6 +14,7 @@ type AuthState = {
   tokenValidated: boolean;
   authed: boolean;
   scopes: JwtPayload["scopes"];
+  projects: JwtPayload["projects"];
   username: string;
 };
 
@@ -26,6 +27,7 @@ export const useAuthStore = defineStore("auth", {
     tokenValidated: false,
     authed: false,
     scopes: [],
+    projects: [],
     username: "",
   }),
   actions: {
@@ -33,7 +35,8 @@ export const useAuthStore = defineStore("auth", {
       const decoded = jwtDecode<JwtPayload>(token);
       this.token = token;
       this.username = decoded.sub;
-      this.scopes = decoded.scopes;
+      this.scopes = decoded.scopes ?? [];
+      this.projects = decoded.projects ?? [];
       this.tokenValidated = true;
       this.authed = true;
     },
@@ -41,6 +44,7 @@ export const useAuthStore = defineStore("auth", {
       this.token = "";
       this.username = "";
       this.scopes = [];
+      this.projects = [];
       this.tokenValidated = true;
       this.authed = false;
     },

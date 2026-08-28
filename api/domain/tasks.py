@@ -11,6 +11,13 @@ from network.models import (
     NetworkModel,
 )
 from node.models import NodeModel
+from project.models import ProjectModel
+from resource_authorization import (
+    project_allows_image,
+    project_allows_network_attachment,
+    project_node_names,
+    project_storage_ids,
+)
 from storage.models import (
     ImageModel,
     StorageModel,
@@ -19,7 +26,9 @@ from task.functions import TaskBase, is_agent_task
 from task.models import TaskModel
 from task.schemas import TaskRequest
 
+from .authorization import validate_locked_domain_task_authorization
 from .models import DomainDriveModel, DomainInterfaceModel, DomainModel
+from .service import lock_domain_owner_context
 from .schemas import (
     CdromForUpdateDomain,
     DomainForCreate,
@@ -78,6 +87,7 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
             row.owner_project_id = (
                 existing.owner_project_id if existing is not None else None
             )
+            row.storage_used = 0
             for interface in temp.interface:
                 row.interfaces.append(
                     DomainInterfaceModel(
@@ -93,6 +103,8 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
                 if db_image is not None:
                     db_image.domain_uuid=temp.uuid
                     db.merge(db_image)
+                    if disk.device == "disk":
+                        row.storage_used += int(db_image.capacity or 0)
                 row.drives.append(
                     DomainDriveModel(
                         domain_uuid=temp.uuid,
@@ -123,12 +135,15 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     if body.type != "manual":
         raise ValueError("このendpointではmanual作成だけを利用できます")
 
-    owner_project_id = getattr(body, "project_id", None)
-    if is_agent_task(model):
-        from project.models import ProjectModel
-
-        if db.get(ProjectModel, owner_project_id) is None:
-            raise ValueError("VM owner projectがありません")
+    owner_project_id = body.project_id
+    locked_project_id = (
+        db.query(ProjectModel.id)
+        .filter(ProjectModel.id == owner_project_id)
+        .with_for_update()
+        .scalar()
+    )
+    if locked_project_id is None:
+        raise ValueError("VM owner projectがありません")
 
     # データベースから情報とってきて確認も行う
     domains = db.query(DomainModel).filter(DomainModel.name==body.name).all()
@@ -139,6 +154,47 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         node = db.query(NodeModel).filter(NodeModel.name==body.node_name).one()
     except NoResultFound:
         raise Exception("node not found")
+    if node.name not in project_node_names(db, owner_project_id):
+        raise ValueError("request node is outside the project grants")
+
+    allowed_storage_ids = project_storage_ids(db, owner_project_id)
+    if any(
+        not project_allows_network_attachment(
+            db,
+            owner_project_id,
+            interface.network_uuid,
+            interface.port,
+        )
+        for interface in body.interface
+    ):
+        raise ValueError("request network is outside the project grants")
+    if any(
+        disk.save_pool_uuid not in allowed_storage_ids
+        or (
+            disk.type == "copy"
+            and disk.original_pool_uuid not in allowed_storage_ids
+        )
+        for disk in body.disks
+    ):
+        raise ValueError("request storage is outside the project grants")
+
+    # 外部処理を始める前にcopy元imageを再検査する。flavor未設定imageは
+    # OS flavorに依存しない汎用imageとして全Projectで利用できる。
+    for disk in body.disks:
+        if disk.type != "copy":
+            continue
+        if disk.original_pool_uuid is None or disk.original_name is None:
+            raise ValueError("copy diskにはoriginal storageとnameが必要です")
+        source_image = db.query(ImageModel).filter(
+            ImageModel.storage_uuid == disk.original_pool_uuid,
+            ImageModel.name == disk.original_name,
+        ).one_or_none()
+        if (
+            source_image is None
+            or source_image.storage.node_name != node.name
+            or not project_allows_image(db, owner_project_id, source_image)
+        ):
+            raise ValueError("request source image is outside the project grants")
 
     ansible_manager = create_ansible_backend(user=node.user_name, domain=node.domain)
 
@@ -250,8 +306,11 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         status=5,
         node_name=body.node_name,
     )
-    created_domain.owner_user_id = model.user_id
+    created_domain.owner_user_id = None
     created_domain.owner_project_id = owner_project_id
+    created_domain.storage_used = sum(
+        int(disk.size_giga_byte or 0) for disk in body.disks
+    )
     created_domain.vnc_port = "0"
     db.merge(created_domain)
 
@@ -262,7 +321,12 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
 def delete_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     uuid = req.path_param["uuid"]
 
-    domain, node = get_domain(db=db, uuid=uuid)
+    domain, node = _get_locked_task_domain(
+        db,
+        model,
+        req,
+        agent_action_id="vm.delete",
+    )
 
     manager = create_libvirt_backend(node_model=node)
     manager.domain_destroy(uuid=uuid)
@@ -278,7 +342,12 @@ def patch_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     uuid = req.path_param["uuid"]
     body = PowerStatusForUpdateDomain.model_validate(req.body)
 
-    domain, node = get_domain(db=db, uuid=uuid)
+    domain, node = _get_locked_task_domain(
+        db,
+        model,
+        req,
+        agent_action_id="vm.power.update",
+    )
 
     manager = create_libvirt_backend(node_model=node)
 
@@ -296,7 +365,39 @@ def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
     uuid = req.path_param["uuid"]
     body = CdromForUpdateDomain.model_validate(req.body)
 
-    domain, node = get_domain(db=db, uuid=uuid)
+    domain, node = _get_locked_task_domain(
+        db,
+        model,
+        req,
+        agent_action_id="vm.cdrom.update",
+    )
+    owner_project_id = domain.owner_project_id
+    if body.path and owner_project_id is not None:
+        image = (
+            db.query(ImageModel)
+            .join(StorageModel, ImageModel.storage_uuid == StorageModel.uuid)
+            .filter(
+                ImageModel.path == body.path,
+                StorageModel.node_name == domain.node_name,
+            )
+            .one_or_none()
+        )
+        if (
+            image is None
+            or not project_allows_image(db, owner_project_id, image)
+        ):
+            raise ValueError("CD-ROM image is outside the VM project grants")
+
+    drive = next(
+        (
+            item
+            for item in domain.drives
+            if item.device == "cdrom" and item.target == body.target
+        ),
+        None,
+    )
+    if drive is None:
+        raise ValueError("CD-ROM target is not found")
 
     manager = create_libvirt_backend(node_model=node)
 
@@ -304,6 +405,9 @@ def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
         manager.domain_cdrom(uuid, body.target)
     else:
         manager.domain_cdrom(uuid, body.target, body.path)
+    # Domain lockを解放するcommitへ、管理nodeで確定した変更も同居させる。
+    # 後続inventory refresh前にVM移動が始まっても最新の依存を再検証できる。
+    drive.source = body.path or None
 
 
 @worker_task(key="patch.vm.network")
@@ -311,26 +415,120 @@ def patch_vm_network(db: Session, model: TaskModel, req: TaskRequest):
     body = NetworkForUpdateDomain.model_validate(req.body)
     uuid = req.path_param["uuid"]
 
-    domain, node = get_domain(db=db, uuid=uuid)
+    domain, node = _get_locked_task_domain(
+        db,
+        model,
+        req,
+        agent_action_id="vm.network.update",
+    )
+    owner_project_id = domain.owner_project_id
+    if (
+        owner_project_id is not None
+        and not project_allows_network_attachment(
+            db,
+            owner_project_id,
+            body.network_uuid,
+            body.port,
+        )
+    ):
+        raise ValueError("request network is outside the VM project grants")
 
     try:
         network = db.query(NetworkModel).filter(NetworkModel.uuid == body.network_uuid).one()
     except NoResultFound:
         raise Exception("Network uuid is not found")
+
+    interface = next(
+        (item for item in domain.interfaces if item.mac == body.mac),
+        None,
+    )
+    if interface is None:
+        raise ValueError("VM network interface is not found")
     
     manager = create_libvirt_backend(node_model=node)
     manager.domain_network(uuid=uuid, network=str(network.name), port=body.port, mac=body.mac)
+    interface.type = "network"
+    interface.network = network.name
+    interface.bridge = None
+    interface.port = body.port
     
     
-def get_domain(db: Session, uuid):
-    try:
-        domain: DomainModel = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-    except NoResultFound:
-        raise Exception(f"VM({uuid}) not found")
+def _get_locked_task_domain(
+    db: Session,
+    model: TaskModel,
+    req: TaskRequest,
+    *,
+    agent_action_id: str,
+) -> tuple[DomainModel, NodeModel]:
+    """VM移動と直列化し、lock後の最新ownerを再認可する。"""
+
+    uuid = str(req.path_param["uuid"])
+    domain = lock_domain_owner_context(db, uuid)
+    if is_agent_task(model):
+        _validate_locked_agent_domain_task(
+            db,
+            domain,
+            model,
+            action_id=agent_action_id,
+        )
+    else:
+        validate_locked_domain_task_authorization(
+            db,
+            domain,
+            task_user_id=model.user_id,
+            path_param=req.path_param,
+        )
 
     try:
         node: NodeModel = db.query(NodeModel).filter(NodeModel.name == domain.node_name).one()
     except NoResultFound:
         raise Exception(f"Node({domain.node_name}) not found")
-    
+
     return domain, node
+
+
+def _validate_locked_agent_domain_task(
+    db: Session,
+    domain: DomainModel,
+    model: TaskModel,
+    *,
+    action_id: str,
+) -> None:
+    """Agent resolved targetをDomain lock取得後のownerへ再照合する。"""
+
+    from agent.exceptions import AuthorizationError
+    from agent.project_boundary import validate_project_mutation_targets
+
+    principal_id = model.principal_id
+    if not principal_id:
+        raise AuthorizationError(
+            "vm_principal_missing_at_handler",
+            "Agent VM taskのprincipalがありません",
+        )
+    raw_targets: object = model.resolved_targets or []
+    targets = [raw_targets] if isinstance(raw_targets, dict) else raw_targets
+    if not isinstance(targets, list):
+        targets = []
+    authorization_targets = [
+        target
+        for target in targets
+        if isinstance(target, dict)
+        and str(target.get("authorizationTarget", "true")).lower() != "false"
+    ]
+    primary = authorization_targets[0] if authorization_targets else None
+    if (
+        primary is None
+        or str(primary.get("resourceType") or primary.get("resource_type")) != "vm"
+        or str(primary.get("resourceId") or primary.get("resource_id") or "")
+        != domain.uuid
+    ):
+        raise AuthorizationError(
+            "vm_target_mismatch_at_handler",
+            "Agent VM taskのresolved targetがlock対象VMと一致しません",
+        )
+    validate_project_mutation_targets(
+        db,
+        principal_id=principal_id,
+        action_id=action_id,
+        targets=authorization_targets,
+    )

@@ -5,6 +5,11 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
+from project.service import (
+    ProjectConflictError,
+    ProjectGrantNotFoundError,
+    ensure_flavor_deletable,
+)
 from resource_authorization import allowed_flavor_ids, require_admin
 
 from .models import FlavorModel
@@ -43,7 +48,7 @@ def get_flavors(
 ):
     current_user.verify_scope(["flavor.read"])
     query = db.query(FlavorModel)
-    allowed_flavors = allowed_flavor_ids(db, current_user)
+    allowed_flavors = allowed_flavor_ids(db, current_user, param.project_id)
     if allowed_flavors is not None:
         query = query.filter(FlavorModel.id.in_(allowed_flavors))
     
@@ -66,16 +71,21 @@ def delete_flavor(
 ):
     cu.verify_scope(["flavor.manage"])
     require_admin(cu)
-    deleted_model = (
-        db.query(FlavorModel).filter(FlavorModel.id == flavor_id).one_or_none()
-    )
-    if deleted_model is None:
+    try:
+        deleted_model = ensure_flavor_deletable(db, flavor_id)
+    except ProjectGrantNotFoundError as exc:
         raise ApiError(
             404,
             ApiErrorCode.FLAVOR_NOT_FOUND,
             "The flavor was not found.",
-        )
-    db.query(FlavorModel).filter(FlavorModel.id==flavor_id).delete()
+        ) from exc
+    except ProjectConflictError as exc:
+        raise ApiError(
+            409,
+            ApiErrorCode.FLAVOR_IN_USE,
+            "The flavor is still in use.",
+        ) from exc
+    db.delete(deleted_model)
     db.commit()
 
     return deleted_model

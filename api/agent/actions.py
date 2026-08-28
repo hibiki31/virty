@@ -15,6 +15,19 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from project.service import (
+    ProjectConflictError,
+    ProjectNotFoundError,
+    ensure_project_deletable,
+)
+from resource_deletion import (
+    ResourceDeletionConflictError,
+    ResourceDeletionNotFoundError,
+    ensure_image_deletable,
+    ensure_network_deletable,
+    ensure_network_port_deletable,
+    ensure_storage_deletable,
+)
 from task.functions import (
     TaskIdempotencyConflict,
     TaskManager,
@@ -30,6 +43,7 @@ from .adapters import (
     ResolvedTarget,
     _allowed_network_ids,
     _allowed_storage_ids,
+    _effective_project_ids,
 )
 from .audit import append_audit_event
 from .catalog import ACTIONS, PUBLIC_CATALOG, ActionDefinition, get_action
@@ -48,6 +62,10 @@ from .policy import (
     consume_mutation,
     require_scope,
     resolve_generation,
+)
+from .project_boundary import (
+    validate_mutation_lease_constraints,
+    validate_project_mutation_targets,
 )
 from .schemas import ActionRequest, ActionResult, OperationAccepted
 
@@ -132,6 +150,8 @@ _PATH_ONLY_FIELDS: dict[str, set[str]] = {
     "network.delete": {"uuid"},
     "network.ovs.create": {"uuid"},
     "network.ovs.delete": {"uuid"},
+    "project.get": {"projectId"},
+    "project.member-candidates": {"projectId"},
 }
 
 
@@ -294,11 +314,13 @@ def _project_ids_for_resource(
 
 
 def _select_server_project(
+    db: Session,
     context: LeaseContext,
     candidates: set[str],
 ) -> str | None:
-    if context.lease.project_ids:
-        candidates &= set(context.lease.project_ids)
+    if not candidates:
+        return None
+    candidates &= _effective_project_ids(db, context)
     return sorted(candidates)[0] if candidates else None
 
 
@@ -427,6 +449,7 @@ def resolve_action_target(
             raise NotFoundError("storage_not_found", "download先storageがありません")
         node_id = storage.node_name
         project_id = _select_server_project(
+            db,
             context,
             _project_ids_for_resource(
                 db,
@@ -450,6 +473,9 @@ def resolve_action_target(
         resource_id = f"sha256:{destination_hash}"
     elif definition.action_id == "vm.create":
         node_id = model.node_name
+    elif definition.action_id == "image.flavor.update":
+        # storageが複数Projectで共有されても、選択Projectをprimary targetにする。
+        project_id = model.project_id
     elif definition.action_id == "node.create":
         # 未作成nodeもlifecycle reservationの安定keyへ含める。
         node_id = model.name
@@ -457,8 +483,6 @@ def resolve_action_target(
         node_id = model.node_name
     elif definition.action_id == "network.create":
         node_id = model.node_name
-    elif definition.action_id == "network.provider.create":
-        node_id = model.network_node
 
     # generation不要のmutation/readも既存objectの所属をserver側で解決する。
     if definition.resource_type == "node":
@@ -514,7 +538,7 @@ def resolve_action_target(
         node_id=node_id,
     )
     if project_id is None:
-        project_id = _select_server_project(context, derived_projects)
+        project_id = _select_server_project(db, context, derived_projects)
 
     # identity/system/global collectionへclientがproject/nodeを付けても権限化しない。
     if definition.resource_type in {"system", "metrics", "user"}:
@@ -610,20 +634,39 @@ def _validate_action_references(
     from flavor.models import FlavorModel
     from node.models import NodeModel
     from project.models import ProjectModel
-    from storage.models import ImageModel, StorageModel
-    from network.models import NetworkModel
+    from storage.models import ImageModel, StorageModel, StoragePoolModel
+    from network.models import NetworkModel, NetworkPoolModel
+    from user.models import UserModel
 
     related: list[dict[str, str]] = [
         dict(item) for item in target.related_targets
     ]
-    allowed_storages = _allowed_storage_ids(db, context)
-    allowed_networks = _allowed_network_ids(db, context)
-    constrained_projects = db.query(ProjectModel).filter(
-        ProjectModel.id.in_(context.lease.project_ids or ["__none__"]),
-    ).all()
+    allowed_storages: set[str] | None = None
+    allowed_networks: set[str] | None = None
+    constrained_projects: list[ProjectModel] | None = None
+
+    def effective_projects() -> list[ProjectModel]:
+        nonlocal constrained_projects
+        if constrained_projects is None:
+            constrained_projects = db.query(ProjectModel).filter(
+                ProjectModel.id.in_(_effective_project_ids(db, context)),
+            ).all()
+        return constrained_projects
+
+    def effective_storage_ids() -> set[str]:
+        nonlocal allowed_storages
+        if allowed_storages is None:
+            allowed_storages = _allowed_storage_ids(db, context)
+        return allowed_storages
+
+    def effective_network_ids() -> set[str]:
+        nonlocal allowed_networks
+        if allowed_networks is None:
+            allowed_networks = _allowed_network_ids(db, context)
+        return allowed_networks
 
     def storage_project_id(storage_uuid: str) -> str | None:
-        for project in constrained_projects:
+        for project in effective_projects():
             if any(
                 association.storage_uuid == storage_uuid
                 for pool in project.storage_pools
@@ -633,7 +676,7 @@ def _validate_action_references(
         return None
 
     def network_project_id(network_uuid: str) -> str | None:
-        for project in constrained_projects:
+        for project in effective_projects():
             if any(
                 network.uuid == network_uuid
                 for pool in project.network_pools
@@ -645,7 +688,13 @@ def _validate_action_references(
                 return str(project.id)
         return None
 
-    def storage_reference(storage_uuid: str, required_node: str | None) -> StorageModel:
+    def storage_reference(
+        storage_uuid: str,
+        required_node: str | None,
+        project_id_override: str | None = None,
+        *,
+        enforce_project_access: bool = True,
+    ) -> StorageModel:
         storage = db.get(StorageModel, storage_uuid)
         if storage is None:
             raise NotFoundError("storage_not_found", "参照storageがありません")
@@ -654,7 +703,10 @@ def _validate_action_references(
                 "storage_node_mismatch",
                 "参照storageはtargetと同じnodeにありません",
             )
-        if allowed_storages is not None and storage.uuid not in allowed_storages:
+        if (
+            enforce_project_access
+            and storage.uuid not in effective_storage_ids()
+        ):
             raise AuthorizationError(
                 "storage_constraint_denied",
                 "参照storageは能力leaseの制約外です",
@@ -664,13 +716,22 @@ def _validate_action_references(
             "resourceId": storage.uuid,
             "nodeId": storage.node_name,
         }
-        project_id = storage_project_id(storage.uuid)
+        project_id = project_id_override
+        if project_id is None and (
+            enforce_project_access or context.lease.project_ids
+        ):
+            project_id = storage_project_id(storage.uuid)
         if project_id is not None:
             item["projectId"] = project_id
         related.append(item)
         return storage
 
-    def network_reference(network_uuid: str, required_node: str | None) -> NetworkModel:
+    def network_reference(
+        network_uuid: str,
+        required_node: str | None,
+        *,
+        enforce_project_access: bool = True,
+    ) -> NetworkModel:
         network = db.get(NetworkModel, network_uuid)
         if network is None:
             raise NotFoundError("network_not_found", "参照networkがありません")
@@ -679,7 +740,10 @@ def _validate_action_references(
                 "network_node_mismatch",
                 "参照networkはtargetと同じnodeにありません",
             )
-        if allowed_networks is not None and network.uuid not in allowed_networks:
+        if (
+            enforce_project_access
+            and network.uuid not in effective_network_ids()
+        ):
             raise AuthorizationError(
                 "network_constraint_denied",
                 "参照networkは能力leaseの制約外です",
@@ -689,11 +753,57 @@ def _validate_action_references(
             "resourceId": network.uuid,
             "nodeId": network.node_name,
         }
-        project_id = network_project_id(network.uuid)
+        project_id = None
+        if enforce_project_access or context.lease.project_ids:
+            project_id = network_project_id(network.uuid)
         if project_id is not None:
             item["projectId"] = project_id
         related.append(item)
         return network
+
+    def project_allows_network(
+        project: ProjectModel,
+        network_uuid: str,
+        port_name: str | None,
+    ) -> bool:
+        direct_network_ids = {
+            network.uuid
+            for pool in project.network_pools
+            for network in pool.networks
+        }
+        port_grants = {
+            (port.network_uuid, port.name)
+            for pool in project.network_pools
+            for port in pool.ports
+        }
+        return network_uuid in direct_network_ids or (
+            port_name is not None
+            and (network_uuid, port_name) in port_grants
+        )
+
+    def project_allows_image(
+        project: ProjectModel,
+        image: ImageModel,
+    ) -> bool:
+        storage_ids = {
+            association.storage_uuid
+            for pool in project.storage_pools
+            for association in pool.storages
+        }
+        flavor_ids = {flavor.id for flavor in project.flavors}
+        return image.storage_uuid in storage_ids and (
+            image.flavor_id is None or image.flavor_id in flavor_ids
+        )
+
+    def require_principal_project_membership(project_id: str) -> None:
+        principal = db.get(UserModel, context.principal_id)
+        if principal is None or all(
+            project.id != project_id for project in principal.projects
+        ):
+            raise AuthorizationError(
+                "project_membership_denied",
+                "対象Projectはprincipalの所属範囲外です",
+            )
 
     action_id = definition.action_id
     if action_id in _FAMILY_EFFECTS or action_id in _FAMILY_MUTATIONS:
@@ -715,6 +825,7 @@ def _validate_action_references(
                 "project_not_found",
                 "VM owner projectがありません",
             )
+        require_principal_project_membership(owner_project.id)
         if (
             context.lease.project_ids
             and model.project_id not in context.lease.project_ids
@@ -734,11 +845,6 @@ def _validate_action_references(
             for pool in owner_project.storage_pools
             for association in pool.storages
         }
-        project_network_ids = {
-            network.uuid
-            for pool in owner_project.network_pools
-            for network in [*pool.networks, *(port.network for port in pool.ports)]
-        }
         for disk in model.disks:
             if disk.save_pool_uuid not in project_storage_ids or (
                 disk.original_pool_uuid
@@ -748,17 +854,71 @@ def _validate_action_references(
                     "vm_storage_project_denied",
                     "VM disk storageはowner projectのpool外です",
                 )
-            storage_reference(disk.save_pool_uuid, model.node_name)
+            storage_reference(
+                disk.save_pool_uuid,
+                model.node_name,
+                str(owner_project.id),
+            )
             if disk.original_pool_uuid:
-                storage_reference(disk.original_pool_uuid, model.node_name)
+                storage_reference(
+                    disk.original_pool_uuid,
+                    model.node_name,
+                    str(owner_project.id),
+                )
+                if disk.original_name is None:
+                    raise ConflictError(
+                        "vm_copy_source_required",
+                        "copy diskには元image名が必要です",
+                    )
+                source_image = db.query(ImageModel).filter(
+                    ImageModel.storage_uuid == disk.original_pool_uuid,
+                    ImageModel.name == disk.original_name,
+                ).one_or_none()
+                project_flavor_ids = {flavor.id for flavor in owner_project.flavors}
+                if (
+                    source_image is None
+                    or (
+                        source_image.flavor_id is not None
+                        and source_image.flavor_id not in project_flavor_ids
+                    )
+                ):
+                    raise AuthorizationError(
+                        "vm_image_project_denied",
+                        "copy元imageのflavorはowner projectのgrant外です",
+                    )
+                related.append({
+                    "resourceType": "image",
+                    "resourceId": json.dumps(
+                        [source_image.storage_uuid, source_image.path],
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ),
+                    "projectId": str(owner_project.id),
+                    "nodeId": model.node_name,
+                })
         for interface in model.interface:
-            if interface.network_uuid not in project_network_ids:
+            if not project_allows_network(
+                owner_project,
+                interface.network_uuid,
+                interface.port,
+            ):
                 raise AuthorizationError(
                     "vm_network_project_denied",
-                    "VM networkはowner projectのpool外です",
+                    "VM network/portはowner projectのpool外です",
                 )
             network_reference(interface.network_uuid, model.node_name)
     elif action_id == "vm.network.update":
+        if target.project_id is not None:
+            owner_project = db.get(ProjectModel, target.project_id)
+            if owner_project is None or not project_allows_network(
+                owner_project,
+                model.network_uuid,
+                model.port,
+            ):
+                raise AuthorizationError(
+                    "vm_network_project_denied",
+                    "VM network/portはowner projectのpool外です",
+                )
         network_reference(model.network_uuid, target.node_id)
     elif action_id == "vm.cdrom.update" and model.path:
         images = db.query(ImageModel).filter(ImageModel.path == model.path).all()
@@ -776,7 +936,38 @@ def _validate_action_references(
                 "CD-ROM pathは対象node上の一意な登録済みimage.pathに限定されます",
             )
         image = matching_images[0]
-        storage_reference(image.storage_uuid, target.node_id)
+        if target.project_id is not None:
+            cdrom_project = db.get(ProjectModel, target.project_id)
+            if cdrom_project is None or not project_allows_image(
+                cdrom_project,
+                image,
+            ):
+                raise AuthorizationError(
+                    "vm_image_project_denied",
+                    "CD-ROM imageはVM owner Projectのgrant外です",
+                )
+        else:
+            cdrom_project = next(
+                (
+                    project
+                    for project in sorted(
+                        effective_projects(),
+                        key=lambda item: item.id,
+                    )
+                    if project_allows_image(project, image)
+                ),
+                None,
+            )
+            if cdrom_project is None:
+                raise AuthorizationError(
+                    "vm_image_project_denied",
+                    "CD-ROM imageはprincipal所属Projectのgrant外です",
+                )
+        storage_reference(
+            image.storage_uuid,
+            target.node_id,
+            str(cdrom_project.id),
+        )
         image_target = {
             "resourceType": "image",
             "resourceId": json.dumps(
@@ -785,15 +976,14 @@ def _validate_action_references(
                 separators=(",", ":"),
             ),
             "nodeId": target.node_id or "",
+            "projectId": str(cdrom_project.id),
         }
-        image_project = storage_project_id(image.storage_uuid)
-        if image_project is not None:
-            image_target["projectId"] = image_project
         related.append(image_target)
     elif action_id == "vm.project.update":
         destination = db.get(ProjectModel, model.project_id)
         if destination is None:
             raise NotFoundError("project_not_found", "移動先projectがありません")
+        require_principal_project_membership(destination.id)
         if context.lease.project_ids and model.project_id not in context.lease.project_ids:
             raise AuthorizationError(
                 "destination_project_denied",
@@ -804,35 +994,75 @@ def _validate_action_references(
             "resourceId": destination.id,
             "projectId": destination.id,
         })
-    elif action_id == "network.provider.create":
-        network_node = db.get(NodeModel, model.network_node)
-        if network_node is None:
-            raise NotFoundError(
-                "network_node_not_found",
-                "provider networkのnetwork nodeがありません",
-            )
-        overlay_nodes = [
-            node
-            for node in db.query(NodeModel).order_by(NodeModel.name).all()
-            if any(role.role_name == "vxlan_overlay" for role in node.roles)
-        ]
-        for node in {item.name: item for item in [network_node, *overlay_nodes]}.values():
-            related.append({
-                "resourceType": "node",
-                "resourceId": node.name,
-                "nodeId": node.name,
-            })
     elif action_id in {"storage.pool.create", "storage.pool.update"}:
         for storage_uuid in model.storage_uuids:
-            storage_reference(storage_uuid, None)
+            storage_reference(
+                storage_uuid,
+                None,
+                enforce_project_access=False,
+            )
     elif action_id == "network.pool.update":
-        network_reference(model.network_uuid, None)
+        network_reference(
+            model.network_uuid,
+            None,
+            enforce_project_access=False,
+        )
+    elif action_id == "project.resource-grants.update":
+        for resource_type, model_type, identifiers in (
+            ("storage-pool", StoragePoolModel, model.storage_pool_ids),
+            ("network-pool", NetworkPoolModel, model.network_pool_ids),
+            ("flavor", FlavorModel, model.flavor_ids),
+        ):
+            for identifier in identifiers:
+                if db.get(model_type, identifier) is None:
+                    raise NotFoundError(
+                        "project_grant_resource_not_found",
+                        f"grant対象{resource_type}がありません: {identifier}",
+                    )
+                related.append({
+                    "resourceType": resource_type,
+                    "resourceId": str(identifier),
+                    "projectId": model.project_id,
+                    # 完全置換では新規grantも予約対象に含めるが、更新前の
+                    # Project所属を認可条件にはできない。
+                    "authorizationTarget": "false",
+                })
     elif action_id in {"image.delete", "image.download", "image.flavor.update"}:
         storage_uuid = (
             model.uuid if action_id == "image.delete" else model.storage_uuid
         )
-        storage = storage_reference(storage_uuid, target.node_id)
+        selected_project: ProjectModel | None = None
         if action_id == "image.flavor.update":
+            selected_project = db.get(ProjectModel, model.project_id)
+            if selected_project is None:
+                raise NotFoundError("project_not_found", "Projectがありません")
+            require_principal_project_membership(selected_project.id)
+            if (
+                context.lease.project_ids
+                and selected_project.id not in context.lease.project_ids
+            ):
+                raise AuthorizationError(
+                    "project_constraint_denied",
+                    "対象Projectは能力leaseの制約外です",
+                )
+        storage = storage_reference(
+            storage_uuid,
+            target.node_id,
+            str(selected_project.id) if selected_project is not None else None,
+            enforce_project_access=action_id != "image.delete",
+        )
+        if action_id == "image.flavor.update":
+            assert selected_project is not None
+            project_storage_ids = {
+                association.storage_uuid
+                for pool in selected_project.storage_pools
+                for association in pool.storages
+            }
+            if storage.uuid not in project_storage_ids:
+                raise AuthorizationError(
+                    "image_storage_project_denied",
+                    "image storageは選択Projectのgrant外です",
+                )
             if storage.node_name != model.node_name:
                 raise ConflictError(
                     "image_node_mismatch",
@@ -841,36 +1071,19 @@ def _validate_action_references(
             flavor = db.get(FlavorModel, model.flavor_id)
             if flavor is None:
                 raise NotFoundError("flavor_not_found", "flavorがありません")
-            if context.lease.project_ids:
-                allowed_flavors = {
-                    item.id
-                    for project in db.query(ProjectModel).filter(
-                        ProjectModel.id.in_(context.lease.project_ids),
-                    )
-                    for item in project.flavors
-                }
-                if flavor.id not in allowed_flavors:
-                    raise AuthorizationError(
-                        "flavor_constraint_denied",
-                        "参照flavorは能力leaseの制約外です",
-                    )
+            if flavor.id not in {item.id for item in selected_project.flavors}:
+                raise AuthorizationError(
+                    "flavor_project_denied",
+                    "参照flavorは選択Projectのgrant外です",
+                )
+            target = replace(target, project_id=str(selected_project.id))
             flavor_target = {
                 "resourceType": "flavor",
                 "resourceId": str(flavor.id),
+                "projectId": str(selected_project.id),
             }
             if target.node_id is not None:
                 flavor_target["nodeId"] = target.node_id
-            if context.lease.project_ids:
-                flavor_project = next(
-                    (
-                        str(project.id)
-                        for project in constrained_projects
-                        if flavor in project.flavors
-                    ),
-                    None,
-                )
-                if flavor_project is not None:
-                    flavor_target["projectId"] = flavor_project
             related.append(flavor_target)
 
     # 同じ参照が複数disk等に現れてもreservationは1つに正規化する。
@@ -917,6 +1130,39 @@ def _validate_identity_admin_scope(
 ) -> None:
     """恒久admin credentialへ影響する場合だけ追加能力を要求する。"""
 
+    global_admin_actions = {
+        "project.create",
+        "project.delete",
+        "project.resource-grant-candidates.get",
+        "project.resource-grants.update",
+        "storage.pool.create",
+        "storage.pool.update",
+        "storage.pool.delete",
+        "storage.create",
+        "storage.delete",
+        "image.delete",
+        "network.pool.create",
+        "network.pool.update",
+        "network.pool.delete",
+        "network.create",
+        "network.delete",
+        "network.ovs.create",
+        "network.ovs.delete",
+        "flavor.delete",
+    }
+    if definition.action_id in global_admin_actions:
+        from user.models import UserScopeModel
+
+        is_admin = db.query(UserScopeModel).filter(
+            UserScopeModel.user_id == context.principal_id,
+            UserScopeModel.name == "admin",
+        ).first() is not None
+        if not is_admin:
+            raise AuthorizationError(
+                "global_admin_required",
+                "この操作にはglobal adminが必要です",
+            )
+        return
     if definition.action_id not in {"user.create", "user.update", "user.delete"}:
         return
     from user.models import UserScopeModel
@@ -966,7 +1212,6 @@ _FAMILY_EFFECTS: dict[str, tuple[str, ...]] = {
     "network.delete": ("network",),
     "network.ovs.create": ("network",),
     "network.ovs.delete": ("network",),
-    "network.provider.create": ("network",),
     "image.refresh": ("storage", "image"),
 }
 
@@ -1112,6 +1357,43 @@ def _dependent_selectors(
     return result
 
 
+def _preflight_task_action(
+    db: Session,
+    action_id: str,
+    model: Any,
+    params: dict[str, Any],
+) -> None:
+    """非同期削除をqueueへ積む直前にworkerと同じ依存検査を行う。"""
+
+    try:
+        if action_id == "storage.delete":
+            ensure_storage_deletable(db, str(params["uuid"]))
+        elif action_id == "image.delete":
+            ensure_image_deletable(
+                db,
+                str(params["uuid"]),
+                str(params["name"]),
+            )
+        elif action_id == "network.delete":
+            ensure_network_deletable(db, str(params["uuid"]))
+        elif action_id == "network.ovs.delete":
+            ensure_network_port_deletable(
+                db,
+                str(params["uuid"]),
+                str(params["name"]),
+            )
+        elif action_id == "project.delete":
+            ensure_project_deletable(db, str(model.project_id), lock=True)
+    except ResourceDeletionNotFoundError as exc:
+        raise NotFoundError("resource_not_found", str(exc)) from exc
+    except ResourceDeletionConflictError as exc:
+        raise ConflictError("resource_in_use", str(exc)) from exc
+    except ProjectNotFoundError as exc:
+        raise NotFoundError("project_not_found", str(exc)) from exc
+    except ProjectConflictError as exc:
+        raise ConflictError("project_not_empty", str(exc)) from exc
+
+
 def _execute_task_action(
     db: Session,
     *,
@@ -1130,6 +1412,7 @@ def _execute_task_action(
         )
     method, resource, object_name = definition.task_selector
     body, params = _task_body_and_params(definition, request, model)
+    _preflight_task_action(db, definition.action_id, model, params)
     principal = SimpleNamespace(id=context.principal_id)
     append_audit_event(
         db,
@@ -1338,6 +1621,12 @@ def execute_action(
     definition = get_action(action_id)
     _validate_public_json(action_id, request.input)
     model = _load_input_model(definition, request.input)
+    validate_mutation_lease_constraints(
+        action_id=definition.action_id,
+        mutation=definition.mutation,
+        project_ids=context.lease.project_ids,
+        node_ids=context.lease.node_ids,
+    )
     agent_request_hash = request_hash({
         "action": action_id,
         "input": request.input,
@@ -1385,6 +1674,13 @@ def execute_action(
         model=model,
         target=target,
     )
+    if definition.mutation:
+        validate_project_mutation_targets(
+            db,
+            principal_id=context.principal_id,
+            action_id=definition.action_id,
+            targets=target.task_value(),
+        )
     if definition.mutation:
         target = _apply_reservation_contract(definition, target)
     if definition.mutation:

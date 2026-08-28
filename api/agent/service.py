@@ -687,9 +687,6 @@ class AgentIdentityService:
         user = db.get(UserModel, principal_id)
         if user is None:
             raise NotFoundError("principal_not_found", "lease principalがありません")
-        scopes = {scope.name for scope in user.scopes}
-        if "admin" in scopes:
-            return
         allowed_projects = {project.id for project in user.projects}
         if any(project not in allowed_projects for project in requested_projects):
             raise AuthorizationError(

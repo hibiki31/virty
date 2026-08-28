@@ -4,6 +4,7 @@
       <v-m-delete-dialog v-model="stateDeleteDialog" :item="data"></v-m-delete-dialog>
       <v-m-network-change v-model="stateNetworkDialog" :item="data" :mac="changeMac"></v-m-network-change>
       <v-m-cdrom-change v-model="stateCdromDialog" :item="data" :target="deleteTarget"></v-m-cdrom-change>
+      <v-m-project-change-dialog v-model="stateProjectDialog" :item="data" @changed="reload" />
       <v-card-item>
         <v-card-title>
           <v-icon left class="ma-3" :aria-label="vmStatusLabel(data.status)" :color="getPowerColor(data.status)" role="img">mdi-power-standby</v-icon>
@@ -56,6 +57,19 @@
               </v-table>
             </v-card>
 
+            <v-card prepend-icon="mdi-folder-account-outline" :title="t('pages.vmDetail.sections.project')" class="mt-5">
+              <v-card-text>
+                <router-link v-if="data.ownerProject" :to="`/projects/${data.ownerProject.id}`">
+                  {{ formatProjectName(data.ownerProject) }}
+                </router-link>
+                <span v-else class="text-medium-emphasis">{{ t('pages.vmDetail.project.personalLegacy') }}</span>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn v-if="canChangeProject" size="small" prepend-icon="mdi-swap-horizontal" variant="tonal"
+                  @click="stateProjectDialog = true">{{ t('pages.vmDetail.project.change') }}</v-btn>
+              </v-card-actions>
+            </v-card>
+
             <v-card prepend-icon="mdi-server" :title="t('pages.vmDetail.sections.node')" class="mt-5">
               <v-table class="text-caption" density="compact">
                 <tbody align="right">
@@ -99,7 +113,12 @@
                       <td>{{ item.type }}</td>
                       <td>{{ item.mac }}</td>
                       <td>
-                        <router-link v-if="item.networkUuid" :to="'/networks/' + item.networkUuid">
+                        <router-link v-if="item.networkUuid" :to="{
+                          path: `/networks/${item.networkUuid}`,
+                          query: data.ownerProjectId
+                            ? { projectId: data.ownerProjectId }
+                            : {},
+                        }">
                           {{ item.network }}
                         </router-link>
                         <span v-else>{{ item.network || '-' }}</span>
@@ -187,6 +206,9 @@ import { useRoute } from 'vue-router';
 import { apiClient } from '@/api';
 const route = useRoute()
 import type { schemas } from '@/composables/schemas';
+import { formatProjectName } from '@/composables/project';
+import { hasScope } from '@/composables/auth';
+import { useAuthStore } from '@/stores/auth';
 import {
   formatNumber,
   nodeStatusLabel,
@@ -207,10 +229,13 @@ const { t } = useI18n({ useScope: 'global' })
 
 const data = ref<schemas['DomainDetail']>()
 const dataXML = ref<schemas['DomainXML']>()
+const auth = useAuthStore()
+const canChangeProject = computed(() => hasScope(auth.scopes, 'vm.project'))
 
 const stateDeleteDialog = ref(false)
 const stateCdromDialog = ref(false)
 const stateNetworkDialog = ref(false)
+const stateProjectDialog = ref(false)
 const deleteTarget = ref("")
 const changeMac = ref("")
 const expandedStoragePaths = ref(new Set<number>())

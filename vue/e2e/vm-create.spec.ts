@@ -29,6 +29,9 @@ for (const locale of localeCases) {
     await expectNoHorizontalOverflow(page);
     await dialog.getByTestId("vm-name").getByRole("textbox").fill("vm-new");
 
+    await dialog.getByTestId("vm-project").click();
+    await page.getByRole("option", { name: "Project E2E (#a1b2c3)", exact: true }).click();
+
     await dialog.getByTestId("vm-node").click();
     await page.getByRole("option", { name: "node-e2e", exact: true }).click();
     await dialog.getByTestId("vm-destination-pool").click();
@@ -49,6 +52,7 @@ for (const locale of localeCases) {
     expect(api.vmCreateBodies[1]).toMatchObject({
       name: "vm-new",
       nodeName: "node-e2e",
+      projectId: "a1b2c3",
     });
   });
 }

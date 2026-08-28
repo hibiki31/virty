@@ -10,7 +10,7 @@ endpointやDB列のreferenceではない。詳細なAPI契約は実行中APIのO
 
 Virtyは、SSHで到達できるLinux上のKVM/libvirt環境を、Web UIとAPIから一元管理するための
 軽量なcontrol planeである。主な利用者は、自身が管理権限を持つ小規模な仮想化環境を
-構築・運用する管理者である。
+構築・運用する管理者と、同じProjectでVMやresourceを共同管理する複数の利用者である。
 
 管理対象nodeにはSSH公開鍵認証と、必要なsystem package・sudo権限を設定できることを前提とする。
 Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SSHを介して既存基盤を操作する。
@@ -22,7 +22,10 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - 初回アクセス時に最初の管理利用者を作成できる。
 - OAuth2 password flowでBearer JWTを発行し、保護されたAPIとWeb UIで利用する。
 - APIから利用者の作成、一覧、更新、削除を行い、scopeと複数のSSH公開鍵を保持できる。
-- scopeをAPI認可に利用し、project IDをtokenに含める。VM・project一覧は認証利用者とDB上の所属で絞り込む。
+- scopeをAPI認可に利用し、Project IDをtokenに含める。実効権限は操作scopeと対象Projectへの所属を
+  ともに満たす場合だけ与え、VM・Project・関連resourceの一覧と詳細を同じ境界で絞り込む。
+- Project membershipはProject APIだけから変更する。member追加後の権限は再loginで取得したJWTから有効になり、
+  member削除はDB上の所属をrequestごとに再確認して次のrequestから失効させる。
 - scopeは完全一致または末尾の明示wildcardだけで評価し、各endpointでactionと対象objectを再認可する。
 - Web UI用JWTとAI agent用credentialを分離し、Web UI用JWTをagentへ渡さない。
 
@@ -35,6 +38,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
   device鍵のproof-of-possessionを全requestで確認する。既定期限は30分、変更上限は20件とする。
 - MCPにはreview済みaction catalogだけを公開する。任意shell、任意HTTP API proxy、認証・setup、
   内部console resolver、秘密値のreadbackは提供しない。新しいREST endpointもcatalog更新までは公開しない。
+- Projectの名称、member、resource grantは専用actionで変更する。利用者作成・更新actionからmembershipを変更せず、
+  resource grantの完全置換はglobal adminだけに許可するR3 actionとして扱う。
 - 読取結果にはVM名、IP、XML、task logなどの運用情報を含められるが、access token、password hash、
   VNC password、SSH秘密鍵を含めない。credential投入はwrite-only actionとする。
 - Agentからのimage downloadは管理者が列挙したHTTPS hostだけを許可し、private・link-local・metadata宛と
@@ -54,7 +59,12 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - VM詳細では、接続networkへの導線と、disk容量、pathから識別できるfile名を確認できる。
   diskのfull pathは必要なときだけfile名chipから展開する。
 - storageとnetworkを選択し、空diskまたは既存imageのcopyからVMを作成できる。
-- cloud-init user data、CD-ROM、network interface、project割り当てを扱える。
+- cloud-init user data、CD-ROM、network interface、Project割り当てを扱える。新規VMは所有Projectを必須とし、
+  選択Projectへgrantされたstorage・network・flavorだけを同じProject境界内で組み合わせる。
+  copy元imageにflavorがある場合はそのflavorも選択Projectのgrantを必須とし、flavor未設定imageは
+  OS flavorに依存しない汎用imageとして利用できる。
+- 既存の未所属VMはlegacyなpersonal VMとして保持する。Projectへ移動すると個人ownerを解除し、既存diskとnetworkが
+  移動先Projectのgrantを満たさない場合は移動を拒否する。
 - WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、初回起動scriptを
   cloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
 - guided formは明示的な適用操作で管理対象の設定だけをraw user dataへ一方向にmergeし、その他の設定を保持する。
@@ -70,13 +80,22 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - storage poolの発見、登録、metadata更新、再走査、削除を行える。
 - volume/imageの一覧、metadata更新、HTTP download、削除を行える。
 - libvirt networkの発見、作成、削除と、Open vSwitchのport group追加・削除を扱える。
-- 複数のstorageやnetworkを、project設計で参照するresource poolとしてまとめられる。
+- 複数のstorageやnetworkを、Projectへgrantする共有resource poolとしてまとめられる。pool自体は複数Projectから
+  参照でき、poolの構成変更・削除とProjectへのgrant変更はglobal adminだけが行う。
 
 ### Project・flavor・非同期task
 
-- backendはproject recordの作成・一覧・削除、利用者やVMとの関連付けを扱う。
-- project modelはresource上限、pool、flavorの関連を保持するが、完全なquota強制やtenant isolationとは扱わない。
-- flavor APIはOS、manual、icon、cloud-initなどのmetadataを管理し、imageと関連付けられる。
+- Projectは複数人でVMとresourceを共同管理する唯一の境界であり、旧`group`とは別概念を併存させない。
+  memberはProject内で同格とし、Project別roleは持たない。名称は重複可能な1〜64文字、識別子は6桁hexとし、
+  UIでは曖昧さを避けるため名称とIDを併記する。
+- global adminは1名以上の既存利用者を指定してProjectを作成し、VMが残っていないProjectだけを削除できる。
+  `project.manage`を持つmemberは名称とmemberを管理できるが、最後のmemberは削除できない。
+- Projectはstorage pool、network pool、flavorのgrantを保持する。grant更新は集合の完全置換とし、所属VMが使用中の
+  resourceを失う変更は拒否する。imageと利用可能nodeはgrant済みresourceから導出する。
+- Project modelのCPU・memory・storage上限は互換情報として表示するが強制しない。完全なquota強制や
+  tenant isolationとは扱わない。
+- flavor APIはOS、manual、icon、cloud-initなどのmetadataを管理し、imageと関連付けられる。imageへの
+  flavor関連付けはProjectを明示し、imageのstorageとflavorが同じProjectへgrantされている場合だけ許可する。
 - 時間のかかる変更操作はDB-backed taskとしてqueueし、状態、依存関係、message、失敗時tracebackを確認できる。
 - worker再起動時に既存RESTの未完了taskを成功扱いせず`lost`として識別する。Agent taskは未dispatchのqueueを保持し、
   実行開始後のtaskは自動再実行せず`unknown`として識別する。
@@ -94,9 +113,11 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 ## 提供中のWeb UI範囲
 
-Web UIには、login・初期設定、VM、node、storage、image、network、利用者一覧、task一覧・詳細、
+Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者一覧、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
-projectとflavorはbackend APIおよび一部の関連操作に存在するが、独立した管理画面は現時点で提供しない。
+Project画面は一覧・詳細、使用量と非強制limit、member、resource grantを表示し、権限に応じて作成、名称変更、
+member変更、grant変更、削除を行う。resource画面はURL queryのProject filterを保持し、Project詳細から
+絞り込み済み一覧へ移動できる。全画面へ影響するglobal active Project selectorは持たない。
 dashboardは、認証利用者が参照できるVM、node、storage、image、network、taskの件数、状態、容量を、
 DB上のinventory cacheとtask recordから集約した現在値のsnapshotとして表示する。
 表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。
@@ -129,7 +150,8 @@ command出力は運用dataであり、内容を翻訳または書き換えず原
 - Agent経由のmutationは監査書込み失敗時にfail closedとし、global停止、端末失効、端末別breakerを
   AI経路とは独立して操作できるようにする。
 - Agentと既存RESTの双方で、projectからresource poolをたどってstorage、image、network、flavor、nodeの
-  object認可を行う。projectへ対応付け不能なglobal操作はadminだけに許可する。
+  object認可を行う。一つの操作で複数Projectのresourceを混在させず、projectへ対応付け不能なglobal操作は
+  adminだけに許可する。
 - Agent image downloadは管理nodeで接続先DNSの全addressを検証し、TLS hostname検証を保ったままglobal IPへ
   接続を固定する。redirect・proxyを使わず、既存file/imageをatomicに上書きしない。
 - 30分内に失敗または`unknown`が3件発生した端末はmutationを停止する。全端末・全leaseを通じて
@@ -142,7 +164,7 @@ command出力は運用dataであり、内容を翻訳または書き換えず原
 
 - 高可用なcontrol plane、複数workerによる分散実行、厳密なtenant isolation
 - project上限とresource poolを全操作へ強制する完全なquota管理
-- project・flavorの独立したWeb管理画面
+- flavorの独立したWeb管理画面
 - dashboard上の時系列chartやreal-time監視
 - libvirt以外のhypervisorや、SSHで到達できない管理node
 - 外部identity provider連携やpassword reset workflow

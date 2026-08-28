@@ -11,6 +11,12 @@
         :disabled="imageSelected.length === 0">{{ t('pages.images.actions.delete') }}</v-btn>
       <v-spacer></v-spacer>
       <!-- フィルタ -->
+      <project-filter-select
+        :model-value="query.projectId"
+        class="pr-3"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
       <v-select density="compact" clearable :label="t('pages.images.filters.node')" v-model="query.nodeName"
         @update:model-value="async () => { queryImtesReload(); reload() }" :items="itemsNodes.data"
         variant="solo-filled" width="1" hide-details flat item-title="name" item-value="name" persistent-placeholder
@@ -56,14 +62,21 @@ import { initStorageList, getStorageList } from '@/composables/storage'
 import type { typeListStorageQuery } from '@/composables/storage'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/composables/i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
 
 
 const loading = ref(false)
+const auth = useAuthStore()
+const isAdmin = hasAdminScope(auth.scopes)
+const route = useRoute()
+const router = useRouter()
 const stateCreateDialog = ref(false)
 const stateDeleteDialog = ref(false)
 
 const query = ref<typeListImageQuery>({
-  admin: true,
+  admin: isAdmin,
   limit: 20,
   page: 1,
   nodeName: null,
@@ -71,6 +84,7 @@ const query = ref<typeListImageQuery>({
   name: "",
   rool: "",
   poolUuid: null,
+  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
 })
 
 const { t } = useI18n({ useScope: 'global' })
@@ -125,18 +139,32 @@ async function reload() {
   loading.value = false
 }
 
+async function updateProjectFilter(value: string | null) {
+  query.value.projectId = value
+  query.value.page = 1
+  query.value.nodeName = null
+  query.value.poolUuid = null
+  const routeQuery = { ...route.query }
+  if (value) routeQuery.projectId = value
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  await queryImtesReload()
+  await reload()
+}
+
 useReloadListener(() => {
   reload()
 })
 
 async function queryImtesReload() {
   const queryStorage: typeListStorageQuery = {
-    admin: true,
+    admin: isAdmin,
     limit: 999999,
     page: 1,
-    nodeName: query.value.nodeName
+    nodeName: query.value.nodeName,
+    projectId: query.value.projectId,
   }
-  itemsNodes.value = await getNode()
+  itemsNodes.value = await getNode(query.value.projectId)
   itemsStorages.value = await getStorageList(queryStorage)
 }
 

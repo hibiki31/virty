@@ -7,6 +7,8 @@
       <v-list-item prepend-icon="mdi-database" :title="$t('navigation.storages')" :to="{ name: '/storages/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-harddisk" :title="$t('navigation.images')" :to="{ name: '/images/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-wan" :title="$t('navigation.networks')" :to="{ name: '/networks/' }"></v-list-item>
+      <v-list-item v-if="canReadProjects" prepend-icon="mdi-folder-account-outline" :title="$t('navigation.projects')"
+        :to="{ name: '/projects/' }"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-account" :title="$t('navigation.users')"
         :to="{ name: '/users/' }"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-robot-outline" :title="$t('navigation.agent')"
@@ -38,10 +40,12 @@
 <script lang="ts" setup>
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
+import { hasScope } from '@/composables/auth'
 const apiURL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL + "/api" : "/api"
 const state = useStateStore()
 const auth = useAuthStore()
 const isAdmin = computed(() => auth.scopes.includes('admin'))
+const canReadProjects = computed(() => hasScope(auth.scopes, 'project.read'))
 import { useDisplay } from 'vuetify'
 
 function useBreakpoint() {

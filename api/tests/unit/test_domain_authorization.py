@@ -37,10 +37,12 @@ def test_unrelated_user_cannot_access_domain() -> None:
     assert not can_access_domain(_user(projects=["a1b2c3"]), domain)
 
 
-def test_admin_can_access_domain() -> None:
+def test_admin_still_requires_project_membership() -> None:
     domain = _domain(owner_user_id="bob", owner_project_id="ffffff")
     admin = CurrentUser(id="admin", token="token", scopes=["admin"])
 
+    assert not can_access_domain(admin, domain)
+    admin.projects = ["ffffff"]
     assert can_access_domain(admin, domain)
 
 

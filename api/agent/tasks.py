@@ -19,6 +19,10 @@ from .catalog import ACTIONS, get_action
 from .exceptions import AuditWriteError, AuthorizationError, ServiceUnavailableError
 from .models import AgentCapabilityLeaseModel, AgentDeviceModel
 from .policy import LeaseContext
+from .project_boundary import (
+    validate_mutation_lease_constraints,
+    validate_project_mutation_targets,
+)
 
 worker_task = TaskBase()
 
@@ -114,6 +118,18 @@ def execute_direct_action(
     target = _resolved_target(model, definition.resource_type)
     context = _worker_context(db, model)
     _validate_identity_admin_scope(db, context, definition, input_model)
+    validate_mutation_lease_constraints(
+        action_id=definition.action_id,
+        mutation=definition.mutation,
+        project_ids=context.lease.project_ids,
+        node_ids=context.lease.node_ids,
+    )
+    validate_project_mutation_targets(
+        db,
+        principal_id=context.principal_id,
+        action_id=action_id,
+        targets=target.task_value(),
+    )
     result = adapter(db, context, input_model, target)
     model.result = redact_secrets(result)
     model.message = "Agent direct operationが完了しました"

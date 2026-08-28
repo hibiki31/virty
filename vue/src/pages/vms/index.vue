@@ -7,6 +7,12 @@
         data-testid="vm-create-open"
         @click="stateCreateDialog = true">{{ t('pages.vms.actions.create') }}</v-btn>
       <v-spacer></v-spacer>
+      <project-filter-select
+        :model-value="query.projectId"
+        class="pr-3"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
       <v-text-field v-model="query.nameLike" density="compact" :label="t('pages.vms.filters.search')" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
@@ -28,6 +34,12 @@
       <template v-slot:item.core="{ item }">
         <v-icon left>mdi-cpu-64-bit</v-icon>
         {{ t('pages.vms.coreCount', { count: item.core }, item.core) }}
+      </template>
+      <template #item.ownerProject="{ item }">
+        <v-chip v-if="item.ownerProject" size="small" :to="`/projects/${item.ownerProject.id}`">
+          {{ formatProjectName(item.ownerProject) }}
+        </v-chip>
+        <span v-else class="text-medium-emphasis">{{ t('pages.vms.personalLegacy') }}</span>
       </template>
 
     </v-data-table-server>
@@ -51,8 +63,12 @@ import { getPowerColor } from '@/composables/vm'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/composables/i18n'
+import { formatProjectName } from '@/composables/project'
+import { useRoute, useRouter } from 'vue-router'
 
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
 const loading = ref(false)
 const stateCreateDialog = ref(false)
@@ -67,7 +83,7 @@ const headers = computed(() => [
   { title: t('pages.vms.columns.ram'), value: 'memory' },
   { title: t('pages.vms.columns.cpu'), value: 'core' },
   { title: t('pages.vms.columns.userId'), value: 'ownerUserId' },
-  { title: t('pages.vms.columns.groupId'), value: 'ownerGroupId' }
+  { title: t('pages.vms.columns.project'), value: 'ownerProject' }
 ])
 
 const query = ref<typeListVMQuery>({
@@ -76,6 +92,7 @@ const query = ref<typeListVMQuery>({
   page: 1,
   nameLike: "",
   nodeNameLike: "",
+  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
 })
 
 const items = ref<typeListVM>(initVMList)
@@ -99,6 +116,17 @@ async function reload() {
   loading.value = true
   items.value = await getVMList(query.value)
   loading.value = false
+}
+
+async function updateProjectFilter(projectId: string | null) {
+  query.value.projectId = projectId
+  const routeQuery = { ...route.query }
+  if (projectId) routeQuery.projectId = projectId
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  pageState.value = 1
+  query.value.page = 1
+  await reload()
 }
 
 useReloadListener(() => {

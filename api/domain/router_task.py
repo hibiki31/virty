@@ -5,26 +5,27 @@ from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import ApiError, ApiErrorCode, NoResultFound, raise_notfound
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from node.models import NodeModel
-from project.models import ProjectModel
 from resource_authorization import (
-    allowed_node_names,
     get_authorized_network,
     get_authorized_storage,
+    get_member_project,
+    get_project_network,
+    get_project_storage,
+    project_allows_image,
+    project_node_names,
     require_admin,
 )
 from storage.models import ImageModel, StorageModel
 from task.functions import TaskManager
 from task.schemas import Task
 
-from .authorization import get_authorized_domain
-from .models import DomainModel
+from .authorization import domain_task_path_param, get_authorized_domain
 from .schemas import (
     CdromForUpdateDomain,
     DomainForCreate,
-    DomainProjectForUpdate,
     NetworkForUpdateDomain,
     PowerStatusForUpdateDomain,
 )
@@ -60,17 +61,17 @@ def create_vm(
         db: Session = Depends(get_db),
 ):
     cu.verify_scope(["vm.create"])
+    get_member_project(db, body.project_id, cu)
     node = db.query(NodeModel).filter(NodeModel.name == body.node_name).one_or_none()
-    allowed_nodes = allowed_node_names(db, cu)
-    if node is None or (
-        allowed_nodes is not None and node.name not in allowed_nodes
-    ):
+    if node is None or node.name not in project_node_names(db, body.project_id):
         raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     for interface in body.interface:
-        network = get_authorized_network(
+        network = get_project_network(
             db,
+            body.project_id,
             interface.network_uuid,
             cu,
+            interface.port,
         )
         if network.node_name != node.name:
             raise ApiError(
@@ -79,8 +80,9 @@ def create_vm(
                 "The network must belong to the selected node.",
             )
     for disk in body.disks:
-        destination = get_authorized_storage(
+        destination = get_project_storage(
             db,
+            body.project_id,
             disk.save_pool_uuid,
             cu,
         )
@@ -97,7 +99,7 @@ def create_vm(
                     ApiErrorCode.COPY_SOURCE_REQUIRED,
                     "The copy source storage and image are required.",
                 )
-            get_authorized_storage(db, disk.original_pool_uuid, cu)
+            get_project_storage(db, body.project_id, disk.original_pool_uuid, cu)
             source = (
                 db.query(ImageModel)
                 .filter(
@@ -106,11 +108,15 @@ def create_vm(
                 )
                 .one_or_none()
             )
-            if source is None or source.storage.node_name != node.name:
+            if (
+                source is None
+                or source.storage.node_name != node.name
+                or not project_allows_image(db, body.project_id, source)
+            ):
                 raise ApiError(
-                    400,
-                    ApiErrorCode.IMAGE_NODE_MISMATCH,
-                    "The source image must belong to the selected node.",
+                    404,
+                    ApiErrorCode.IMAGE_NOT_FOUND,
+                    "The source image is not available to the selected project.",
                 )
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -135,10 +141,14 @@ def delete_vm(
         db: Session = Depends(get_db)
 ):
     cu.verify_scope(["vm.delete"])
-    get_authorized_domain(db, uuid, cu)
+    domain = get_authorized_domain(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='delete', resource='vm', object='root')
-    task.commit(user=cu, req=req, param={"uuid": uuid})
+    task.commit(
+        user=cu,
+        req=req,
+        param=domain_task_path_param(domain, cu.id),
+    )
 
     vm_list_task = TaskManager(db=db)
     vm_list_task.select('put', 'vm', 'list')
@@ -156,10 +166,15 @@ def update_vm_power_status(
         db: Session = Depends(get_db),
 ):
     cu.verify_scope(["vm.power"])
-    get_authorized_domain(db, uuid, cu)
+    domain = get_authorized_domain(db, uuid, cu)
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='power')
-    task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
+    task.commit(
+        user=cu,
+        req=req,
+        body=body,
+        param=domain_task_path_param(domain, cu.id),
+    )
 
     task_vm_list = TaskManager(db=db)
     task_vm_list.select('put', 'vm', 'list')
@@ -202,11 +217,23 @@ def control_vm_cdrom(
                 ApiErrorCode.CDROM_IMAGE_NOT_FOUND,
                 "The CD-ROM image was not found.",
             )
-        get_authorized_storage(db, image.storage_uuid, cu)
+        if domain.owner_project_id is None:
+            get_authorized_storage(db, image.storage_uuid, cu)
+        elif not project_allows_image(db, domain.owner_project_id, image):
+            raise ApiError(
+                404,
+                ApiErrorCode.CDROM_IMAGE_NOT_FOUND,
+                "The CD-ROM image was not found.",
+            )
 
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='cdrom')
-    task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
+    task.commit(
+        user=cu,
+        req=req,
+        body=body,
+        param=domain_task_path_param(domain, cu.id),
+    )
 
     task_vm_list = TaskManager(db=db)
     task_vm_list.select('put', 'vm', 'list')
@@ -275,36 +302,6 @@ def control_vm_cdrom(
 #     return vm
 
 
-@app.patch("/{uuid}/project")
-def update_vm_project(
-        uuid: str,
-        request: DomainProjectForUpdate,
-        current_user: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db),
-):
-    current_user.verify_scope(["vm.project"])
-    get_authorized_domain(db, uuid, current_user)
-    if not current_user.can_access_project(request.project_id):
-        raise ApiError(
-            403,
-            ApiErrorCode.PROJECT_DENIED,
-            "The project is outside the granted scope.",
-        )
-    try:
-        vm = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
-        db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
-    except NoResultFound:
-        raise_notfound(
-            "The VM or project was not found.",
-            code=ApiErrorCode.VM_OR_PROJECT_NOT_FOUND,
-        )
-    
-    vm.owner_project_id = request.project_id
-    db.commit()
-
-    return vm
-
-
 @app.patch("/{uuid}/network", response_model=List[Task])
 def update_vm_network(
         uuid: str,
@@ -322,7 +319,16 @@ def update_vm_network(
     cu.verify_scope(["vm.attach"])
     vm = get_authorized_domain(db, uuid, cu)
     
-    net = get_authorized_network(db, body.network_uuid, cu)
+    if vm.owner_project_id is None:
+        net = get_authorized_network(db, body.network_uuid, cu)
+    else:
+        net = get_project_network(
+            db,
+            vm.owner_project_id,
+            body.network_uuid,
+            cu,
+            body.port,
+        )
     if net.node_name != vm.node_name:
         raise ApiError(
             400,
@@ -333,7 +339,12 @@ def update_vm_network(
     # タスクを追加
     task = TaskManager(db=db)
     task.select(method='patch', resource='vm', object='network')
-    task.commit(user=cu, req=req, body=body, param={"uuid": uuid})
+    task.commit(
+        user=cu,
+        req=req,
+        body=body,
+        param=domain_task_path_param(vm, cu.id),
+    )
 
     task_vm_list = TaskManager(db=db)
     task_vm_list.select('put', 'vm', 'list')

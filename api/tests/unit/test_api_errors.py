@@ -271,6 +271,30 @@ def test_agent_literal_error_codes_are_registered() -> None:
     assert found <= registered
 
 
+def test_normal_api_routes_do_not_raise_unstructured_http_errors() -> None:
+    api_root = Path(__file__).resolve().parents[2]
+    source_paths = [
+        path
+        for package in api_root.iterdir()
+        if package.is_dir() and package.name not in {"agent", "tests"}
+        for path in package.glob("router*.py")
+    ]
+    source_paths.append(api_root / "resource_authorization.py")
+    unexpected: list[str] = []
+
+    for source_path in source_paths:
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "HTTPException"
+            ):
+                unexpected.append(f"{source_path.relative_to(api_root)}:{node.lineno}")
+
+    assert not unexpected
+
+
 def test_known_api_error_uses_common_envelope() -> None:
     response = TestClient(_test_application()).get("/known")
 

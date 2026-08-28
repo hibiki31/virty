@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 from pydantic import field_validator
 
@@ -38,6 +38,7 @@ class StorageForLibvirt(StorageForXML):
 class StorageForQuery(GetPagination):
     name_like: str | None = None
     node_name: str | None = None
+    project_id: str | None = None
 
 
 class StorageMetadata(BaseSchema):
@@ -156,6 +157,11 @@ class StoragePoolForCreate(BaseSchema):
 class StoragePoolForUpdate(BaseSchema):
     id: int
     storage_uuids: List[str]
+
+
+class StoragePoolDeleteResponse(BaseSchema):
+    deleted: Literal[True]
+    id: int
 
 
 class StorageForStorageContainer(BaseSchema):

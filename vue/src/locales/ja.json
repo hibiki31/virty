@@ -91,6 +91,7 @@
     "images": "イメージ",
     "networks": "ネットワーク",
     "nodes": "ノード",
+    "projects": "プロジェクト",
     "storages": "ストレージ",
     "tasks": "タスク",
     "users": "ユーザー",
@@ -231,6 +232,25 @@
     "vmNetwork": {
       "title": "ネットワークの変更"
     },
+    "projectCreate": {
+      "failed": "プロジェクトの作成に失敗しました",
+      "members": "メンバー",
+      "membershipNotice": "この画面でプロジェクトを管理し続けられるよう、ログイン中の管理者を明示的に含めます。新しいプロジェクトをトークンへ反映するには、全メンバーが再ログインする必要があります。",
+      "title": "プロジェクトの作成",
+      "validation": {
+        "keepAdministrator": "ログイン中の管理者をメンバーに残してください。",
+        "memberRequired": "メンバーを1人以上選択してください。"
+      }
+    },
+    "vmProjectChange": {
+      "failed": "VMのプロジェクト移動に失敗しました",
+      "move": "移動",
+      "resourceNotice": "移動先プロジェクトでは、このVMが現在使用しているすべてのストレージとネットワークリソースを許可する必要があります。",
+      "success": "VMを移動しました",
+      "successBody": "VMはプロジェクト #{projectId} に所属しました。",
+      "title": "VMのプロジェクト移動",
+      "unreachable": "VMサービスに接続できません。"
+    },
     "vmAdd": {
       "additionalKeys": "追加のSSH公開鍵",
       "addInterface": "インターフェースを追加",
@@ -252,6 +272,7 @@
       "noSavedKeys": "保存済みSSH公開鍵はありません",
       "oneKeyPerLine": "1行に公開鍵を1つ入力してください",
       "passwordChange": "初回ログイン時にパスワード変更を要求",
+      "projectRequired": "VMを作成するには、1つ以上のプロジェクトに所属する必要があります。",
       "removeInterface": "インターフェースを削除",
       "savedKeys": "保存済みSSH公開鍵",
       "savedKeysFailed": "保存済みSSH公開鍵を取得できませんでした。公開鍵は手入力できます。",
@@ -506,6 +527,36 @@
     "challenge_not_found": "認証チャレンジが見つかりません。",
     "challenge_replay": "認証チャレンジはすでに使用されています。",
     "conflict": "現在のリソース状態と競合しています。",
+    "flavor_in_use": "フレーバーは現在使用中です。",
+    "flavor_project_denied": "このフレーバーはプロジェクトに許可されていません。",
+    "global_admin_required": "この操作にはグローバル管理者権限が必要です。",
+    "global_mutation_requires_unscoped_lease": "グローバルな変更操作には、プロジェクトへ限定されていないリースが必要です。",
+    "image_project_grant_denied": "このイメージはプロジェクトに許可されていません。",
+    "image_storage_project_denied": "イメージのストレージはプロジェクトに許可されていません。",
+    "image_storage_target_missing": "イメージの保存先ストレージが見つかりません。",
+    "last_project_member_required": "プロジェクトの最後のメンバーは削除できません。",
+    "mutation_target_missing": "変更対象が見つかりません。",
+    "network_or_pool_not_found": "ネットワークまたはネットワークプールが見つかりません。",
+    "network_pool_in_use": "ネットワークプールは現在使用中です。",
+    "principal_project_revoked": "プリンシパルはこのプロジェクトへアクセスできなくなりました。",
+    "project_constraint_denied": "リソースがプロジェクトに許可された制約の範囲外です。",
+    "project_grant_conflict": "プロジェクトのリソース許可が現在の状態と競合しています。",
+    "project_grant_not_found": "プロジェクトのリソース許可が見つかりません。",
+    "project_grant_resource_not_found": "プロジェクトの許可が参照するリソースが見つかりません。",
+    "project_membership_denied": "この操作にはプロジェクトへの所属が必要です。",
+    "project_member_conflict": "プロジェクトメンバーの状態が現在の状態と競合しています。",
+    "project_member_not_found": "プロジェクトメンバーが見つかりません。",
+    "project_not_empty": "プロジェクトに所有中のリソースがあるため削除できません。",
+    "project_update_conflict": "別のリクエストによってプロジェクトが変更されました。再読込してから再試行してください。",
+    "resource_in_use": "リソースは現在使用中です。",
+    "storage_pool_in_use": "ストレージプールは現在使用中です。",
+    "storage_project_denied": "このストレージはプロジェクトに許可されていません。",
+    "vm_copy_source_required": "VMのコピー元イメージを選択してください。",
+    "vm_image_project_denied": "VMイメージはプロジェクトに許可されていません。",
+    "vm_owner_denied": "このVMの所有者へアクセスする権限がありません。",
+    "vm_project_binding_changed": "取得後にVMの所属プロジェクトが変更されました。再読込してから再試行してください。",
+    "vm_project_resource_conflict": "VMが移動先プロジェクトに許可されていないリソースを使用しています。",
+    "vm_source_denied": "VMのコピー元を使用する権限がありません。",
     "copy_source_required": "コピー元のイメージを選択してください。",
     "destination_project_denied": "コピー先プロジェクトを使用する権限がありません。",
     "destructive_action_denied": "この破壊的なアクションは許可されていません。",
@@ -717,10 +768,14 @@
     "credentialName": "Credential名",
     "currentPassword": "現在のパスワード",
     "description": "説明",
+    "flavorIds": "フレーバー",
     "imageUrl": "イメージURL",
     "limit": "1ページの件数",
     "memoryMegaByte": "メモリー",
+    "memberIds": "メンバー",
     "name": "名前",
+    "nameLike": "検索",
+    "networkPoolIds": "ネットワークプール",
     "nodeName": "ノード",
     "page": "ページ",
     "password": "パスワード",
@@ -732,6 +787,7 @@
     "request": "リクエスト",
     "scope": "スコープ",
     "storageUuid": "ストレージ",
+    "storagePoolIds": "ストレージプール",
     "userId": "ユーザーID",
     "userName": "ユーザー名",
     "username": "ユーザー名",
@@ -936,7 +992,8 @@
         "pool": {
           "list": "libvirtストレージプール一覧の参照 (storage.pool.list)",
           "create": "libvirtストレージプールの作成 (storage.pool.create)",
-          "update": "libvirtストレージプールの更新 (storage.pool.update)"
+          "update": "libvirtストレージプールの更新 (storage.pool.update)",
+          "delete": "libvirtストレージプールの削除 (storage.pool.delete)"
         },
         "get": "ストレージ詳細の参照 (storage.get)",
         "create": "ストレージの作成 (storage.create)",
@@ -978,12 +1035,22 @@
       },
       "project": {
         "all": "すべてのプロジェクトアクション (project.*)",
+        "get": "プロジェクト詳細の参照 (project.get)",
         "list": "プロジェクト一覧の参照 (project.list)",
+        "memberCandidates": "プロジェクトメンバー候補の参照 (project.member-candidates)",
         "member": {
-          "add": "プロジェクトメンバーの追加 (project.member.add)"
+          "add": "プロジェクトメンバーの追加 (project.member.add)",
+          "remove": "プロジェクトメンバーの削除 (project.member.remove)"
+        },
+        "resourceGrantCandidates": {
+          "get": "プロジェクトのリソース許可候補の参照 (project.resource-grant-candidates.get)"
+        },
+        "resourceGrants": {
+          "update": "プロジェクトのリソース許可の更新 (project.resource-grants.update)"
         },
         "create": "プロジェクトの作成 (project.create)",
-        "delete": "プロジェクトの削除 (project.delete)"
+        "delete": "プロジェクトの削除 (project.delete)",
+        "update": "プロジェクトの更新 (project.update)"
       },
       "user": {
         "all": "すべてのユーザーアクション (user.*)",
@@ -1225,6 +1292,64 @@
         "publicKeys": "公開鍵"
       }
     },
+    "projects": {
+      "documentTitle": "プロジェクト",
+      "filters": {
+        "search": "検索"
+      },
+      "columns": {
+        "project": "プロジェクト",
+        "members": "メンバー",
+        "vcpuUsed": "使用中vCPU",
+        "memoryUsed": "使用中メモリー",
+        "storageUsed": "使用中ストレージ"
+      },
+      "gibValue": "{value} GiB"
+    },
+    "projectDetail": {
+      "deleteConfirm": "{project}を削除しますか？",
+      "documentTitle": "プロジェクト",
+      "membershipChanged": "追加されたメンバーがこのプロジェクトをトークンへ反映するには、再ログインが必要です。削除されたメンバーは次のリクエストからアクセスできません。",
+      "subtitle": "VMと許可されたリソースを共同所有する境界",
+      "sections": {
+        "grants": "リソース許可",
+        "limits": "上限（未適用）",
+        "members": "メンバー",
+        "name": "プロジェクト名",
+        "resources": "リソース",
+        "usage": "使用量"
+      },
+      "members": {
+        "add": "メンバーを追加"
+      },
+      "grants": {
+        "edit": "許可を編集",
+        "flavors": "フレーバー",
+        "networkPools": "ネットワークプール",
+        "save": "許可を保存",
+        "storagePools": "ストレージプール"
+      },
+      "values": {
+        "gib": "{value} GiB",
+        "gibUsed": "{value} GiB 使用中",
+        "used": "{value} 使用中",
+        "vcpu": "vCPU"
+      },
+      "notifications": {
+        "addMemberFailed": "メンバーの追加に失敗しました",
+        "candidatesUnavailable": "許可候補を取得できませんでした。",
+        "deleteFailed": "プロジェクトの削除に失敗しました",
+        "grantsUpdated": "リソース許可を更新しました",
+        "grantsUpdatedBody": "プロジェクトのリソース許可を置き換えました。",
+        "loadFailed": "プロジェクトの読込に失敗しました",
+        "loadPoolsFailed": "リソースプールの読込に失敗しました",
+        "nameUpdated": "プロジェクト名を更新しました。",
+        "removeMemberFailed": "メンバーの削除に失敗しました",
+        "updateFailed": "プロジェクトの更新に失敗しました",
+        "updateGrantsFailed": "リソース許可の更新に失敗しました",
+        "updated": "プロジェクトを更新しました"
+      }
+    },
     "vms": {
       "documentTitle": "VM",
       "actions": {
@@ -1242,8 +1367,10 @@
         "ram": "RAM",
         "cpu": "CPU",
         "userId": "ユーザーID",
-        "groupId": "グループID"
+        "groupId": "グループID",
+        "project": "プロジェクト"
       },
+      "personalLegacy": "個人所有 / 旧形式",
       "memoryGib": "{value} GiB",
       "coreCount": "{count}コア",
       "notifications": {
@@ -1259,10 +1386,15 @@
       },
       "sections": {
         "spec": "仕様",
+        "project": "プロジェクト",
         "node": "ノード",
         "network": "ネットワーク",
         "storage": "ストレージ",
         "xml": "XML"
+      },
+      "project": {
+        "change": "プロジェクトを変更",
+        "personalLegacy": "個人所有 / 旧形式"
       },
       "spec": {
         "status": "状態:",

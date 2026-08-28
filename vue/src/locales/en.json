@@ -91,6 +91,7 @@
     "images": "Images",
     "networks": "Networks",
     "nodes": "Nodes",
+    "projects": "Projects",
     "storages": "Storage",
     "tasks": "Tasks",
     "users": "Users",
@@ -231,6 +232,25 @@
     "vmNetwork": {
       "title": "Change network"
     },
+    "projectCreate": {
+      "failed": "Creating the Project failed",
+      "members": "Members",
+      "membershipNotice": "The signed-in administrator is included explicitly so the Project remains manageable in this UI. All members must sign in again before the new Project appears in their token.",
+      "title": "Create Project",
+      "validation": {
+        "keepAdministrator": "Keep the signed-in administrator as a member.",
+        "memberRequired": "Select at least one member."
+      }
+    },
+    "vmProjectChange": {
+      "failed": "Moving the VM failed",
+      "move": "Move",
+      "resourceNotice": "The destination Project must grant every storage and network resource currently used by this VM.",
+      "success": "VM moved",
+      "successBody": "The VM now belongs to Project #{projectId}.",
+      "title": "Move VM to Project",
+      "unreachable": "Unable to reach the VM service."
+    },
     "vmAdd": {
       "additionalKeys": "Additional SSH public keys",
       "addInterface": "Add interface",
@@ -252,6 +272,7 @@
       "noSavedKeys": "No saved SSH public keys",
       "oneKeyPerLine": "Enter one public key per line",
       "passwordChange": "Require a password change on first login",
+      "projectRequired": "VM creation requires membership in at least one Project.",
       "removeInterface": "Remove interface",
       "savedKeys": "Saved SSH public keys",
       "savedKeysFailed": "Saved SSH public keys could not be loaded. You can still enter keys manually.",
@@ -506,6 +527,36 @@
     "challenge_not_found": "The authentication challenge was not found.",
     "challenge_replay": "The authentication challenge has already been used.",
     "conflict": "The request conflicts with the current resource state.",
+    "flavor_in_use": "The flavor is currently in use.",
+    "flavor_project_denied": "The flavor is not granted to this project.",
+    "global_admin_required": "A global administrator is required for this operation.",
+    "global_mutation_requires_unscoped_lease": "A global mutation requires a lease that is not restricted to a project.",
+    "image_project_grant_denied": "The image is not granted to this project.",
+    "image_storage_project_denied": "The image storage is not granted to this project.",
+    "image_storage_target_missing": "The image storage target was not found.",
+    "last_project_member_required": "The last project member cannot be removed.",
+    "mutation_target_missing": "The mutation target was not found.",
+    "network_or_pool_not_found": "The network or network pool was not found.",
+    "network_pool_in_use": "The network pool is currently in use.",
+    "principal_project_revoked": "The principal no longer has access to this project.",
+    "project_constraint_denied": "The resource is outside the granted project constraints.",
+    "project_grant_conflict": "The project resource grant conflicts with its current state.",
+    "project_grant_not_found": "The project resource grant was not found.",
+    "project_grant_resource_not_found": "The resource referenced by the project grant was not found.",
+    "project_membership_denied": "Project membership is required for this operation.",
+    "project_member_conflict": "The project membership conflicts with its current state.",
+    "project_member_not_found": "The project member was not found.",
+    "project_not_empty": "The project still owns resources and cannot be deleted.",
+    "project_update_conflict": "The project was changed by another request. Reload and try again.",
+    "resource_in_use": "The resource is currently in use.",
+    "storage_pool_in_use": "The storage pool is currently in use.",
+    "storage_project_denied": "The storage is not granted to this project.",
+    "vm_copy_source_required": "Select a source image for the VM copy.",
+    "vm_image_project_denied": "The VM image is not granted to this project.",
+    "vm_owner_denied": "You do not have permission to access this VM owner.",
+    "vm_project_binding_changed": "The VM project assignment changed after it was read. Reload and try again.",
+    "vm_project_resource_conflict": "The VM uses resources that are not granted to the destination project.",
+    "vm_source_denied": "You do not have permission to use the VM source.",
     "copy_source_required": "Select a source image to copy.",
     "destination_project_denied": "You do not have permission to use the destination project.",
     "destructive_action_denied": "This destructive action is not permitted.",
@@ -717,10 +768,14 @@
     "credentialName": "Credential name",
     "currentPassword": "Current password",
     "description": "Description",
+    "flavorIds": "Flavors",
     "imageUrl": "Image URL",
     "limit": "Items per page",
     "memoryMegaByte": "Memory",
+    "memberIds": "Members",
     "name": "Name",
+    "nameLike": "Search",
+    "networkPoolIds": "Network pools",
     "nodeName": "Node",
     "page": "Page",
     "password": "Password",
@@ -732,6 +787,7 @@
     "request": "Request",
     "scope": "Scope",
     "storageUuid": "Storage",
+    "storagePoolIds": "Storage pools",
     "userId": "User ID",
     "userName": "User name",
     "username": "User name",
@@ -936,7 +992,8 @@
         "pool": {
           "list": "List libvirt storage pools (storage.pool.list)",
           "create": "Create libvirt storage pools (storage.pool.create)",
-          "update": "Update libvirt storage pools (storage.pool.update)"
+          "update": "Update libvirt storage pools (storage.pool.update)",
+          "delete": "Delete libvirt storage pools (storage.pool.delete)"
         },
         "get": "Read storage details (storage.get)",
         "create": "Create storage (storage.create)",
@@ -978,12 +1035,22 @@
       },
       "project": {
         "all": "All project actions (project.*)",
+        "get": "Read project details (project.get)",
         "list": "List projects (project.list)",
+        "memberCandidates": "List project member candidates (project.member-candidates)",
         "member": {
-          "add": "Add project members (project.member.add)"
+          "add": "Add project members (project.member.add)",
+          "remove": "Remove project members (project.member.remove)"
+        },
+        "resourceGrantCandidates": {
+          "get": "List project resource grant candidates (project.resource-grant-candidates.get)"
+        },
+        "resourceGrants": {
+          "update": "Update project resource grants (project.resource-grants.update)"
         },
         "create": "Create projects (project.create)",
-        "delete": "Delete projects (project.delete)"
+        "delete": "Delete projects (project.delete)",
+        "update": "Update projects (project.update)"
       },
       "user": {
         "all": "All user actions (user.*)",
@@ -1225,6 +1292,64 @@
         "publicKeys": "Public keys"
       }
     },
+    "projects": {
+      "documentTitle": "Projects",
+      "filters": {
+        "search": "Search"
+      },
+      "columns": {
+        "project": "Project",
+        "members": "Members",
+        "vcpuUsed": "vCPU used",
+        "memoryUsed": "Memory used",
+        "storageUsed": "Storage used"
+      },
+      "gibValue": "{value} GiB"
+    },
+    "projectDetail": {
+      "deleteConfirm": "Delete {project}?",
+      "documentTitle": "Project",
+      "membershipChanged": "Added members must sign in again before this Project appears in their token. Removed members lose access from their next request.",
+      "subtitle": "Shared ownership boundary for virtual machines and granted resources",
+      "sections": {
+        "grants": "Resource grants",
+        "limits": "Limits (not enforced)",
+        "members": "Members",
+        "name": "Project name",
+        "resources": "Resources",
+        "usage": "Usage"
+      },
+      "members": {
+        "add": "Add member"
+      },
+      "grants": {
+        "edit": "Edit grants",
+        "flavors": "Flavors",
+        "networkPools": "Network pools",
+        "save": "Save grants",
+        "storagePools": "Storage pools"
+      },
+      "values": {
+        "gib": "{value} GiB",
+        "gibUsed": "{value} GiB used",
+        "used": "{value} used",
+        "vcpu": "vCPU"
+      },
+      "notifications": {
+        "addMemberFailed": "Adding the member failed",
+        "candidatesUnavailable": "Grant candidates could not be loaded.",
+        "deleteFailed": "Deleting the Project failed",
+        "grantsUpdated": "Resource grants updated",
+        "grantsUpdatedBody": "The Project resource grants were replaced.",
+        "loadFailed": "Loading the Project failed",
+        "loadPoolsFailed": "Loading resource pools failed",
+        "nameUpdated": "The Project name was updated.",
+        "removeMemberFailed": "Removing the member failed",
+        "updateFailed": "Updating the Project failed",
+        "updateGrantsFailed": "Updating resource grants failed",
+        "updated": "Project updated"
+      }
+    },
     "vms": {
       "documentTitle": "VMs",
       "actions": {
@@ -1242,8 +1367,10 @@
         "ram": "RAM",
         "cpu": "CPU",
         "userId": "User ID",
-        "groupId": "Group ID"
+        "groupId": "Group ID",
+        "project": "Project"
       },
+      "personalLegacy": "Personal / legacy",
       "memoryGib": "{value} GiB",
       "coreCount": "{count} core | {count} cores",
       "notifications": {
@@ -1259,10 +1386,15 @@
       },
       "sections": {
         "spec": "Specifications",
+        "project": "Project",
         "node": "Node",
         "network": "Network",
         "storage": "Storage",
         "xml": "XML"
+      },
+      "project": {
+        "change": "Change Project",
+        "personalLegacy": "Personal / legacy"
       },
       "spec": {
         "status": "Status:",

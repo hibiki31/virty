@@ -6,8 +6,8 @@ const encoded = (value: object): string =>
 
 export const accessToken = `${encoded({ alg: "none", typ: "JWT" })}.${encoded({
   exp: 4_102_444_800,
-  projects: [],
-  scopes: ["user", "admin"],
+  projects: ["a1b2c3"],
+  scopes: ["user", "admin", "project.read", "project.manage"],
   sub: "operator",
 })}.signature`;
 
@@ -111,9 +111,33 @@ export const rawTask = {
   uuid: "task-raw-7f3a",
 };
 
+const project = {
+  id: "a1b2c3",
+  name: "Project E2E",
+  memberCount: 1,
+  usedCore: 2,
+  usedMemoryG: 8,
+  usedStorageG: 0,
+};
+
+const projectDetail = {
+  ...project,
+  limits: { core: 16, memoryG: 64, storageCapacityG: 500, enforced: false },
+  members: [{ username: "operator" }],
+  resourceGrants: {
+    storagePoolIds: [1],
+    networkPoolIds: [1],
+    flavorIds: [],
+  },
+  storagePools: [{ id: 1, name: "storage-e2e" }],
+  networkPools: [{ id: 1, name: "network-e2e" }],
+  flavors: [],
+};
+
 type ApiState = {
   failNextVmCreate: () => void;
   setInitialized: (initialized: boolean) => void;
+  projectCreateBodies: unknown[];
   vmCreateBodies: unknown[];
 };
 
@@ -130,11 +154,49 @@ async function fulfillJson(route: Route, json: unknown, status = 200): Promise<v
   });
 }
 
+async function handleAgentRequest(route: Route, path: string): Promise<boolean> {
+  if (path === "/api/agent/v1/pairing-requests") {
+    await fulfillJson(route, []);
+    return true;
+  }
+  if (path === "/api/agent/v1/lease-requests") {
+    await fulfillJson(route, []);
+    return true;
+  }
+  if (path === "/api/agent/v1/devices") {
+    await fulfillJson(route, []);
+    return true;
+  }
+  if (path === "/api/agent/v1/capability-leases") {
+    await fulfillJson(route, []);
+    return true;
+  }
+  if (path === "/api/agent/v1/control") {
+    await fulfillJson(route, {
+      allowDeleteWithoutRecovery: false,
+      allowNetworkChangeWithoutOob: false,
+      enabledRiskLevels: ["R1"],
+      mutationsEnabled: false,
+      reason: "E2E baseline",
+      shadowMode: true,
+      updatedAt: "2026-08-22T12:34:56Z",
+      updatedBy: "operator",
+    });
+    return true;
+  }
+  if (path === "/api/agent/v1/operation-reconciliations") {
+    await fulfillJson(route, []);
+    return true;
+  }
+  return false;
+}
+
 export const test = base.extend<Fixtures>({
   api: async ({ page }, use) => {
     const state = {
       failVmCreate: false,
       initialized: true,
+      projectCreateBodies: [] as unknown[],
       vmCreateBodies: [] as unknown[],
     };
 
@@ -166,37 +228,7 @@ export const test = base.extend<Fixtures>({
         await fulfillJson(route, { count: 1, data: [rawTask] });
         return;
       }
-      if (path === "/api/agent/v1/pairing-requests") {
-        await fulfillJson(route, []);
-        return;
-      }
-      if (path === "/api/agent/v1/lease-requests") {
-        await fulfillJson(route, []);
-        return;
-      }
-      if (path === "/api/agent/v1/devices") {
-        await fulfillJson(route, []);
-        return;
-      }
-      if (path === "/api/agent/v1/capability-leases") {
-        await fulfillJson(route, []);
-        return;
-      }
-      if (path === "/api/agent/v1/control") {
-        await fulfillJson(route, {
-          allowDeleteWithoutRecovery: false,
-          allowNetworkChangeWithoutOob: false,
-          enabledRiskLevels: ["R1"],
-          mutationsEnabled: false,
-          reason: "E2E baseline",
-          shadowMode: true,
-          updatedAt: "2026-08-22T12:34:56Z",
-          updatedBy: "operator",
-        });
-        return;
-      }
-      if (path === "/api/agent/v1/operation-reconciliations") {
-        await fulfillJson(route, []);
+      if (await handleAgentRequest(route, path)) {
         return;
       }
       if (path === "/api/vms/vm-e2e-uuid/xml") {
@@ -209,6 +241,23 @@ export const test = base.extend<Fixtures>({
       }
       if (path === "/api/vms" && request.method() === "GET") {
         await fulfillJson(route, { count: 1, data: [vm] });
+        return;
+      }
+      if (path === "/api/projects/a1b2c3/member-candidates") {
+        await fulfillJson(route, { count: 0, data: [] });
+        return;
+      }
+      if (path === "/api/projects/a1b2c3") {
+        await fulfillJson(route, projectDetail);
+        return;
+      }
+      if (path === "/api/projects" && request.method() === "GET") {
+        await fulfillJson(route, { count: 1, data: [project] });
+        return;
+      }
+      if (path === "/api/tasks/projects" && request.method() === "POST") {
+        state.projectCreateBodies.push(request.postDataJSON());
+        await fulfillJson(route, [{ uuid: "project-create-task" }]);
         return;
       }
       if (path === "/api/nodes") {
@@ -242,7 +291,10 @@ export const test = base.extend<Fixtures>({
         return;
       }
       if (path === "/api/users") {
-        await fulfillJson(route, { count: 0, data: [] });
+        await fulfillJson(route, {
+          count: 1,
+          data: [{ username: "operator", scopes: [], projects: [{ id: project.id, name: project.name }], publickeys: [] }],
+        });
         return;
       }
       if (path === "/api/tasks/vms" && request.method() === "POST") {
@@ -275,6 +327,7 @@ export const test = base.extend<Fixtures>({
       setInitialized: initialized => {
         state.initialized = initialized;
       },
+      projectCreateBodies: state.projectCreateBodies,
       vmCreateBodies: state.vmCreateBodies,
     });
   },

@@ -36,6 +36,23 @@ describe("API notification", () => {
     }))).toBe("The requested resource was not found.");
   });
 
+  it("Project業務errorも共通envelopeのcodeから翻訳する", () => {
+    const content = apiErrorRef({
+      detail: {
+        code: "vm_project_resource_conflict",
+        message: "Raw fallback that must not be displayed.",
+      },
+    });
+
+    expect(formatNotificationText(content)).toBe(
+      "The VM uses resources that are not granted to the destination project.",
+    );
+    setLocale("ja");
+    expect(formatNotificationText(content)).toBe(
+      "VMが移動先プロジェクトに許可されていないリソースを使用しています。",
+    );
+  });
+
   it("typed client errorをtranslation contentとして保持する", () => {
     const content = notificationContentFromError(
       new TranslationError(translationRef("webauthn.credentialFailed")),

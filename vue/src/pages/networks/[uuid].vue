@@ -1,6 +1,6 @@
 <template>
   <v-card variant="flat" :loading="!data">
-    <network-delete-dialog :item="data" v-model="stateDeleteDialog"></network-delete-dialog>
+    <network-delete-dialog v-if="isAdmin" :item="data" v-model="stateDeleteDialog"></network-delete-dialog>
     <v-card-title>
       <span class="title">{{ data?.name }}</span>
     </v-card-title>
@@ -9,7 +9,7 @@
         <span class="body ml-5">{{ data.description }}</span>
       </v-card-subtitle>
       <v-card-actions>
-        <v-btn small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
+        <v-btn v-if="isAdmin" small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
           <v-icon left>mdi-delete</v-icon>{{ t('pages.networkDetail.actions.delete') }}
         </v-btn>
       </v-card-actions>
@@ -36,7 +36,7 @@
                     <th class="text-left">{{ t('pages.networkDetail.portGroups.name') }}</th>
                     <th class="text-left">{{ t('pages.networkDetail.portGroups.vlan') }}</th>
                     <th class="text-left">{{ t('pages.networkDetail.portGroups.default') }}</th>
-                    <th class="text-left"></th>
+                    <th v-if="isAdmin" class="text-left"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -44,7 +44,7 @@
                     <td>{{ item.name }}</td>
                     <td>{{ item.vlanId }}</td>
                     <td>{{ item.isDefault ? t('pages.networkDetail.portGroups.yes') : "" }}</td>
-                    <td>
+                    <td v-if="isAdmin">
 
                       <v-btn icon="mdi-delete" color="error" variant="plain" density="compact" size="small"
                         :aria-label="t('common.actions.delete')"
@@ -54,9 +54,9 @@
                   </tr>
                 </tbody>
               </v-table>
-              <v-divider></v-divider>
+              <v-divider v-if="isAdmin"></v-divider>
               <!-- VLAN ADD -->
-              <v-card-text>
+              <v-card-text v-if="isAdmin">
                 <v-form ref="formRef" @submit.prevent="submitPort">
                   <v-row>
                     <v-col cols="6">
@@ -100,15 +100,22 @@
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
+import { hasAdminScope } from '@/composables/auth';
 import { asyncSleep } from '@/composables/sleep';
 import { translateDomainValue, useLocalizedDocumentTitle } from '@/composables/i18n';
 import { useI18n } from 'vue-i18n';
 import { useLocalizedRules } from '@/composables/rules';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute()
 const state = useStateStore()
 const { t } = useI18n({ useScope: 'global' })
 const r = useLocalizedRules()
+const auth = useAuthStore()
+const isAdmin = hasAdminScope(auth.scopes)
+const projectId = computed(() =>
+  typeof route.query.projectId === 'string' ? route.query.projectId : undefined
+)
 
 const loading = ref(false)
 const deleting = ref<Set<string>>(new Set())
@@ -135,7 +142,8 @@ function reload() {
   if ('uuid' in route.params) {
     apiClient.GET('/api/networks/{uuid}', {
       params: {
-        path: { uuid: route.params.uuid }
+        path: { uuid: route.params.uuid },
+        query: { projectId: projectId.value },
       }
     }).then((res) => {
       if (res.data) {
@@ -145,7 +153,8 @@ function reload() {
 
     apiClient.GET('/api/networks/{uuid}/xml', {
       params: {
-        path: { uuid: route.params.uuid }
+        path: { uuid: route.params.uuid },
+        query: { projectId: projectId.value },
       }
     }).then((res) => {
       if (res.data) {

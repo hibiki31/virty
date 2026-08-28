@@ -6,6 +6,7 @@ import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import {
   agentScopeLabel,
   agentScopeListLabel,
+  agentScopeKeys,
   agentStatusLabel,
   booleanLabel,
   formatDateTime,
@@ -53,6 +54,79 @@ function interpolationParams(message: string): string[] {
     .filter((value, index, values) => values.indexOf(value) === index)
     .sort();
 }
+
+// api/agent/action_catalog.jsonの公開action scope。catalog変更時は同じ変更で更新する。
+const actionCatalogScopes = [
+  "flavor.create",
+  "flavor.delete",
+  "flavor.list",
+  "image.delete",
+  "image.download",
+  "image.flavor.update",
+  "image.list",
+  "image.refresh",
+  "metrics.get",
+  "network.create",
+  "network.delete",
+  "network.get",
+  "network.list",
+  "network.ovs.create",
+  "network.ovs.delete",
+  "network.pool.create",
+  "network.pool.delete",
+  "network.pool.list",
+  "network.pool.update",
+  "network.refresh",
+  "network.xml.get",
+  "node.create",
+  "node.delete",
+  "node.facts",
+  "node.get",
+  "node.info",
+  "node.list",
+  "node.role.update",
+  "node.ssh-key.write",
+  "node.ssh-public-key.get",
+  "project.create",
+  "project.delete",
+  "project.get",
+  "project.list",
+  "project.member-candidates",
+  "project.member.add",
+  "project.member.remove",
+  "project.resource-grant-candidates.get",
+  "project.resource-grants.update",
+  "project.update",
+  "storage.create",
+  "storage.delete",
+  "storage.get",
+  "storage.list",
+  "storage.metadata.update",
+  "storage.pool.create",
+  "storage.pool.delete",
+  "storage.pool.list",
+  "storage.pool.update",
+  "system.version",
+  "task.delete-all",
+  "task.get",
+  "task.incomplete",
+  "task.list",
+  "user.create",
+  "user.delete",
+  "user.list",
+  "user.me",
+  "user.update",
+  "vm.cdrom.update",
+  "vm.create",
+  "vm.delete",
+  "vm.get",
+  "vm.list",
+  "vm.network.update",
+  "vm.power.update",
+  "vm.project.update",
+  "vm.refresh",
+  "vm.xml.get",
+] as const;
 
 describe("locale resolution", () => {
   it("prefers a supported stored locale over browser preferences", () => {
@@ -163,7 +237,7 @@ describe("localized presentation", () => {
   });
 
   it("contains a non-empty translation for every generated API error code", () => {
-    expect(API_ERROR_CODES).toHaveLength(207);
+    expect(API_ERROR_CODES).toHaveLength(237);
     for (const code of API_ERROR_CODES) {
       expect(en.apiErrors[code].trim(), code).not.toBe("");
       expect(ja.apiErrors[code].trim(), code).not.toBe("");
@@ -175,6 +249,24 @@ describe("localized presentation", () => {
     for (const code of FIELD_ERROR_CODES) {
       expect(en.fieldErrors[code].trim(), code).not.toBe("");
       expect(ja.fieldErrors[code].trim(), code).not.toBe("");
+    }
+  });
+
+  it("maps every Agent action catalog scope to non-empty English and Japanese labels", () => {
+    expect(actionCatalogScopes).toHaveLength(69);
+    expect(new Set(actionCatalogScopes).size).toBe(actionCatalogScopes.length);
+
+    for (const scope of actionCatalogScopes) {
+      expect(agentScopeKeys[scope], scope).toBeDefined();
+    }
+
+    for (const locale of ["en", "ja"] as const) {
+      setLocale(locale);
+      for (const scope of actionCatalogScopes) {
+        const label = agentScopeLabel(scope);
+        expect(label.trim(), `${locale}:${scope}`).not.toBe("");
+        expect(label, `${locale}:${scope}`).not.toBe(scope);
+      }
     }
   });
 

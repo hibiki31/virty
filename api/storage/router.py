@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -8,11 +8,17 @@ from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
+from project.service import (
+    ProjectConflictError,
+    ProjectGrantNotFoundError,
+    ensure_storage_pool_deletable,
+    ensure_storage_pool_update_allowed,
+    remove_storage_pool,
+)
 from resource_authorization import (
     allowed_storage_ids,
     allowed_storage_pool_ids,
     get_authorized_storage,
-    get_authorized_storage_pool,
     require_admin,
 )
 
@@ -29,6 +35,7 @@ from .schemas import (
     StorageMetadataForUpdate,
     StoragePage,
     StoragePool,
+    StoragePoolDeleteResponse,
     StoragePoolForCreate,
     StoragePoolForUpdate,
 )
@@ -58,7 +65,7 @@ def get_storages(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.name,StorageModel.node_name)
-    allowed_storages = allowed_storage_ids(db, current_user)
+    allowed_storages = allowed_storage_ids(db, current_user, param.project_id)
     if allowed_storages is not None:
         query = query.filter(StorageModel.uuid.in_(allowed_storages))
 
@@ -100,29 +107,35 @@ def update_storage_metadata(
 
 @app.get("/pools", response_model=List[StoragePool])
 def get_storage_pools(
+        project_id: str | None = Query(default=None, alias="projectId"),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
 ):
     current_user.verify_scope(["storage.read"])
     query = db.query(StoragePoolModel)
-    allowed_pools = allowed_storage_pool_ids(db, current_user)
+    allowed_pools = allowed_storage_pool_ids(db, current_user, project_id)
     if allowed_pools is not None:
         query = query.filter(StoragePoolModel.id.in_(allowed_pools))
     return query.all()
 
 
-@app.post("/pools")
+@app.post("/pools", response_model=StoragePool)
 def create_storage_pool(
         request_model: StoragePoolForCreate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> StoragePoolModel:
     current_user.verify_scope(["storage.manage"])
     require_admin(current_user)
     storage_pool_model = StoragePoolModel(name=request_model.name)
     db.add(storage_pool_model)
     for storage_uuid in request_model.storage_uuids:
-        get_authorized_storage(db, storage_uuid, current_user)
+        if db.get(StorageModel, storage_uuid) is None:
+            raise ApiError(
+                404,
+                ApiErrorCode.STORAGE_NOT_FOUND,
+                "The storage was not found.",
+            )
         storage_pool_model.storages.append(
             AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
@@ -130,25 +143,77 @@ def create_storage_pool(
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
 
 
-@app.patch("/pools")
+@app.patch("/pools", response_model=StoragePool)
 def update_storage_pool(
         request_model: StoragePoolForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> StoragePoolModel:
     current_user.verify_scope(["storage.manage"])
-    storage_pool_model = get_authorized_storage_pool(
-        db,
-        request_model.id,
-        current_user,
-    )
-    for storage_uuid in request_model.storage_uuids:
-        get_authorized_storage(db, storage_uuid, current_user)
-        storage_pool_model.storages.append(
+    require_admin(current_user)
+    storage_uuids = set(request_model.storage_uuids)
+    for storage_uuid in storage_uuids:
+        if db.get(StorageModel, storage_uuid) is None:
+            raise ApiError(
+                404,
+                ApiErrorCode.STORAGE_NOT_FOUND,
+                "The storage was not found.",
+            )
+    try:
+        storage_pool_model = ensure_storage_pool_update_allowed(
+            db,
+            request_model.id,
+            storage_uuids,
+        )
+    except ProjectGrantNotFoundError as exc:
+        raise ApiError(
+            404,
+            ApiErrorCode.STORAGE_POOL_NOT_FOUND,
+            "The storage pool was not found.",
+        ) from exc
+    except ProjectConflictError as exc:
+        raise ApiError(
+            409,
+            ApiErrorCode.STORAGE_POOL_IN_USE,
+            "The storage pool is still in use.",
+        ) from exc
+
+    db.query(AssociationStoragePoolModel).filter(
+        AssociationStoragePoolModel.pool_id == storage_pool_model.id,
+    ).delete(synchronize_session=False)
+    for storage_uuid in sorted(storage_uuids):
+        db.add(
             AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
     db.commit()
     return db.query(StoragePoolModel).filter(StoragePoolModel.id==storage_pool_model.id).one()
+
+
+@app.delete("/pools/{pool_id}", response_model=StoragePoolDeleteResponse)
+def delete_storage_pool(
+    pool_id: int,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> StoragePoolDeleteResponse:
+    current_user.verify_scope(["storage.manage"])
+    require_admin(current_user)
+    try:
+        pool = ensure_storage_pool_deletable(db, pool_id)
+    except ProjectGrantNotFoundError as exc:
+        raise ApiError(
+            404,
+            ApiErrorCode.STORAGE_POOL_NOT_FOUND,
+            "The storage pool was not found.",
+        ) from exc
+    except ProjectConflictError as exc:
+        raise ApiError(
+            409,
+            ApiErrorCode.STORAGE_POOL_IN_USE,
+            "The storage pool is still in use.",
+        ) from exc
+    remove_storage_pool(db, pool)
+    db.commit()
+    return StoragePoolDeleteResponse(deleted=True, id=pool_id)
 
 
 @app.get("/{uuid}", response_model=Storage)

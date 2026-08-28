@@ -1,8 +1,6 @@
 <template>
   <v-card>
     <v-card-actions>
-      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
-        @click="stateCreateDialog = true">{{ t('pages.users.actions.create') }}</v-btn>
       <v-spacer></v-spacer>
       <v-text-field v-model="query.nameLike" density="compact" :label="t('pages.users.filters.search')" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
@@ -12,6 +10,15 @@
       @update:options="loadItems">
       <template v-slot:item.scopes="{ item }">
         {{ displayScopes(item.scopes) }}
+      </template>
+      <template #item.projects="{ item }">
+        <v-chip
+          v-for="project in item.projects"
+          :key="project.id"
+          class="ma-1"
+          size="x-small"
+          :to="`/projects/${project.id}`"
+        >{{ formatProjectName(project) }}</v-chip>
       </template>
     </v-data-table-server>
 
@@ -29,11 +36,11 @@ import { ref } from 'vue'
 import { getUserList, initUserList, type UserListQuery } from '@/composables/user'
 import { userScopeListLabel } from '@/composables/i18n'
 import { useI18n } from 'vue-i18n'
+import { formatProjectName } from '@/composables/project'
 
 const { t } = useI18n({ useScope: 'global' })
 
 const loading = ref(false)
-const stateCreateDialog = ref(false)
 const itemsPerPage = ref(20)
 const pageState = ref(1)
 

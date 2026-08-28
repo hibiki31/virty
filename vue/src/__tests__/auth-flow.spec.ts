@@ -1,4 +1,5 @@
 import {
+  hasScope,
   removeAuth,
   resolveAuthNavigation,
   setAxios,
@@ -88,6 +89,13 @@ beforeEach(() => {
 });
 
 describe("認証navigation", () => {
+  it("legacy userとnamespace wildcardをAPIと同じ規則で判定する", () => {
+    expect(hasScope(["user"], "project.read")).toBe(true);
+    expect(hasScope(["user"], "project.manage")).toBe(false);
+    expect(hasScope(["vm.*"], "vm.project")).toBe(true);
+    expect(hasScope(["admin"], "identity.manage")).toBe(true);
+  });
+
   it("未認証のdeep linkをloginへ送り、認証済みloginはrootへ戻す", () => {
     expect(
       resolveAuthNavigation(false, { path: "/vms/vm-1", fullPath: "/vms/vm-1" }),

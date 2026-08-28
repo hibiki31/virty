@@ -97,8 +97,15 @@ def vm_images(env, client, created_storage):
 
 
 @pytest.fixture(scope="session")
-def created_vm(env, client, created_network, created_storage, vm_images):
-    create_vm(env, client)
+def created_vm(
+    env,
+    client,
+    created_network,
+    created_storage,
+    created_project,
+    vm_images,
+):
+    create_vm(env, client, created_project)
 
     response = client.get("/api/vms")
     response.raise_for_status()
@@ -133,7 +140,7 @@ def _xml_memory_bytes(xml: Element) -> int | None:
     return value * multiplier if multiplier is not None else None
 
 
-def create_vm(env: EnvConfig, client: TestClient) -> None:
+def create_vm(env: EnvConfig, client: TestClient, project_id: str) -> None:
     reload_vms(env, client)
     storage_cloud_name = next(
         item.name for item in env.storages if item.name.endswith("test-cloud")
@@ -212,6 +219,7 @@ def create_vm(env: EnvConfig, client: TestClient) -> None:
                 type="manual",
                 name=exact_vm_name,
                 node_name=server.name,
+                project_id=project_id,
                 memory_mega_byte=4096,
                 cpu=4,
                 disks=[

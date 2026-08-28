@@ -13,17 +13,26 @@ from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from module.xmllib import redact_domain_xml_secrets
 from network.models import NetworkModel
-from project.models import ProjectModel
+from resource_authorization import (
+    get_authorized_project,
+    get_member_project,
+)
 from settings import DATA_ROOT
 from storage.models import ImageModel, StorageModel
 
-from .authorization import get_authorized_domain
+from .authorization import can_access_domain, get_authorized_domain
 from .models import DomainConsoleTicketModel, DomainModel
+from .service import (
+    DomainProjectMoveConflictError,
+    DomainProjectMoveNotFoundError,
+    move_domain_to_project,
+)
 from .schemas import (
     DomainConsoleTicket,
     DomainDetail,
     DomainForQuery,
     DomainPage,
+    DomainProjectForUpdate,
     DomainXML,
 )
 
@@ -93,13 +102,13 @@ def get_vms(
     current_user.verify_scope(["vm.read"])
     query = db.query(DomainModel)
 
-    if param.admin:
-        current_user.verify_scope(scopes=["admin"])
-    else:
-        query = query.filter(or_(
-                DomainModel.owner_user_id==current_user.id,
-                DomainModel.owner_project.has(ProjectModel.users.any(username=current_user.id))
-        ))
+    query = query.filter(or_(
+        DomainModel.owner_user_id == current_user.id,
+        DomainModel.owner_project_id.in_(current_user.projects),
+    ))
+    if param.project_id is not None:
+        get_authorized_project(db, param.project_id, current_user)
+        query = query.filter(DomainModel.owner_project_id == param.project_id)
     if param.name_like:
         query = query.filter(DomainModel.name.like(f'%{param.name_like}%'))
     if param.node_name_like:
@@ -123,6 +132,44 @@ def get_vm(
     ):
     current_user.verify_scope(["vm.read"])
     domain = get_authorized_domain(db, uuid, current_user)
+    return _get_domain_detail(domain, db)
+
+
+@app.patch("/{uuid}/project", response_model=DomainDetail)
+def update_vm_project(
+        uuid: str,
+        request: DomainProjectForUpdate,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+):
+    """VMを、接続済みresourceを利用できるprojectへ移動する。"""
+    current_user.verify_scope(["vm.project"])
+    get_authorized_domain(db, uuid, current_user)
+    get_member_project(db, request.project_id, current_user)
+    try:
+        domain = move_domain_to_project(
+            db,
+            domain_uuid=uuid,
+            destination_project_id=request.project_id,
+            authorize_locked=lambda locked_domain, destination: (
+                can_access_domain(current_user, locked_domain)
+                and destination.id in current_user.projects
+            ),
+        )
+    except DomainProjectMoveNotFoundError as error:
+        raise ApiError(
+            404,
+            ApiErrorCode.VM_OR_PROJECT_NOT_FOUND,
+            "The VM or project was not found.",
+        ) from error
+    except DomainProjectMoveConflictError as error:
+        raise ApiError(
+            409,
+            ApiErrorCode.VM_PROJECT_RESOURCE_CONFLICT,
+            "VM resources are outside the destination project grants.",
+        ) from error
+    db.commit()
+    db.refresh(domain)
     return _get_domain_detail(domain, db)
 
 

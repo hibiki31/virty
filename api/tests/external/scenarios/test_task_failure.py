@@ -37,6 +37,7 @@ def test_vm_copy_failure_blocks_dependent_backends_and_is_cleanup_safe(
     client,
     created_network,
     created_storage,
+    created_project,
 ) -> None:
     cloud_name = next(
         storage.name for storage in env.storages if storage.name.endswith("test-cloud")
@@ -96,6 +97,7 @@ def test_vm_copy_failure_blocks_dependent_backends_and_is_cleanup_safe(
         type="manual",
         name=exact_vm_name,
         node_name=server.name,
+        project_id=created_project,
         memory_mega_byte=4096,
         cpu=4,
         disks=[

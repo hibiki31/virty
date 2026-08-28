@@ -1,5 +1,7 @@
 from typing import List
 
+from pydantic import Field
+
 from flavor.schemas import Flavor
 from mixin.schemas import BaseSchema, GetPagination
 from storage.schemas import Storage
@@ -10,11 +12,12 @@ class ImageBase(BaseSchema):
 
 
 class ImageForUpdateImageFlavor(BaseSchema):
+    project_id: str = Field(min_length=6, max_length=6)
     storage_uuid: str
     path: str
     node_name: str
     flavor_id: int
-    
+
 
 
 class ImageDomain(BaseSchema):
@@ -34,13 +37,13 @@ class Image(ImageBase):
     path:str
     update_token:str | None = None
     domain: ImageDomain | None = None
-    
+
 
 
 class ImagePage(BaseSchema):
     count: int
     data: List[Image]
-    
+
 
 
 class ImageForQuery(GetPagination):
@@ -49,6 +52,7 @@ class ImageForQuery(GetPagination):
     name:str | None = None
     name_like:str | None = None
     rool:str | None = None
+    project_id: str | None = None
 
 
 class StorageForCreate(BaseSchema):
@@ -101,4 +105,3 @@ class StoragePool(BaseSchema):
     id: int
     name: str
     storages: List[StorageContainerForStoragePool]
-    

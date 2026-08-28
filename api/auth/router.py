@@ -121,13 +121,6 @@ class CurrentUser(BaseModel):
                 )
         return True
 
-    def can_access_project(self, project_id: str | None) -> bool:
-        return (
-            self.verify_scope(["admin"], return_bool=True)
-            or project_id is None
-            or project_id in self.projects
-        )
-
 # JWTトークンの設定
 ALGORITHM = "HS256"
 

@@ -53,7 +53,7 @@ export function translateDomainValue(
   return i18n.global.te(key) ? i18n.global.t(key) : rawValue;
 }
 
-const agentScopeKeys = {
+export const agentScopeKeys = {
   "*": "domain.agentScope.all",
   "identity.admin": "domain.agentScope.identity.admin",
   "system.*": "domain.agentScope.system.all",
@@ -92,6 +92,7 @@ const agentScopeKeys = {
   "storage.pool.list": "domain.agentScope.storage.pool.list",
   "storage.pool.create": "domain.agentScope.storage.pool.create",
   "storage.pool.update": "domain.agentScope.storage.pool.update",
+  "storage.pool.delete": "domain.agentScope.storage.pool.delete",
   "storage.get": "domain.agentScope.storage.get",
   "storage.create": "domain.agentScope.storage.create",
   "storage.delete": "domain.agentScope.storage.delete",
@@ -117,9 +118,15 @@ const agentScopeKeys = {
   "network.delete": "domain.agentScope.network.delete",
   "project.*": "domain.agentScope.project.all",
   "project.list": "domain.agentScope.project.list",
+  "project.get": "domain.agentScope.project.get",
+  "project.member-candidates": "domain.agentScope.project.memberCandidates",
   "project.member.add": "domain.agentScope.project.member.add",
+  "project.member.remove": "domain.agentScope.project.member.remove",
+  "project.resource-grant-candidates.get": "domain.agentScope.project.resourceGrantCandidates.get",
+  "project.resource-grants.update": "domain.agentScope.project.resourceGrants.update",
   "project.create": "domain.agentScope.project.create",
   "project.delete": "domain.agentScope.project.delete",
+  "project.update": "domain.agentScope.project.update",
   "user.*": "domain.agentScope.user.all",
   "user.me": "domain.agentScope.user.me",
   "user.list": "domain.agentScope.user.list",

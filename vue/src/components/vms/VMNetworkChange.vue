@@ -29,6 +29,7 @@ import { apiClient } from '@/api'
 import type { schemas } from '@/composables/schemas'
 import type { typeListNetwork } from '@/composables/network'
 import { useLocalizedRules } from '@/composables/rules'
+import { ref, watch, type PropType } from 'vue'
 
 const r = useLocalizedRules()
 
@@ -107,8 +108,9 @@ async function getNetworkList() {
     const res = await apiClient.GET("/api/networks", {
       params: {
         query: {
-          admin: true,
-          nodeNameLike: props.item.nodeName
+          admin: false,
+          nodeNameLike: props.item.nodeName,
+          projectId: props.item.ownerProjectId,
         }
       }
     })
@@ -119,8 +121,20 @@ async function getNetworkList() {
   loadingList.value = false
 }
 
-onMounted(() => {
-  getNetworkList()
-})
+watch(
+  [
+    model,
+    () => props.item?.uuid,
+    () => props.item?.nodeName,
+    () => props.item?.ownerProjectId,
+  ],
+  ([open]) => {
+    if (!open) return
+    networkUuid.value = undefined
+    networkPort.value = undefined
+    void getNetworkList()
+  },
+  { immediate: true },
+)
 
 </script>
