@@ -35,6 +35,19 @@ SSH_DIRECTORY = Path("/root/.ssh")
 SSH_KEY_NAMES = ("id_rsa", "id_ed25519")
 
 
+def _get_authorized_node(
+    db: Session,
+    current_user: CurrentUser,
+    name: str,
+) -> NodeModel:
+    """通常readのProject境界内にあるnodeだけを返す。"""
+
+    node = db.get(NodeModel, name)
+    if node is None or name not in allowed_node_names(db, current_user):
+        raise HTTPException(status_code=404, detail="Node not found")
+    return node
+
+
 def _fsync_path(path: Path) -> None:
     """鍵dataとrenameを永続化し、電源断後の片方だけの消失を避ける。"""
 
@@ -111,7 +124,7 @@ def get_nodes(
 ):
     current_user.verify_scope(["node.read"])
     query = db.query(NodeModel)
-    allowed_nodes = allowed_node_names(db, current_user)
+    allowed_nodes = allowed_node_names(db, current_user, param.project_id)
     if allowed_nodes is not None:
         query = query.filter(NodeModel.name.in_(allowed_nodes))
     if param.name_like:
@@ -225,12 +238,7 @@ def get_node(
         db: Session = Depends(get_db)
 ):
     cu.verify_scope(["node.read"])
-    node = db.query(NodeModel).filter(NodeModel.name==name).one_or_none()
-    allowed_nodes = allowed_node_names(db, cu)
-    if node is None or (allowed_nodes is not None and name not in allowed_nodes):
-        raise HTTPException(status_code=404, detail="node is not found")
-
-    return node
+    return _get_authorized_node(db, cu, name)
 
 
 @app.get("/{name}/facts")
@@ -241,11 +249,7 @@ def get_node_facts(
 ):
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
-    
-    if node is None:
-        raise HTTPException(status_code=404, detail="Node not found")
-
+    node = _get_authorized_node(db, current_user, name)
     return node.ansible_facts
 
 
@@ -257,11 +261,7 @@ def get_node_info(
 ):
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
-    
-    if node is None:
-        raise HTTPException(status_code=404, detail="Node not found")
-    
+    node = _get_authorized_node(db, current_user, name)
     ssh_manager = create_ssh_backend(
         user=node.user_name,
         domain=node.domain,

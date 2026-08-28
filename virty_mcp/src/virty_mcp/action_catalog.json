@@ -101,7 +101,14 @@
       "title": "Node一覧取得",
       "description": "管理nodeを絞り込み付きで取得する。",
       "source": {"method": "GET", "path": "/api/nodes", "operationId": "get_nodes"},
-      "mutation": false, "destructive": false, "risk": "R0", "parameterSet": "namePagination",
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "limit": {"type": "integer", "minimum": 0, "maximum": 1000, "default": 25},
+        "page": {"type": "integer", "minimum": 0, "default": 0},
+        "admin": {"type": "boolean", "default": false},
+        "nameLike": {"type": ["string", "null"], "maxLength": 255},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
+      },
       "target": {"resourceType": "node"}
     },
     {
@@ -185,12 +192,12 @@
       "action": "node.role.update",
       "toolName": "virty.node.role.update",
       "title": "Node role更新",
-      "description": "指定nodeの管理roleを更新する。",
+      "description": "指定nodeへlibvirt管理roleを設定する。",
       "source": {"method": "PATCH", "path": "/api/tasks/nodes/roles", "operationId": "update_node_role"},
       "mutation": true, "destructive": false, "risk": "R2",
       "parameters": {
         "nodeName": {"type": "string", "minLength": 1, "maxLength": 255},
-        "roleName": {"type": "string", "minLength": 1, "maxLength": 255}
+        "roleName": {"type": "string", "enum": ["libvirt"]}
       },
       "required": ["nodeName", "roleName"],
       "target": {"resourceType": "node", "resourceIdField": "nodeName", "nodeIdField": "nodeName"}
@@ -208,7 +215,8 @@
         "page": {"type": "integer", "minimum": 0, "default": 0},
         "admin": {"type": "boolean", "default": false},
         "nameLike": {"type": ["string", "null"], "maxLength": 255},
-        "nodeNameLike": {"type": ["string", "null"], "maxLength": 255}
+        "nodeNameLike": {"type": ["string", "null"], "maxLength": 255},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
       },
       "target": {"resourceType": "vm"}
     },
@@ -250,7 +258,7 @@
         "type": {"type": "string", "enum": ["manual"]},
         "name": {"type": "string", "minLength": 1, "maxLength": 255},
         "nodeName": {"type": "string", "minLength": 1, "maxLength": 255},
-        "projectId": {"type": "string", "minLength": 1, "maxLength": 64},
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
         "memoryMegaByte": {"type": "integer", "minimum": 1},
         "cpu": {"type": "integer", "minimum": 1},
         "disks": {
@@ -339,11 +347,11 @@
       "toolName": "virty.vm.project.update",
       "title": "VM project変更",
       "description": "指定VMのowner projectを変更する。",
-      "source": {"method": "PATCH", "path": "/api/tasks/vms/{uuid}/project", "operationId": "update_vm_project"},
+      "source": {"method": "PATCH", "path": "/api/vms/{uuid}/project", "operationId": "update_vm_project"},
       "mutation": true, "destructive": false, "risk": "R2",
       "parameters": {
         "uuid": {"type": "string", "minLength": 1, "maxLength": 255},
-        "projectId": {"type": "string", "minLength": 1, "maxLength": 255}
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6}
       },
       "required": ["uuid", "projectId"],
       "target": {"resourceType": "vm", "resourceIdField": "uuid", "projectIdField": "projectId"}
@@ -377,7 +385,8 @@
         "page": {"type": "integer", "minimum": 0, "default": 0},
         "admin": {"type": "boolean", "default": false},
         "nameLike": {"type": ["string", "null"], "maxLength": 255},
-        "nodeName": {"type": ["string", "null"], "maxLength": 255}
+        "nodeName": {"type": ["string", "null"], "maxLength": 255},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
       },
       "target": {"resourceType": "storage", "nodeIdField": "nodeName"}
     },
@@ -403,7 +412,10 @@
       "title": "Storage pool一覧取得",
       "description": "project割当用storage poolを取得する。",
       "source": {"method": "GET", "path": "/api/storages/pools", "operationId": "get_storage_pools"},
-      "mutation": false, "destructive": false, "risk": "R0", "parameterSet": "empty",
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
+      },
       "target": {"resourceType": "storage-pool"}
     },
     {
@@ -424,14 +436,27 @@
       "action": "storage.pool.update",
       "toolName": "virty.storage.pool.update",
       "title": "Storage pool更新",
-      "description": "storage poolへstorageを追加する。",
+      "description": "storage poolのstorage集合を完全置換する。",
       "source": {"method": "PATCH", "path": "/api/storages/pools", "operationId": "update_storage_pool"},
       "mutation": true, "destructive": false, "risk": "R2",
       "parameters": {
-        "id": {"type": "string", "minLength": 1, "maxLength": 255},
+        "id": {"type": "integer", "minimum": 1},
         "storageUuids": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 255}, "uniqueItems": true, "maxItems": 256}
       },
       "required": ["id", "storageUuids"],
+      "target": {"resourceType": "storage-pool", "resourceIdField": "id"}
+    },
+    {
+      "action": "storage.pool.delete",
+      "toolName": "virty.storage.pool.delete",
+      "title": "Storage pool削除",
+      "description": "指定storage poolを削除する。使用中VMが依存するgrantは先に移行する必要がある。",
+      "source": {"method": "DELETE", "path": "/api/storages/pools/{pool_id}", "operationId": "delete_storage_pool"},
+      "mutation": true, "destructive": true, "risk": "R3",
+      "parameters": {
+        "id": {"type": "integer", "minimum": 1}
+      },
+      "required": ["id"],
       "target": {"resourceType": "storage-pool", "resourceIdField": "id"}
     },
     {
@@ -483,7 +508,8 @@
         "poolUuid": {"type": ["string", "null"], "maxLength": 255},
         "name": {"type": ["string", "null"], "maxLength": 255},
         "nameLike": {"type": ["string", "null"], "maxLength": 255},
-        "rool": {"type": ["string", "null"], "maxLength": 255}
+        "rool": {"type": ["string", "null"], "maxLength": 255},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
       },
       "target": {"resourceType": "image", "nodeIdField": "nodeName"}
     },
@@ -495,13 +521,14 @@
       "source": {"method": "PATCH", "path": "/api/images", "operationId": "update_image_flavor"},
       "mutation": true, "destructive": false, "risk": "R1",
       "parameters": {
+        "projectId": {"type": "string", "minLength": 6, "maxLength": 6},
         "storageUuid": {"type": "string", "minLength": 1, "maxLength": 255},
         "path": {"type": "string", "minLength": 1, "maxLength": 4096},
         "nodeName": {"type": "string", "minLength": 1, "maxLength": 255},
         "flavorId": {"type": "integer", "minimum": 1}
       },
-      "required": ["storageUuid", "path", "nodeName", "flavorId"],
-      "target": {"resourceType": "image", "resourceIdField": "path", "nodeIdField": "nodeName"}
+      "required": ["projectId", "storageUuid", "path", "nodeName", "flavorId"],
+      "target": {"resourceType": "image", "resourceIdField": "path", "projectIdField": "projectId", "nodeIdField": "nodeName"}
     },
     {
       "action": "image.refresh",
@@ -554,7 +581,8 @@
         "admin": {"type": "boolean", "default": false},
         "nameLike": {"type": ["string", "null"], "maxLength": 255},
         "nodeNameLike": {"type": ["string", "null"], "maxLength": 255},
-        "type": {"type": ["string", "null"], "maxLength": 64}
+        "type": {"type": ["string", "null"], "maxLength": 64},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
       },
       "target": {"resourceType": "network"}
     },
@@ -564,7 +592,10 @@
       "title": "Network pool一覧取得",
       "description": "project割当用network poolを取得する。",
       "source": {"method": "GET", "path": "/api/networks/pools", "operationId": "get_network_pools"},
-      "mutation": false, "destructive": false, "risk": "R0", "parameterSet": "empty",
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
+      },
       "target": {"resourceType": "network-pool"}
     },
     {
@@ -678,25 +709,6 @@
       "target": {"resourceType": "network", "resourceIdField": "uuid"}
     },
     {
-      "action": "network.provider.create",
-      "toolName": "virty.network.provider.create",
-      "title": "Provider network作成",
-      "description": "provider networkとaddress設定を作成する。帯域外復旧手段がない環境では高risk。",
-      "source": {"method": "POST", "path": "/api/tasks/networks/providers", "operationId": "create_network_providers"},
-      "mutation": true, "destructive": true, "risk": "R3",
-      "parameters": {
-        "name": {"type": ["string", "null"], "maxLength": 255},
-        "dnsDomain": {"type": ["string", "null"], "maxLength": 255},
-        "networkAddress": {"type": ["string", "null"], "maxLength": 255},
-        "networkPrefix": {"type": ["string", "null"], "maxLength": 64},
-        "gatewayAddress": {"type": ["string", "null"], "maxLength": 255},
-        "dhcpStart": {"type": ["string", "null"], "maxLength": 255},
-        "dhcpEnd": {"type": ["string", "null"], "maxLength": 255},
-        "networkNode": {"type": ["string", "null"], "maxLength": 255}
-      },
-      "target": {"resourceType": "network", "resourceIdField": "name", "nodeIdField": "networkNode"}
-    },
-    {
       "action": "network.ovs.delete",
       "toolName": "virty.network.ovs.delete",
       "title": "OVS portgroup削除",
@@ -726,21 +738,121 @@
       "title": "Project一覧取得",
       "description": "権限内projectとresource使用量を取得する。",
       "source": {"method": "GET", "path": "/api/projects", "operationId": "get_projects"},
-      "mutation": false, "destructive": false, "risk": "R0", "parameterSet": "namePagination",
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "limit": {"type": "integer", "minimum": 0, "maximum": 1000, "default": 25},
+        "page": {"type": "integer", "minimum": 0, "default": 0},
+        "nameLike": {"type": ["string", "null"], "maxLength": 255}
+      },
       "target": {"resourceType": "project"}
+    },
+    {
+      "action": "project.get",
+      "toolName": "virty.project.get",
+      "title": "Project詳細取得",
+      "description": "指定projectのmember、使用量、非強制limit、resource grantを取得する。",
+      "source": {"method": "GET", "path": "/api/projects/{project_id}", "operationId": "get_project"},
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6}
+      },
+      "required": ["projectId"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
+    },
+    {
+      "action": "project.member-candidates",
+      "toolName": "virty.project.member_candidates",
+      "title": "Project member候補取得",
+      "description": "指定projectへ追加できる既存userのusernameだけを取得する。",
+      "source": {"method": "GET", "path": "/api/projects/{project_id}/member-candidates", "operationId": "get_project_member_candidates"},
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
+        "limit": {"type": "integer", "minimum": 0, "maximum": 1000, "default": 25},
+        "page": {"type": "integer", "minimum": 0, "default": 0},
+        "nameLike": {"type": ["string", "null"], "maxLength": 255}
+      },
+      "required": ["projectId"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
+    },
+    {
+      "action": "project.resource-grant-candidates.get",
+      "toolName": "virty.project.resource_grant_candidates.get",
+      "title": "Project resource grant候補取得",
+      "description": "指定projectへ割当可能な現在のstorage pool、network pool、flavorを取得する。global admin専用。",
+      "source": {"method": "GET", "path": "/api/projects/{project_id}/resource-grant-candidates", "operationId": "get_project_resource_grant_candidates"},
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6}
+      },
+      "required": ["projectId"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
+    },
+    {
+      "action": "project.update",
+      "toolName": "virty.project.update",
+      "title": "Project名称更新",
+      "description": "指定projectの表示名を更新する。",
+      "source": {"method": "PATCH", "path": "/api/projects/{project_id}", "operationId": "update_project_name"},
+      "mutation": true, "destructive": false, "risk": "R2",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
+        "name": {"type": "string", "minLength": 1, "maxLength": 64}
+      },
+      "required": ["projectId", "name"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
     },
     {
       "action": "project.member.add",
       "toolName": "virty.project.member.add",
       "title": "Project member追加",
-      "description": "指定userをprojectへ追加する。",
-      "source": {"method": "PUT", "path": "/api/projects", "operationId": "update_project"},
+      "description": "指定usernameの既存userをprojectへ冪等に追加する。反映後の権限取得には再loginが必要。",
+      "source": {"method": "PUT", "path": "/api/projects/{project_id}/members/{username}", "operationId": "add_project_member"},
       "mutation": true, "destructive": false, "risk": "R2",
       "parameters": {
-        "projectId": {"type": "string", "minLength": 1, "maxLength": 255},
-        "userId": {"type": "string", "minLength": 1, "maxLength": 255}
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
+        "username": {"type": "string", "minLength": 1, "maxLength": 255}
       },
-      "required": ["projectId", "userId"],
+      "required": ["projectId", "username"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
+    },
+    {
+      "action": "project.member.remove",
+      "toolName": "virty.project.member.remove",
+      "title": "Project member削除",
+      "description": "指定usernameのmemberをprojectから冪等に削除する。最後のmemberは削除できない。",
+      "source": {"method": "DELETE", "path": "/api/projects/{project_id}/members/{username}", "operationId": "remove_project_member"},
+      "mutation": true, "destructive": false, "risk": "R2",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
+        "username": {"type": "string", "minLength": 1, "maxLength": 255}
+      },
+      "required": ["projectId", "username"],
+      "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
+    },
+    {
+      "action": "project.resource-grants.update",
+      "toolName": "virty.project.resource_grants.update",
+      "title": "Project resource grant更新",
+      "description": "指定projectのstorage pool、network pool、flavor grantを完全置換する。global admin専用の高risk操作。",
+      "source": {"method": "PUT", "path": "/api/projects/{project_id}/resource-grants", "operationId": "update_project_resource_grants"},
+      "mutation": true, "destructive": false, "risk": "R3",
+      "parameters": {
+        "projectId": {"type": "string", "minLength": 1, "maxLength": 6},
+        "storagePoolIds": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "networkPoolIds": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "flavorIds": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        }
+      },
+      "required": ["projectId", "storagePoolIds", "networkPoolIds", "flavorIds"],
       "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
     },
     {
@@ -751,11 +863,11 @@
       "source": {"method": "POST", "path": "/api/tasks/projects", "operationId": "create_project"},
       "mutation": true, "destructive": false, "risk": "R2",
       "parameters": {
-        "projectName": {"type": "string", "minLength": 1, "maxLength": 255},
-        "userIds": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 255}, "uniqueItems": true, "maxItems": 256}
+        "name": {"type": "string", "minLength": 1, "maxLength": 64},
+        "memberIds": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 255}, "uniqueItems": true, "minItems": 1, "maxItems": 256}
       },
-      "required": ["projectName", "userIds"],
-      "target": {"resourceType": "project", "resourceIdField": "projectName", "projectIdField": "projectName"}
+      "required": ["name", "memberIds"],
+      "target": {"resourceType": "project", "resourceIdField": "name"}
     },
     {
       "action": "project.delete",
@@ -764,7 +876,7 @@
       "description": "指定projectを削除する。所属VMと割当resourceを事前確認する。",
       "source": {"method": "DELETE", "path": "/api/tasks/projects/{project_id}", "operationId": "delete_project"},
       "mutation": true, "destructive": true, "risk": "R3",
-      "parameters": {"projectId": {"type": "string", "minLength": 1, "maxLength": 255}},
+      "parameters": {"projectId": {"type": "string", "minLength": 1, "maxLength": 6}},
       "required": ["projectId"],
       "target": {"resourceType": "project", "resourceIdField": "projectId", "projectIdField": "projectId"}
     },
@@ -801,10 +913,6 @@
           "type": "array", "maxItems": 256,
           "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
         },
-        "projects": {
-          "type": "array", "maxItems": 256,
-          "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
-        },
         "publickeys": {
           "type": "array", "maxItems": 64,
           "items": {
@@ -825,7 +933,7 @@
       "action": "user.update",
       "toolName": "virty.user.update",
       "title": "User更新",
-      "description": "userのpassword、project、scope、公開鍵を更新する。password/public keyはwrite-only。",
+      "description": "userのpassword、scope、公開鍵を更新する。Project所属はProject member actionだけで変更する。password/public keyはwrite-only。",
       "source": {"method": "PUT", "path": "/api/users/{username}", "operationId": "update_user"},
       "mutation": true, "destructive": true, "risk": "R3",
       "parameters": {
@@ -833,10 +941,6 @@
         "username": {"type": "string", "minLength": 1, "maxLength": 255},
         "password": {"type": "string", "minLength": 8, "maxLength": 128, "writeOnly": true},
         "scopes": {
-          "type": "array", "maxItems": 256,
-          "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
-        },
-        "projects": {
           "type": "array", "maxItems": 256,
           "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
         },
@@ -853,7 +957,7 @@
           }
         }
       },
-      "required": ["pathUsername", "username", "password", "scopes", "projects", "publickeys"],
+      "required": ["pathUsername", "username", "password", "scopes", "publickeys"],
       "target": {"resourceType": "user", "resourceIdField": "pathUsername"}
     },
     {
@@ -874,7 +978,14 @@
       "title": "Flavor一覧取得",
       "description": "OS image flavor metadataを取得する。",
       "source": {"method": "GET", "path": "/api/flavors", "operationId": "get_flavors"},
-      "mutation": false, "destructive": false, "risk": "R0", "parameterSet": "namePagination",
+      "mutation": false, "destructive": false, "risk": "R0",
+      "parameters": {
+        "limit": {"type": "integer", "minimum": 0, "maximum": 1000, "default": 25},
+        "page": {"type": "integer", "minimum": 0, "default": 0},
+        "admin": {"type": "boolean", "default": false},
+        "nameLike": {"type": ["string", "null"], "maxLength": 255},
+        "projectId": {"type": ["string", "null"], "minLength": 6, "maxLength": 6}
+      },
       "target": {"resourceType": "flavor"}
     },
     {

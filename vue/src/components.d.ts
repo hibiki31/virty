@@ -21,6 +21,8 @@ declare module 'vue' {
     NodeAddDialog: typeof import('./components/nodes/NodeAddDialog.vue')['default']
     NodeDeleteDialog: typeof import('./components/nodes/NodeDeleteDialog.vue')['default']
     NodeKeyDialog: typeof import('./components/nodes/NodeKeyDialog.vue')['default']
+    ProjectCreateDialog: typeof import('./components/projects/ProjectCreateDialog.vue')['default']
+    ProjectFilterSelect: typeof import('./components/projects/ProjectFilterSelect.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SetupDialog: typeof import('./components/SetupDialog.vue')['default']
@@ -32,5 +34,6 @@ declare module 'vue' {
     VMCdromChange: typeof import('./components/vms/VMCdromChange.vue')['default']
     VMDeleteDialog: typeof import('./components/vms/VMDeleteDialog.vue')['default']
     VMNetworkChange: typeof import('./components/vms/VMNetworkChange.vue')['default']
+    VMProjectChangeDialog: typeof import('./components/vms/VMProjectChangeDialog.vue')['default']
   }
 }

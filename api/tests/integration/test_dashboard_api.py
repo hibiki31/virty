@@ -266,36 +266,17 @@ def test_dashboard_normalizes_nullable_cached_values(
         body = response.json()
 
         assert body["storages"] == {
-            "count": 2,
-            "capacityGib": 10,
+            "count": 0,
+            "capacityGib": 0,
             "usedGib": 0,
-            "availableGib": 20,
+            "availableGib": 0,
             "highUsageCount": 0,
-            "highestUsage": [
-                {
-                    "uuid": storage_uuids[1],
-                    "name": "overavailable",
-                    "nodeName": "unknown",
-                    "capacityGib": 10,
-                    "usedGib": 0,
-                    "availableGib": 20,
-                    "usagePercent": 0.0,
-                },
-                {
-                    "uuid": storage_uuids[0],
-                    "name": "unknown",
-                    "nodeName": "unknown",
-                    "capacityGib": 0,
-                    "usedGib": 0,
-                    "availableGib": 0,
-                    "usagePercent": None,
-                },
-            ],
+            "highestUsage": [],
         }
         assert body["networks"] == {
-            "count": 2,
+            "count": 0,
             "portGroupCount": 0,
-            "types": [{"name": "unknown", "count": 2}],
+            "types": [],
         }
         assert body["tasks"]["incompleteCount"] == 0
         assert body["tasks"]["failedLast24Hours"] == 1
@@ -365,11 +346,9 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
             project = ProjectModel(
                 id=project_id,
                 name=f"dashboard-project-{suffix}",
-                is_admin=False,
                 core=32,
                 memory_g=64,
                 storage_capacity_g=512,
-                user_installable=True,
             )
             db.add(project)
             db.flush()
@@ -664,38 +643,19 @@ def test_dashboard_aggregates_cache_and_respects_visibility(
         assert admin_response.status_code == 200, admin_response.text
         admin = admin_response.json()
 
-        assert admin["visibility"] == "all"
-        assert admin["vms"]["count"] == 7
-        assert admin["vms"]["core"] == 19
-        assert admin["vms"]["memoryGib"] == 18.5
-        assert admin["vms"]["statuses"]["running"] == 2
-        assert admin["storages"]["count"] == 5
-        assert admin["storages"]["capacityGib"] == 300
-        assert admin["storages"]["usedGib"] == 255
-        assert admin["storages"]["availableGib"] == 45
-        assert admin["storages"]["highUsageCount"] == 2
-        highest_usage = admin["storages"]["highestUsage"]
-        assert len(highest_usage) == 4
-        assert [pool["usagePercent"] for pool in highest_usage] == [
-            90.0,
-            85.0,
-            80.0,
-            None,
-        ]
-        assert highest_usage[-1]["name"] == f"d-zero-{suffix}"
+        assert admin["visibility"] == "assigned"
+        assert admin["nodes"]["count"] == 0
+        assert admin["vms"]["count"] == 0
+        assert admin["storages"]["count"] == 0
         assert admin["networks"] == {
-            "count": 3,
-            "portGroupCount": 3,
-            "types": [
-                {"name": "nat", "count": 2},
-                {"name": "openvswitch", "count": 1},
-            ],
+            "count": 0,
+            "portGroupCount": 0,
+            "types": [],
         }
-        assert admin["images"] == {"count": 2}
-        assert admin["tasks"]["incompleteCount"] == 4
-        assert admin["tasks"]["failedLast24Hours"] == 3
-        assert len(admin["tasks"]["recent"]) == 6
-        assert other_user in {task["userId"] for task in admin["tasks"]["recent"]}
+        assert admin["images"] == {"count": 0}
+        assert admin["tasks"]["incompleteCount"] == 0
+        assert admin["tasks"]["failedLast24Hours"] == 0
+        assert admin["tasks"]["recent"] == []
         assert private_value not in admin_response.text
     finally:
         with SessionLocal.begin() as db:

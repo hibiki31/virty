@@ -44,7 +44,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 exclude = '''(?x)(
     ^tests/external/(?!support/)
-    | ^module/(ansiblelib|cloudinitlib|ovslib|paramikolib|virtlib)\.py$
+    | ^module/(ansiblelib|cloudinitlib|paramikolib|virtlib)\.py$
     | ^module/xmllib/
 )'''
 

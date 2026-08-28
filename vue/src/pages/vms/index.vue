@@ -6,6 +6,12 @@
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
       <v-spacer></v-spacer>
+      <project-filter-select
+        :model-value="query.projectId"
+        class="pr-3"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
       <v-text-field v-model="query.nameLike" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
@@ -28,6 +34,12 @@
         <v-icon left>mdi-cpu-64-bit</v-icon>
         {{ item.core }} core
       </template>
+      <template #item.ownerProject="{ item }">
+        <v-chip v-if="item.ownerProject" size="small" :to="`/projects/${item.ownerProject.id}`">
+          {{ formatProjectName(item.ownerProject) }}
+        </v-chip>
+        <span v-else class="text-medium-emphasis">Personal / legacy</span>
+      </template>
 
     </v-data-table-server>
 
@@ -47,8 +59,12 @@ import { hasAdminScope } from '@/composables/auth'
 import notify from '@/composables/notify'
 import { getPowerColor } from '@/composables/vm'
 import { useAuthStore } from '@/stores/auth'
+import { formatProjectName } from '@/composables/project'
+import { useRoute, useRouter } from 'vue-router'
 
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const stateCreateDialog = ref(false)
 const itemsPerPage = ref(20)
@@ -62,7 +78,7 @@ const headers = [
   { title: 'RAM', value: 'memory' },
   { title: 'CPU', value: 'core' },
   { title: 'userId', value: 'ownerUserId' },
-  { title: 'groupId', value: 'ownerGroupId' }
+  { title: 'Project', value: 'ownerProject' }
 ]
 
 const query = ref<typeListVMQuery>({
@@ -71,6 +87,7 @@ const query = ref<typeListVMQuery>({
   page: 1,
   nameLike: "",
   nodeNameLike: "",
+  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
 })
 
 const items = ref<typeListVM>(initVMList)
@@ -94,6 +111,17 @@ async function reload() {
   loading.value = true
   items.value = await getVMList(query.value)
   loading.value = false
+}
+
+async function updateProjectFilter(projectId: string | null) {
+  query.value.projectId = projectId
+  const routeQuery = { ...route.query }
+  if (projectId) routeQuery.projectId = projectId
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  pageState.value = 1
+  query.value.page = 1
+  await reload()
 }
 
 useReloadListener(() => {

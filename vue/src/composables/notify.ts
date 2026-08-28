@@ -4,11 +4,17 @@ import type { components } from "@/api/openapi";
 const { notify: baseNotify } = useNotification();
 
 type responsesValidationError = components["schemas"]["HTTPValidationError"];
+type ApiErrorDetail = {
+  detail?: string | {
+    message?: string;
+    resources?: unknown[];
+  };
+};
 
 declare type NotificationType = "warn" | "success" | "error" | "info";
 
 export function formatNotificationText(
-  text: responsesValidationError | string | undefined,
+  text: responsesValidationError | ApiErrorDetail | string | undefined,
 ): string {
   if (typeof text === "string") {
     return text || "Unknown error";
@@ -26,13 +32,26 @@ export function formatNotificationText(
     return messages.length > 0 ? messages.join("; ") : "Unknown error";
   }
 
+  if (typeof text.detail === "string") {
+    return text.detail || "Unknown error";
+  }
+
+  if (text.detail && typeof text.detail === "object") {
+    const message = text.detail.message?.trim();
+    const resources = text.detail.resources
+      ?.filter((resource): resource is string => typeof resource === "string")
+      .join(", ");
+    if (message && resources) return `${message}: ${resources}`;
+    if (message) return message;
+  }
+
   return "Unknown error";
 }
 
 function notify(
   type: NotificationType,
   title = "Success",
-  text: responsesValidationError | string | undefined = "API request completed"
+  text: responsesValidationError | ApiErrorDetail | string | undefined = "API request completed"
 ) {
   baseNotify({
     type,

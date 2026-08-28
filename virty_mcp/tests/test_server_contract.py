@@ -257,7 +257,7 @@ def test_tools_list_is_deterministic_strict_and_excludes_sensitive_plumbing() ->
     tools = result["tools"]
     names = [tool["name"] for tool in tools]
     assert names == sorted(names)
-    assert len(names) == 70
+    assert len(names) == 76
     assert "virty.device.pair" in names
     assert "virty.lease.begin" in names
     assert "virty.operation.cancel" in names
@@ -449,7 +449,7 @@ def test_nested_cloud_init_write_only_value_is_redacted_from_free_text() -> None
                     "type": "manual",
                     "name": "vm-1",
                     "nodeName": "node-1",
-                    "projectId": "project-1",
+                    "projectId": "a1b2c3",
                     "memoryMegaByte": 1024,
                     "cpu": 1,
                     "disks": [],

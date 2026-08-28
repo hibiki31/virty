@@ -12,16 +12,26 @@
         <v-card-text class="vm-create-dialog__body pa-4">
           <section class="vm-create-dialog__section">
             <h3 class="vm-create-dialog__section-title">Basic</h3>
+            <v-alert v-if="!projectsLoading && itemsProjects.length === 0" class="mb-3" density="compact"
+              type="warning" variant="tonal">
+              VM creation requires membership in at least one Project.
+            </v-alert>
             <v-row class="ma-n1">
-              <v-col cols="12" md="5" class="pa-1">
+              <v-col cols="12" md="4" class="pa-1">
+                <v-select v-model="postData.projectId" data-testid="vm-project" variant="outlined" density="compact"
+                  label="Project" hide-details="auto" :items="projectOptions" :loading="projectsLoading"
+                  :rules="[r.required]" item-title="title" item-value="value"></v-select>
+              </v-col>
+              <v-col cols="12" md="4" class="pa-1">
                 <v-text-field v-model="postData.name" data-testid="vm-name" variant="outlined" density="compact" label="Name"
                   hide-details="auto"
                   :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
                   @change="() => { if (postData.cloudInit) { postData.cloudInit.hostname = postData.name } }"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="6" md="3" class="pa-1">
+              <v-col cols="12" md="4" class="pa-1">
                 <v-select v-model="postData.nodeName" data-testid="vm-node" variant="outlined" density="compact" label="Node"
-                  hide-details="auto" :items="itemsNodes.data" :rules="[r.required]" item-title="name"
+                  hide-details="auto" :items="itemsNodes.data" :loading="resourcesLoading" :disabled="!postData.projectId"
+                  :rules="[r.required]" item-title="name"
                   item-value="name"></v-select>
               </v-col>
               <v-col cols="6" sm="3" md="2" class="pa-1">
@@ -56,16 +66,19 @@
               <v-col cols="12" sm="6" :md="disk.type === 'copy' ? 3 : 8" class="pa-1">
                 <v-select v-model="disk.savePoolUuid" data-testid="vm-destination-pool" variant="outlined" density="compact" label="Destination pool"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
+                  :disabled="!postData.projectId" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="2" class="pa-1">
                 <v-select v-model="disk.originalPoolUuid" variant="outlined" density="compact" label="Source pool"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
+                  :disabled="!postData.projectId" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="3" class="pa-1">
                 <v-select v-model="disk.originalName" variant="outlined" density="compact" label="Source image"
                   hide-details="auto" :items="itemsImages.data.filter(x => x.storageUuid === disk.originalPoolUuid)"
+                  :disabled="!postData.projectId" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="name"></v-select>
               </v-col>
             </v-row>
@@ -81,11 +94,12 @@
               <v-col cols="10" :md="checkOVS(nic.networkUuid) ? 6 : 11" class="pa-1">
                 <v-select v-model="nic.networkUuid" data-testid="vm-network" variant="outlined" density="compact" label="Network"
                   hide-details="auto" :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)"
+                  :disabled="!postData.projectId" :loading="resourcesLoading"
                   item-title="name" item-value="uuid" :rules="[r.required]"></v-select>
               </v-col>
               <v-col v-if="checkOVS(nic.networkUuid)" cols="10" md="5" class="pa-1">
-                <v-select v-model="nic.port" variant="outlined" density="compact" label="Port" hide-details="auto"
-                  :items="itemsPort(nic.networkUuid)" item-title="name" item-value="value"
+                <v-select v-model="nic.port" data-testid="vm-network-port" variant="outlined" density="compact" label="Port" hide-details="auto"
+                  :items="itemsPort(nic.networkUuid)" item-title="title" item-value="value"
                   :rules="[r.required]"></v-select>
               </v-col>
               <v-col cols="2" md="1" class="pa-1 text-right">
@@ -195,7 +209,8 @@
         <v-divider></v-divider>
         <v-card-actions class="justify-end px-4 py-2">
           <v-btn data-testid="vm-create-cancel" variant="text" @click="dialogState = false">Cancel</v-btn>
-          <v-btn data-testid="vm-create-submit" color="primary" type="submit" :loading="loading">Create</v-btn>
+          <v-btn data-testid="vm-create-submit" color="primary" type="submit" :loading="loading"
+            :disabled="itemsProjects.length === 0">Create</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -204,7 +219,7 @@
 
 <script lang="ts" setup>
 
-import { computed, onMounted, reactive, ref, toRaw } from 'vue';
+import { computed, onMounted, reactive, ref, toRaw, watch } from 'vue';
 import r from '@/composables/rules';
 import { itemsCPU, itemsMemory } from '@/composables/vm'
 import type { bodyPostVM } from '@/composables/vm';
@@ -230,15 +245,23 @@ import {
 } from '@/composables/cloudInit';
 import type { CloudInitFormState } from '@/composables/cloudInit';
 import { useAuthStore } from '@/stores/auth';
+import { formatProjectName, getProjectList, type ProjectSummary } from '@/composables/project';
 
 
 const loading = ref(false)
+const projectsLoading = ref(false)
+const resourcesLoading = ref(false)
 const dialogState = defineModel({ default: false })
 
 const itemsNodes = ref<typeListNode>(initNodeList)
 const itemsNetworks = ref<typeListNetwork>(initNetworkList)
 const itemsStorages = ref<schemas['StoragePage']>(initStorageList)
 const itemsImages = ref<typeListImage>(initImageList)
+const itemsProjects = ref<ProjectSummary[]>([])
+const projectOptions = computed(() => itemsProjects.value.map(project => ({
+  title: formatProjectName(project),
+  value: project.id,
+})))
 const cloudInitTab = ref<'simple' | 'yaml'>('simple')
 const cloudInitForm = reactive<CloudInitFormState>(createCloudInitFormState())
 const cloudInitFormSnapshot = ref(JSON.stringify(toRaw(cloudInitForm)))
@@ -255,6 +278,7 @@ const cloudInitFormDirty = computed(
 
 const postData = reactive<bodyPostVM>({
   type: 'manual',
+  projectId: '',
   name: '',
   nodeName: '',
   memoryMegaByte: 8192,
@@ -402,7 +426,7 @@ function itemsPort(networkUuid: string) {
     .filter(n => n.nodeName === postData.nodeName && n.uuid === networkUuid)
 
   if (net[0]) {
-    return net[0].portgroups.map(p => ({ title: p.name, value: p.vlanId }))
+    return net[0].portgroups.map(p => ({ title: p.name, value: p.name }))
   } else {
     return []
   }
@@ -420,27 +444,80 @@ function deleteInterface(index: number) {
   postData.interface.splice(index, 1);
 }
 
-onMounted(async () => {
+let projectResourceRequest = 0
+
+function resetProjectResources() {
+  postData.nodeName = ''
+  for (const disk of postData.disks) {
+    disk.savePoolUuid = ''
+    disk.originalPoolUuid = null
+    disk.originalName = null
+  }
+  for (const nic of postData.interface) {
+    nic.networkUuid = ''
+    nic.port = null
+  }
+  itemsNodes.value = initNodeList
+  itemsNetworks.value = initNetworkList
+  itemsStorages.value = initStorageList
+  itemsImages.value = initImageList
+}
+
+async function loadProjectResources(projectId: string) {
+  const request = ++projectResourceRequest
+  resetProjectResources()
+  if (!projectId) return
+
+  resourcesLoading.value = true
   const queryImage: typeListImageQuery = {
-    admin: true,
+    admin: false,
     limit: 999999,
     page: 1,
+    projectId,
   }
   const queryNetwork: typeListNetworkQuery = {
-    admin: true,
+    admin: false,
     limit: 999999,
     page: 1,
+    projectId,
   }
   const queryStorage: typeListStorageQuery = {
-    admin: true,
+    admin: false,
     limit: 999999,
     page: 1,
+    projectId,
   }
 
-  itemsNodes.value = await getNode()
-  itemsNetworks.value = await getNetworkList(queryNetwork)
-  itemsStorages.value = await getStorageList(queryStorage)
-  itemsImages.value = await getImageList(queryImage)
+  try {
+    const [nodes, networks, storages, images] = await Promise.all([
+      getNode(projectId),
+      getNetworkList(queryNetwork),
+      getStorageList(queryStorage),
+      getImageList(queryImage),
+    ])
+    if (request !== projectResourceRequest) return
+    itemsNodes.value = nodes
+    itemsNetworks.value = networks
+    itemsStorages.value = storages
+    itemsImages.value = images
+  } finally {
+    if (request === projectResourceRequest) resourcesLoading.value = false
+  }
+}
+
+watch(() => postData.projectId, projectId => {
+  void loadProjectResources(projectId)
+})
+
+onMounted(async () => {
+  projectsLoading.value = true
+  try {
+    const response = await getProjectList({ limit: 0, page: 1 })
+    itemsProjects.value = response.data
+    if (response.data.length === 1) postData.projectId = response.data[0].id
+  } finally {
+    projectsLoading.value = false
+  }
 })
 
 

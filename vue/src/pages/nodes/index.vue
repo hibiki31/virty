@@ -8,6 +8,12 @@
         @click="dialogKey = true">KEY</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="dialogAdd = true">JOIN</v-btn>
+      <v-spacer />
+      <project-filter-select
+        :model-value="projectId"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
     </v-card-actions>
     <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
       <template v-slot:item.name="{ item }">
@@ -37,8 +43,15 @@ meta:
 import type { schemas } from '@/composables/schemas'
 import { apiClient } from '@/api'
 import { getNodeStatusColor } from '@/composables/nodes'
+import { useRoute, useRouter } from 'vue-router'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const loading = ref(false)
+const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const projectId = ref(typeof route.query.projectId === 'string' ? route.query.projectId : null)
 
 const dialogAdd = ref(false)
 const dialogKey = ref(false)
@@ -70,8 +83,9 @@ const reload = () => {
   apiClient.GET('/api/nodes', {
     params: {
       query: {
-        admin: true,
+        admin: hasAdminScope(auth.scopes),
         limit: 100,
+        projectId: projectId.value,
       }
     }
   }).then((res) => {
@@ -79,6 +93,15 @@ const reload = () => {
       items.value = res.data
     }
   })
+}
+
+async function updateProjectFilter(value: string | null) {
+  projectId.value = value
+  const routeQuery = { ...route.query }
+  if (value) routeQuery.projectId = value
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  reload()
 }
 
 useReloadListener(() => {

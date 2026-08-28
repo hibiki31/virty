@@ -6,8 +6,8 @@ const encoded = (value: object): string =>
 
 export const accessToken = `${encoded({ alg: "none", typ: "JWT" })}.${encoded({
   exp: 4_102_444_800,
-  projects: [],
-  scopes: ["user", "admin"],
+  projects: ["a1b2c3"],
+  scopes: ["user", "admin", "project.read", "project.manage"],
   sub: "operator",
 })}.signature`;
 
@@ -75,8 +75,32 @@ const vm = {
   vncPort: -1,
 };
 
+const project = {
+  id: "a1b2c3",
+  name: "Project E2E",
+  memberCount: 1,
+  usedCore: 2,
+  usedMemoryG: 8,
+  usedStorageG: 0,
+};
+
+const projectDetail = {
+  ...project,
+  limits: { core: 16, memoryG: 64, storageCapacityG: 500, enforced: false },
+  members: [{ username: "operator" }],
+  resourceGrants: {
+    storagePoolIds: [1],
+    networkPoolIds: [1],
+    flavorIds: [],
+  },
+  storagePools: [{ id: 1, name: "storage-e2e" }],
+  networkPools: [{ id: 1, name: "network-e2e" }],
+  flavors: [],
+};
+
 type ApiState = {
   failNextVmCreate: () => void;
+  projectCreateBodies: unknown[];
   vmCreateBodies: unknown[];
 };
 
@@ -97,6 +121,7 @@ export const test = base.extend<Fixtures>({
   api: async ({ page }, use) => {
     const state = {
       failVmCreate: false,
+      projectCreateBodies: [] as unknown[],
       vmCreateBodies: [] as unknown[],
     };
 
@@ -136,6 +161,23 @@ export const test = base.extend<Fixtures>({
         await fulfillJson(route, { count: 1, data: [vm] });
         return;
       }
+      if (path === "/api/projects/a1b2c3/member-candidates") {
+        await fulfillJson(route, { count: 0, data: [] });
+        return;
+      }
+      if (path === "/api/projects/a1b2c3") {
+        await fulfillJson(route, projectDetail);
+        return;
+      }
+      if (path === "/api/projects" && request.method() === "GET") {
+        await fulfillJson(route, { count: 1, data: [project] });
+        return;
+      }
+      if (path === "/api/tasks/projects" && request.method() === "POST") {
+        state.projectCreateBodies.push(request.postDataJSON());
+        await fulfillJson(route, [{ uuid: "project-create-task" }]);
+        return;
+      }
       if (path === "/api/nodes") {
         await fulfillJson(route, { count: 1, data: [node] });
         return;
@@ -159,7 +201,10 @@ export const test = base.extend<Fixtures>({
         return;
       }
       if (path === "/api/users") {
-        await fulfillJson(route, { count: 0, data: [] });
+        await fulfillJson(route, {
+          count: 1,
+          data: [{ username: "operator", scopes: [], projects: [{ id: project.id, name: project.name }], publickeys: [] }],
+        });
         return;
       }
       if (path === "/api/tasks/vms" && request.method() === "POST") {
@@ -184,6 +229,7 @@ export const test = base.extend<Fixtures>({
       failNextVmCreate: () => {
         state.failVmCreate = true;
       },
+      projectCreateBodies: state.projectCreateBodies,
       vmCreateBodies: state.vmCreateBodies,
     });
   },

@@ -231,7 +231,9 @@ def cleanup_resources(
 
     from mixin.database import SessionLocal
     from module.ansiblelib import AnsibleManager
+    from network.models import NetworkPoolModel
     from project.models import ProjectModel
+    from storage.models import StoragePoolModel
     from tests.external.fixtures.network import (
         delete_network_target,
         reload_networks,
@@ -427,9 +429,23 @@ def cleanup_resources(
 
             def delete_project(name=entry.name) -> None:
                 with SessionLocal.begin() as db:
-                    db.query(ProjectModel).filter(ProjectModel.name == name).delete(
-                        synchronize_session=False
+                    project = (
+                        db.query(ProjectModel)
+                        .filter(ProjectModel.name == name)
+                        .one_or_none()
                     )
+                    if project is None:
+                        return
+                    storage_pool_ids = [pool.id for pool in project.storage_pools]
+                    network_pool_ids = [pool.id for pool in project.network_pools]
+                    db.delete(project)
+                    db.flush()
+                    db.query(StoragePoolModel).filter(
+                        StoragePoolModel.id.in_(storage_pool_ids)
+                    ).delete(synchronize_session=False)
+                    db.query(NetworkPoolModel).filter(
+                        NetworkPoolModel.id.in_(network_pool_ids)
+                    ).delete(synchronize_session=False)
 
             return cleanup(label, entry, delete_project)
         elif entry.kind == "node":
@@ -510,5 +526,6 @@ pytest_plugins = [
     "tests.external.fixtures.node",
     "tests.external.fixtures.storage",
     "tests.external.fixtures.network",
+    "tests.external.fixtures.project",
     "tests.external.fixtures.vm",
 ]

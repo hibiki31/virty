@@ -793,6 +793,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vms/{uuid}/project": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Vm Project
+         * @description VMを、接続済みresourceを利用できるprojectへ移動する。
+         */
+        patch: operations["update_vm_project"];
+        trace?: never;
+    };
     "/api/vms/{uuid}/xml": {
         parameters: {
             query?: never;
@@ -905,23 +925,6 @@ export interface paths {
         patch: operations["control_vm_cdrom"];
         trace?: never;
     };
-    "/api/tasks/vms/{uuid}/project": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Vm Project */
-        patch: operations["update_vm_project"];
-        trace?: never;
-    };
     "/api/tasks/vms/{uuid}/network": {
         parameters: {
             query?: never;
@@ -979,6 +982,23 @@ export interface paths {
         head?: never;
         /** Update Storage Pool */
         patch: operations["update_storage_pool"];
+        trace?: never;
+    };
+    "/api/storages/pools/{pool_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Storage Pool */
+        delete: operations["delete_storage_pool"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/storages/{uuid}": {
@@ -1223,23 +1243,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tasks/networks/providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Network Providers */
-        post: operations["create_network_providers"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/tasks/networks/{uuid}/ovs/{name}": {
         parameters: {
             query?: never;
@@ -1336,8 +1339,97 @@ export interface paths {
         };
         /** Get Projects */
         get: operations["get_projects"];
-        /** Update Project */
-        put: operations["update_project"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project */
+        get: operations["get_project"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Project Name */
+        patch: operations["update_project_name"];
+        trace?: never;
+    };
+    "/api/projects/{project_id}/members/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Add Project Member */
+        put: operations["add_project_member"];
+        post?: never;
+        /** Remove Project Member */
+        delete: operations["remove_project_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/member-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project Member Candidates */
+        get: operations["get_project_member_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/resource-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Project Resource Grants */
+        put: operations["update_project_resource_grants"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/resource-grant-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Project Resource Grant Candidates
+         * @description global admin向けにProjectへ割当可能なresourceを列挙する。
+         */
+        get: operations["get_project_resource_grant_candidates"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1883,6 +1975,8 @@ export interface components {
             name: string;
             /** Nodename */
             nodeName: string;
+            /** Projectid */
+            projectId: string;
             /** Memorymegabyte */
             memoryMegaByte: number;
             /** Cpu */
@@ -2042,6 +2136,8 @@ export interface components {
         };
         /** ImageForUpdateImageFlavor */
         ImageForUpdateImageFlavor: {
+            /** Projectid */
+            projectId: string;
             /** Storageuuid */
             storageUuid: string;
             /** Path */
@@ -2365,13 +2461,23 @@ export interface components {
         /** NetworkPool */
         NetworkPool: {
             /** Id */
-            id?: number | null;
+            id: number;
             /** Name */
-            name?: string | null;
+            name: string | null;
             /** Networks */
-            networks?: components["schemas"]["NetworkForNetworkPool"][] | null;
+            networks: components["schemas"]["NetworkForNetworkPool"][];
             /** Ports */
-            ports?: components["schemas"]["NetworkPoolPort"][] | null;
+            ports: components["schemas"]["NetworkPoolPort"][];
+        };
+        /** NetworkPoolDeleteResponse */
+        NetworkPoolDeleteResponse: {
+            /**
+             * Deleted
+             * @constant
+             */
+            deleted: true;
+            /** Id */
+            id: number;
         };
         /** NetworkPoolForCreate */
         NetworkPoolForCreate: {
@@ -2403,25 +2509,6 @@ export interface components {
             vlanId?: string | null;
             /** Isdefault */
             isDefault: boolean;
-        };
-        /** NetworkProviderForCreate */
-        NetworkProviderForCreate: {
-            /** Name */
-            name?: string | null;
-            /** Dnsdomain */
-            dnsDomain?: string | null;
-            /** Networkaddress */
-            networkAddress?: string | null;
-            /** Networkprefix */
-            networkPrefix?: string | null;
-            /** Gatewayaddress */
-            gatewayAddress?: string | null;
-            /** Dhcpstart */
-            dhcpStart?: string | null;
-            /** Dhcpend */
-            dhcpEnd?: string | null;
-            /** Networknode */
-            networkNode?: string | null;
         };
         /** NetworkXML */
         NetworkXML: {
@@ -2521,12 +2608,11 @@ export interface components {
         NodeRoleForUpdate: {
             /** Nodename */
             nodeName: string;
-            /** Rolename */
-            roleName: string;
-            /** Extrajson */
-            extraJson?: {
-                [key: string]: unknown;
-            } | null;
+            /**
+             * Rolename
+             * @constant
+             */
+            roleName: "libvirt";
         };
         /** OperationAccepted */
         OperationAccepted: {
@@ -2710,54 +2796,116 @@ export interface components {
             /** Status */
             status?: string | null;
         };
-        /** Project */
-        Project: {
+        /** ProjectDetail */
+        ProjectDetail: {
             /** Id */
             id: string;
             /** Name */
             name: string;
-            /** Memoryg */
-            memoryG: number;
-            /** Core */
-            core: number;
-            /** Storagecapacityg */
-            storageCapacityG: number;
-            /** Users */
-            users: components["schemas"]["ProjectUser"][];
-            /** Usedmemoryg */
-            usedMemoryG: number;
+            /** Membercount */
+            memberCount: number;
             /** Usedcore */
             usedCore: number;
-            /** Networkpools */
-            networkPools: unknown;
+            /** Usedmemoryg */
+            usedMemoryG: number;
+            /** Usedstorageg */
+            usedStorageG: number;
+            limits: components["schemas"]["ProjectLimits"];
+            /** Members */
+            members: components["schemas"]["ProjectMember"][];
+            resourceGrants: components["schemas"]["ProjectResourceGrantsUpdate"];
             /** Storagepools */
-            storagePools: unknown;
+            storagePools: components["schemas"]["ProjectResourceReference"][];
+            /** Networkpools */
+            networkPools: components["schemas"]["ProjectResourceReference"][];
+            /** Flavors */
+            flavors: components["schemas"]["ProjectResourceReference"][];
         };
         /** ProjectForCreate */
         ProjectForCreate: {
-            /** Projectname */
-            projectName: string;
-            /** Userids */
-            userIds: string[];
+            /** Name */
+            name: string;
+            /** Memberids */
+            memberIds: string[];
         };
-        /** ProjectForUpdate */
-        ProjectForUpdate: {
-            /** Projectid */
-            projectId: string;
-            /** Userid */
-            userId: string;
+        /** ProjectForNameUpdate */
+        ProjectForNameUpdate: {
+            /** Name */
+            name: string;
+        };
+        /** ProjectLimits */
+        ProjectLimits: {
+            /** Core */
+            core: number;
+            /** Memoryg */
+            memoryG: number;
+            /** Storagecapacityg */
+            storageCapacityG: number | null;
+            /**
+             * Enforced
+             * @default false
+             * @constant
+             */
+            enforced: false;
+        };
+        /** ProjectMember */
+        ProjectMember: {
+            /** Username */
+            username: string;
+        };
+        /** ProjectMemberPage */
+        ProjectMemberPage: {
+            /** Count */
+            count: number;
+            /** Data */
+            data: components["schemas"]["ProjectMember"][];
         };
         /** ProjectPage */
         ProjectPage: {
             /** Count */
             count: number;
             /** Data */
-            data: components["schemas"]["Project"][];
+            data: components["schemas"]["ProjectSummary"][];
         };
-        /** ProjectUser */
-        ProjectUser: {
-            /** Username */
-            username: string;
+        /** ProjectResourceGrantCandidates */
+        ProjectResourceGrantCandidates: {
+            /** Storagepools */
+            storagePools: components["schemas"]["ProjectResourceReference"][];
+            /** Networkpools */
+            networkPools: components["schemas"]["ProjectResourceReference"][];
+            /** Flavors */
+            flavors: components["schemas"]["ProjectResourceReference"][];
+        };
+        /** ProjectResourceGrantsUpdate */
+        ProjectResourceGrantsUpdate: {
+            /** Storagepoolids */
+            storagePoolIds: number[];
+            /** Networkpoolids */
+            networkPoolIds: number[];
+            /** Flavorids */
+            flavorIds: number[];
+        };
+        /** ProjectResourceReference */
+        ProjectResourceReference: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** ProjectSummary */
+        ProjectSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Membercount */
+            memberCount: number;
+            /** Usedcore */
+            usedCore: number;
+            /** Usedmemoryg */
+            usedMemoryG: number;
+            /** Usedstorageg */
+            usedStorageG: number;
         };
         /** SSHKeyPair */
         SSHKeyPair: {
@@ -2872,6 +3020,16 @@ export interface components {
             name: string;
             /** Storages */
             storages: components["schemas"]["StorageContainerForStoragePool"][];
+        };
+        /** StoragePoolDeleteResponse */
+        StoragePoolDeleteResponse: {
+            /**
+             * Deleted
+             * @constant
+             */
+            deleted: true;
+            /** Id */
+            id: number;
         };
         /** StoragePoolForCreate */
         StoragePoolForCreate: {
@@ -2995,8 +3153,6 @@ export interface components {
             username: string;
             /** Scopes */
             scopes?: components["schemas"]["UserScope"][];
-            /** Projects */
-            projects?: components["schemas"]["UserProject"][];
             /** Publickeys */
             publickeys?: components["schemas"]["UserPublickey"][];
             /** Password */
@@ -3018,6 +3174,8 @@ export interface components {
         };
         /** UserProject */
         UserProject: {
+            /** Id */
+            id: string;
             /** Name */
             name: string;
         };
@@ -4329,6 +4487,7 @@ export interface operations {
                 page?: number;
                 admin?: boolean;
                 nameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4607,6 +4766,7 @@ export interface operations {
                 admin?: boolean;
                 nameLike?: string | null;
                 nodeNameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4644,6 +4804,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_vm_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainProjectForUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4881,41 +5076,6 @@ export interface operations {
             };
         };
     };
-    update_vm_project: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DomainProjectForUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     update_vm_network: {
         parameters: {
             query?: never;
@@ -4959,6 +5119,7 @@ export interface operations {
                 admin?: boolean;
                 nameLike?: string | null;
                 nodeName?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5021,7 +5182,9 @@ export interface operations {
     };
     get_storage_pools: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5035,6 +5198,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoragePool"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5058,7 +5230,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StoragePool"];
                 };
             };
             /** @description Validation Error */
@@ -5091,7 +5263,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StoragePool"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_storage_pool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pool_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoragePoolDeleteResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5243,6 +5446,7 @@ export interface operations {
                 name?: string | null;
                 nameLike?: string | null;
                 rool?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5289,7 +5493,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Image"];
                 };
             };
             /** @description Validation Error */
@@ -5365,6 +5569,7 @@ export interface operations {
                 nameLike?: string | null;
                 nodeNameLike?: string | null;
                 type?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5394,7 +5599,9 @@ export interface operations {
     };
     get_network_pools: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5408,6 +5615,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NetworkPool"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5431,7 +5647,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPool"];
                 };
             };
             /** @description Validation Error */
@@ -5464,7 +5680,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPool"];
                 };
             };
             /** @description Validation Error */
@@ -5495,7 +5711,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPoolDeleteResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5511,7 +5727,9 @@ export interface operations {
     };
     get_network: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5542,7 +5760,9 @@ export interface operations {
     };
     get_network_xml: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5636,39 +5856,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkOVSForCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Task"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_network_providers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NetworkProviderForCreate"];
             };
         };
         responses: {
@@ -5911,7 +6098,6 @@ export interface operations {
     get_projects: {
         parameters: {
             query?: {
-                admin?: boolean;
                 limit?: number;
                 page?: number;
                 nameLike?: string | null;
@@ -5942,16 +6128,49 @@ export interface operations {
             };
         };
     };
-    update_project: {
+    get_project: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_name: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProjectForUpdate"];
+                "application/json": components["schemas"]["ProjectForNameUpdate"];
             };
         };
         responses: {
@@ -5961,7 +6180,172 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_project_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_project_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_member_candidates: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                nameLike?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_resource_grants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectResourceGrantsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_resource_grant_candidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectResourceGrantCandidates"];
                 };
             };
             /** @description Validation Error */
@@ -5994,7 +6378,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
             /** @description Validation Error */
@@ -6025,7 +6409,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
             /** @description Validation Error */
@@ -6046,6 +6430,7 @@ export interface operations {
                 page?: number;
                 admin?: boolean;
                 nameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;

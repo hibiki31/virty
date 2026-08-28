@@ -1,47 +1,62 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
 from mixin.log import setup_logger
-from project.schemas import (
-    ProjectForCreate,
-)
 from resource_authorization import require_admin
 from task.functions import TaskManager
+from task.schemas import Task
+
+from .schemas import ProjectForCreate
+from .service import (
+    ProjectConflictError,
+    ProjectNotFoundError,
+    ensure_project_deletable,
+)
 
 app = APIRouter(prefix="/api/tasks/projects", tags=["projects-tasks"])
 logger = setup_logger(__name__)
 
 
-@app.post("")
+@app.post("", response_model=list[Task])
 def create_project(
-        body: ProjectForCreate,
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-):
+    body: ProjectForCreate,
+    req: Request,
+    cu: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Task]:
     cu.verify_scope(["project.manage"])
     require_admin(cu)
     task = TaskManager(db=db)
-    task.select(method='post', resource='project', object='root')
+    task.select(method="post", resource="project", object="root")
     task.commit(user=cu, req=req, body=body)
+    return [Task.model_validate(task.model)]
 
-    return [task.model]
 
-
-@app.delete("/{project_id}")
+@app.delete("/{project_id}", response_model=list[Task])
 def delete_project(
-        project_id: str,
-        req: Request,
-        cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-):
+    project_id: str,
+    req: Request,
+    cu: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Task]:
     cu.verify_scope(["project.manage"])
     require_admin(cu)
-    task = TaskManager(db=db)
-    task.select(method='delete', resource='project', object='root')
-    task.commit(user=cu, req=req, param={"project_id": project_id})
+    try:
+        ensure_project_deletable(db, project_id)
+    except ProjectNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except ProjectConflictError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
 
-    return [task.model]
-    
+    task = TaskManager(db=db)
+    task.select(method="delete", resource="project", object="root")
+    task.commit(user=cu, req=req, param={"project_id": project_id})
+    return [Task.model_validate(task.model)]

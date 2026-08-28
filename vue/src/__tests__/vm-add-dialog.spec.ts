@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   getImageList: vi.fn(),
   getNetworkList: vi.fn(),
   getNode: vi.fn(),
+  getProjectList: vi.fn(),
   getStorageList: vi.fn(),
   notify: vi.fn(),
   notifyTask: vi.fn(),
@@ -46,6 +47,12 @@ vi.mock("@/composables/storage", () => ({
 vi.mock("@/composables/image", () => ({
   initImageList: { count: 0, data: [] },
   getImageList: mocks.getImageList,
+}));
+
+vi.mock("@/composables/project", () => ({
+  formatProjectName: (project: { id: string; name: string }) =>
+    `${project.name} (#${project.id})`,
+  getProjectList: mocks.getProjectList,
 }));
 
 vi.mock("@/composables/notify", () => ({
@@ -261,6 +268,17 @@ beforeEach(() => {
   mocks.getNetworkList.mockResolvedValue({ count: 0, data: [] });
   mocks.getStorageList.mockResolvedValue({ count: 0, data: [] });
   mocks.getImageList.mockResolvedValue({ count: 0, data: [] });
+  mocks.getProjectList.mockResolvedValue({
+    count: 1,
+    data: [{
+      id: "a1b2c3",
+      name: "Project A",
+      memberCount: 1,
+      usedCore: 0,
+      usedMemoryG: 0,
+      usedStorageG: 0,
+    }],
+  });
   mocks.apiGet.mockResolvedValue({ data: { count: 0, data: [] } });
   mocks.apiPost.mockResolvedValue({ data: [{ uuid: "task-1" }] });
 });
@@ -308,11 +326,65 @@ describe("VMAddDialog submit", () => {
       cloudInit: null,
       name: "vm-1",
       nodeName: "node-1",
+      projectId: "a1b2c3",
       disks: [{ savePoolUuid: "pool-1", type: "empty" }],
       interface: [{ networkUuid: "net-1", type: "network" }],
     });
     expect(mocks.notifyTask).toHaveBeenCalledOnce();
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
+  });
+
+  it("選択Projectを全resource queryと作成payloadへ固定する", async () => {
+    mocks.getProjectList.mockResolvedValue({
+      count: 2,
+      data: [
+        { id: "a1b2c3", name: "Project A" },
+        { id: "d4e5f6", name: "Project B" },
+      ],
+    });
+    const wrapper = await mountDialog();
+
+    getSelectStub(wrapper, "vm-project").vm.$emit("update:modelValue", "d4e5f6");
+    await flushPromises();
+
+    expect(mocks.getNode).toHaveBeenCalledWith("d4e5f6");
+    expect(mocks.getNetworkList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+    expect(mocks.getStorageList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+    expect(mocks.getImageList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+  });
+
+  it("OVS portgroup名を表示値とVM作成payloadへ使用する", async () => {
+    mocks.getNode.mockResolvedValue({ count: 1, data: [{ name: "node-1" }] });
+    mocks.getNetworkList.mockResolvedValue({
+      count: 1,
+      data: [{
+        name: "ovs-1",
+        nodeName: "node-1",
+        type: "openvswitch",
+        uuid: "network-1",
+        portgroups: [{ name: "tenant-a", vlanId: "321", isDefault: false }],
+      }],
+    });
+    const wrapper = await mountDialog();
+
+    getSelectStub(wrapper, "vm-node").vm.$emit("update:modelValue", "node-1");
+    getSelectStub(wrapper, "vm-network").vm.$emit("update:modelValue", "network-1");
+    await nextTick();
+
+    const portSelect = getSelectStub(wrapper, "vm-network-port");
+    expect(portSelect.props("items")).toEqual([
+      { title: "tenant-a", value: "tenant-a" },
+    ]);
+    portSelect.vm.$emit("update:modelValue", "tenant-a");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost.mock.calls[0][1].body.interface).toEqual([
+      expect.objectContaining({
+        networkUuid: "network-1",
+        port: "tenant-a",
+      }),
+    ]);
   });
 
   it("API errorを通知して開いたままloadingを解除する", async () => {

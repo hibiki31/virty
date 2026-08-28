@@ -20,6 +20,9 @@ test("VM作成dialogのcancel、error、successを実ブラウザで確認する
   await expect(dialog).toBeVisible();
   await dialog.getByTestId("vm-name").getByRole("textbox").fill("vm-new");
 
+  await dialog.getByTestId("vm-project").click();
+  await page.getByRole("option", { name: "Project E2E (#a1b2c3)" }).click();
+
   await dialog.getByTestId("vm-node").click();
   await page.getByRole("option", { name: "node-e2e" }).click();
   await dialog.getByTestId("vm-destination-pool").click();
@@ -38,5 +41,6 @@ test("VM作成dialogのcancel、error、successを実ブラウザで確認する
   expect(api.vmCreateBodies[1]).toMatchObject({
     name: "vm-new",
     nodeName: "node-e2e",
+    projectId: "a1b2c3",
   });
 });

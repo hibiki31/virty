@@ -9,12 +9,13 @@ export const initNodeList: typeListNode = {
   data: [],
 };
 
-export async function getNode() {
+export async function getNode(projectId?: string | null) {
   const res = await apiClient.GET("/api/nodes", {
     params: {
       query: {
-        admin: true,
+        admin: projectId ? false : true,
         limit: 100,
+        projectId,
       },
     },
   });

@@ -25,7 +25,6 @@ REQUIRED_BODY_OPERATIONS = [
     ("patch", "/api/tasks/vms/missing/network", "/api/tasks/vms/{uuid}/network"),
     ("post", "/api/tasks/networks", "/api/tasks/networks"),
     ("post", "/api/tasks/networks/missing/ovs", "/api/tasks/networks/{uuid}/ovs"),
-    ("post", "/api/tasks/networks/providers", "/api/tasks/networks/providers"),
     ("post", "/api/tasks/nodes", "/api/tasks/nodes"),
     ("post", "/api/tasks/storages", "/api/tasks/storages"),
     ("patch", "/api/storages", "/api/storages"),
@@ -69,7 +68,8 @@ def test_mutation_request_bodies_are_required(
     username = f"body-contract-{uuid4().hex}"
     try:
         with SessionLocal.begin() as db:
-            db.add(UserModel(username=username, hashed_password="unused"))
+            user = UserModel(username=username, hashed_password="unused")
+            db.add(user)
             db.add(UserScopeModel(user_id=username, name="admin"))
 
         response = api_client.request(
@@ -230,6 +230,7 @@ def test_network_create_accepts_isolated_and_rejects_obsolete_typo(
 def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
     suffix = uuid4().hex
     username = f"vm-project-user-{suffix}"
+    outsider_username = f"vm-project-outsider-{suffix}"
     node_name = f"vm-project-node-{suffix}"
     target_uuid = str(uuid4())
     other_uuid = str(uuid4())
@@ -237,17 +238,23 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
 
     try:
         with SessionLocal.begin() as db:
-            db.add(UserModel(username=username, hashed_password="unused"))
+            user = UserModel(username=username, hashed_password="unused")
+            db.add(user)
+            db.add(UserModel(
+                username=outsider_username,
+                hashed_password="unused",
+            ))
             db.add(UserScopeModel(user_id=username, name="admin"))
-            db.add(ProjectModel(
+            db.add(UserScopeModel(user_id=outsider_username, name="admin"))
+            project = ProjectModel(
                 id=project_id,
                 name=f"vm-project-{suffix}",
-                is_admin=False,
                 core=8,
                 memory_g=16,
                 storage_capacity_g=128,
-                user_installable=True,
-            ))
+            )
+            project.users.append(user)
+            db.add(project)
             db.add(NodeModel(
                 name=node_name,
                 description="VM project contract test",
@@ -264,16 +271,18 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
                 ansible_facts={},
             ))
             db.flush()
+            target_domain = DomainModel(
+                uuid=target_uuid,
+                name=f"vm-project-target-{suffix}",
+                core=2,
+                memory=2048,
+                status=5,
+                node_name=node_name,
+                update_token=suffix,
+            )
+            target_domain.owner_user_id = username
             db.add_all([
-                DomainModel(
-                    uuid=target_uuid,
-                    name=f"vm-project-target-{suffix}",
-                    core=2,
-                    memory=2048,
-                    status=5,
-                    node_name=node_name,
-                    update_token=suffix,
-                ),
+                target_domain,
                 DomainModel(
                     uuid=other_uuid,
                     name=f"vm-project-other-{suffix}",
@@ -285,9 +294,16 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
                 ),
             ])
 
+        denied_response = api_client.patch(
+            f"/api/vms/{target_uuid}/project",
+            headers=_headers(outsider_username),
+            json={"projectId": project_id},
+        )
+        assert denied_response.status_code == 404
+
         response = api_client.patch(
-            f"/api/tasks/vms/{target_uuid}/project",
-            headers=_headers(username),
+            f"/api/vms/{target_uuid}/project",
+            headers=_headers(username, projects=[project_id]),
             json={"projectId": project_id},
         )
         assert response.status_code == 200, response.text
@@ -296,6 +312,7 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
             target = db.query(DomainModel).filter(DomainModel.uuid == target_uuid).one()
             other = db.query(DomainModel).filter(DomainModel.uuid == other_uuid).one()
             assert target.owner_project_id == project_id
+            assert target.owner_user_id is None
             assert other.owner_project_id is None
 
         schema = api_client.get("/api/openapi.json").json()
@@ -309,4 +326,6 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
             ).delete(synchronize_session=False)
             db.query(ProjectModel).filter(ProjectModel.id == project_id).delete()
             db.query(NodeModel).filter(NodeModel.name == node_name).delete()
-            db.query(UserModel).filter(UserModel.username == username).delete()
+            db.query(UserModel).filter(
+                UserModel.username.in_([username, outsider_username]),
+            ).delete(synchronize_session=False)

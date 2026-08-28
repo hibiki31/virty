@@ -41,6 +41,45 @@ describe("API notification", () => {
       title: "Request failed",
       text: "Name is required; Port is invalid",
     });
+
+    expect(formatNotificationText({
+      detail: [{ loc: ["body"], msg: "", type: "missing" }],
+    })).toBe("Unknown error");
+  });
+
+  it("文字列detailと構造不明のdetailを安全に整形する", () => {
+    expect(formatNotificationText({ detail: "Conflict" })).toBe("Conflict");
+    expect(formatNotificationText({ detail: "" })).toBe("Unknown error");
+    expect(formatNotificationText({})).toBe("Unknown error");
+
+    notify("success");
+    expect(mocks.baseNotify).toHaveBeenCalledWith({
+      type: "success",
+      title: "Success",
+      text: "API request completed",
+    });
+  });
+
+  it("409の構造化detailへresource一覧を含める", () => {
+    expect(formatNotificationText({
+      detail: {
+        message: "VM resources are outside the destination project grants",
+        resources: ["storage:/vm/disk.qcow2", "network:tenant"],
+      },
+    })).toBe(
+      "VM resources are outside the destination project grants: "
+      + "storage:/vm/disk.qcow2, network:tenant",
+    );
+
+    expect(formatNotificationText({
+      detail: {
+        message: "Project is in use",
+        resources: [42, null],
+      },
+    })).toBe("Project is in use");
+    expect(formatNotificationText({
+      detail: { message: "   ", resources: ["vm:one"] },
+    })).toBe("Unknown error");
   });
 
   it("task UUIDをqueue通知へ含め、欠落時は空文字にする", () => {

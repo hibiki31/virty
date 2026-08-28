@@ -11,6 +11,7 @@ from module.backends import (
     create_libvirt_backend,
 )
 from node.models import NodeModel
+from resource_deletion import ensure_image_deletable
 from storage.models import StorageModel
 from storage.rescan import storage_rescan
 from task.functions import TaskBase, TaskRequest, is_agent_task
@@ -101,7 +102,9 @@ def post_image_download(db: Session, model: TaskModel, req: TaskRequest):
 def delete_image_root(db: Session, model: TaskModel, req: TaskRequest):
     storage_uuid = req.path_param["uuid"]
     image_name = req.path_param["name"]
-    
+
+    # 受付後に別ProjectのVMが参照しても、外部volume削除前にfail closedにする。
+    ensure_image_deletable(db, storage_uuid, image_name)
     storage_model = db.query(StorageModel).filter(StorageModel.uuid==storage_uuid).one()
     node_model = db.query(NodeModel).filter(NodeModel.name==storage_model.node_name).one()
     

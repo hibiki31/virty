@@ -7,6 +7,12 @@
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">CREATE</v-btn>
+      <v-spacer />
+      <project-filter-select
+        :model-value="query.projectId"
+        style="max-width: 300px"
+        @update:model-value="updateProjectFilter"
+      />
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
@@ -44,8 +50,15 @@ import notify from '@/composables/notify'
 import type { typeListStorageQuery } from '@/composables/storage'
 import { initStorageList, getStorageList, getAvailableColoer } from '@/composables/storage'
 import type { schemas } from '@/composables/schemas'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
 
 const loading = ref(false)
+const auth = useAuthStore()
+const isAdmin = hasAdminScope(auth.scopes)
+const route = useRoute()
+const router = useRouter()
 const dialogDelete = ref(false)
 
 const dataDailogDelete = ref<schemas['Storage']>()
@@ -65,9 +78,10 @@ const headers = [
 ]
 
 const query = ref<typeListStorageQuery>({
-  admin: true,
+  admin: isAdmin,
   limit: 20,
-  page: 1
+  page: 1,
+  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
 })
 
 const items = ref<schemas['StoragePage']>(initStorageList)
@@ -91,6 +105,16 @@ async function reload() {
   loading.value = true
   items.value = await getStorageList(query.value)
   loading.value = false
+}
+
+async function updateProjectFilter(value: string | null) {
+  query.value.projectId = value
+  query.value.page = 1
+  const routeQuery = { ...route.query }
+  if (value) routeQuery.projectId = value
+  else delete routeQuery.projectId
+  await router.replace({ query: routeQuery })
+  await reload()
 }
 
 useReloadListener(() => {

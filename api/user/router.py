@@ -7,6 +7,10 @@ from auth.router import CurrentUser, get_current_user as require_current_user
 from mixin.database import get_db
 from mixin.exception import raise_notfound
 from mixin.log import setup_logger
+from project.service import (
+    ProjectConflictError,
+    ensure_user_memberships_deletable,
+)
 from resource_authorization import require_admin
 from user.admin_guard import would_remove_last_admin
 from user.functions import overwrite_user_scopes
@@ -148,6 +152,13 @@ def delete_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="The last administrator cannot be deleted",
         )
+    try:
+        ensure_user_memberships_deletable(db, username)
+    except ProjectConflictError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
 
     user_model = db.query(UserModel).filter(UserModel.username==username).delete()
     db.commit()

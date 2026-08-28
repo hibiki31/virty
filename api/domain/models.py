@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mixin.database import Base
@@ -14,6 +14,12 @@ if TYPE_CHECKING:
 
 class DomainModel(Base):
     __tablename__ = "domains"
+    __table_args__ = (
+        CheckConstraint(
+            "NOT (owner_user_id IS NOT NULL AND owner_project_id IS NOT NULL)",
+            name="ck_domains_single_owner",
+        ),
+    )
     uuid: Mapped[str] = Column(String, primary_key=True, index=True)
     # name@user
     name: Mapped[str] = Column(String)
@@ -43,7 +49,7 @@ class DomainModel(Base):
     owner_project: Mapped["ProjectModel | None"] = relationship("ProjectModel")
     owner_project_id: Mapped[str | None] = mapped_column(
         String,
-        ForeignKey('projects.id', onupdate='CASCADE', ondelete='SET NULL'),
+        ForeignKey('projects.id', onupdate='CASCADE', ondelete='RESTRICT'),
         nullable=True,
     )
 

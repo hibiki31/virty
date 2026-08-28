@@ -66,6 +66,8 @@ JWT signing keyはprocess再起動をまたいで同じ値を使う必要があ�
 repositoryやimageへ埋め込まない。
 
 Web UIのBearer JWTはissuerとaudienceを検証する短命tokenとし、scopeは完全一致または明示的wildcardで評価する。
+Project操作ではJWTのProject IDとDB上のmembershipを対象objectごとに照合する。member追加は既発行JWTを拡張せず
+再login後に有効にし、member削除はDB上のmembership確認によって既発行JWTより優先して即時失効させる。
 noVNCはVM UUIDをtokenとして使わず、対象VMのobject認可後に発行する60秒のconsole ticketをresolverへ渡す。
 ticketはhashだけを保存して一度だけ消費し、NginxとAPIのaccess logにはticketを含むresolver pathを記録しない。
 
@@ -85,6 +87,12 @@ WebAuthnはrelying party originに束縛されるため、assertionをstdio help
 
 MCP toolとAgent API actionはchecked-in catalogで一対一に対応する。catalogはread/mutation、risk、scope、
 入力・出力schemaと対象解決規則を持つ。REST routerやOpenAPIを自動的に全公開せず、catalog未登録actionは拒否する。
+Projectの名称変更、member追加・削除、resource grant更新も独立actionとし、利用者作成・更新adapterはmembershipを
+変更しない。Project generationは名称、member、非強制limit、storage/network pool、flavor grantから計算し、
+並行変更を古いgenerationで上書きしない。grant候補の全pool・flavor取得はglobal admin専用のR0 actionとして明示し、
+grant更新はglobal adminのR3 actionとしてrequest解析時と実行直前に再認可する。
+共有poolやstorage等を介して制約外Project・nodeへ影響が波及しないよう、global mutationはProject・node制約を
+どちらも持たない能力leaseとDB上のglobal adminだけに許可し、制約付きleaseでは受付時とworker dispatch時に拒否する。
 
 外部URLを受け取るimage downloadはAgent経路だけ追加policyを適用する。HTTPSの完全一致host allowlist、
 管理node上での名前解決後の全address検査、検証済みIPへの接続固定とTLS hostname検証、redirect・proxyの
@@ -154,6 +162,37 @@ row lockだけでなく、外部resourceへの重複実行と冪等性を再検�
 server側で導出する。nodeは許可VM・storage・networkが存在するnodeだけを参照できる。projectへ安全に
 対応付けられない全体再走査、node診断、SSH鍵、resource新規作成はadmin限定とする。
 
+### Project共同管理境界
+
+Project IDは重複しない6桁hex、名称は重複可能な表示値とする。membership、storage pool、network pool、flavorの
+多対多関係には組合せ一意制約を置き、Project別roleや旧`group` tableを認可へ使わない。VMは個人ownerまたは
+Project ownerのどちらか一方だけを持ち、新規VMではProject ownerを必須にする。移行前から存在する未所属VMだけは
+personal legacyとして残す。
+
+共同管理migrationは、NULL・重複membershipを整理した結果memberが0名になるProjectを検出するとupgradeを中止する。
+運用者は該当Projectを確認し、`users_to_projects`へ有効な利用者を1名以上割り当ててからupgradeを再実行する。
+
+Project固有のVM作成では、最初にProjectを一つ確定し、そのProjectへgrantされたstorage・network・flavorから
+候補を導出する。copy元imageはstorageに加えて設定済みflavorも同じProjectへgrantされていることをAPI受付時と
+worker実行時に検査する。flavorがNULLのimageは汎用imageとして扱う。imageのflavor更新もProject IDを必須とし、
+storageとflavorを同じProjectへ照合する。所属Project全体のresource和集合を一つのVMへ混在させない。
+VMのProject移動ではDomain行を
+先に、source・destination Project行をID順にlockし、最新のdisk・CD-ROM・network・image flavorを移動先grantへ
+再照合してから個人ownerを解除する。CD-ROM・network変更とresource削除もDomainからProjectの順でlockし、移動中の
+古いowner認可や逆順lockによるdeadlockを防ぐ。Project削除はAPI受付時とworker実行時の双方で
+所属VMがないことを検査し、VM、pool、flavor自体は削除しない。
+RESTのVM削除・電源・CD-ROM・network taskは受付時のprincipalとownerをrequestへ固定し、workerがDomainから
+Projectの順でlockした後に最新ownerとDB membershipを再認可する。queue待機中にVMが移動した場合やmemberを
+削除された場合は、管理nodeへの副作用を始める前にtaskを拒否する。personal legacy VMも受付時の個人ownerと
+task principalの完全一致を必要とする。
+Agentの同じVM taskも、dispatch policyの再評価に加えてDomain lock取得後にserver解決済みsource Projectと
+principalの最新membershipまたはpersonal ownerを再照合し、dispatchからhandler開始までのVM移動を拒否する。
+
+resource poolは複数Projectから共有される独立resourceである。Project grant更新はID集合の完全置換として行い、
+所属VMが参照中のstorage、network、flavorをgrant外にする変更を拒否する。CPU・memory・storage limitは互換表示値で、
+現時点の配置・作成処理ではquotaとして強制しない。未grant resourceの選択肢は通常のresource一覧へadmin bypassを
+設けず、Project配下のglobal admin専用candidate APIから取得する。
+
 ### Inventory同期
 
 VM、storage、image、networkの一覧は、管理node上のlibvirt状態を走査してDBへcacheする。
@@ -166,6 +205,10 @@ Web dashboardはBearer token付きの型付きclientで専用のdashboard query 
 認証利用者の参照範囲に合わせてDB上のinventory cacheとtask recordを表示用に集約する。
 各resourceとtaskには既存queryと同じscope認可とproject・resource poolによる絞り込みを適用し、
 frontendで権限範囲を拡張しない。
+
+VM、node、storage、image、network、各pool、flavorの一覧は任意のProject filterを受け取り、指定時は
+Projectの存在と認可を404で秘匿したうえで、そのProjectだけから導出したresourceを返す。WebはfilterをURL queryに
+保持するため、Project詳細からresource一覧へ遷移しても管理境界が失われない。
 
 このflowはread-onlyであり、表示や再読込を契機に管理nodeへのSSH・libvirt接続、inventory再走査、
 task投入を行わない。表示値は取得時点のsnapshotであり、時系列dataやreal-time監視を表さない。
@@ -196,5 +239,7 @@ runtimeのmajor versionとimageはDockerfileおよび`compose.example.yml`、Pyt
 - model変更では既存DBを移行できる新規Alembic revisionを追加する。
 - destructive operationでは、対象node、VM、storage、networkを一意なIDで解決してから実行する。
 - Agent API以外の既存REST経路も同じscope・project・object境界を迂回できないようにする。
+- Project membershipはProject APIだけを正本とし、利用者作成・更新から暗黙に置換しない。
+- Projectの表示名を識別子として参照せず、API、Agent、task、認可では6桁IDを使う。
 - MCP annotationはclient表示のhintに限り、認可やrisk判定の入力にしない。
 - 管理node操作はbackend interfaceを越えて行い、標準testからproduction adapterへ接続しない。

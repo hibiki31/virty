@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from mixin.log import setup_logger
 from module.backends import create_libvirt_backend
 from node.models import NodeModel
+from resource_deletion import ensure_storage_deletable
 from storage.create import create_storage
 from task.functions import TaskBase, TaskRequest
 from task.models import TaskModel
@@ -53,9 +54,8 @@ def post_storage_root(db: Session, model: TaskModel, req: TaskRequest):
 def delete_storage_root(db: Session, model: TaskModel, req: TaskRequest):
     uuid = req.path_param["uuid"]
 
-    storage:StorageModel = db.query(StorageModel).filter(
-        StorageModel.uuid == uuid
-    ).one()
+    # 受付後にgrantやVM参照が変わっていても管理nodeへ削除を送らない。
+    storage = ensure_storage_deletable(db, uuid)
     node: NodeModel = db.query(NodeModel).filter(
         NodeModel.name == storage.node_name
     ).one()

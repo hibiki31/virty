@@ -1,8 +1,6 @@
 <template>
   <v-card>
     <v-card-actions>
-      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
-        @click="stateCreateDialog = true">CREATE</v-btn>
       <v-spacer></v-spacer>
       <v-text-field v-model="query.nameLike" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
@@ -10,6 +8,15 @@
     <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="items.data"
       v-model:page="pageState" density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
+      <template #item.projects="{ item }">
+        <v-chip
+          v-for="project in item.projects"
+          :key="project.id"
+          class="ma-1"
+          size="x-small"
+          :to="`/projects/${project.id}`"
+        >{{ formatProjectName(project) }}</v-chip>
+      </template>
     </v-data-table-server>
 
   </v-card>
@@ -24,9 +31,9 @@ meta:
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { getUserList, initUserList, type UserListQuery } from '@/composables/user'
+import { formatProjectName } from '@/composables/project'
 
 const loading = ref(false)
-const stateCreateDialog = ref(false)
 const itemsPerPage = ref(20)
 const pageState = ref(1)
 

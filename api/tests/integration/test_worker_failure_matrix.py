@@ -93,6 +93,7 @@ def _prepare_fault(
     monkeypatch: pytest.MonkeyPatch,
     fault_name: FaultName,
     suffix: str,
+    username: str,
     private_marker: str,
 ) -> FaultSetup:
     node_name = f"fault-node-{suffix}"
@@ -232,7 +233,7 @@ def _prepare_fault(
             node_name=node_name,
         )
         domain.description = private_marker
-        domain.owner_user_id = None
+        domain.owner_user_id = username
         domain.owner_project_id = None
         db.add(domain)
         libvirt_backend = FakeLibvirtBackend(
@@ -252,7 +253,14 @@ def _prepare_fault(
         )
         request = TaskRequest(
             url=request_url,
-            path_param={"uuid": domain_uuid},
+            path_param={
+                "uuid": domain_uuid,
+                "ownerBinding": {
+                    "principalId": username,
+                    "ownerUserId": username,
+                    "ownerProjectId": None,
+                },
+            },
             body={"status": "on"},
         )
         return FaultSetup(
@@ -432,6 +440,7 @@ def test_production_worker_handlers_record_fault_and_block_dependency(
                 monkeypatch=monkeypatch,
                 fault_name=fault_name,
                 suffix=suffix,
+                username=username,
                 private_marker=private_marker,
             )
             db.add(

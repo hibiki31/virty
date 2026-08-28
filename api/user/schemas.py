@@ -26,6 +26,7 @@ class UserScope(BaseSchema):
 
 
 class UserProject(BaseSchema):
+    id: str
     name: str
 
 class UserPublickey(BaseSchema):
@@ -47,7 +48,10 @@ class UserPage(BaseSchema):
     count: int
     data:List[User]
 
-class UserForCreate(User):
+class UserForCreate(BaseSchema):
+    username: str
+    scopes: List[UserScope] = Field(default_factory=list)
+    publickeys: List[UserPublickey] = Field(default_factory=list)
     password: str = Field(
         min_length=8,
         max_length=128,
@@ -74,8 +78,3 @@ class UserInDB(UserBase):
 
 class UserResponse(BaseSchema):
     username: str
-
-
-class GroupForUpdate(BaseSchema):
-    group_id: str
-    user_id: str

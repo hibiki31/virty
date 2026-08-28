@@ -18,7 +18,7 @@ describe("auth store", () => {
   it("Agent用granular scopeを保持し、認証失敗時にstateを破棄する", () => {
     mocks.jwtDecode.mockReturnValue({
       exp: 4_102_444_800,
-      projects: [],
+      projects: ["a1b2c3"],
       scopes: ["user", "admin", "identity.manage", "vm.read"],
       sub: "operator",
     });
@@ -33,6 +33,7 @@ describe("auth store", () => {
       "vm.read",
     ]);
     expect(auth.username).toBe("operator");
+    expect(auth.projects).toEqual(["a1b2c3"]);
     expect(auth.authed).toBe(true);
 
     auth.loginFailure();
@@ -40,6 +41,7 @@ describe("auth store", () => {
     expect(auth.token).toBe("");
     expect(auth.username).toBe("");
     expect(auth.scopes).toEqual([]);
+    expect(auth.projects).toEqual([]);
     expect(auth.tokenValidated).toBe(true);
     expect(auth.authed).toBe(false);
   });
