@@ -3,18 +3,19 @@
     <setup-dialog></setup-dialog>
     <v-card class="mx-auto" max-width="400">
       <v-toolbar color="primary" dark>
-        <v-toolbar-title>Login</v-toolbar-title>
+        <v-toolbar-title>{{ t('pages.login.heading') }}</v-toolbar-title>
         <v-spacer></v-spacer>
+        <locale-switcher />
       </v-toolbar>
       <v-card-text>
-        <v-text-field v-model="username" label="ID" prepend-icon="mdi-account" required type="text" variant="underlined"
+        <v-text-field v-model="username" data-testid="login-username" :label="t('pages.login.username')" prepend-icon="mdi-account" required type="text" variant="underlined"
           density="compact" @keydown.enter="login"></v-text-field>
-        <v-text-field v-model="password" label="Password" prepend-icon="mdi-lock" required type="password"
+        <v-text-field v-model="password" data-testid="login-password" :label="t('pages.login.password')" prepend-icon="mdi-lock" required type="password"
           variant="underlined" density="compact" @keydown.enter="login"></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn depressed color="primary" type="submit" :loading="isLoadingLogin" @click="login">Login</v-btn>
+        <v-btn depressed color="primary" data-testid="login-submit" type="submit" :loading="isLoadingLogin" @click="login">{{ t('pages.login.submit') }}</v-btn>
       </v-card-actions>
     </v-card>
   </div>
@@ -22,23 +23,26 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Login
+  titleKey: pages.login.documentTitle
   layout: login
 </route>
 
 <script lang="ts" setup>
 import { useRouter, useRoute } from 'vue-router'
-import { useNotification } from '@kyvg/vue3-notification'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient } from '@/api'
 import { getCookie, removeCookie, setCookie } from 'typescript-cookie'
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
+import notify, { apiErrorRef } from '@/composables/notify'
+import { translationRef } from '@/composables/i18n'
 
 // module
-const { notify } = useNotification()
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { t } = useI18n({ useScope: 'global' })
 
 const password = ref('')
 const username = ref('')
@@ -62,24 +66,12 @@ const login = async () => {
       setCookie('accessToken', res.data.access_token)
       auth.loginSuccess(res.data.access_token)
       await router.push((route.query.redirect as string | undefined) ?? '/')
-      notify({
-        type: 'success',
-        title: 'Login successful',
-        text: 'will be automatically redirected'
-      })
+      notify('success', translationRef('pages.login.notifications.successTitle'), translationRef('pages.login.notifications.redirecting'))
     } else {
-      notify({
-        type: 'error',
-        title: 'Login fail',
-        text: typeof res.error?.detail === "string" ? res.error.detail : 'Unknown error',
-      })
+      notify('error', translationRef('pages.login.notifications.failureTitle'), apiErrorRef(res.error))
     }
   } catch {
-    notify({
-      type: 'error',
-      title: 'Login fail',
-      text: 'Unable to reach the authentication service',
-    })
+    notify('error', translationRef('pages.login.notifications.failureTitle'), translationRef('pages.login.notifications.serviceUnavailable'))
   } finally {
     isLoadingLogin.value = false
   }
@@ -106,28 +98,16 @@ const validateToken = async () => {
     })
 
     if (res.response.ok) {
-      notify({
-        type: 'success',
-        title: 'Login successful',
-        text: 'Token were valid',
-      })
+      notify('success', translationRef('pages.login.notifications.successTitle'), translationRef('pages.login.notifications.tokenValid'))
       auth.loginSuccess(accessToken)
       await router.push((route.query.redirect as string | undefined) ?? '/')
     } else {
-      notify({
-        type: 'error',
-        title: 'Login Failed',
-        text: 'Token have expired',
-      })
+      notify('error', translationRef('pages.login.notifications.failureTitle'), apiErrorRef(res.error))
       removeCookie('accessToken')
       auth.loginFailure()
     }
   } catch {
-    notify({
-      type: 'error',
-      title: 'Login Failed',
-      text: 'Unable to validate the saved token',
-    })
+    notify('error', translationRef('pages.login.notifications.failureTitle'), translationRef('pages.login.notifications.tokenValidationFailed'))
     removeCookie('accessToken')
     auth.loginFailure()
   }

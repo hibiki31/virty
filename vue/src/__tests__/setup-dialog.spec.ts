@@ -21,7 +21,10 @@ vi.mock("@/api", () => ({
   },
 }));
 
-vi.mock("@/composables/notify", () => ({ default: mocks.notify }));
+vi.mock("@/composables/notify", () => ({
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
+  default: mocks.notify,
+}));
 vi.mock("@/composables/sleep", () => ({ asyncSleep: mocks.sleep }));
 
 function mountDialog() {
@@ -69,7 +72,10 @@ describe("SetupDialog", () => {
     await flushPromises();
 
     expect(mocks.apiPost).toHaveBeenCalledOnce();
-    expect(mocks.notify).toHaveBeenCalledWith("success", "Setup successful");
+    expect(mocks.notify).toHaveBeenCalledWith("success", {
+      kind: "translation",
+      key: "setup.success",
+    });
     expect(mocks.apiGet).toHaveBeenCalledTimes(2);
     expect(setupButton(wrapper).props("loading")).toBe(false);
   });
@@ -84,8 +90,8 @@ describe("SetupDialog", () => {
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Failed Setup",
-      "Unable to reach the setup service",
+      { kind: "translation", key: "setup.failed" },
+      { kind: "translation", key: "setup.unreachable" },
     );
     expect(setupButton(wrapper).props("loading")).toBe(false);
   });

@@ -1,5 +1,4 @@
 import pytest
-from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -8,6 +7,7 @@ import models as _all_models  # noqa: F401
 from auth.router import CurrentUser
 from flavor.models import FlavorModel
 from mixin.database import Base
+from mixin.exception import ApiError, ApiErrorCode
 from network.models import NetworkModel, NetworkPoolModel
 from node.models import NodeModel
 from project.models import ProjectModel
@@ -99,18 +99,20 @@ def test_project_resource_pools_define_object_access() -> None:
         assert get_authorized_storage(db, "storage-a", user).name == "allowed"
         assert get_authorized_network(db, "network-a", user).name == "allowed"
 
-        with pytest.raises(HTTPException) as storage_error:
+        with pytest.raises(ApiError) as storage_error:
             get_authorized_storage(db, "storage-b", user)
         assert storage_error.value.status_code == 404
+        assert storage_error.value.code is ApiErrorCode.STORAGE_NOT_FOUND
 
-        with pytest.raises(HTTPException) as network_error:
+        with pytest.raises(ApiError) as network_error:
             get_authorized_network(db, "network-b", user)
         assert network_error.value.status_code == 404
+        assert network_error.value.code is ApiErrorCode.NETWORK_NOT_FOUND
 
 
 def test_global_operation_requires_current_admin_grant() -> None:
     user = CurrentUser(id="alice", token="token", scopes=["node.manage"])
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(ApiError) as error:
         require_admin(user)
     assert error.value.status_code == 403
 

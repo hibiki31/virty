@@ -102,6 +102,15 @@ DB上のinventory cacheとtask recordから集約した現在値のsnapshotと�
 表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。
 集計対象は各APIの認可とprojectによる絞り込みに従い、利用者が参照できないresourceを含めない。
 
+Web UIは日本語と英語を提供する。Virtyが所有する固定文言、入力検証、通知、accessibility文言は
+自動翻訳せず、review可能な日英辞書で個別に定義する。明示した言語はbrowserへ保存し、保存値、
+browserの対応言語、英語の順で選択する。loginと初期設定を含めて切替可能とし、VueとVuetify、
+画面title、日時・数値表記へ同じlocaleを即時適用する。言語設定の利用者account間・端末間同期は提供しない。
+READMEとMkDocs本文の完全な二言語化はこのWeb UI機能の対象に含めず、必要な場合は別変更として扱う。
+
+resource名、利用者が入力したdescription、XML・JSON・YAML、taskのrequest・message・log、管理nodeの
+command出力は運用dataであり、内容を翻訳または書き換えず原文のまま表示する。
+
 ## 品質上の不変条件
 
 - 認証が必要なresourceは、Bearer tokenなしで管理操作を許可しない。
@@ -109,6 +118,9 @@ DB上のinventory cacheとtask recordから集約した現在値のsnapshotと�
 - APIとworkerは同じDB、data領域、SSH credential、task keyの規約を共有する。
 - DB schema変更はAlembicで再現可能にし、既存環境と新規環境の両方をupgradeできるようにする。
 - frontendが利用するAPI型はOpenAPIから生成し、backend契約と同じ変更で同期する。
+- 通常APIとAgent APIのerrorは言語に依存しない安定したcode、手動で定義した英語fallback、
+  構造化parameterを共通形式で返す。Web UIはcodeに対応する日英辞書を正本として表示し、
+  validation errorで入力値や内部contextを応答へ漏らさない。
 - 永続dataはcontainer imageの外に置き、再作成後もDB、管理data、SSH鍵を保持できるようにする。
 - 配布WebはHTTPで待ち受け、TLS終端は運用者が外部reverse proxyまたはload balancerで任意に行う。
   平文HTTPはloopbackまたは信頼済み閉域だけで使用し、AgentのWebAuthn承認とproduction MCP接続には

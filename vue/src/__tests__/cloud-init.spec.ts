@@ -1,9 +1,11 @@
 import {
   EMPTY_CLOUD_CONFIG,
   createCloudInitFormState,
+  formatCloudInitErrors,
   mergeCloudInitForm,
   validateCloudInitYaml,
 } from "@/composables/cloudInit";
+import type { CloudInitResult } from "@/composables/cloudInit";
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
 
@@ -14,9 +16,13 @@ const RSA_KEY =
 
 function successfulValue(result: ReturnType<typeof mergeCloudInitForm>): string {
   if (!result.ok) {
-    throw new Error(result.errors.join("\n"));
+    throw new Error(formatCloudInitErrors(result.errors).join("\n"));
   }
   return result.value;
+}
+
+function failureErrors(result: CloudInitResult): string[] {
+  return result.ok ? [] : formatCloudInitErrors(result.errors);
 }
 
 describe("cloud-init YAML helper", () => {
@@ -48,16 +54,16 @@ describe("cloud-init YAML helper", () => {
     );
     const sequenceRoot = validateCloudInitYaml("#cloud-config\n- value\n");
 
-    expect(invalidHeader).toEqual({
-      ok: false,
-      errors: ["Line 1, column 1: The first line must be exactly #cloud-config."],
-    });
+    expect(invalidHeader.ok).toBe(false);
+    expect(failureErrors(invalidHeader)).toEqual([
+      "Line 1, column 1: The first line must be exactly #cloud-config.",
+    ]);
     expect(multipleDocuments.ok).toBe(false);
     expect(
-      multipleDocuments.ok ? [] : multipleDocuments.errors,
+      failureErrors(multipleDocuments),
     ).toContainEqual(expect.stringContaining("exactly one YAML document"));
     expect(sequenceRoot.ok).toBe(false);
-    expect(sequenceRoot.ok ? [] : sequenceRoot.errors).toContainEqual(
+    expect(failureErrors(sequenceRoot)).toContainEqual(
       expect.stringContaining("root must be a mapping"),
     );
   });
@@ -69,12 +75,12 @@ describe("cloud-init YAML helper", () => {
     const syntax = validateCloudInitYaml("#cloud-config\npackages: [curl\n");
 
     expect(duplicate.ok).toBe(false);
-    expect(duplicate.ok ? [] : duplicate.errors).toContainEqual(
-      expect.stringMatching(/^Line \d+, column \d+: .*unique/i),
+    expect(failureErrors(duplicate)).toContainEqual(
+      expect.stringMatching(/^Line \d+, column \d+: The YAML is invalid\.$/),
     );
     expect(syntax.ok).toBe(false);
-    expect(syntax.ok ? [] : syntax.errors).toContainEqual(
-      expect.stringMatching(/^Line \d+, column \d+:/),
+    expect(failureErrors(syntax)).toContainEqual(
+      expect.stringMatching(/^Line \d+, column \d+: The YAML is invalid\.$/),
     );
   });
 
@@ -185,13 +191,11 @@ runcmd:
     const result = mergeCloudInitForm(EMPTY_CLOUD_CONFIG, form);
 
     expect(result.ok).toBe(false);
-    expect(result.ok ? [] : result.errors).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining("Username must match"),
-        expect.stringContaining("Password is required"),
-        expect.stringContaining("private-key marker"),
-      ]),
-    );
+    expect(result.ok ? [] : result.errors.map(error => error.key)).toEqual([
+      "cloudInit.username",
+      "cloudInit.passwordRequired",
+      "cloudInit.privateKey",
+    ]);
   });
 
   it("OpenSSH形式ではない公開鍵を行単位で拒否する", () => {
@@ -202,10 +206,10 @@ runcmd:
     const result = mergeCloudInitForm(EMPTY_CLOUD_CONFIG, form);
 
     expect(result.ok).toBe(false);
-    expect(result.ok ? [] : result.errors).toEqual([
-      expect.stringContaining("Manual SSH key line 1"),
-      expect.stringContaining("Manual SSH key line 2"),
-      expect.stringContaining("Manual SSH key line 3"),
+    expect(failureErrors(result)).toEqual([
+      expect.stringContaining("Manual SSH key on line 1"),
+      expect.stringContaining("Manual SSH key on line 2"),
+      expect.stringContaining("Manual SSH key on line 3"),
     ]);
   });
 
@@ -230,8 +234,8 @@ runcmd:
     );
 
     expect(result.ok).toBe(false);
-    expect(result.ok ? [] : result.errors).toContainEqual(
-      expect.stringMatching(/^Line 2, column \d+:/),
+    expect(failureErrors(result)).toContainEqual(
+      expect.stringMatching(/^Line 2, column \d+: The YAML is invalid\.$/),
     );
   });
 
@@ -251,7 +255,7 @@ runcmd:
     );
 
     expect(conflict.ok).toBe(false);
-    expect(conflict.ok ? [] : conflict.errors).toContainEqual(
+    expect(failureErrors(conflict)).toContainEqual(
       expect.stringContaining("must keep default as its first user"),
     );
     expect(parse(compatible, { version: "1.1" })).toMatchObject({
@@ -274,11 +278,11 @@ runcmd:
     );
 
     expect(listConflict.ok).toBe(false);
-    expect(listConflict.ok ? [] : listConflict.errors).toContainEqual(
+    expect(failureErrors(listConflict)).toContainEqual(
       expect.stringContaining("chpasswd.list conflicts"),
     );
     expect(usersConflict.ok).toBe(false);
-    expect(usersConflict.ok ? [] : usersConflict.errors).toContainEqual(
+    expect(failureErrors(usersConflict)).toContainEqual(
       expect.stringContaining("chpasswd.users conflicts"),
     );
   });
@@ -294,11 +298,11 @@ runcmd:
     );
 
     expect(userResult.ok).toBe(false);
-    expect(userResult.ok ? [] : userResult.errors).toContainEqual(
+    expect(failureErrors(userResult)).toContainEqual(
       expect.stringMatching(/^Line 2, column \d+: .*user value must be a mapping/),
     );
     expect(chpasswdResult.ok).toBe(false);
-    expect(chpasswdResult.ok ? [] : chpasswdResult.errors).toContainEqual(
+    expect(failureErrors(chpasswdResult)).toContainEqual(
       expect.stringMatching(/^Line 2, column \d+: .*chpasswd value must be a mapping/),
     );
   });

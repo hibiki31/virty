@@ -18,6 +18,7 @@ export default defineConfig({
     environment: "jsdom",
     include: ["src/**/*.spec.ts", "e2e/**/*.unit.ts"],
     restoreMocks: true,
+    setupFiles: ["src/__tests__/setup.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

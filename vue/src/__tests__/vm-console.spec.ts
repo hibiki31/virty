@@ -50,7 +50,15 @@ describe("VM console ticket", () => {
       opener: window,
     };
     vi.spyOn(window, "open").mockReturnValue(consoleWindow as unknown as Window);
-    mocks.post.mockResolvedValue({ data: undefined, error: { detail: "denied" } });
+    mocks.post.mockResolvedValue({
+      data: undefined,
+      error: {
+        detail: {
+          code: "scope_denied",
+          message: "The required permission is missing.",
+        },
+      },
+    });
 
     await openVNC("vm-uuid");
 

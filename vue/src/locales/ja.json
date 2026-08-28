@@ -1,0 +1,1298 @@
+{
+  "app": {
+    "defaultTitle": "Virty コンソール",
+    "documentTitle": "Virty - {page}",
+    "language": "言語"
+  },
+  "common": {
+    "actions": {
+      "add": "追加",
+      "apply": "適用",
+      "approve": "承認",
+      "cancel": "キャンセル",
+      "change": "変更",
+      "close": "閉じる",
+      "create": "作成",
+      "delete": "削除",
+      "download": "ダウンロード",
+      "edit": "編集",
+      "overwrite": "上書き",
+      "refresh": "再読み込み",
+      "register": "登録",
+      "rescan": "再スキャン",
+      "retry": "再試行",
+      "revoke": "失効",
+      "save": "保存",
+      "setup": "セットアップ",
+      "submit": "送信",
+      "viewAll": "すべて表示",
+      "viewDetails": "詳細を表示"
+    },
+    "fields": {
+      "actions": "操作",
+      "allocation": "割り当て量",
+      "bridge": "ブリッジ",
+      "capacity": "容量",
+      "cpu": "CPU",
+      "description": "説明",
+      "device": "デバイス",
+      "dhcp": "DHCP",
+      "id": "ID",
+      "image": "イメージ",
+      "memory": "メモリー",
+      "method": "メソッド",
+      "mode": "モード",
+      "name": "名前",
+      "network": "ネットワーク",
+      "node": "ノード",
+      "password": "パスワード",
+      "path": "パス",
+      "port": "ポート",
+      "project": "プロジェクト",
+      "request": "リクエスト",
+      "resource": "リソース",
+      "role": "ロール",
+      "search": "検索",
+      "size": "サイズ",
+      "source": "ソース",
+      "status": "状態",
+      "storage": "ストレージ",
+      "target": "ターゲット",
+      "type": "種類",
+      "user": "ユーザー",
+      "uuid": "UUID"
+    },
+    "values": {
+      "all": "すべて",
+      "enabled": "有効",
+      "no": "いいえ",
+      "none": "なし",
+      "other": "その他",
+      "unavailable": "取得できません",
+      "unknown": "不明",
+      "yes": "はい"
+    },
+    "errors": {
+      "apiRequestFailed": "APIリクエストに失敗しました。",
+      "unknown": "不明なエラー",
+      "unreachable": "{service}に接続できません。"
+    },
+    "notifications": {
+      "apiCompleted": "APIリクエストが完了しました",
+      "queued": "タスクをキューへ登録しました",
+      "success": "成功"
+    }
+  },
+  "navigation": {
+    "agent": "Agent",
+    "api": "APIドキュメントを開く",
+    "dashboard": "ホーム",
+    "documentation": "Virtyドキュメントを開く",
+    "images": "イメージ",
+    "networks": "ネットワーク",
+    "nodes": "ノード",
+    "storages": "ストレージ",
+    "tasks": "タスク",
+    "users": "ユーザー",
+    "vms": "VM"
+  },
+  "localeSwitcher": {
+    "english": "English",
+    "japanese": "日本語",
+    "label": "表示言語を選択"
+  },
+  "appBar": {
+    "autoReload": "自動再読み込みを有効化",
+    "logout": "ログアウト",
+    "logoutComplete": "ログアウトしました",
+    "logoutRedirect": "ログイン画面へ移動します。",
+    "reload": "再読み込み",
+    "reloadAfterTask": "タスクが完了したため再読み込みします。",
+    "taskCount": "実行中のタスク: {count}件",
+    "toggleNavigation": "ナビゲーションを開閉"
+  },
+  "setup": {
+    "adminUsername": "管理者ユーザー名",
+    "createAdmin": "管理者ユーザーを作成します。",
+    "failed": "セットアップに失敗しました",
+    "passwordHint": "1文字以上入力してください",
+    "success": "セットアップが完了しました",
+    "title": "Virtyのセットアップ",
+    "unreachable": "セットアップサービスに接続できません。"
+  },
+  "docsLink": {
+    "open": "ドキュメントを開く"
+  },
+  "dialogs": {
+    "imageDelete": {
+      "confirm": "選択したイメージを削除しますか？",
+      "confirmation": "{count}件のイメージを削除する",
+      "failed": "イメージの削除に失敗しました",
+      "title": "イメージの削除"
+    },
+    "imageDownload": {
+      "downloadUrl": "ダウンロードURL",
+      "failed": "イメージのダウンロードに失敗しました",
+      "nodeSubtitle": "ノード: {name}",
+      "selectNode": "ノードを選択",
+      "selectStorage": "ストレージを選択",
+      "title": "イメージのダウンロード",
+      "unreachable": "イメージサービスに接続できません。"
+    },
+    "networkAdd": {
+      "bridgeName": "ブリッジ名",
+      "createFailed": "ネットワークの作成に失敗しました",
+      "enableDhcp": "DHCPを有効化",
+      "enableGateway": "ゲートウェイを有効化",
+      "end": "終了アドレス",
+      "gatewayHelp": "isolatedまたはOVSネットワークではゲートウェイを利用できません。DHCPにはゲートウェイが必要です。",
+      "ip": "IPアドレス",
+      "isolated": "分離",
+      "netmask": "ネットマスク",
+      "route": "ルーティング",
+      "start": "開始アドレス",
+      "title": "ネットワークの作成",
+      "unreachable": "ネットワークサービスに接続できません。"
+    },
+    "networkDelete": {
+      "failed": "ネットワークの削除に失敗しました",
+      "success": "ネットワーク削除を受け付けました",
+      "title": "ネットワークの削除",
+      "unreachable": "ネットワークサービスに接続できません。",
+      "wait": "タスクの完了を待ってください。"
+    },
+    "nodeAdd": {
+      "domain": "IPアドレスまたはドメイン",
+      "failed": "ノードの登録に失敗しました",
+      "kvmHost": "KVMホストとして構成",
+      "success": "ノード登録を受け付けました",
+      "title": "ノードの登録",
+      "unreachable": "ノードサービスに接続できません。",
+      "wait": "タスクの完了を待ってください。"
+    },
+    "nodeDelete": {
+      "confirm": "このノードを削除しますか？",
+      "confirmation": "{name}を削除する",
+      "failed": "ノードの削除に失敗しました",
+      "title": "ノードの削除"
+    },
+    "nodeKey": {
+      "description": "Virtyは各ノードの操作にこのSSH鍵を使用します。アカウントにはパスワードなしのsudo権限が必要です。権限を適切に制限した専用アカウントを使用してください。",
+      "failed": "鍵の追加に失敗しました",
+      "generated": "サーバー側で生成",
+      "invalid": "鍵の形式を確認してください。",
+      "privateKey": "秘密鍵",
+      "publicKey": "公開鍵",
+      "success": "鍵の更新を受け付けました",
+      "title": "管理用SSH鍵",
+      "wait": "タスクの完了を待ってください。",
+      "warning": "サーバーには既にSSH鍵があります。上書きすると元に戻せません。"
+    },
+    "storageAdd": {
+      "displayName": "Virtyでの表示名",
+      "failed": "ストレージの登録に失敗しました",
+      "help": "先にノード上でディレクトリを作成してください。通常はVMイメージ、cloud-init、ISOイメージ用のストレージを個別に登録し、登録後にロールを割り当てます。",
+      "selectNode": "ノードを選択",
+      "title": "ストレージの登録",
+      "unreachable": "ストレージサービスに接続できません。"
+    },
+    "storageDelete": {
+      "confirm": "このストレージを削除しますか？",
+      "confirmation": "{name}を削除する",
+      "failed": "ストレージの削除に失敗しました",
+      "title": "ストレージの削除"
+    },
+    "storageMetadata": {
+      "changed": "メタデータを変更しました",
+      "deviceType": "デバイス種別を選択",
+      "local": "ローカル",
+      "other": "その他",
+      "protocol": "プロトコルを選択",
+      "role": "ストレージロールを選択",
+      "title": "メタデータの変更"
+    },
+    "taskDetail": {
+      "log": "ログ",
+      "message": "メッセージ",
+      "request": "リクエスト"
+    },
+    "vmCdrom": {
+      "title": "ISOイメージのマウント",
+      "unmount": "アンマウント"
+    },
+    "vmDelete": {
+      "description": "VMの実行中は失敗します。ディスクイメージは削除されません。",
+      "failed": "VMの削除に失敗しました",
+      "success": "VM削除を受け付けました",
+      "title": "VMの削除",
+      "unreachable": "VMサービスに接続できません。",
+      "wait": "タスクの完了を待ってください。"
+    },
+    "vmNetwork": {
+      "title": "ネットワークの変更"
+    },
+    "vmAdd": {
+      "additionalKeys": "追加のSSH公開鍵",
+      "addInterface": "インターフェースを追加",
+      "applyYaml": "YAMLへ適用",
+      "basic": "基本設定",
+      "cloudInit": "Cloud-init",
+      "cloudInitDirty": "簡易フォームの未適用変更は送信されません。作成時には現在のraw YAMLを使用します。",
+      "cloudInitWarning": "パスワードはタスク履歴とcloud-init ISOに残ります。初期スクリプトはrootとして一度実行されます。SSH鍵認証を推奨します。",
+      "copy": "コピー",
+      "cpuCores": "{count}コア",
+      "destinationPool": "保存先pool",
+      "empty": "空ディスク",
+      "enable": "有効化",
+      "failed": "VMの作成に失敗しました",
+      "hostName": "ホスト名",
+      "initialScript": "初期スクリプト",
+      "initialUsername": "初期ユーザー名",
+      "isoHelp": "作成後にVM詳細画面からISOを接続してください。",
+      "noSavedKeys": "保存済みSSH公開鍵はありません",
+      "oneKeyPerLine": "1行に公開鍵を1つ入力してください",
+      "passwordChange": "初回ログイン時にパスワード変更を要求",
+      "removeInterface": "インターフェースを削除",
+      "savedKeys": "保存済みSSH公開鍵",
+      "savedKeysFailed": "保存済みSSH公開鍵を取得できませんでした。公開鍵は手入力できます。",
+      "simpleForm": "簡易フォーム",
+      "sizeGb": "サイズ [GB]",
+      "sourceImage": "コピー元イメージ",
+      "sourcePool": "コピー元pool",
+      "sshPassword": "SSHパスワード認証を有効化",
+      "title": "VMの作成",
+      "unavailableDefaultUser": "空欄の場合はイメージの既定値を使用します",
+      "unreachable": "VMサービスに接続できません。",
+      "userData": "User-data",
+      "yaml": "YAML"
+    }
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "subtitle": "インフラ構成と直近の制御処理",
+    "updated": "更新日時: {date}",
+    "refreshAria": "ダッシュボードを再読込",
+    "loading": "ダッシュボードを読込中",
+    "unavailableTitle": "ダッシュボードを表示できません",
+    "unavailableDescription": "APIからダッシュボードのスナップショットを取得できませんでした。既存のリソースは変更されていません。",
+    "staleTitle": "最後に取得できたスナップショットを表示しています",
+    "staleDescription": "最新情報の取得に失敗しました。表示値が古い可能性があります。",
+    "noInventoryTitle": "インフラ情報がまだありません",
+    "noInventoryDescription": "ノードを登録してインベントリスキャンを実行すると、このダッシュボードに情報が表示されます。",
+    "nodesLink": "ノードへ移動",
+    "overview": "リソース概要",
+    "kpiAria": "{title}: {value}、{detail}。{title}を開く。",
+    "visibilityAll": "すべてのVMとタスク",
+    "visibilityAssigned": "割り当てられたVMとタスク",
+    "capacityTitle": "容量の概要",
+    "capacitySubtitle": "リアルタイム使用率ではなく、キャッシュ済みインベントリの合計です",
+    "capacityUnavailable": "容量を取得できません",
+    "usageUnavailable": "使用率を取得できません",
+    "metricAria": "{label}: {value}",
+    "highestStorageUsage": "使用率が最も高いストレージ",
+    "noStorageCapacity": "ストレージ容量の情報がありません。",
+    "storageUsageAria": "{name}のストレージ使用率: {usage}",
+    "percentAllocated": "{percent} 割り当て済み",
+    "percentUsed": "{percent} 使用済み",
+    "valueAvailable": "空き {value}",
+    "vmStateTitle": "仮想マシンの状態",
+    "vmStateSubtitle": "最新のインベントリスキャンで取得した電源状態",
+    "runningVmsAria": "稼働中の仮想マシン: {percent}",
+    "running": "稼働中",
+    "stopped": "停止中",
+    "maintenance": "メンテナンス中",
+    "lostNode": "ノード消失",
+    "deleted": "削除済み",
+    "unknown": "不明",
+    "ofCount": "全{count}台中",
+    "nodeRoles": "ノードロール",
+    "noNodeRoles": "ノードロールが割り当てられていません。",
+    "roleAria": "{role}ロール: {count}ノード",
+    "networkTypes": "ネットワーク種別",
+    "noNetworks": "仮想ネットワークが登録されていません。",
+    "networkAria": "{type}ネットワーク: {count}",
+    "portGroups": "ポートグループ",
+    "attentionTitle": "要確認",
+    "noWarningsTitle": "ダッシュボードに警告はありません",
+    "noWarningsDescription": "このスナップショットに警告対象はありません。",
+    "recentActivity": "最近の処理",
+    "recentSubtitle": "閲覧可能なタスクのうち、直近にキューへ登録された6件",
+    "noRecentActivity": "最近の処理はありません。",
+    "kpis": {
+      "vms": "仮想マシン",
+      "nodes": "ノード",
+      "storagePools": "ストレージプール",
+      "networks": "ネットワーク",
+      "images": "イメージ",
+      "activeTasks": "実行中のタスク",
+      "running": "{count}台が稼働中",
+      "cpuCores": "CPU {count}コア",
+      "portGroups": "{count}ポートグループ",
+      "inventoryImages": "インベントリイメージ",
+      "inProgress": "待機中または実行中"
+    },
+    "metrics": {
+      "vcpu": "vCPU割り当て",
+      "memory": "メモリー割り当て",
+      "storage": "ストレージ使用量",
+      "ofCores": "{total}コア中{value}コア",
+      "ofValues": "{total}中{value}"
+    },
+    "attention": {
+      "failedTasks": "直近24時間の失敗または消失タスク: {count}件",
+      "failedTasksDetail": "直近24時間にエラーまたは消失したタスクがあります",
+      "highStorage": "使用率が高いストレージプール: {count}件",
+      "highStorageDetail": "容量の80%を超えて使用しています",
+      "lostNode": "ノードを失ったVM: {count}台",
+      "lostNodeDetail": "インベントリでVMのノード消失状態が報告されています",
+      "maintenance": "メンテナンス中のVM: {count}台",
+      "maintenanceDetail": "ライフサイクル操作を予定する前に確認してください",
+      "deleted": "インベントリ内の削除済みVM: {count}台",
+      "deletedDetail": "容量合計を使用する前にインベントリ状態を確認してください",
+      "unknown": "状態不明のVM: {count}台",
+      "unknownDetail": "インベントリスキャンを実行して状態を更新してください"
+    }
+  },
+  "agent": {
+    "documentTitle": "Agent管理",
+    "heading": "Agent管理",
+    "description": "Codex端末の登録、短期リース、変更操作の停止をWebAuthnで管理します。",
+    "actions": {
+      "reload": "再読み込み",
+      "register": "登録",
+      "applyWithWebAuthn": "WebAuthnで反映",
+      "approve": "承認",
+      "effectConfirmed": "効果あり",
+      "effectAbsent": "効果なし",
+      "resetBreaker": "ブレーカーをリセット",
+      "revoke": "失効"
+    },
+    "warnings": {
+      "mutation": "変更操作を有効にすると、リース範囲内の操作は追加確認なしで実行されます。バックアップや帯域外復旧がない場合、削除やネットワーク変更を元に戻すことはできません。",
+      "reconciliation": "外部基盤の実状態を確認してから結果を確定してください。確認前に再実行すると、同じ副作用が二重に発生する可能性があります。"
+    },
+    "webauthn": {
+      "title": "WebAuthnクレデンシャル",
+      "description": "ペアリングや停止操作の承認に使うセキュリティキーまたはプラットフォーム認証器を登録します。現在のパスワードは再認証だけに使われ、保存されません。",
+      "credentialName": "クレデンシャル名",
+      "currentPassword": "現在のパスワード"
+    },
+    "control": {
+      "title": "変更操作の全体制御",
+      "mutationsEnabled": "Agentの変更操作を有効化",
+      "shadowMode": "シャドウ / 読み取り専用モード",
+      "enabledRiskLevels": "有効なリスクレベル",
+      "allowDeleteWithoutRecovery": "復旧手段なしの削除を許可",
+      "allowNetworkChangeWithoutOob": "帯域外復旧なしのネットワーク変更を許可",
+      "reason": "変更理由（監査ログへ記録）",
+      "lastUpdated": "最終更新: {date} / {user}"
+    },
+    "pairings": {
+      "title": "承認待ちの端末ペアリング",
+      "empty": "承認待ちの端末はありません。",
+      "device": "端末",
+      "requestedScopes": "要求スコープ",
+      "expires": "有効期限",
+      "pairingCode": "ペアリングコード",
+      "codeLabel": "ヘルパーに表示されたコード"
+    },
+    "leaseRequests": {
+      "title": "承認待ちのケイパビリティリース",
+      "empty": "承認待ちのリースはありません。",
+      "devicePrincipal": "端末 / プリンシパル",
+      "constraints": "スコープと対象の制約",
+      "riskGrants": "リスク許可",
+      "expires": "有効期限",
+      "projects": "プロジェクト: {projects}",
+      "nodes": "ノード: {nodes}",
+      "maxMutations": "変更操作の上限: {count}回",
+      "riskDetails": "破壊的操作={destructive}、復旧手段なしの削除={deleteWithoutRecovery}、帯域外復旧なしのネットワーク変更={networkWithoutOob}"
+    },
+    "unknownOperations": {
+      "title": "状態不明の操作",
+      "empty": "整合確認待ちの操作はありません。",
+      "operationAction": "操作 / アクション",
+      "lastMessage": "最終メッセージ",
+      "reason": "確認理由",
+      "result": "確認結果",
+      "reasonLabel": "実状態を確認した方法と根拠"
+    },
+    "devices": {
+      "title": "ペアリング済み端末",
+      "reasonLabel": "失効・ブレーカーリセット理由（監査ログへ記録）",
+      "device": "端末",
+      "status": "状態",
+      "scopes": "スコープ",
+      "breakerOpen": "ブレーカー作動中"
+    },
+    "leases": {
+      "title": "ケイパビリティリース",
+      "lease": "リース",
+      "usageExpiry": "使用量 / 有効期限",
+      "scopes": "スコープ",
+      "device": "端末: {device}",
+      "revoked": "失効済み"
+    },
+    "table": {
+      "actions": "操作"
+    },
+    "notifications": {
+      "webauthnRegistered": "WebAuthnクレデンシャルを登録しました。",
+      "pairingApproved": "{device}を承認しました。",
+      "leaseApproved": "{device}のリースを承認しました。",
+      "controlUpdated": "Agentの全体制御を更新しました。",
+      "deviceRevoked": "{device}を失効しました。",
+      "breakerReset": "{device}のブレーカーをリセットしました。",
+      "leaseRevoked": "{lease}を失効しました。",
+      "operationReconciled": "{operation}の実状態を確定しました。"
+    }
+  },
+  "validation": {
+    "characterRestrictions": "A-Z、a-z、0-9、ハイフンのみ使用できます。",
+    "firstCharacter": "先頭文字にはA-Zまたはa-zを使用してください。",
+    "integer": "整数を入力してください。",
+    "invalidIp": "正しいIPアドレスを入力してください。",
+    "invalidUrl": "正しいURLを入力してください。",
+    "maxLength": "{max}文字以内で入力してください。",
+    "required": "必須項目です。",
+    "requiredCheckbox": "チェックしてください。",
+    "tcpPort": "0から65535までのTCPポートを入力してください。",
+    "vlan": "1から4094までのVLAN IDを入力してください。"
+  },
+  "cloudInit": {
+    "chpasswdConflict": "既存のchpasswd.{key}はフォームのパスワードと競合します。フォームを適用する前にYAMLから削除してください。",
+    "chpasswdMapping": "chpasswd.expireを更新するには、既存のchpasswd値をマッピングにしてください。",
+    "createMappingFailed": "YAMLマッピングを作成できませんでした。",
+    "createRunCommandFailed": "runcmdのYAMLノードを作成できませんでした。",
+    "firstLine": "先頭行は正確に#cloud-configと記述してください。",
+    "invalidYaml": "YAMLの形式が正しくありません。",
+    "manualKey": "{index}行目の手入力SSH鍵",
+    "mappingRoot": "YAMLドキュメントのルートをマッピングにしてください。",
+    "multipleDocuments": "cloud-init user-dataに含められるYAMLドキュメントは1つだけです。",
+    "passwordRequired": "SSHパスワード認証を有効にする場合はパスワードが必要です。",
+    "position": "{line}行{column}列: {message}",
+    "privateKey": "{label}に秘密鍵のマーカーが含まれています。公開鍵だけを指定してください。",
+    "publicKeyBlob": "{label}に正しいOpenSSH公開鍵blobが含まれていません。",
+    "publicKeyFormat": "{label}はOpenSSH形式「type base64 [comment]」で指定してください。",
+    "selectedKey": "選択したSSH鍵{index}",
+    "selectedKeyCount": "選択したSSH鍵{index}には公開鍵を1つだけ指定してください。",
+    "serializeFailed": "cloud-init YAMLをシリアライズできませんでした。",
+    "userMapping": "user.nameを更新するには、既存のuser値をマッピングにしてください。",
+    "username": "ユーザー名は^[a-z_][a-z0-9_-]{0,31}$に一致させてください。",
+    "usersDefault": "既定ユーザーのフォーム設定を適用するには、既存のusers値の先頭をdefaultのままにしてください。"
+  },
+  "webauthn": {
+    "assertionFailed": "WebAuthn assertionを取得できませんでした。",
+    "credentialFailed": "WebAuthn credentialを作成できませんでした。"
+  },
+  "apiErrors": {
+    "action_adapter_missing": "アクションアダプターを利用できません。",
+    "action_not_found": "要求されたアクションが見つかりません。",
+    "agent_control_missing": "Agentの制御設定を取得できません。",
+    "agent_public_base_url_missing": "Agentの公開ベースURLが設定されていません。",
+    "agent_signing_key_missing": "Agentの署名鍵が設定されていません。",
+    "agent_signing_key_too_short": "Agentの署名鍵が短すぎます。",
+    "already_initialized": "Virtyはすでに初期設定されています。",
+    "audit_unavailable": "監査サービスを利用できません。",
+    "authentication_required": "認証が必要です。",
+    "bad_request": "リクエストを処理できませんでした。",
+    "catalog_action_missing_at_dispatch": "カタログのアクションを利用できなくなりました。",
+    "catalog_risk_mismatch_at_dispatch": "実行前にカタログのリスクレベルが変更されました。",
+    "catalog_selector_mismatch_at_dispatch": "実行前にカタログのセレクターが変更されました。",
+    "cdrom_image_not_found": "CD-ROMイメージが見つかりません。",
+    "cdrom_image_required": "CD-ROMイメージを選択してください。",
+    "challenge_expired": "認証チャレンジの有効期限が切れています。",
+    "challenge_mismatch": "認証チャレンジが一致しません。",
+    "challenge_not_found": "認証チャレンジが見つかりません。",
+    "challenge_replay": "認証チャレンジはすでに使用されています。",
+    "conflict": "現在のリソース状態と競合しています。",
+    "copy_source_required": "コピー元のイメージを選択してください。",
+    "destination_project_denied": "コピー先プロジェクトを使用する権限がありません。",
+    "destructive_action_denied": "この破壊的なアクションは許可されていません。",
+    "destructive_action_denied_at_dispatch": "実行時に破壊的なアクションが拒否されました。",
+    "device_breaker_open": "端末のサーキットブレーカーが作動しています。",
+    "device_inactive": "端末が無効です。",
+    "device_inactive_after_dpop": "認証中に端末が無効になりました。",
+    "device_inactive_at_dispatch": "実行時に端末が無効でした。",
+    "device_key_exists": "この端末にはすでに鍵が登録されています。",
+    "device_key_mismatch": "端末の鍵が一致しません。",
+    "device_missing_at_handler": "アクションの実行時に端末を利用できませんでした。",
+    "device_not_found": "端末が見つかりません。",
+    "device_principal_changed_after_dpop": "認証中に端末のプリンシパルが変更されました。",
+    "device_principal_mismatch": "端末のプリンシパルが一致しません。",
+    "device_revoked": "端末は失効しています。",
+    "direct_action_kind_mismatch": "直接アクションの種別が一致しません。",
+    "direct_request_invalid": "直接アクションのリクエストが正しくありません。",
+    "dpop_method_mismatch": "DPoPのHTTPメソッドが一致しません。",
+    "dpop_replay": "DPoP proofはすでに使用されています。",
+    "dpop_replay_store_unavailable": "DPoPリプレイ防止ストアを利用できません。",
+    "dpop_token_mismatch": "DPoP proofがアクセストークンと一致しません。",
+    "dpop_uri_mismatch": "DPoPのリクエストURIが一致しません。",
+    "expected_generation_required": "想定するリソース世代を指定してください。",
+    "flavor_constraint_denied": "フレーバーが許可された制約の範囲外です。",
+    "flavor_exists": "同じ名前のフレーバーがすでに存在します。",
+    "flavor_not_found": "フレーバーが見つかりません。",
+    "generation_sentinel_required": "世代を確認するためのsentinelが必要です。",
+    "generation_target_invalid": "世代確認の対象が正しくありません。",
+    "generation_target_missing": "世代確認の対象が見つかりません。",
+    "http_error": "HTTPリクエストに失敗しました。",
+    "idempotency_key_conflict": "同じ冪等性キーが異なるリクエストに使用されています。",
+    "idempotency_key_required": "冪等性キーが必要です。",
+    "identity_target_missing_at_dispatch": "実行時に識別対象を利用できませんでした。",
+    "image_address_denied": "イメージのアドレスは許可されていません。",
+    "image_filename_required": "イメージURLにファイル名が必要です。",
+    "image_host_denied": "イメージのホストは許可されていません。",
+    "image_host_unresolved": "イメージのホスト名を解決できません。",
+    "image_node_mismatch": "イメージとVMは同じノードに配置してください。",
+    "image_not_found": "イメージが見つかりません。",
+    "image_or_flavor_not_found": "イメージまたはフレーバーが見つかりません。",
+    "image_url_denied": "イメージURLは許可されていません。",
+    "inactive_user": "このユーザーアカウントは無効です。",
+    "internal_server_error": "サーバー内部でエラーが発生しました。",
+    "invalid_action_input": "アクションの入力が正しくありません。",
+    "invalid_console_ticket": "コンソールチケットが無効か、有効期限が切れています。",
+    "invalid_credentials": "ユーザー名またはパスワードが正しくありません。",
+    "invalid_device_key": "端末の鍵が正しくありません。",
+    "invalid_dpop": "DPoP proofが正しくありません。",
+    "invalid_lease": "ケイパビリティリースが正しくありません。",
+    "invalid_lease_request_status": "現在のリース要求の状態ではこの操作を実行できません。",
+    "invalid_mutation_risk": "変更操作のリスクレベルが正しくありません。",
+    "invalid_operation_resolution": "操作の確認結果が正しくありません。",
+    "invalid_pairing_status": "現在のペアリング要求の状態ではこの操作を実行できません。",
+    "invalid_ssh_private_key": "SSH秘密鍵が正しくありません。",
+    "invalid_token": "認証トークンが無効です。",
+    "invalid_value": "指定された値が正しくありません。",
+    "invalid_webauthn_assertion": "WebAuthn assertionが正しくありません。",
+    "invalid_webauthn_purpose": "WebAuthnチャレンジの用途が正しくありません。",
+    "invalid_webauthn_registration": "WebAuthnの登録応答が正しくありません。",
+    "jsonschema_dependency_missing": "JSON Schema検証を利用できません。",
+    "last_admin_required": "最後の管理者は削除できません。",
+    "last_admin_scope_required": "最後の管理者から管理者権限を削除できません。",
+    "lease_already_exchanged": "ケイパビリティリースはすでに交換されています。",
+    "lease_expired": "ケイパビリティリースの有効期限が切れています。",
+    "lease_inactive_after_dpop": "認証中にケイパビリティリースが無効になりました。",
+    "lease_inactive_at_dispatch": "実行時にケイパビリティリースが無効でした。",
+    "lease_integrity_error": "ケイパビリティリースの整合性を確認できませんでした。",
+    "lease_mismatch": "ケイパビリティリースがリクエストと一致しません。",
+    "lease_missing": "ケイパビリティリースが必要です。",
+    "lease_missing_at_handler": "アクションの実行時にケイパビリティリースを利用できませんでした。",
+    "lease_not_approved": "ケイパビリティリースは承認されていません。",
+    "lease_not_found": "ケイパビリティリースが見つかりません。",
+    "lease_principal_mismatch": "ケイパビリティリースのプリンシパルが一致しません。",
+    "lease_request_already_pending": "この端末にはすでに承認待ちのリース要求があります。",
+    "lease_request_capacity_exceeded": "承認待ちリース要求の上限に達しました。",
+    "lease_request_not_found": "リース要求が見つかりません。",
+    "lease_request_not_pending": "リース要求は承認待ちではありません。",
+    "lease_required": "このアクションにはケイパビリティリースが必要です。",
+    "lease_revoked": "ケイパビリティリースは失効しています。",
+    "lease_scope_escalation": "要求されたスコープがケイパビリティリースの範囲を超えています。",
+    "method_not_allowed": "このHTTPメソッドは使用できません。",
+    "mutation_concurrency_limit": "同時に実行できる変更操作の上限に達しました。",
+    "mutation_limit_exhausted": "ケイパビリティリースの変更操作回数を使い切りました。",
+    "mutations_disabled": "Agentの変更操作は無効です。",
+    "mutations_disabled_at_dispatch": "実行前にAgentの変更操作が無効になりました。",
+    "network_constraint_denied": "ネットワークが許可された制約の範囲外です。",
+    "network_node_mismatch": "ネットワークとVMは同じノードに配置してください。",
+    "network_node_not_found": "ネットワークのノードが見つかりません。",
+    "network_not_found": "ネットワークが見つかりません。",
+    "network_or_port_not_found": "ネットワークまたはポートグループが見つかりません。",
+    "network_pool_not_found": "ネットワークプールが見つかりません。",
+    "network_port_not_found": "ネットワークのポートグループが見つかりません。",
+    "network_vm_node_mismatch": "ネットワークとVMは同じノードに配置してください。",
+    "network_xml_not_found": "ネットワークXMLが見つかりません。",
+    "node_denied": "このノードを使用する権限がありません。",
+    "node_denied_at_dispatch": "実行時にノードへのアクセスが拒否されました。",
+    "node_missing_at_dispatch": "実行時にノードを利用できませんでした。",
+    "node_not_found": "ノードが見つかりません。",
+    "oob_required": "このネットワーク変更には帯域外の復旧手段が必要です。",
+    "oob_required_at_dispatch": "実行時に帯域外の復旧手段が必要でした。",
+    "operation_action_mismatch": "操作のアクションが一致しません。",
+    "operation_action_not_found": "操作のアクションが見つかりません。",
+    "operation_dependency_cycle_at_dispatch": "操作の依存関係が循環しています。",
+    "operation_dependency_invalid_at_dispatch": "実行前に操作の依存関係が無効になりました。",
+    "operation_node_denied": "このノードでは操作が許可されていません。",
+    "operation_not_found": "操作が見つかりません。",
+    "operation_not_unknown": "この操作は整合確認待ちではありません。",
+    "operation_owner_mismatch": "操作の所有者が一致しません。",
+    "operation_project_denied": "このプロジェクトでは操作が許可されていません。",
+    "operation_root_invalid_at_dispatch": "実行前にルート操作が無効になりました。",
+    "operation_target_invalid": "操作の対象が正しくありません。",
+    "operation_target_missing": "操作の対象が見つかりません。",
+    "operation_timestamp_missing": "操作の日時がありません。",
+    "pairing_capacity_exceeded": "承認待ち端末ペアリングの上限に達しました。",
+    "pairing_expired": "端末のペアリング要求の有効期限が切れています。",
+    "pairing_not_found": "端末のペアリング要求が見つかりません。",
+    "pairing_not_pending": "端末のペアリング要求は承認待ちではありません。",
+    "pairing_scope_escalation": "承認スコープがペアリング要求の範囲を超えています。",
+    "password_reauthentication_failed": "パスワードによる再認証に失敗しました。",
+    "permission_denied": "この操作を実行する権限がありません。",
+    "principal_authority_revoked": "プリンシパルの権限は失効しています。",
+    "principal_authority_revoked_at_dispatch": "実行前にプリンシパルの権限が失効しました。",
+    "principal_mismatch": "認証されたプリンシパルが一致しません。",
+    "principal_mismatch_at_handler": "アクションの実行前に認証プリンシパルが変更されました。",
+    "principal_not_found": "プリンシパルが見つかりません。",
+    "project_denied": "このプロジェクトへアクセスする権限がありません。",
+    "project_denied_at_dispatch": "実行時にプロジェクトへのアクセスが拒否されました。",
+    "project_missing_at_dispatch": "実行時にプロジェクトを利用できませんでした。",
+    "project_not_found": "プロジェクトが見つかりません。",
+    "project_or_user_not_found": "プロジェクトまたはユーザーが見つかりません。",
+    "project_scope_escalation": "要求されたプロジェクトが許可スコープの範囲を超えています。",
+    "r3_concurrency_limit": "同時に実行できるR3操作の上限に達しました。",
+    "rate_limited": "リクエスト回数が上限を超えました。しばらく待ってから再試行してください。",
+    "recovery_required": "このアクションには確認済みの復旧手段が必要です。",
+    "recovery_required_at_dispatch": "実行時に復旧手段が必要でした。",
+    "related_image_invalid": "関連するイメージが正しくありません。",
+    "related_node_changed_at_dispatch": "実行前に関連ノードが変更されました。",
+    "related_project_changed_at_dispatch": "実行前に関連プロジェクトが変更されました。",
+    "related_target_missing_at_dispatch": "実行時に関連対象を利用できませんでした。",
+    "request_too_large": "リクエスト本文が大きすぎます。",
+    "resolved_target_missing_at_handler": "アクションの実行時に解決済みの対象を利用できませんでした。",
+    "resource_id_required": "リソースIDを指定してください。",
+    "resource_not_found": "対象のリソースが見つかりません。",
+    "resource_type_mismatch": "リソース種別が一致しません。",
+    "risk_disabled": "このリスクレベルは無効です。",
+    "risk_disabled_at_dispatch": "実行前にこのリスクレベルが無効になりました。",
+    "scope_denied": "必要な権限スコープが付与されていません。",
+    "scoped_global_read_denied": "このスコープでは全体の読取権限を使用できません。",
+    "self_delete_denied": "自分のユーザーアカウントは削除できません。",
+    "service_unavailable": "サービスを一時的に利用できません。",
+    "ssh_key_pair_required": "SSH秘密鍵と公開鍵の両方が必要です。",
+    "ssh_public_key_mismatch": "SSH公開鍵が秘密鍵と一致しません。",
+    "ssh_public_key_not_found": "SSH公開鍵が見つかりません。",
+    "stale_dpop": "DPoP proofの時刻が古すぎます。",
+    "stale_generation": "取得後にリソースが変更されました。再読込してから再試行してください。",
+    "storage_constraint_denied": "ストレージが許可された制約の範囲外です。",
+    "storage_node_mismatch": "ストレージとVMは同じノードに配置してください。",
+    "storage_not_found": "ストレージが見つかりません。",
+    "storage_pool_not_found": "ストレージプールが見つかりません。",
+    "target_busy": "対象は現在処理中です。",
+    "target_mapping_mismatch": "対象のマッピングが一致しません。",
+    "target_not_found": "対象が見つかりません。",
+    "task_not_found": "タスクが見つかりません。",
+    "task_ownership_denied": "このタスクへアクセスする権限がありません。",
+    "task_principal_mismatch_at_dispatch": "実行前にタスクのプリンシパルが変更されました。",
+    "task_selector_missing": "タスクのセレクターがありません。",
+    "token_expired": "認証トークンの有効期限が切れています。",
+    "unknown_action_scope": "アクションが不明なスコープを使用しています。",
+    "unknown_lease": "ケイパビリティリースを確認できません。",
+    "unknown_webauthn_credential": "WebAuthnクレデンシャルを確認できません。",
+    "unsupported_media_type": "リクエストのメディアタイプに対応していません。",
+    "unsupported_ssh_key": "この種類のSSH鍵には対応していません。",
+    "user_exists": "同じIDのユーザーがすでに存在します。",
+    "user_id_required": "ユーザーIDを入力してください。",
+    "user_not_found": "ユーザーが見つかりません。",
+    "username_mismatch": "ユーザー名が認証済みユーザーと一致しません。",
+    "validation_error": "入力内容を確認してください。",
+    "vm_network_project_denied": "VMとネットワークはアクセス可能なプロジェクトに所属させてください。",
+    "vm_not_found": "VMが見つかりません。",
+    "vm_or_project_not_found": "VMまたはプロジェクトが見つかりません。",
+    "vm_project_denied": "VMのプロジェクトへアクセスする権限がありません。",
+    "vm_storage_project_denied": "VMとストレージはアクセス可能なプロジェクトに所属させてください。",
+    "vm_xml_not_found": "VM XMLが見つかりません。",
+    "webauthn_challenge_capacity_exceeded": "承認待ちWebAuthnチャレンジの上限に達しました。",
+    "webauthn_credential_exists": "このWebAuthnクレデンシャルはすでに登録されています。",
+    "webauthn_dependency_missing": "サーバーでWebAuthnを利用できません。",
+    "webauthn_enrollment_required": "続行する前にWebAuthnクレデンシャルを登録してください。"
+  },
+  "fieldErrors": {
+    "extra_forbidden": "この項目は指定できません。",
+    "greater_than": "{limit}より大きい値を入力してください。",
+    "greater_than_or_equal": "{limit}以上の値を入力してください。",
+    "invalid_choice": "選択肢から値を選んでください。",
+    "invalid_format": "指定された形式で入力してください。",
+    "invalid_json": "正しいJSONを入力してください。",
+    "invalid_type": "指定された型の値を入力してください。",
+    "invalid_value": "正しい値を入力してください。",
+    "less_than": "{limit}より小さい値を入力してください。",
+    "less_than_or_equal": "{limit}以下の値を入力してください。",
+    "multiple_of": "{multiple}の倍数を入力してください。",
+    "required": "必須項目です。",
+    "too_long": "{maximum}文字または項目以内で入力してください。",
+    "too_short": "{minimum}文字または項目以上で入力してください。"
+  },
+  "apiFields": {
+    "admin": "管理者モード",
+    "challengeId": "チャレンジID",
+    "cpu": "CPU",
+    "credentialName": "Credential名",
+    "currentPassword": "現在のパスワード",
+    "description": "説明",
+    "imageUrl": "イメージURL",
+    "limit": "1ページの件数",
+    "memoryMegaByte": "メモリー",
+    "name": "名前",
+    "nodeName": "ノード",
+    "page": "ページ",
+    "password": "パスワード",
+    "path": "パス",
+    "port": "ポート",
+    "projectId": "プロジェクト",
+    "publicKey": "公開鍵",
+    "reason": "理由",
+    "request": "リクエスト",
+    "scope": "スコープ",
+    "storageUuid": "ストレージ",
+    "userId": "ユーザーID",
+    "userName": "ユーザー名",
+    "username": "ユーザー名",
+    "uuid": "UUID"
+  },
+  "domain": {
+    "taskStatus": {
+      "error": "エラー",
+      "finish": "完了",
+      "incomplete": "未完了",
+      "init": "初期化中",
+      "lost": "消失",
+      "start": "実行中",
+      "unknown": "不明",
+      "wait": "待機中"
+    },
+    "taskResource": {
+      "image": "イメージ",
+      "network": "ネットワーク",
+      "node": "ノード",
+      "storage": "ストレージ",
+      "user": "ユーザー",
+      "vm": "VM"
+    },
+    "taskMethod": {
+      "delete": "DELETE",
+      "get": "GET",
+      "patch": "PATCH",
+      "post": "POST",
+      "put": "PUT"
+    },
+    "nodeRole": {
+      "libvirt": "libvirt",
+      "ssh": "SSH"
+    },
+    "networkType": {
+      "bridge": "ブリッジ",
+      "internal": "内部ネットワーク",
+      "isolated": "分離ネットワーク",
+      "nat": "NAT",
+      "openvswitch": "Open vSwitch",
+      "route": "ルーティング"
+    },
+    "vmStatus": {
+      "1": "実行中",
+      "5": "停止中",
+      "7": "メンテナンス中",
+      "10": "削除済み",
+      "20": "ノード消失"
+    },
+    "nodeStatus": {
+      "10": "準備完了",
+      "init": "初期化中",
+      "error": "エラー"
+    },
+    "agentStatus": {
+      "pending": "承認待ち",
+      "active": "有効",
+      "approved": "承認済み",
+      "expired": "期限切れ",
+      "rejected": "拒否済み",
+      "revoked": "失効済み",
+      "queued": "待機中",
+      "running": "実行中",
+      "succeeded": "成功",
+      "failed": "失敗",
+      "cancel_requested": "取消要求済み",
+      "cancelled": "取消済み",
+      "reconciling": "整合確認中",
+      "unknown": "不明"
+    },
+    "boolean": {
+      "true": "はい",
+      "false": "いいえ"
+    },
+    "storageRole": {
+      "img": "VMイメージ",
+      "iso": "ISOインストーラー",
+      "template": "テンプレートイメージ",
+      "initIso": "Cloud-init"
+    },
+    "userScope": {
+      "admin": "管理者 (admin)",
+      "user": "従来の一般ユーザー (user)",
+      "inventory": {
+        "read": "インベントリの参照 (inventory.read)"
+      },
+      "vm": {
+        "read": "VMの参照 (vm.read)",
+        "create": "VMの作成 (vm.create)",
+        "power": "VM電源の操作 (vm.power)",
+        "attach": "VMメディア・ネットワークの変更 (vm.attach)",
+        "delete": "VMの削除 (vm.delete)",
+        "project": "VMプロジェクトの変更 (vm.project)"
+      },
+      "node": {
+        "read": "ノードの参照 (node.read)",
+        "manage": "ノードの管理 (node.manage)",
+        "credentials": "ノード接続鍵の投入 (node.credentials)"
+      },
+      "storage": {
+        "read": "ストレージの参照 (storage.read)",
+        "manage": "ストレージの管理 (storage.manage)"
+      },
+      "image": {
+        "read": "イメージの参照 (image.read)",
+        "manage": "イメージの管理 (image.manage)"
+      },
+      "network": {
+        "read": "ネットワークの参照 (network.read)",
+        "manage": "ネットワークの管理 (network.manage)"
+      },
+      "project": {
+        "read": "所属プロジェクトの参照 (project.read)",
+        "manage": "プロジェクトの管理 (project.manage)"
+      },
+      "flavor": {
+        "read": "フレーバーの参照 (flavor.read)",
+        "manage": "フレーバーの管理 (flavor.manage)"
+      },
+      "task": {
+        "read": {
+          "self": "自身のタスクの参照 (task.read.self)",
+          "any": "すべてのタスクの参照 (task.read.any)"
+        },
+        "manage": "タスクの取消・削除 (task.manage)"
+      },
+      "identity": {
+        "manage": "ユーザーと権限の管理 (identity.manage)"
+      },
+      "metrics": {
+        "read": "メトリクスの参照 (metrics.read)"
+      }
+    },
+    "agentScope": {
+      "all": "すべてのAgentアクション (*)",
+      "identity": {
+        "admin": "恒久管理者クレデンシャルの管理 (identity.admin)"
+      },
+      "system": {
+        "all": "すべてのシステムアクション (system.*)",
+        "version": "Virtyバージョンの参照 (system.version)"
+      },
+      "metrics": {
+        "all": "すべてのメトリクスアクション (metrics.*)",
+        "get": "集約メトリクスの参照 (metrics.get)"
+      },
+      "task": {
+        "all": "すべてのタスクアクション (task.*)",
+        "list": "タスク一覧の参照 (task.list)",
+        "incomplete": "未完了タスク一覧の参照 (task.incomplete)",
+        "get": "タスク詳細の参照 (task.get)",
+        "deleteAll": "タスク履歴の削除 (task.delete-all)"
+      },
+      "node": {
+        "all": "すべてのノードアクション (node.*)",
+        "list": "ノード一覧の参照 (node.list)",
+        "sshKey": {
+          "write": "管理SSH鍵の投入 (node.ssh-key.write)"
+        },
+        "sshPublicKey": {
+          "get": "管理SSH公開鍵の参照 (node.ssh-public-key.get)"
+        },
+        "get": "ノード詳細の参照 (node.get)",
+        "facts": "ノードfactsの参照 (node.facts)",
+        "info": "ノード診断情報の参照 (node.info)",
+        "create": "ノードの作成 (node.create)",
+        "delete": "ノードの削除 (node.delete)",
+        "role": {
+          "update": "ノードロールの更新 (node.role.update)"
+        }
+      },
+      "vm": {
+        "all": "すべてのVMアクション (vm.*)",
+        "list": "VM一覧の参照 (vm.list)",
+        "get": "VM詳細の参照 (vm.get)",
+        "xml": {
+          "get": "VM XMLの参照 (vm.xml.get)"
+        },
+        "refresh": "VMインベントリの更新 (vm.refresh)",
+        "create": "VMの作成 (vm.create)",
+        "delete": "VMの削除 (vm.delete)",
+        "power": {
+          "update": "VM電源状態の変更 (vm.power.update)"
+        },
+        "cdrom": {
+          "update": "VM CD-ROMメディアの変更 (vm.cdrom.update)"
+        },
+        "project": {
+          "update": "VMプロジェクトの変更 (vm.project.update)"
+        },
+        "network": {
+          "update": "VMネットワークの変更 (vm.network.update)"
+        }
+      },
+      "storage": {
+        "all": "すべてのストレージアクション (storage.*)",
+        "list": "ストレージ一覧の参照 (storage.list)",
+        "metadata": {
+          "update": "ストレージメタデータの更新 (storage.metadata.update)"
+        },
+        "pool": {
+          "list": "libvirtストレージプール一覧の参照 (storage.pool.list)",
+          "create": "libvirtストレージプールの作成 (storage.pool.create)",
+          "update": "libvirtストレージプールの更新 (storage.pool.update)"
+        },
+        "get": "ストレージ詳細の参照 (storage.get)",
+        "create": "ストレージの作成 (storage.create)",
+        "delete": "ストレージの削除 (storage.delete)"
+      },
+      "image": {
+        "all": "すべてのイメージアクション (image.*)",
+        "list": "イメージ一覧の参照 (image.list)",
+        "flavor": {
+          "update": "イメージフレーバーの変更 (image.flavor.update)"
+        },
+        "refresh": "イメージインベントリの更新 (image.refresh)",
+        "download": "イメージのダウンロード (image.download)",
+        "delete": "イメージの削除 (image.delete)"
+      },
+      "network": {
+        "all": "すべてのネットワークアクション (network.*)",
+        "list": "ネットワーク一覧の参照 (network.list)",
+        "pool": {
+          "list": "ネットワークプール一覧の参照 (network.pool.list)",
+          "create": "ネットワークプールの作成 (network.pool.create)",
+          "update": "ネットワークプールの更新 (network.pool.update)",
+          "delete": "ネットワークプールの削除 (network.pool.delete)"
+        },
+        "get": "ネットワーク詳細の参照 (network.get)",
+        "xml": {
+          "get": "ネットワークXMLの参照 (network.xml.get)"
+        },
+        "refresh": "ネットワークインベントリの更新 (network.refresh)",
+        "create": "ネットワークの作成 (network.create)",
+        "ovs": {
+          "create": "OVSポートグループの作成 (network.ovs.create)",
+          "delete": "OVSポートグループの削除 (network.ovs.delete)"
+        },
+        "provider": {
+          "create": "プロバイダーネットワークの作成 (network.provider.create)"
+        },
+        "delete": "ネットワークの削除 (network.delete)"
+      },
+      "project": {
+        "all": "すべてのプロジェクトアクション (project.*)",
+        "list": "プロジェクト一覧の参照 (project.list)",
+        "member": {
+          "add": "プロジェクトメンバーの追加 (project.member.add)"
+        },
+        "create": "プロジェクトの作成 (project.create)",
+        "delete": "プロジェクトの削除 (project.delete)"
+      },
+      "user": {
+        "all": "すべてのユーザーアクション (user.*)",
+        "me": "リースプリンシパルの参照 (user.me)",
+        "list": "ユーザー一覧の参照 (user.list)",
+        "create": "ユーザーの作成 (user.create)",
+        "update": "ユーザーの更新 (user.update)",
+        "delete": "ユーザーの削除 (user.delete)"
+      },
+      "flavor": {
+        "all": "すべてのフレーバーアクション (flavor.*)",
+        "list": "フレーバー一覧の参照 (flavor.list)",
+        "create": "フレーバーの作成 (flavor.create)",
+        "delete": "フレーバーの削除 (flavor.delete)"
+      }
+    }
+  },
+  "pages": {
+    "login": {
+      "documentTitle": "ログイン",
+      "heading": "ログイン",
+      "username": "ユーザーID",
+      "password": "パスワード",
+      "submit": "ログイン",
+      "notifications": {
+        "successTitle": "ログインに成功しました",
+        "failureTitle": "ログインに失敗しました",
+        "redirecting": "自動的に移動します。",
+        "unknownError": "不明なエラー",
+        "serviceUnavailable": "認証サービスに接続できません。",
+        "tokenValid": "保存済みのトークンは有効です。",
+        "tokenExpired": "保存済みのトークンの有効期限が切れています。",
+        "tokenValidationFailed": "保存済みのトークンを検証できません。"
+      }
+    },
+    "images": {
+      "documentTitle": "イメージ",
+      "actions": {
+        "rescan": "再スキャン",
+        "download": "ダウンロード",
+        "delete": "削除"
+      },
+      "filters": {
+        "node": "ノード",
+        "resource": "ストレージプール",
+        "search": "検索"
+      },
+      "columns": {
+        "node": "ノード",
+        "pool": "プール",
+        "vmName": "VM名",
+        "capacity": "容量",
+        "allocation": "割り当て量",
+        "name": "名前",
+        "flavorName": "フレーバー名",
+        "actions": "操作"
+      },
+      "notifications": {
+        "taskQueued": "タスクをキューへ登録しました。"
+      }
+    },
+    "networks": {
+      "documentTitle": "ネットワーク",
+      "actions": {
+        "rescan": "再スキャン",
+        "create": "作成"
+      },
+      "columns": {
+        "name": "名前",
+        "bridge": "ブリッジ",
+        "node": "ノード",
+        "type": "種類",
+        "uuid": "UUID",
+        "dhcp": "DHCP",
+        "actions": "操作"
+      },
+      "notifications": {
+        "taskQueued": "タスクをキューへ登録しました。"
+      }
+    },
+    "networkDetail": {
+      "actions": {
+        "delete": "削除"
+      },
+      "sections": {
+        "spec": "仕様",
+        "portGroups": "ポートグループ",
+        "info": "情報"
+      },
+      "spec": {
+        "name": "名前:",
+        "uuid": "UUID:",
+        "nodeName": "ノード名:",
+        "bridgeName": "ブリッジ名:",
+        "type": "種類:"
+      },
+      "portGroups": {
+        "name": "名前",
+        "nameExample": "dmz-network",
+        "vlan": "VLAN",
+        "vlanId": "VLAN ID",
+        "vlanIdExample": "810",
+        "default": "デフォルト",
+        "yes": "はい"
+      },
+      "info": {
+        "xml": "XML"
+      }
+    },
+    "nodes": {
+      "documentTitle": "ノード",
+      "actions": {
+        "key": "SSHキー",
+        "join": "参加"
+      },
+      "columns": {
+        "status": "状態",
+        "name": "名前",
+        "ip": "IPアドレス",
+        "port": "ポート",
+        "core": "コア数",
+        "memory": "メモリー",
+        "cpu": "CPU",
+        "os": "OS",
+        "qemu": "QEMU",
+        "libvirt": "libvirt",
+        "roles": "ロール",
+        "actions": "操作"
+      }
+    },
+    "nodeDetail": {
+      "sections": {
+        "spec": "仕様"
+      },
+      "spec": {
+        "status": "状態:",
+        "cpuModel": "CPUモデル:",
+        "os": "OS:",
+        "qemuVersion": "QEMUバージョン:",
+        "libvirtVersion": "libvirtバージョン:"
+      },
+      "info": {
+        "top": "プロセス (top -b -n 1 | head -n 20)",
+        "free": "メモリー (free -h)",
+        "ipRoute": "IPルート (ip r)",
+        "ipNeighbor": "IP近隣情報 (ip n)",
+        "ipAddress": "IPアドレス (ip a)",
+        "filesystem": "ファイルシステム (df -h)",
+        "storage": "ストレージデバイス (lsblk)",
+        "netplan": "Netplan (netplan get)",
+        "netfilter": "Netfilter (iptables -L)",
+        "nat": "NAT (iptables -L -t nat)"
+      }
+    },
+    "storages": {
+      "documentTitle": "ストレージ",
+      "actions": {
+        "rescan": "再スキャン",
+        "create": "作成"
+      },
+      "columns": {
+        "name": "名前",
+        "node": "ノード",
+        "uuid": "UUID",
+        "usage": "使用量",
+        "path": "パス",
+        "role": "ロール",
+        "actions": "操作"
+      },
+      "notifications": {
+        "taskQueued": "タスクをキューへ登録しました。"
+      },
+      "capacityGb": "{used}/{capacity} GB"
+    },
+    "storageDetail": {
+      "sections": {
+        "spec": "仕様",
+        "json": "JSON"
+      },
+      "spec": {
+        "name": "名前:",
+        "nodeName": "ノード名:",
+        "path": "パス:",
+        "available": "空き容量:"
+      },
+      "capacityGb": "{value} GB"
+    },
+    "tasks": {
+      "documentTitle": "タスク",
+      "heading": "タスク一覧",
+      "filters": {
+        "status": "状態",
+        "resource": "リソース",
+        "method": "メソッド"
+      },
+      "statuses": {
+        "finish": "完了",
+        "error": "エラー",
+        "init": "初期化中",
+        "wait": "待機中",
+        "incomplete": "未完了"
+      },
+      "resources": {
+        "vm": "VM",
+        "network": "ネットワーク",
+        "node": "ノード",
+        "storage": "ストレージ"
+      },
+      "methods": {
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH"
+      },
+      "columns": {
+        "status": "状態",
+        "postTime": "受付日時",
+        "userId": "ユーザーID",
+        "request": "リクエスト",
+        "id": "ID",
+        "runTime": "実行時間",
+        "actions": "操作"
+      },
+      "requestParametersWithValue": "JSONパラメーター: {request}",
+      "durationSeconds": "{value}秒"
+    },
+    "users": {
+      "documentTitle": "ユーザー",
+      "actions": {
+        "create": "作成"
+      },
+      "filters": {
+        "search": "検索"
+      },
+      "columns": {
+        "name": "名前",
+        "projects": "プロジェクト",
+        "scopes": "スコープ",
+        "publicKeys": "公開鍵"
+      }
+    },
+    "vms": {
+      "documentTitle": "VM",
+      "actions": {
+        "rescan": "再スキャン",
+        "create": "作成"
+      },
+      "filters": {
+        "search": "検索"
+      },
+      "columns": {
+        "status": "状態",
+        "name": "名前",
+        "node": "ノード",
+        "uuid": "UUID",
+        "ram": "RAM",
+        "cpu": "CPU",
+        "userId": "ユーザーID",
+        "groupId": "グループID"
+      },
+      "memoryGib": "{value} GiB",
+      "coreCount": "{count}コア",
+      "notifications": {
+        "taskQueued": "タスクをキューへ登録しました。"
+      }
+    },
+    "vmDetail": {
+      "actions": {
+        "powerOff": "電源オフ",
+        "powerOn": "電源オン",
+        "console": "コンソール",
+        "delete": "削除"
+      },
+      "sections": {
+        "spec": "仕様",
+        "node": "ノード",
+        "network": "ネットワーク",
+        "storage": "ストレージ",
+        "xml": "XML"
+      },
+      "spec": {
+        "status": "状態:",
+        "vcpu": "vCPU:",
+        "memory": "メモリー:"
+      },
+      "node": {
+        "name": "名前:",
+        "ip": "ノードIP:",
+        "status": "状態:",
+        "vncPort": "VNCポート:"
+      },
+      "network": {
+        "type": "種類",
+        "macAddress": "MACアドレス",
+        "networkName": "ネットワーク名",
+        "bridgeDevice": "ブリッジデバイス",
+        "ovsPort": "OVSポート",
+        "target": "ターゲット",
+        "actions": "操作"
+      },
+      "storage": {
+        "device": "デバイス",
+        "type": "種類",
+        "size": "サイズ",
+        "source": "ソース",
+        "target": "ターゲット",
+        "actions": "操作"
+      },
+      "memoryMb": "{value} MB"
+    }
+  }
+}

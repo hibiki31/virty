@@ -8,8 +8,11 @@
 import { createRouter, createWebHistory } from "vue-router/auto";
 import { setupLayouts } from "virtual:generated-layouts";
 import { routes } from "vue-router/auto-routes";
+import { watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { resolveAuthNavigation } from "@/composables/auth";
+import { localizedDocumentTitle } from "@/composables/i18n";
+import i18n, { type MessageKey } from "@/plugins/i18n";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,10 +52,15 @@ router.beforeEach((to) => {
   );
 });
 
-const DEFAULT_TITLE = "Virty Console";
-router.afterEach((to) => {
-  document.title =
-    typeof to.meta.title === "string" ? to.meta.title : DEFAULT_TITLE;
-});
+function updateDocumentTitle(): void {
+  const titleKey = router.currentRoute.value.meta.titleKey;
+  const page = typeof titleKey === "string"
+    ? i18n.global.t(titleKey as MessageKey)
+    : undefined;
+  document.title = localizedDocumentTitle(page);
+}
+
+router.afterEach(updateDocumentTitle);
+watch(i18n.global.locale, updateDocumentTitle);
 
 export default router;

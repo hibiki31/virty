@@ -1,4 +1,5 @@
 import VMAddDialog from "@/components/vms/VMAddDialog.vue";
+import { setLocale } from "@/plugins/i18n";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import {
   defineComponent,
@@ -49,6 +50,7 @@ vi.mock("@/composables/image", () => ({
 }));
 
 vi.mock("@/composables/notify", () => ({
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
   default: mocks.notify,
   notifyTask: mocks.notifyTask,
 }));
@@ -316,7 +318,14 @@ describe("VMAddDialog submit", () => {
   });
 
   it("API errorを通知して開いたままloadingを解除する", async () => {
-    mocks.apiPost.mockResolvedValue({ error: { detail: "conflict" } });
+    mocks.apiPost.mockResolvedValue({
+      error: {
+        detail: {
+          code: "conflict",
+          message: "The request conflicts with the current state.",
+        },
+      },
+    });
     const wrapper = await mountDialog();
 
     await wrapper.get("form").trigger("submit");
@@ -324,8 +333,16 @@ describe("VMAddDialog submit", () => {
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Create VM failed",
-      { detail: "conflict" },
+      { kind: "translation", key: "dialogs.vmAdd.failed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "conflict",
+            message: "The request conflicts with the current state.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     expect(wrapper.getComponent(ButtonStub).props("loading")).toBe(false);
@@ -402,7 +419,15 @@ describe("VMAddDialog cloud-init support", () => {
 
     expect(mocks.apiPost).not.toHaveBeenCalled();
     expect(wrapper.getComponent(TabsStub).props("modelValue")).toBe("yaml");
-    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).not.toBe("");
+    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).toContain(
+      "The YAML is invalid.",
+    );
+
+    setLocale("ja");
+    await nextTick();
+    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).toContain(
+      "YAMLの形式が正しくありません。",
+    );
   });
 
   it("YAML clear操作のnullを空文字へ正規化し、検証errorとして扱う", async () => {
@@ -503,7 +528,14 @@ describe("VMAddDialog cloud-init support", () => {
   });
 
   it("保存鍵APIの失敗を警告して手入力を妨げない", async () => {
-    mocks.apiGet.mockResolvedValue({ error: { detail: "unavailable" } });
+    mocks.apiGet.mockResolvedValue({
+      error: {
+        detail: {
+          code: "service_unavailable",
+          message: "The service is temporarily unavailable.",
+        },
+      },
+    });
     const wrapper = await mountDialog();
 
     await toggleCloudInit(wrapper, true);
@@ -511,6 +543,12 @@ describe("VMAddDialog cloud-init support", () => {
     expect(getSelectStub(wrapper, "cloud-init-saved-public-keys").props("items")).toEqual([]);
     expect(wrapper.get('[data-testid="saved-public-keys-error"]').text()).toContain(
       "could not be loaded"
+    );
+
+    setLocale("ja");
+    await nextTick();
+    expect(wrapper.get('[data-testid="saved-public-keys-error"]').text()).toContain(
+      "取得できませんでした"
     );
     expect(wrapper.find('[data-testid="cloud-init-manual-public-keys"] textarea').exists()).toBe(true);
   });

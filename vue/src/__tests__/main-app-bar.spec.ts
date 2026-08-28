@@ -1,5 +1,5 @@
 import MainAppBer from "@/components/MainAppBer.vue";
-import { componentStubs } from "@/__tests__/support/components";
+import { componentStubs, LocaleSwitcherStub } from "@/__tests__/support/components";
 import type * as TaskPollingModule from "@/composables/taskPolling";
 import { mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,6 +35,21 @@ beforeEach(() => {
 });
 
 describe("MainAppBer task polling", () => {
+  it("desktop selectorとnarrow向けcompact selectorを排他的なbreakpoint classで配置する", () => {
+    const wrapper = mount(MainAppBer, {
+      global: { stubs: componentStubs },
+    });
+    const switchers = wrapper.findAllComponents(LocaleSwitcherStub);
+
+    expect(switchers).toHaveLength(2);
+    expect(switchers[0].props("compact")).toBe(false);
+    expect(switchers[0].classes()).toEqual(expect.arrayContaining(["d-none", "d-md-flex"]));
+    expect(switchers[1].props("compact")).toBe(true);
+    expect(switchers[1].classes()).toEqual(expect.arrayContaining(["d-flex", "d-md-none"]));
+
+    wrapper.unmount();
+  });
+
   it("count減少でstate.triggerを1回実行し、unmountでpollerを停止する", () => {
     const wrapper = mount(MainAppBer, {
       global: { stubs: componentStubs },
@@ -49,8 +64,8 @@ describe("MainAppBer task polling", () => {
     expect(mocks.state.trigger).toHaveBeenCalledOnce();
     expect(mocks.notify).toHaveBeenCalledWith(
       "info",
-      "Reload",
-      "Reloading due to task completion",
+      { kind: "translation", key: "appBar.reload" },
+      { kind: "translation", key: "appBar.reloadAfterTask" },
     );
 
     wrapper.unmount();

@@ -1,11 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import NoResultFound
+from mixin.exception import ApiError, ApiErrorCode, NoResultFound
 from mixin.log import setup_logger
 from resource_authorization import get_authorized_network, require_admin
 from task.functions import TaskManager
@@ -108,7 +108,11 @@ def delete_network_ovs(
             NetworkPortgroupModel.network_uuid==uuid
             ).filter(NetworkPortgroupModel.name==name).one()
     except NoResultFound:
-        raise HTTPException(status_code=404, detail="network or port is not found")
+        raise ApiError(
+            404,
+            ApiErrorCode.NETWORK_OR_PORT_NOT_FOUND,
+            "The network or port was not found.",
+        )
 
     task = TaskManager(db=db)
     task.select(method='delete', resource='network', object='ovs')

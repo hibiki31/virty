@@ -2,9 +2,9 @@
   <v-card>
     <network-add-dialog v-model="stateCreateDialog"></network-add-dialog>
     <v-card-actions>
-      <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">rescan</v-btn>
+      <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.networks.actions.rescan') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
-        @click="stateCreateDialog = true">CREATE</v-btn>
+        @click="stateCreateDialog = true">{{ t('pages.networks.actions.create') }}</v-btn>
     </v-card-actions>
     <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
@@ -14,6 +14,13 @@
         <router-link :to="'/networks/' + item.uuid" style="font-family: monospace;">{{ item.uuid }}</router-link>
       </template>
 
+      <template v-slot:item.type="{ value }">
+        {{ translateDomainValue('networkType', value) }}
+      </template>
+      <template v-slot:item.dhcp="{ value }">
+        {{ booleanLabel(value) }}
+      </template>
+
     </v-data-table-server>
 
   </v-card>
@@ -21,29 +28,33 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Networks
+  titleKey: pages.networks.documentTitle
 </route>
 
 <script lang="ts" setup>
 import { apiClient } from '@/api'
-import notify from '@/composables/notify'
+import notify, { rawTextRef } from '@/composables/notify'
+import { booleanLabel, translateDomainValue, translationRef } from '@/composables/i18n'
 
 import type { typeListNetwork, typeListNetworkQuery } from '@/composables/network'
 import { getNetworkList, initNetworkList } from '@/composables/network'
+import { useI18n } from 'vue-i18n'
 
 
 const loading = ref(false)
 const stateCreateDialog = ref(false)
 
-const headers = [
-  { title: 'Name', value: 'name' },
-  { title: 'bridge', value: 'bridge' },
-  { title: 'Node', value: 'nodeName' },
-  { title: 'Type', value: 'type' },
-  { title: 'UUID', value: 'uuid' },
-  { title: 'DHCP', value: 'dhcp' },
-  { title: 'actions', value: 'actions' }
-]
+const { t } = useI18n({ useScope: 'global' })
+
+const headers = computed(() => [
+  { title: t('pages.networks.columns.name'), value: 'name' },
+  { title: t('pages.networks.columns.bridge'), value: 'bridge' },
+  { title: t('pages.networks.columns.node'), value: 'nodeName' },
+  { title: t('pages.networks.columns.type'), value: 'type' },
+  { title: t('pages.networks.columns.uuid'), value: 'uuid' },
+  { title: t('pages.networks.columns.dhcp'), value: 'dhcp' },
+  { title: t('pages.networks.columns.actions'), value: 'actions' }
+])
 
 const items = ref<typeListNetwork>(initNetworkList)
 const query = ref<NonNullable<typeListNetworkQuery>>({
@@ -63,7 +74,7 @@ async function loadItems({ page = 1, itemsPerPage = 10 }) {
 const rescan = () => {
   apiClient.PUT('/api/tasks/networks').then((res) => {
     if (res.data) {
-      notify("success", "The task has been queued.", res.data[0].uuid)
+      notify("success", translationRef('pages.networks.notifications.taskQueued'), rawTextRef(res.data[0].uuid))
     }
   })
 }

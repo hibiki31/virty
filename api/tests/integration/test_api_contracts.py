@@ -8,9 +8,10 @@ from fastapi import FastAPI
 from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
 
-from auth.router import create_access_token
+from auth.router import create_access_token, get_current_user
 from domain.models import DomainModel
 from mixin.database import SessionLocal
+from mixin.exception import ApiErrorCode, FieldErrorCode
 from node.models import NodeModel
 from project.models import ProjectModel
 from task.models import TaskModel
@@ -103,6 +104,239 @@ def test_openapi_operation_ids_remain_route_names(api_client: TestClient) -> Non
 
     assert len(operation_ids) == len(set(operation_ids))
     assert set(operation_ids) == route_names
+
+
+def test_openapi_publishes_common_error_contract(api_client: TestClient) -> None:
+    schema = api_client.get("/api/openapi.json").json()
+    schemas = schema["components"]["schemas"]
+
+    api_codes = set(schemas["ApiErrorCode"]["enum"])
+    field_codes = set(schemas["FieldErrorCode"]["enum"])
+    assert api_codes == {code.value for code in ApiErrorCode}
+    assert field_codes == {code.value for code in FieldErrorCode}
+    assert "HTTPValidationError" not in schemas
+    assert "ValidationError" not in schemas
+
+    detail_schema = schemas["ApiErrorDetail"]
+    field_schema = schemas["ApiFieldError"]
+    assert "params" not in detail_schema.get("required", [])
+    assert "errors" not in detail_schema.get("required", [])
+    assert detail_schema["properties"]["params"]["type"] == "object"
+    assert detail_schema["properties"]["errors"]["type"] == "array"
+    assert "params" not in field_schema.get("required", [])
+    assert field_schema["properties"]["params"]["type"] == "object"
+
+    responses = schema["paths"]["/api/auth"]["post"]["responses"]
+    for status_code in ("default", "422"):
+        response_schema = responses[status_code]["content"]["application/json"][
+            "schema"
+        ]
+        assert response_schema == {
+            "$ref": "#/components/schemas/ApiErrorResponse"
+        }
+
+    metrics_responses = schema["paths"]["/api/metrics"]["get"]["responses"]
+    for status_code in ("default", "422"):
+        content = metrics_responses[status_code]["content"]
+        assert set(content) == {"application/json"}
+        assert content["application/json"][
+            "schema"
+        ] == {"$ref": "#/components/schemas/ApiErrorResponse"}
+
+
+def test_runtime_errors_use_common_safe_envelope(api_client: TestClient) -> None:
+    unauthenticated = api_client.get("/api/tasks")
+    assert unauthenticated.status_code == 401
+    assert unauthenticated.json() == {
+        "detail": {
+            "code": "authentication_required",
+            "message": "Authentication is required.",
+        }
+    }
+    assert unauthenticated.headers["www-authenticate"] == "Bearer"
+
+    missing_route = api_client.get("/api/route-that-does-not-exist")
+    assert missing_route.status_code == 404
+    assert missing_route.json() == {
+        "detail": {
+            "code": "resource_not_found",
+            "message": "The requested resource was not found.",
+        }
+    }
+
+    invalid_credentials = api_client.post(
+        "/api/auth",
+        data={"username": "missing-user", "password": "wrong-password"},
+    )
+    assert invalid_credentials.status_code == 401
+    assert invalid_credentials.json() == {
+        "detail": {
+            "code": "invalid_credentials",
+            "message": "The username or password is incorrect.",
+        }
+    }
+
+    missing_form_field = api_client.post(
+        "/api/auth",
+        data={"username": "missing-password"},
+    )
+    assert missing_form_field.status_code == 422
+    assert missing_form_field.json() == {
+        "detail": {
+            "code": "validation_error",
+            "message": "Request validation failed.",
+            "errors": [
+                {"field": "body.password", "code": "required"},
+            ],
+        }
+    }
+
+    secret = "scope.DoNotReturnThisSecret"
+    invalid_body = api_client.post(
+        "/api/agent/v1/pairings",
+        json={
+            "deviceName": "",
+            "publicKeyJwk": {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "A" * 43,
+                "y": "A" * 43,
+            },
+            "requestedScopes": [secret, secret],
+        },
+    )
+    assert invalid_body.status_code == 422
+    assert invalid_body.json()["detail"] == {
+        "code": "validation_error",
+        "message": "Request validation failed.",
+        "errors": [
+            {
+                "field": "body.deviceName",
+                "code": "too_short",
+                "params": {"minimum": 1},
+            },
+            {"field": "body.requestedScopes", "code": "invalid_value"},
+        ],
+    }
+    assert secret not in invalid_body.text
+    assert "input" not in invalid_body.text
+    assert "ctx" not in invalid_body.text
+    assert invalid_body.headers["cache-control"] == "no-store"
+
+    missing_pairing = api_client.get(
+        "/api/agent/v1/pairings/missing-pairing",
+        headers={"X-Pairing-Code": "not-a-secret-code"},
+    )
+    assert missing_pairing.status_code == 404
+    assert missing_pairing.json() == {
+        "detail": {
+            "code": "pairing_not_found",
+            "message": "The requested resource was not found.",
+        }
+    }
+    assert missing_pairing.headers["cache-control"] == "no-store"
+
+
+def test_rejected_agent_cors_preflight_uses_common_safe_envelope(
+    api_client: TestClient,
+) -> None:
+    response = api_client.options(
+        "/api/agent/v1/devices",
+        headers={
+            "Origin": "https://cors-contract.invalid",
+            # allow_methods=["*"]が展開する標準method外を指定して必ず拒否させる。
+            "Access-Control-Request-Method": "BREW",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": {
+            "code": "bad_request",
+            "message": "The CORS preflight request was rejected.",
+        }
+    }
+    assert response.headers["content-type"] == "application/json"
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_unexpected_runtime_error_uses_safe_common_envelope(
+    api_client: TestClient,
+) -> None:
+    application = cast(FastAPI, api_client.app)
+    secret = "DoNotReturnThisInternalFailure"
+
+    def fail_authentication() -> None:
+        raise RuntimeError(secret)
+
+    application.dependency_overrides[get_current_user] = fail_authentication
+    client = TestClient(application, raise_server_exceptions=False)
+    try:
+        response = client.get("/api/tasks")
+    finally:
+        client.close()
+        application.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": {
+            "code": "internal_server_error",
+            "message": "An internal server error occurred.",
+        }
+    }
+    assert secret not in response.text
+
+
+def test_forbidden_and_conflict_use_common_runtime_contract(
+    api_client: TestClient,
+) -> None:
+    suffix = uuid4().hex
+    limited_username = f"error-contract-limited-{suffix}"
+    admin_username = f"error-contract-admin-{suffix}"
+    usernames = [limited_username, admin_username]
+
+    try:
+        with SessionLocal.begin() as db:
+            db.add_all([
+                UserModel(username=limited_username, hashed_password="unused"),
+                UserModel(username=admin_username, hashed_password="unused"),
+            ])
+            db.add_all([
+                UserScopeModel(user_id=limited_username, name="vm.read"),
+                UserScopeModel(user_id=admin_username, name="admin"),
+            ])
+
+        forbidden = api_client.get(
+            "/api/dashboard",
+            headers=_headers(limited_username, scopes=["vm.read"]),
+        )
+        assert forbidden.status_code == 403
+        assert forbidden.json() == {
+            "detail": {
+                "code": "scope_denied",
+                "message": "The required permission is missing.",
+            }
+        }
+
+        conflict = api_client.delete(
+            f"/api/users/{admin_username}",
+            headers=_headers(admin_username),
+        )
+        assert conflict.status_code == 409
+        assert conflict.json() == {
+            "detail": {
+                "code": "self_delete_denied",
+                "message": "The current administrator cannot delete its own account.",
+            }
+        }
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(UserScopeModel).filter(
+                UserScopeModel.user_id.in_(usernames),
+            ).delete(synchronize_session=False)
+            db.query(UserModel).filter(UserModel.username.in_(usernames)).delete(
+                synchronize_session=False,
+            )
 
 
 def test_prometheus_uses_templated_route_name(api_client: TestClient) -> None:

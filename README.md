@@ -43,6 +43,15 @@ access `http://localhost:8765`. For remote access or Agent operations, follow th
 [external HTTPS setup](mkdocs/setup/nginx.md), bind Virty to the proxy-facing interface,
 and set `VIRTY_PUBLIC_URL` to the browser-visible HTTPS origin.
 
+### API compatibility note
+
+The Japanese/English UI release makes a breaking change to every REST and Agent API
+error response. Clients must read `detail.code` and `detail.message` from the common
+structured envelope; the former REST `detail` string/list is no longer returned.
+Agent clients can continue to use `detail.code`, but validation entries now use
+`errors[].code` instead of `errors[].type`, and `detail.message` is an English fallback.
+HTTP status codes and authentication headers remain unchanged.
+
 
 ### Preparation of managed nodes
 

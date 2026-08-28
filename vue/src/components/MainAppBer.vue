@@ -1,16 +1,27 @@
 <template>
   <v-app-bar color="primary" prominent density="compact">
-    <v-app-bar-nav-icon variant="text" @click.stop="state.showSideDrawer = !state.showSideDrawer"></v-app-bar-nav-icon>
-    <v-toolbar-title>Virty</v-toolbar-title>
+    <v-app-bar-nav-icon variant="text" :aria-label="t('appBar.toggleNavigation')"
+      @click.stop="state.showSideDrawer = !state.showSideDrawer"></v-app-bar-nav-icon>
+    <v-toolbar-title class="d-none d-sm-flex">Virty</v-toolbar-title>
 
     <v-spacer></v-spacer>
 
-    <v-switch v-model="enableAutoReload" hide-details color="error" class="pa-6" hint="Enable auto relaod"></v-switch>
+    <LocaleSwitcher class="d-none d-md-flex mr-2" />
+    <LocaleSwitcher compact class="d-flex d-md-none" />
 
-    <v-progress-circular indeterminate color="error" v-if="taskCount > 0" size="24"></v-progress-circular>
-    <v-progress-circular color="error" v-else size="24"></v-progress-circular>
+    <v-switch v-model="enableAutoReload" :aria-label="t('appBar.autoReload')" hide-details color="error"
+      class="d-none d-md-flex mx-2" :hint="t('appBar.autoReload')"></v-switch>
+    <v-btn v-if="enableAutoReload" class="d-flex d-md-none" color="error" icon="mdi-refresh-auto"
+      :aria-label="t('appBar.autoReload')" variant="text" @click="enableAutoReload = false"></v-btn>
+    <v-btn v-else class="d-flex d-md-none" icon="mdi-refresh-off" :aria-label="t('appBar.autoReload')"
+      variant="text" @click="enableAutoReload = true"></v-btn>
 
-    <v-btn variant="text" icon="mdi-logout-variant" class="" @click="logout"></v-btn>
+    <v-progress-circular :aria-label="t('appBar.taskCount', { count: taskCount }, taskCount)" indeterminate color="error"
+      v-if="taskCount > 0" size="24"></v-progress-circular>
+    <v-progress-circular :aria-label="t('appBar.taskCount', { count: 0 }, 0)" color="error" v-else
+      size="24"></v-progress-circular>
+
+    <v-btn variant="text" icon="mdi-logout-variant" :aria-label="t('appBar.logout')" @click="logout"></v-btn>
   </v-app-bar>
 </template>
 
@@ -19,15 +30,19 @@ import { removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
 import { applyTaskPollingSnapshot, createTaskPoller } from '@/composables/taskPolling'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 
 import { apiClient } from '@/api'
 import notify from '@/composables/notify'
+import { translationRef } from '@/composables/i18n'
 
 const state = useStateStore()
 const auth = useAuthStore()
+const { t } = useI18n({ useScope: 'global' })
 
 const taskCount = ref(0)
 const enableAutoReload = ref(true)
@@ -35,7 +50,7 @@ const enableAutoReload = ref(true)
 const logout = async () => {
   removeAuth()
   auth.loginFailure()
-  notify('success', 'You have been logged out', 'You will be redirected to the login page.')
+  notify('success', translationRef('appBar.logoutComplete'), translationRef('appBar.logoutRedirect'))
 
   await asyncSleep(200)
   location.reload()
@@ -62,7 +77,7 @@ const taskPoller = createTaskPoller({
   },
   onSnapshot(snapshot, previousCount) {
     applyTaskPollingSnapshot(snapshot, previousCount, enableAutoReload.value, {
-      notifyReload: () => notify("info", "Reload", "Reloading due to task completion"),
+      notifyReload: () => notify("info", translationRef('appBar.reload'), translationRef('appBar.reloadAfterTask')),
       setTaskCount: (count) => {
         taskCount.value = count
       },

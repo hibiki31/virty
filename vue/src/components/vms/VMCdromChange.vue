@@ -2,15 +2,15 @@
   <v-dialog width="400" v-model="model">
     <v-form ref="formRef" @submit.prevent="submit">
       <v-card>
-        <v-card-title>ISO Image mount</v-card-title>
+        <v-card-title>{{ $t('dialogs.vmCdrom.title') }}</v-card-title>
         <v-card-text>
-          <v-checkbox label="Unmount" v-model="umount" hide-details></v-checkbox>
+          <v-checkbox :label="$t('dialogs.vmCdrom.unmount')" v-model="umount" hide-details></v-checkbox>
           <v-select :loading="loadingList" v-model="isoPath" :items="isoImages" v-if="!umount" append-icon="mdi-reload"
             variant="outlined" density="comfortable" @click:append="getIsoList"></v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" type="submit">SUBMIT</v-btn>
+          <v-btn color="error" type="submit">{{ $t('common.actions.submit') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>

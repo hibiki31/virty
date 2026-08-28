@@ -5,6 +5,7 @@ from auth.router import CurrentUser, get_current_user
 from domain.models import DomainDriveModel, DomainModel
 from flavor.models import FlavorModel
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from node.models import NodeModel
 from resource_authorization import (
@@ -103,8 +104,13 @@ def update_image_flavor(
     image_model = db.query(ImageModel).filter(
         ImageModel.storage_uuid==req.storage_uuid,
         ImageModel.path==req.path
-        ).one()
-    db.query(FlavorModel).filter(FlavorModel.id==req.flavor_id).one()
+        ).one_or_none()
+    if image_model is None:
+        raise ApiError(
+            404,
+            ApiErrorCode.IMAGE_NOT_FOUND,
+            "The image was not found.",
+        )
     image_model.flavor_id = req.flavor_id
     db.commit()
 

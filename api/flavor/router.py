@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from resource_authorization import allowed_flavor_ids, require_admin
 
@@ -22,9 +23,10 @@ def create_flavor(
     current_user.verify_scope(["flavor.manage"])
     require_admin(current_user)
     if db.query(FlavorModel).filter(FlavorModel.name==request_model.name).one_or_none():
-        raise HTTPException(
-            status_code=400,
-            detail=f"{request_model.name} already exists."
+        raise ApiError(
+            400,
+            ApiErrorCode.FLAVOR_EXISTS,
+            "A flavor with this name already exists.",
         )
     
     flavor_model = FlavorModel(**request_model.model_dump())
@@ -68,7 +70,11 @@ def delete_flavor(
         db.query(FlavorModel).filter(FlavorModel.id == flavor_id).one_or_none()
     )
     if deleted_model is None:
-        raise HTTPException(status_code=404, detail="Flavor not found")
+        raise ApiError(
+            404,
+            ApiErrorCode.FLAVOR_NOT_FOUND,
+            "The flavor was not found.",
+        )
     db.query(FlavorModel).filter(FlavorModel.id==flavor_id).delete()
     db.commit()
 

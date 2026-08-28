@@ -47,7 +47,7 @@ describe("TaskDetailDialog", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("POST VM VM-1");
+    expect(wrapper.text()).toContain("POST VM vm-1");
     expect(wrapper.text()).toContain("Message");
     expect(wrapper.text()).toContain("Request");
     expect(wrapper.text()).toContain("Log");

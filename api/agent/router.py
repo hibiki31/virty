@@ -5,12 +5,12 @@ from typing import Any, Literal
 
 from fastapi import Depends, Header, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute, APIRouter
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiErrorCode, api_error_response, validation_error_response
 from task.functions import (
     TaskNotFoundError,
     TaskOwnershipError,
@@ -74,33 +74,21 @@ class AgentAPIRoute(APIRoute):
         original = super().get_route_handler()
 
         async def handler(request: Request) -> Any:
+            request.scope["virty.agent_api"] = True
             try:
                 response = await original(request)
             except AgentError as exc:
-                response = JSONResponse(
+                response = api_error_response(
                     status_code=exc.status_code,
-                    content={"detail": {"code": exc.code, "message": exc.detail}},
+                    code=ApiErrorCode(exc.code),
+                    message=exc.api_message,
+                    no_store=True,
                 )
             except RequestValidationError as exc:
-                errors = [
-                    {
-                        "field": ".".join(str(value) for value in item["loc"]),
-                        "type": item["type"],
-                    }
-                    # FastAPIのRequestValidationError.errors()はPydanticの
-                    # keyword引数を受け付けない。必要なfield/typeだけを選び、
-                    # inputやctxに含まれ得る秘密値は応答へ出さない。
-                    for item in exc.errors()
-                ]
-                response = JSONResponse(
-                    status_code=422,
-                    content={
-                        "detail": {
-                            "code": "validation_error",
-                            "message": "request schemaが不正です",
-                            "errors": errors,
-                        }
-                    },
+                response = validation_error_response(
+                    request,
+                    exc,
+                    no_store=True,
                 )
             response.headers["Cache-Control"] = "no-store"
             return response

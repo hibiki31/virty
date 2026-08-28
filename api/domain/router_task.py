@@ -1,11 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import NoResultFound, raise_notfound
+from mixin.exception import ApiError, ApiErrorCode, NoResultFound, raise_notfound
 from mixin.log import setup_logger
 from node.models import NodeModel
 from project.models import ProjectModel
@@ -65,7 +65,7 @@ def create_vm(
     if node is None or (
         allowed_nodes is not None and node.name not in allowed_nodes
     ):
-        raise HTTPException(status_code=404, detail="Node not found")
+        raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     for interface in body.interface:
         network = get_authorized_network(
             db,
@@ -73,9 +73,10 @@ def create_vm(
             cu,
         )
         if network.node_name != node.name:
-            raise HTTPException(
-                status_code=400,
-                detail="Network must belong to the selected node",
+            raise ApiError(
+                400,
+                ApiErrorCode.NETWORK_NODE_MISMATCH,
+                "The network must belong to the selected node.",
             )
     for disk in body.disks:
         destination = get_authorized_storage(
@@ -84,15 +85,17 @@ def create_vm(
             cu,
         )
         if destination.node_name != node.name:
-            raise HTTPException(
-                status_code=400,
-                detail="Destination storage must belong to the selected node",
+            raise ApiError(
+                400,
+                ApiErrorCode.STORAGE_NODE_MISMATCH,
+                "The destination storage must belong to the selected node.",
             )
         if disk.type == "copy":
             if disk.original_pool_uuid is None or disk.original_name is None:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Copy source storage and image are required",
+                raise ApiError(
+                    400,
+                    ApiErrorCode.COPY_SOURCE_REQUIRED,
+                    "The copy source storage and image are required.",
                 )
             get_authorized_storage(db, disk.original_pool_uuid, cu)
             source = (
@@ -104,9 +107,10 @@ def create_vm(
                 .one_or_none()
             )
             if source is None or source.storage.node_name != node.name:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Source image must belong to the selected node",
+                raise ApiError(
+                    400,
+                    ApiErrorCode.IMAGE_NODE_MISMATCH,
+                    "The source image must belong to the selected node.",
                 )
     task = TaskManager(db=db)
     task.select(method='post', resource='vm', object='root')
@@ -193,7 +197,11 @@ def control_vm_cdrom(
             .one_or_none()
         )
         if image is None:
-            raise HTTPException(status_code=404, detail="CD-ROM image not found")
+            raise ApiError(
+                404,
+                ApiErrorCode.CDROM_IMAGE_NOT_FOUND,
+                "The CD-ROM image was not found.",
+            )
         get_authorized_storage(db, image.storage_uuid, cu)
 
     task = TaskManager(db=db)
@@ -277,12 +285,19 @@ def update_vm_project(
     current_user.verify_scope(["vm.project"])
     get_authorized_domain(db, uuid, current_user)
     if not current_user.can_access_project(request.project_id):
-        raise HTTPException(status_code=403, detail="Project is outside the granted scope")
+        raise ApiError(
+            403,
+            ApiErrorCode.PROJECT_DENIED,
+            "The project is outside the granted scope.",
+        )
     try:
         vm = db.query(DomainModel).filter(DomainModel.uuid == uuid).one()
         db.query(ProjectModel).filter(ProjectModel.id==request.project_id).one()
     except NoResultFound:
-        raise_notfound(detail="Not found vm or group")
+        raise_notfound(
+            "The VM or project was not found.",
+            code=ApiErrorCode.VM_OR_PROJECT_NOT_FOUND,
+        )
     
     vm.owner_project_id = request.project_id
     db.commit()
@@ -309,9 +324,10 @@ def update_vm_network(
     
     net = get_authorized_network(db, body.network_uuid, cu)
     if net.node_name != vm.node_name:
-        raise HTTPException(
-            status_code=400,
-            detail="Network must belong to the VM node",
+        raise ApiError(
+            400,
+            ApiErrorCode.NETWORK_VM_NODE_MISMATCH,
+            "The network must belong to the VM node.",
         )
 
     # タスクを追加

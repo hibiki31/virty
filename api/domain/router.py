@@ -3,12 +3,13 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from os.path import join
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from module.xmllib import redact_domain_xml_secrets
 from network.models import NetworkModel
@@ -137,7 +138,11 @@ def get_vm_xml(
         with open(join(DATA_ROOT, "xml/domain", f"{uuid}.xml")) as f:
             domain_xml = DomainXML(xml=redact_domain_xml_secrets(f.read()))
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Not found domain")
+        raise ApiError(
+            404,
+            ApiErrorCode.VM_XML_NOT_FOUND,
+            "The VM XML was not found.",
+        )
 
     return domain_xml
 
@@ -183,18 +188,26 @@ def get_vnc_address(
         DomainConsoleTicketModel.token_hash == token_hash,
     ).with_for_update().one_or_none()
     if ticket is None or ticket.used_at is not None:
-        raise HTTPException(status_code=401, detail="Invalid console ticket")
+        raise ApiError(
+            401,
+            ApiErrorCode.INVALID_CONSOLE_TICKET,
+            "The console ticket is invalid or has already been used.",
+        )
     expires_at = ticket.expires_at
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=UTC)
     if expires_at <= now:
-        raise HTTPException(status_code=401, detail="Invalid console ticket")
+        raise ApiError(
+            401,
+            ApiErrorCode.INVALID_CONSOLE_TICKET,
+            "The console ticket is invalid or has expired.",
+        )
 
     domain_model = db.query(DomainModel).filter(
         DomainModel.uuid == ticket.domain_uuid,
     ).one_or_none()
     if domain_model is None:
-        raise HTTPException(status_code=404, detail="VM not found")
+        raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
 
     ticket.used_at = now
     db.commit()

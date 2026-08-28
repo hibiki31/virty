@@ -1,6 +1,7 @@
 import { apiClient } from "@/api";
 import type { paths, components } from "@/api/openapi";
 import { toApiPageQuery } from "@/composables/pagination";
+import { formatNumber } from "@/composables/i18n";
 
 export type bodyPostVM = components["schemas"]["DomainForCreate"];
 export type typeListVM =
@@ -105,5 +106,5 @@ export function getStorageFileName(source: string) {
 }
 
 export function formatStorageCapacity(capacityGb: number | null | undefined) {
-  return capacityGb == null ? "-" : `${capacityGb} GB`;
+  return capacityGb == null ? "-" : `${formatNumber(capacityGb)} GB`;
 }

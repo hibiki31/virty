@@ -1,7 +1,7 @@
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser
+from mixin.exception import ApiError, ApiErrorCode
 
 from .models import DomainModel
 
@@ -25,8 +25,8 @@ def get_authorized_domain(
 ) -> DomainModel:
     domain = db.query(DomainModel).filter(DomainModel.uuid == uuid).one_or_none()
     if domain is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="VM not found")
+        raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
     if not can_access_domain(current_user, domain):
         # resourceの存在自体を権限外のprincipalへ知らせない。
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="VM not found")
+        raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
     return domain

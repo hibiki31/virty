@@ -36,7 +36,14 @@ describe("network一覧API", () => {
   });
 
   it("response dataがない場合は空の一覧へfallbackする", async () => {
-    get.mockResolvedValue({ error: { detail: "unavailable" } });
+    get.mockResolvedValue({
+      error: {
+        detail: {
+          code: "service_unavailable",
+          message: "The service is temporarily unavailable.",
+        },
+      },
+    });
 
     await expect(
       getNetworkList({ admin: true, limit: 20, page: 1 })

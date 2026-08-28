@@ -41,6 +41,14 @@ const dashboard = {
   tasks: { incompleteCount: 0, failedLast24Hours: 0, recent: [] },
 };
 
+export const rawVmXml =
+  '<domain data-opaque="XML-UNCHANGED-42"><name>vm-e2e</name></domain>';
+
+export const rawNodeInfo = {
+  ansible: "ANSIBLE-OUTPUT-UNCHANGED-42",
+  ssh: "SSH-OUTPUT-UNCHANGED-42",
+} as const;
+
 const node = {
   core: 8,
   cpuGen: "test-cpu",
@@ -59,6 +67,20 @@ const node = {
   userName: "operator",
 };
 
+const nodeInfo = {
+  dfH: "Filesystem output",
+  free: "Memory output",
+  ipAddress: "IP address output",
+  ipNeigh: "IP neighbor output",
+  ipRoute: "IP route output",
+  iptables: "Netfilter output",
+  iptablesNat: "NAT output",
+  lsblk: "Block device output",
+  netplanGet: rawNodeInfo.ansible,
+  top: rawNodeInfo.ssh,
+  uptime: "Uptime output",
+};
+
 const vm = {
   core: 2,
   description: "E2E VM",
@@ -75,8 +97,23 @@ const vm = {
   vncPort: -1,
 };
 
+export const rawTask = {
+  log: "virsh output: vm-e2e-uuid",
+  message: "libvirt: DOMAIN_RUNNING",
+  object: "vm-e2e-uuid",
+  postTime: "2026-08-22T12:34:56Z",
+  request: { opaqueToken: "REQ-UNCHANGED-42" },
+  resource: "vm",
+  runTime: 1.25,
+  status: "finish",
+  method: "post",
+  userId: "operator",
+  uuid: "task-raw-7f3a",
+};
+
 type ApiState = {
   failNextVmCreate: () => void;
+  setInitialized: (initialized: boolean) => void;
   vmCreateBodies: unknown[];
 };
 
@@ -97,6 +134,7 @@ export const test = base.extend<Fixtures>({
   api: async ({ page }, use) => {
     const state = {
       failVmCreate: false,
+      initialized: true,
       vmCreateBodies: [] as unknown[],
     };
 
@@ -113,7 +151,7 @@ export const test = base.extend<Fixtures>({
         return;
       }
       if (path === "/api/version") {
-        await fulfillJson(route, { initialized: true, version: "5.1.2" });
+        await fulfillJson(route, { initialized: state.initialized, version: "5.1.2" });
         return;
       }
       if (path === "/api/dashboard") {
@@ -124,8 +162,45 @@ export const test = base.extend<Fixtures>({
         await fulfillJson(route, { count: 0, hash: "empty", uuids: [] });
         return;
       }
+      if (path === "/api/tasks" && request.method() === "GET") {
+        await fulfillJson(route, { count: 1, data: [rawTask] });
+        return;
+      }
+      if (path === "/api/agent/v1/pairing-requests") {
+        await fulfillJson(route, []);
+        return;
+      }
+      if (path === "/api/agent/v1/lease-requests") {
+        await fulfillJson(route, []);
+        return;
+      }
+      if (path === "/api/agent/v1/devices") {
+        await fulfillJson(route, []);
+        return;
+      }
+      if (path === "/api/agent/v1/capability-leases") {
+        await fulfillJson(route, []);
+        return;
+      }
+      if (path === "/api/agent/v1/control") {
+        await fulfillJson(route, {
+          allowDeleteWithoutRecovery: false,
+          allowNetworkChangeWithoutOob: false,
+          enabledRiskLevels: ["R1"],
+          mutationsEnabled: false,
+          reason: "E2E baseline",
+          shadowMode: true,
+          updatedAt: "2026-08-22T12:34:56Z",
+          updatedBy: "operator",
+        });
+        return;
+      }
+      if (path === "/api/agent/v1/operation-reconciliations") {
+        await fulfillJson(route, []);
+        return;
+      }
       if (path === "/api/vms/vm-e2e-uuid/xml") {
-        await fulfillJson(route, { xml: "<domain />" });
+        await fulfillJson(route, { xml: rawVmXml });
         return;
       }
       if (path === "/api/vms/vm-e2e-uuid") {
@@ -138,6 +213,14 @@ export const test = base.extend<Fixtures>({
       }
       if (path === "/api/nodes") {
         await fulfillJson(route, { count: 1, data: [node] });
+        return;
+      }
+      if (path === "/api/nodes/node-e2e/info") {
+        await fulfillJson(route, nodeInfo);
+        return;
+      }
+      if (path === "/api/nodes/node-e2e") {
+        await fulfillJson(route, node);
         return;
       }
       if (path === "/api/networks") {
@@ -168,8 +251,13 @@ export const test = base.extend<Fixtures>({
           state.failVmCreate = false;
           await fulfillJson(
             route,
-            { detail: [{ loc: ["body", "name"], msg: "VM already exists", type: "conflict" }] },
-            422,
+            {
+              detail: {
+                code: "conflict",
+                message: "The VM already exists.",
+              },
+            },
+            409,
           );
         } else {
           await fulfillJson(route, [{ uuid: "vm-create-task" }]);
@@ -183,6 +271,9 @@ export const test = base.extend<Fixtures>({
     await use({
       failNextVmCreate: () => {
         state.failVmCreate = true;
+      },
+      setInitialized: initialized => {
+        state.initialized = initialized;
       },
       vmCreateBodies: state.vmCreateBodies,
     });

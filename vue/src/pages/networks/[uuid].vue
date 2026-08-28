@@ -10,13 +10,13 @@
       </v-card-subtitle>
       <v-card-actions>
         <v-btn small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
-          <v-icon left>mdi-delete</v-icon>Delete
+          <v-icon left>mdi-delete</v-icon>{{ t('pages.networkDetail.actions.delete') }}
         </v-btn>
       </v-card-actions>
       <v-card-text>
         <v-row>
           <v-col xs="12" sm="12" md="6" lg="3">
-            <v-card prepend-icon="mdi-cube-outline" title="Spec">
+            <v-card prepend-icon="mdi-cube-outline" :title="t('pages.networkDetail.sections.spec')">
               <v-table class="text-caption" density="compact">
                 <tbody align="right">
                   <tr v-for="item in getSpecList()" :key="item.title">
@@ -29,13 +29,13 @@
           </v-col>
           <!-- Port Group -->
           <v-col xs="12" sm="12" md="6" lg="3" v-if="data.type === 'openvswitch'">
-            <v-card prepend-icon="mdi-cube-outline" title="Port Group">
+            <v-card prepend-icon="mdi-cube-outline" :title="t('pages.networkDetail.sections.portGroups')">
               <v-table class="text-caption" density="compact">
                 <thead>
                   <tr>
-                    <th class="text-left">Name</th>
-                    <th class="text-left">VLAN</th>
-                    <th class="text-left">Default</th>
+                    <th class="text-left">{{ t('pages.networkDetail.portGroups.name') }}</th>
+                    <th class="text-left">{{ t('pages.networkDetail.portGroups.vlan') }}</th>
+                    <th class="text-left">{{ t('pages.networkDetail.portGroups.default') }}</th>
                     <th class="text-left"></th>
                   </tr>
                 </thead>
@@ -43,10 +43,11 @@
                   <tr v-for="item in sortedPortgroups" :key="item.name">
                     <td>{{ item.name }}</td>
                     <td>{{ item.vlanId }}</td>
-                    <td>{{ item.isDefault ? "YES" : "" }}</td>
+                    <td>{{ item.isDefault ? t('pages.networkDetail.portGroups.yes') : "" }}</td>
                     <td>
 
                       <v-btn icon="mdi-delete" color="error" variant="plain" density="compact" size="small"
+                        :aria-label="t('common.actions.delete')"
                         @click="deletePort(item.name)" :loading="deleting.has(item.name)"
                         :disabled="deleting.has(item.name)"></v-btn>
                     </td>
@@ -59,16 +60,18 @@
                 <v-form ref="formRef" @submit.prevent="submitPort">
                   <v-row>
                     <v-col cols="6">
-                      <v-text-field v-model="addVlan.name" persistent-placeholder label="Name" density="compact"
-                        placeholder="dmz-network" type="text" variant="outlined" counter="16"
+                      <v-text-field v-model="addVlan.name" persistent-placeholder :label="t('pages.networkDetail.portGroups.name')" density="compact"
+                        :placeholder="t('pages.networkDetail.portGroups.nameExample')" type="text" variant="outlined" counter="16"
                         :rules="[r.required, r.limitLength16, r.characterRestrictions, r.firstCharacterRestrictions]"></v-text-field>
                     </v-col>
                     <v-col cols="6">
-                      <v-text-field v-model="addVlan.vlanId" label="VLAN ID" density="compact" placeholder="810"
+                      <v-text-field v-model="addVlan.vlanId" :label="t('pages.networkDetail.portGroups.vlanId')" density="compact"
+                        :placeholder="t('pages.networkDetail.portGroups.vlanIdExample')"
                         type="number" persistent-placeholder hide-spin-buttons variant="outlined"
                         :rules="[r.required, r.vlan]">
                         <template v-slot:append>
                           <v-btn icon="mdi-send" variant="plain" density="compact" color="primary" type="submit"
+                            :aria-label="t('common.actions.add')"
                             :loading="loading || hasAnyOverlap(uuidTasks, state.task_uuids)"></v-btn>
                         </template>
                       </v-text-field>
@@ -79,7 +82,7 @@
             </v-card>
           </v-col>
           <v-col xs="12" sm="12" md="12" lg="6">
-            <v-card prepend-icon="mdi-xml" title="Info">
+            <v-card prepend-icon="mdi-xml" :title="t('pages.networkDetail.sections.info')">
               <v-card-text>
                 <div v-for="item in getInfoList()" :key="item.title">
                   <p class="text-h6 pt-3">{{ item.title }}</p>
@@ -98,9 +101,14 @@
 import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
 import { asyncSleep } from '@/composables/sleep';
+import { translateDomainValue, useLocalizedDocumentTitle } from '@/composables/i18n';
+import { useI18n } from 'vue-i18n';
+import { useLocalizedRules } from '@/composables/rules';
 
 const route = useRoute()
 const state = useStateStore()
+const { t } = useI18n({ useScope: 'global' })
+const r = useLocalizedRules()
 
 const loading = ref(false)
 const deleting = ref<Set<string>>(new Set())
@@ -117,6 +125,8 @@ const uuidTasks = ref<string[]>([])
 
 const stateDeleteDialog = ref(false)
 
+useLocalizedDocumentTitle(() => data.value?.name)
+
 const sortedPortgroups = computed(() =>
   [...data.value?.portgroups || []].sort((a, b) => Number(a.vlanId || 0) - Number(b.vlanId || 0)) // 昇順
 )
@@ -130,7 +140,6 @@ function reload() {
     }).then((res) => {
       if (res.data) {
         data.value = res.data
-        window.document.title = `Virty - ${res.data.name}`
       }
     })
 
@@ -150,11 +159,14 @@ function reload() {
 function getSpecList() {
   if (data) {
     return [
-      { title: "Name: ", value: data.value?.name },
-      { title: "UUID: ", value: data.value?.uuid },
-      { title: "Node Name: ", value: data.value?.nodeName },
-      { title: "Bridge Name: ", value: data.value?.bridge },
-      { title: "Type: ", value: data.value?.type },
+      { title: t('pages.networkDetail.spec.name'), value: data.value?.name },
+      { title: t('pages.networkDetail.spec.uuid'), value: data.value?.uuid },
+      { title: t('pages.networkDetail.spec.nodeName'), value: data.value?.nodeName },
+      { title: t('pages.networkDetail.spec.bridgeName'), value: data.value?.bridge },
+      {
+        title: t('pages.networkDetail.spec.type'),
+        value: translateDomainValue('networkType', data.value?.type),
+      },
     ]
   }
 }
@@ -162,7 +174,7 @@ function getSpecList() {
 function getInfoList() {
   if (dataXML.value) {
     return [
-      { title: "XML", value: dataXML.value.xml }
+      { title: t('pages.networkDetail.info.xml'), value: dataXML.value.xml }
     ]
   }
 }

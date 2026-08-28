@@ -82,6 +82,11 @@ unitは10秒、integrationは60秒、fake task待機は30秒を上限とし、ti
 認証、user、project、flavorのようにlab固有adapterを使わないAPI契約は`integration`で検証し、
 external suiteへ重複させない。
 
+API errorのcontract testは、通常APIとAgent APIの4xx・5xxが共通envelopeを返すこと、codeが
+`lower_snake_case`であること、parameterが許可型だけであることを確認する。422ではfield errorを
+安定したcodeへ正規化し、入力値、validatorのraw message、内部contextがresponseへ含まれないことを
+検査する。旧`detail` string・listやAgent API固有形式は互換対象にせず、testで再導入を拒否する。
+
 ### Web
 
 `quick web`は次を一度ずつ実行する。
@@ -94,6 +99,12 @@ external suiteへ重複させない。
 一度ずつ実行し、そのbuild layerからproduction imageを作る。生成結果は一時container内で追跡版と比較し、
 不一致ではworking treeを書き換えず失敗する。OpenAPI型もAPI schemaから再生成して比較する。
 更新が必要な場合だけ`./devctl generate web-types`または`./devctl generate openapi`を使う。
+
+日英辞書のcontract testはleaf key、補間parameter、複数形の定義を比較し、片方だけの追加、空文言、
+不一致を失敗にする。locale処理は保存値、browser言語、英語fallbackの優先順位と不正保存値をunit testし、
+Vue・Vuetify、`html lang`、route title、日時・数値が一つのlocaleへ追従することを検査する。
+Playwrightでは英語localeを明示した既存critical flowに加え、日本語への切替、再読込後の保持、login・初期設定、
+Vuetify組込文言を確認する。task logなど原文dataがlocale切替で変化しないことも検査する。
 
 coverage summaryは`verify web`とCIのlogへ記録するが、既存codeへ根拠のない一律閾値は設定しない。新規・変更する処理には、
 境界値、失敗path、API response変換を対象にしたtestを追加する。
@@ -173,6 +184,10 @@ API契約を変更した場合はschema、router、利用側を同じ変更で�
 OpenAPI schemaと`openapi-typescript`の出力は一時directoryを介してone-shot container間で渡す。
 host portやhost pnpmを使わず、最後だけhost userとして追跡fileへinstallするため所有者を変えない。
 追跡する`vue/src/api/openapi.d.ts`を手編集しない。
+
+error codeまたはfield error codeを追加・変更するときは、backendのcode定義とschema、OpenAPI、
+frontendの日英辞書、API・辞書contract testを同じ変更で更新する。共通error envelopeへの移行では
+旧形式とのdual response期間を設けず、すべての通常API・Agent APIと利用側を一度に切り替える。
 
 ## DB schema変更
 

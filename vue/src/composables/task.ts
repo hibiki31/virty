@@ -2,8 +2,12 @@ import { apiClient } from "@/api";
 import type { paths } from "@/api/openapi";
 import { toApiPageQuery } from "@/composables/pagination";
 
-import { format, parseISO } from "date-fns";
-import { ja } from "date-fns/locale/ja";
+import {
+  formatDateTime,
+  formatNumber,
+  translateDomainValue,
+} from "@/composables/i18n";
+import i18n from "@/plugins/i18n";
 
 export type typeListTask =
   paths["/api/tasks"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -91,17 +95,32 @@ export const getStatusColor = (statusCode: string | undefined | null) => {
   return "yellow";
 };
 
-export const toJST = (val: string | undefined | null) => {
-  if (val) {
-    return format(parseISO(val), "yyyy-MM-dd HH:mm", { locale: ja });
-  } else {
-    return "error";
-  }
+export const taskStatusLabel = (value: string | null | undefined) =>
+  translateDomainValue("taskStatus", value);
+
+export const taskResourceLabel = (value: string | null | undefined) =>
+  translateDomainValue("taskResource", value);
+
+export const taskMethodLabel = (value: string | null | undefined) =>
+  translateDomainValue("taskMethod", value);
+
+export const formatTaskRequest = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  return JSON.stringify(value) ?? String(value ?? "");
 };
 
-export const toFixedTow = (val: number) => {
+export const taskRequestLabel = (value: unknown): string =>
+  i18n.global.t("pages.tasks.requestParametersWithValue", {
+    request: formatTaskRequest(value),
+  });
+
+export const formatTaskDateTime = (val: string | undefined | null) => {
+  return formatDateTime(val, "short") || i18n.global.t("common.values.unavailable");
+};
+
+export const formatTaskDuration = (val: number) => {
   if (isFinite(val)) {
-    return Number(val).toFixed(1);
+    return formatNumber(Number(val), "oneDecimal");
   }
-  return 0;
+  return formatNumber(0, "oneDecimal");
 };

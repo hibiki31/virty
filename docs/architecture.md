@@ -31,7 +31,7 @@ noVNCのwebsockify serviceである。
 
 | Component | 責務 | 主な正本 |
 |---|---|---|
-| Web | file-based routingの管理UI、Bearer token保持、型付きAPI client、noVNCへの導線 | `vue/src/`, `vue/nginx.conf` |
+| Web | file-based routingの管理UI、日英localeと辞書、Bearer token保持、型付きAPI client、noVNCへの導線 | `vue/src/`, `vue/nginx.conf` |
 | API | 認証、同期query、on-demandのnode情報取得、validation、task投入、OpenAPIとmetricsの公開 | `api/main.py`, `api/*/router*.py` |
 | Worker | DBからtaskを取得し、依存順に管理node操作を実行して状態とmessageを記録 | `api/worker.py`, `api/*/tasks.py` |
 | PostgreSQL | control plane metadata、inventory cache、利用者、project、task状態の永続化 | `api/*/models.py`, `api/alembic/` |
@@ -68,6 +68,18 @@ repositoryやimageへ埋め込まない。
 Web UIのBearer JWTはissuerとaudienceを検証する短命tokenとし、scopeは完全一致または明示的wildcardで評価する。
 noVNCはVM UUIDをtokenとして使わず、対象VMのobject認可後に発行する60秒のconsole ticketをresolverへ渡す。
 ticketはhashだけを保存して一度だけ消費し、NginxとAPIのaccess logにはticketを含むresolver pathを記録しない。
+
+### Web UIのlocale
+
+WebはVue I18nの`en`・`ja`辞書を表示文言の正本とし、Vuetifyの組込文言もadapterを介して同じ
+reactive localeへ接続する。起動時は`localStorage`の`virty:locale`、`navigator.languages`内で最初に
+一致する対応言語、英語の順に解決し、applicationをmountする前に適用する。切替時は保存値、Vue・Vuetify、
+`html`の`lang`、route title、日時・数値formatterを一体で更新する。
+localeはURL、cookie、利用者DB、API request headerへ持たせず、Webは`Accept-Language`を送信しない。
+
+APIへ送るstatusやmethodなどの値はlocaleにかかわらず固定し、既知値の表示labelだけを翻訳する。
+resource名、利用者入力、XML・JSON・YAML、taskのrequest・message・log、管理node出力はuntrustedな
+運用dataとして原文を保持し、辞書keyや翻訳対象として解釈しない。
 
 ### Agent pairingと能力lease
 
@@ -177,6 +189,28 @@ FastAPIが`/api/openapi.json`を公開し、
 `vue/src/api/openapi.d.ts`はそのschemaから生成し、`openapi-fetch` clientが利用する。
 backend schemaと生成型は独立した仕様ではなく、一つの契約の生成元と生成物である。
 
+通常APIとAgent APIのerror responseは次の共通envelopeを使う。`code`とfield errorの`code`は
+`lower_snake_case`の安定した識別子、`message`は手動で定義する英語fallbackとし、Webは既知のcodeを
+日英辞書で表示する。`params`は翻訳時の補間値であり、値をstring、number、boolean、nullに限定する。
+
+```json
+{
+  "detail": {
+    "code": "api_error_code",
+    "message": "English fallback message",
+    "params": {},
+    "errors": [
+      { "field": "body.name", "code": "field_error_code", "params": {} }
+    ]
+  }
+}
+```
+
+`params`と`errors`は該当するときだけ返す。422 validation errorはfield、code、安全なparameterだけへ
+正規化し、入力値、validatorのraw message、内部contextを返さない。従来の`detail` string・listと
+Agent API固有error形式は同時対応せず、この共通契約へbreaking cutoverする。APIは表示localeを判断せず、
+未知codeを受けたclientだけが英語fallbackの`message`を使用する。
+
 ### Runtimeと永続data
 
 配布構成は`api`、`worker`、`web`、`proxy`、`db`のserviceからなる。APIとworkerは同じAPI image、
@@ -193,6 +227,7 @@ runtimeのmajor versionとimageはDockerfileおよび`compose.example.yml`、Pyt
 - routerが投入するtask keyには、workerが読み込むhandlerを必ず一つ対応させる。
 - 管理nodeの実状態とDB cacheを区別し、変更後に必要なinventory再走査をqueueする。
 - schema変更ではOpenAPIとfrontend生成型を同期し、生成型へ手修正を加えない。
+- 公開するAPI error code、field error code、parameterとfrontendの日英辞書を同じ変更で同期する。
 - model変更では既存DBを移行できる新規Alembic revisionを追加する。
 - destructive operationでは、対象node、VM、storage、networkを一意なIDで解決してから実行する。
 - Agent API以外の既存REST経路も同じscope・project・object境界を迂回できないようにする。

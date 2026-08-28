@@ -1,68 +1,79 @@
 import * as ipaddr from "ipaddr.js";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
-// 必須
-export const required = (value: string) => !!value || "Required.";
+import {
+  resolveTranslation,
+  translationRef,
+  type TranslationRef,
+} from "@/composables/i18n";
 
-// 文字数制限
-export const limitLength64 = (value: string) =>
-  value.length <= 64 || "64 characters maximum.";
-export const limitLength32 = (value: string) =>
-  value.length <= 32 || "32 characters maximum.";
-export const limitLength16 = (value: string) =>
-  value.length <= 16 || "16 characters maximum.";
+export type ValidationResult = true | TranslationRef;
+type PureRule<Args extends unknown[]> = (...args: Args) => ValidationResult;
 
-const characterRestrictions = (value: string) => {
-  const regex = /^[A-Za-z0-9-]*$/;
-  return regex.test(value) || "Can use character A-Z, a-z, 0-9, -";
-};
+export function localizeRule<Args extends unknown[]>(
+  rule: PureRule<Args>,
+): (...args: Args) => true | string {
+  return (...args) => {
+    const result = rule(...args);
+    return result === true ? true : resolveTranslation(result);
+  };
+}
 
-export const intValueRestrictions = (value: string) =>
-  Number.isInteger(Number(value)) || "Only Int value";
+export const required = (value: string): ValidationResult =>
+  Boolean(value) || translationRef("validation.required");
 
-export const portTCP = (value: unknown): true | string => {
+export const limitLength64 = (value: string): ValidationResult =>
+  value.length <= 64 || translationRef("validation.maxLength", { max: 64 });
+export const limitLength32 = (value: string): ValidationResult =>
+  value.length <= 32 || translationRef("validation.maxLength", { max: 32 });
+export const limitLength16 = (value: string): ValidationResult =>
+  value.length <= 16 || translationRef("validation.maxLength", { max: 16 });
+
+export const characterRestrictions = (value: string): ValidationResult =>
+  /^[A-Za-z0-9-]*$/.test(value)
+  || translationRef("validation.characterRestrictions");
+
+export const intValueRestrictions = (value: string): ValidationResult =>
+  Number.isInteger(Number(value)) || translationRef("validation.integer");
+
+export const portTCP = (value: unknown): ValidationResult => {
   const port = Number(value);
-  if (Number.isInteger(port) && port >= 0 && port < 65536) {
-    return true;
-  }
-  return "Only tcp port 0~65535";
+  return Number.isInteger(port) && port >= 0 && port < 65536
+    ? true
+    : translationRef("validation.tcpPort");
 };
 
-export const vlan = (value: unknown): true | string => {
-  const port = Number(value);
-  if (Number.isInteger(port) && port >= 1 && port <= 4094) {
-    return true;
-  }
-  return "Only vlan 1~4094";
+export const vlan = (value: unknown): ValidationResult => {
+  const id = Number(value);
+  return Number.isInteger(id) && id >= 1 && id <= 4094
+    ? true
+    : translationRef("validation.vlan");
 };
 
-// 先頭文字制限
-export const firstCharacterRestrictions = (value: string) => {
-  const regex = /^[A-Za-z].*/;
-  return regex.test(value) || "Can use first character A-Z, a-z";
-};
+export const firstCharacterRestrictions = (value: string): ValidationResult =>
+  /^[A-Za-z].*/.test(value) || translationRef("validation.firstCharacter");
 
-export const isValidIp = (value: string) =>
-  ipaddr.isValid(value) || "Invalid IP format";
+export const isValidIp = (value: string): ValidationResult =>
+  ipaddr.isValid(value) || translationRef("validation.invalidIp");
 
-export const requiredCheckbox = (value: boolean) => value || "Required Ceckbox";
+export const requiredCheckbox = (value: boolean): ValidationResult =>
+  value || translationRef("validation.requiredCheckbox");
 
-export function isValidURL(value: string) {
+export function isValidURL(value: string): ValidationResult {
   try {
-    new URL(value); // 例外が出なければほぼ仕様どおりの URL
+    new URL(value);
     return true;
   } catch {
-    return "not a valid URL.";
+    return translationRef("validation.invalidUrl");
   }
 }
 
-const r = {
+const pureRules = {
   required,
   limitLength64,
   limitLength32,
   limitLength16,
-  /**
-   * 名称として許可されている文字種[ A-Z, a-z, 0-9, -] に制限
-   */
   characterRestrictions,
   intValueRestrictions,
   portTCP,
@@ -73,4 +84,35 @@ const r = {
   isValidURL,
 } as const;
 
-export default r;
+type LocalizedRules = {
+  [Key in keyof typeof pureRules]: (
+    ...args: Parameters<(typeof pureRules)[Key]>
+  ) => true | string;
+};
+
+function createLocalizedRules() {
+  return {
+    required: localizeRule(required),
+    limitLength64: localizeRule(limitLength64),
+    limitLength32: localizeRule(limitLength32),
+    limitLength16: localizeRule(limitLength16),
+    characterRestrictions: localizeRule(characterRestrictions),
+    intValueRestrictions: localizeRule(intValueRestrictions),
+    portTCP: localizeRule(portTCP),
+    vlan: localizeRule(vlan),
+    firstCharacterRestrictions: localizeRule(firstCharacterRestrictions),
+    isValidIp: localizeRule(isValidIp),
+    requiredCheckbox: localizeRule(requiredCheckbox),
+    isValidURL: localizeRule(isValidURL),
+  } satisfies LocalizedRules;
+}
+
+export function useLocalizedRules() {
+  const { locale } = useI18n({ useScope: "global" });
+  return computed(() => {
+    void locale.value;
+    return createLocalizedRules();
+  });
+}
+
+export default createLocalizedRules();

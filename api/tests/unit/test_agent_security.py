@@ -229,7 +229,18 @@ def test_agent_route_sanitizes_request_validation_errors() -> None:
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"]["code"] == "validation_error"
+    assert response.json()["detail"] == {
+        "code": "validation_error",
+        "message": "Request validation failed.",
+        "errors": [
+            {
+                "field": "body.unexpectedSecret",
+                "code": "invalid_type",
+                "params": {"expected": "integer"},
+            }
+        ],
+    }
+    assert response.headers["cache-control"] == "no-store"
     assert secret not in response.text
     assert "input" not in response.text
 

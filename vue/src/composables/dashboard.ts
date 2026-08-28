@@ -1,5 +1,11 @@
 import { apiClient } from "@/api";
 import type { components } from "@/api/openapi";
+import {
+  formatDateTime,
+  formatNumber as formatLocaleNumber,
+  translateDomainValue,
+} from "@/composables/i18n";
+import i18n from "@/plugins/i18n";
 
 export type DashboardResponse = components["schemas"]["DashboardResponse"];
 
@@ -39,21 +45,8 @@ export function progressPercent(value: number | null): number {
   return Math.min(100, Math.max(0, value));
 }
 
-const numberFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1,
-});
-
-const percentFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1,
-});
-
-const timestampFormatter = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "medium",
-});
-
 export function formatNumber(value: number): string {
-  return numberFormatter.format(value);
+  return formatLocaleNumber(value);
 }
 
 export function formatGib(value: number): string {
@@ -61,18 +54,14 @@ export function formatGib(value: number): string {
 }
 
 export function formatPercentage(value: number | null): string {
-  return value === null ? "Unavailable" : `${percentFormatter.format(value)}%`;
+  return value === null
+    ? i18n.global.t("common.values.unavailable")
+    : `${formatLocaleNumber(value)}%`;
 }
 
 export function formatTimestamp(value: string | null): string {
-  if (!value) {
-    return "Time unavailable";
-  }
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "Time unavailable"
-    : timestampFormatter.format(date);
+  return formatDateTime(value, "medium")
+    || i18n.global.t("common.values.unavailable");
 }
 
 export function utilizationColor(value: number | null): string {
@@ -88,20 +77,13 @@ export function utilizationColor(value: number | null): string {
   return "primary";
 }
 
-export function titleCase(value: string | null): string {
-  if (!value) {
-    return "Unknown";
-  }
+export {
+  taskMethodLabel,
+  taskResourceLabel,
+  taskStatusLabel,
+} from "@/composables/task";
 
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
-export function pluralize(
-  count: number,
-  singular: string,
-  plural = `${singular}s`,
-): string {
-  return count === 1 ? singular : plural;
-}
+export const nodeRoleLabel = (value: string | null) =>
+  translateDomainValue("nodeRole", value);
+export const networkTypeLabel = (value: string | null) =>
+  translateDomainValue("networkType", value);

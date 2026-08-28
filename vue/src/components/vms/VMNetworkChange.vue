@@ -2,22 +2,22 @@
   <v-dialog width="400" v-model="model">
     <v-card>
       <v-form ref="formRef" @submit.prevent="submit">
-        <v-card-title>Network Change</v-card-title>
+        <v-card-title>{{ $t('dialogs.vmNetwork.title') }}</v-card-title>
         <v-card-text>
           <v-row>
             <v-col cols="12" md="12">
               <v-select variant="outlined" density="comfortable" :items="itemsNetworks?.data" item-title="name"
-                hide-details item-value="uuid" :rules="[r.required]" v-model="networkUuid" label="Network"></v-select>
+                hide-details item-value="uuid" :rules="[r.required]" v-model="networkUuid" :label="$t('common.fields.network')"></v-select>
             </v-col>
             <v-col cols="12" md="12" v-if="checkOVS()">
               <v-select variant="outlined" density="comfortable" :items="itemsPort()" hide-details :rules="[r.required]"
-                v-model="networkPort" label="Port"></v-select>
+                v-model="networkPort" :label="$t('common.fields.port')"></v-select>
             </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :loading="loadingSubmit" color="primary" type="submit">Change</v-btn>
+          <v-btn :loading="loadingSubmit" color="primary" type="submit">{{ $t('common.actions.change') }}</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
@@ -28,6 +28,9 @@
 import { apiClient } from '@/api'
 import type { schemas } from '@/composables/schemas'
 import type { typeListNetwork } from '@/composables/network'
+import { useLocalizedRules } from '@/composables/rules'
+
+const r = useLocalizedRules()
 
 // Form
 const networkUuid = ref<string>()

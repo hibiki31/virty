@@ -14,6 +14,7 @@ declare module 'vue' {
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     ImageDeleteDialog: typeof import('./components/images/ImageDeleteDialog.vue')['default']
     ImageDownloadDialog: typeof import('./components/images/ImageDownloadDialog.vue')['default']
+    LocaleSwitcher: typeof import('./components/LocaleSwitcher.vue')['default']
     MainAppBer: typeof import('./components/MainAppBer.vue')['default']
     MainNavigation: typeof import('./components/MainNavigation.vue')['default']
     NetworkAddDialog: typeof import('./components/networks/NetworkAddDialog.vue')['default']

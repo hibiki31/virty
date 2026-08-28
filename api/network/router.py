@@ -1,11 +1,12 @@
 from os.path import join
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from resource_authorization import (
     allowed_network_ids,
@@ -95,14 +96,19 @@ def update_network_pool(
 ):
     current_user.verify_scope(["network.manage"])
     pool_model = get_authorized_network_pool(db, model.pool_id, current_user)
-    get_authorized_network(db, model.network_uuid, current_user)
+    network_model = get_authorized_network(db, model.network_uuid, current_user)
     if model.port_name is not None:
         port_model = db.query(NetworkPortgroupModel).filter(
             NetworkPortgroupModel.network_uuid==model.network_uuid,
-            NetworkPortgroupModel.name==model.port_name).one()
+            NetworkPortgroupModel.name==model.port_name).one_or_none()
+        if port_model is None:
+            raise ApiError(
+                404,
+                ApiErrorCode.NETWORK_PORT_NOT_FOUND,
+                "The network port was not found.",
+            )
         pool_model.ports.append(port_model)
     else:
-        network_model = db.query(NetworkModel).filter(NetworkModel.uuid==model.network_uuid).one()
         pool_model.networks.append(network_model)
     db.commit()
     return True
@@ -145,6 +151,10 @@ def get_network_xml(
         with open(join(DATA_ROOT, "xml/network", f"{uuid}.xml")) as f:
             domain_xml = NetworkXML(xml=f.read())
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Not found domain")
+        raise ApiError(
+            404,
+            ApiErrorCode.NETWORK_XML_NOT_FOUND,
+            "The network XML was not found.",
+        )
 
     return domain_xml

@@ -1,11 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from resource_authorization import (
     allowed_storage_ids,
@@ -121,6 +122,7 @@ def create_storage_pool(
     storage_pool_model = StoragePoolModel(name=request_model.name)
     db.add(storage_pool_model)
     for storage_uuid in request_model.storage_uuids:
+        get_authorized_storage(db, storage_uuid, current_user)
         storage_pool_model.storages.append(
             AssociationStoragePoolModel(storage_uuid=storage_uuid, pool_id=storage_pool_model.id)
         )
@@ -175,7 +177,11 @@ def get_storage(
     model = query.filter(StorageModel.uuid==uuid).one_or_none()
 
     if model is None:
-        raise HTTPException(status_code=404, detail="storage is not found")
+        raise ApiError(
+            404,
+            ApiErrorCode.STORAGE_NOT_FOUND,
+            "The storage was not found.",
+        )
 
     res = model[0]
     res.capacity_commit = model[1]

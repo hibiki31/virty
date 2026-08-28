@@ -1,0 +1,1298 @@
+{
+  "app": {
+    "defaultTitle": "Virty Console",
+    "documentTitle": "Virty - {page}",
+    "language": "Language"
+  },
+  "common": {
+    "actions": {
+      "add": "Add",
+      "apply": "Apply",
+      "approve": "Approve",
+      "cancel": "Cancel",
+      "change": "Change",
+      "close": "Close",
+      "create": "Create",
+      "delete": "Delete",
+      "download": "Download",
+      "edit": "Edit",
+      "overwrite": "Overwrite",
+      "refresh": "Refresh",
+      "register": "Register",
+      "rescan": "Rescan",
+      "retry": "Retry",
+      "revoke": "Revoke",
+      "save": "Save",
+      "setup": "Setup",
+      "submit": "Submit",
+      "viewAll": "View all",
+      "viewDetails": "View details"
+    },
+    "fields": {
+      "actions": "Actions",
+      "allocation": "Allocation",
+      "bridge": "Bridge",
+      "capacity": "Capacity",
+      "cpu": "CPU",
+      "description": "Description",
+      "device": "Device",
+      "dhcp": "DHCP",
+      "id": "ID",
+      "image": "Image",
+      "memory": "Memory",
+      "method": "Method",
+      "mode": "Mode",
+      "name": "Name",
+      "network": "Network",
+      "node": "Node",
+      "password": "Password",
+      "path": "Path",
+      "port": "Port",
+      "project": "Project",
+      "request": "Request",
+      "resource": "Resource",
+      "role": "Role",
+      "search": "Search",
+      "size": "Size",
+      "source": "Source",
+      "status": "Status",
+      "storage": "Storage",
+      "target": "Target",
+      "type": "Type",
+      "user": "User",
+      "uuid": "UUID"
+    },
+    "values": {
+      "all": "All",
+      "enabled": "Enabled",
+      "no": "No",
+      "none": "None",
+      "other": "Other",
+      "unavailable": "Unavailable",
+      "unknown": "Unknown",
+      "yes": "Yes"
+    },
+    "errors": {
+      "apiRequestFailed": "The API request failed.",
+      "unknown": "Unknown error",
+      "unreachable": "Unable to reach {service}."
+    },
+    "notifications": {
+      "apiCompleted": "API request completed",
+      "queued": "Task has been queued",
+      "success": "Success"
+    }
+  },
+  "navigation": {
+    "agent": "Agent",
+    "api": "Open API documentation",
+    "dashboard": "Home",
+    "documentation": "Open Virty documentation",
+    "images": "Images",
+    "networks": "Networks",
+    "nodes": "Nodes",
+    "storages": "Storage",
+    "tasks": "Tasks",
+    "users": "Users",
+    "vms": "VMs"
+  },
+  "localeSwitcher": {
+    "english": "English",
+    "japanese": "日本語",
+    "label": "Select language"
+  },
+  "appBar": {
+    "autoReload": "Enable automatic reload",
+    "logout": "Log out",
+    "logoutComplete": "You have been logged out",
+    "logoutRedirect": "You will be redirected to the login page.",
+    "reload": "Reload",
+    "reloadAfterTask": "Reloading because a task completed.",
+    "taskCount": "{count} active task | {count} active tasks",
+    "toggleNavigation": "Toggle navigation"
+  },
+  "setup": {
+    "adminUsername": "Admin username",
+    "createAdmin": "Create an administrative user.",
+    "failed": "Setup failed",
+    "passwordHint": "Enter at least one character",
+    "success": "Setup completed",
+    "title": "Set up Virty",
+    "unreachable": "Unable to reach the setup service."
+  },
+  "docsLink": {
+    "open": "Open documentation"
+  },
+  "dialogs": {
+    "imageDelete": {
+      "confirm": "Are you sure you want to delete the selected images?",
+      "confirmation": "Yes, delete {count} image | Yes, delete {count} images",
+      "failed": "Deleting the image failed",
+      "title": "Delete images"
+    },
+    "imageDownload": {
+      "downloadUrl": "Download URL",
+      "failed": "Downloading the image failed",
+      "nodeSubtitle": "Node: {name}",
+      "selectNode": "Select a node",
+      "selectStorage": "Select storage",
+      "title": "Download image",
+      "unreachable": "Unable to reach the image service."
+    },
+    "networkAdd": {
+      "bridgeName": "Bridge name",
+      "createFailed": "Creating the network failed",
+      "enableDhcp": "Enable DHCP",
+      "enableGateway": "Enable gateway",
+      "end": "End",
+      "gatewayHelp": "A gateway is not available for isolated or OVS networks. DHCP requires a gateway.",
+      "ip": "IP address",
+      "isolated": "Isolated",
+      "netmask": "Netmask",
+      "route": "Routed",
+      "start": "Start",
+      "title": "Create network",
+      "unreachable": "Unable to reach the network service."
+    },
+    "networkDelete": {
+      "failed": "Deleting the network failed",
+      "success": "Network deletion was queued",
+      "title": "Delete network",
+      "unreachable": "Unable to reach the network service.",
+      "wait": "Wait for the task to complete."
+    },
+    "nodeAdd": {
+      "domain": "IP address or domain",
+      "failed": "Registering the node failed",
+      "kvmHost": "Provision as a KVM host",
+      "success": "Node registration was queued",
+      "title": "Register node",
+      "unreachable": "Unable to reach the node service.",
+      "wait": "Wait for the task to complete."
+    },
+    "nodeDelete": {
+      "confirm": "Are you sure you want to delete this node?",
+      "confirmation": "Delete {name}",
+      "failed": "Deleting the node failed",
+      "title": "Delete node"
+    },
+    "nodeKey": {
+      "description": "Virty uses this SSH key to operate each node. The account requires passwordless sudo privileges. Use a dedicated account with appropriately restricted permissions.",
+      "failed": "Adding the key failed",
+      "generated": "Generate on the server",
+      "invalid": "Check the key format.",
+      "privateKey": "Private key",
+      "publicKey": "Public key",
+      "success": "Key update was queued",
+      "title": "Administration key",
+      "wait": "Wait for the task to complete.",
+      "warning": "An SSH key already exists on the server. Overwriting it cannot be undone."
+    },
+    "storageAdd": {
+      "displayName": "Display name in Virty",
+      "failed": "Registering storage failed",
+      "help": "Create the directory on the node first. Usually separate storage is registered for VM images, cloud-init, and ISO images; assign a role after registration.",
+      "selectNode": "Select a node",
+      "title": "Register storage",
+      "unreachable": "Unable to reach the storage service."
+    },
+    "storageDelete": {
+      "confirm": "Are you sure you want to delete this storage?",
+      "confirmation": "Delete {name}",
+      "failed": "Deleting storage failed",
+      "title": "Delete storage"
+    },
+    "storageMetadata": {
+      "changed": "Metadata changed successfully",
+      "deviceType": "Select a device type",
+      "local": "Local",
+      "other": "Other",
+      "protocol": "Select a protocol",
+      "role": "Select a storage role",
+      "title": "Change metadata"
+    },
+    "taskDetail": {
+      "log": "Log",
+      "message": "Message",
+      "request": "Request"
+    },
+    "vmCdrom": {
+      "title": "Mount ISO image",
+      "unmount": "Unmount"
+    },
+    "vmDelete": {
+      "description": "The operation fails while the VM is running. Its disk image is retained.",
+      "failed": "Deleting the VM failed",
+      "success": "VM deletion was queued",
+      "title": "Delete VM",
+      "unreachable": "Unable to reach the VM service.",
+      "wait": "Wait for the task to complete."
+    },
+    "vmNetwork": {
+      "title": "Change network"
+    },
+    "vmAdd": {
+      "additionalKeys": "Additional SSH public keys",
+      "addInterface": "Add interface",
+      "applyYaml": "Apply to YAML",
+      "basic": "Basic",
+      "cloudInit": "Cloud-init",
+      "cloudInitDirty": "Unapplied simple-form changes are not sent. Create uses the current raw YAML.",
+      "cloudInitWarning": "Passwords remain in task history and the cloud-init ISO. Initial scripts run once as root. Prefer SSH key authentication.",
+      "copy": "Copy",
+      "cpuCores": "{count} core | {count} cores",
+      "destinationPool": "Destination pool",
+      "empty": "Empty",
+      "enable": "Enable",
+      "failed": "Creating the VM failed",
+      "hostName": "Host name",
+      "initialScript": "Initial script",
+      "initialUsername": "Initial user name",
+      "isoHelp": "Attach an ISO from the VM details page after creation.",
+      "noSavedKeys": "No saved SSH public keys",
+      "oneKeyPerLine": "Enter one public key per line",
+      "passwordChange": "Require a password change on first login",
+      "removeInterface": "Remove interface",
+      "savedKeys": "Saved SSH public keys",
+      "savedKeysFailed": "Saved SSH public keys could not be loaded. You can still enter keys manually.",
+      "simpleForm": "Simple form",
+      "sizeGb": "Size [GB]",
+      "sourceImage": "Source image",
+      "sourcePool": "Source pool",
+      "sshPassword": "Enable SSH password authentication",
+      "title": "Create VM",
+      "unavailableDefaultUser": "Leave blank to use the image default",
+      "unreachable": "Unable to reach the VM service.",
+      "userData": "User-data",
+      "yaml": "YAML"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Infrastructure inventory and recent control-plane activity",
+    "updated": "Updated {date}",
+    "refreshAria": "Refresh dashboard",
+    "loading": "Loading dashboard",
+    "unavailableTitle": "Dashboard unavailable",
+    "unavailableDescription": "The API did not return a dashboard snapshot. Your existing resources were not changed.",
+    "staleTitle": "Showing the last available snapshot",
+    "staleDescription": "The latest refresh failed. Values below may be stale.",
+    "noInventoryTitle": "No infrastructure inventory yet",
+    "noInventoryDescription": "Register a node and run inventory scans to populate this dashboard.",
+    "nodesLink": "Go to Nodes",
+    "overview": "Resource overview",
+    "kpiAria": "{title}: {value}, {detail}. Open {title}.",
+    "visibilityAll": "All VMs and tasks",
+    "visibilityAssigned": "Assigned VMs and tasks",
+    "capacityTitle": "Capacity overview",
+    "capacitySubtitle": "Cached inventory totals, not real-time utilization",
+    "capacityUnavailable": "Capacity unavailable",
+    "usageUnavailable": "Usage unavailable",
+    "metricAria": "{label}: {value}",
+    "highestStorageUsage": "Highest storage usage",
+    "noStorageCapacity": "No storage capacity data is available.",
+    "storageUsageAria": "{name} storage usage: {usage}",
+    "percentAllocated": "{percent} allocated",
+    "percentUsed": "{percent} used",
+    "valueAvailable": "{value} available",
+    "vmStateTitle": "Virtual machine state",
+    "vmStateSubtitle": "Power state from the latest inventory scan",
+    "runningVmsAria": "Running virtual machines: {percent}",
+    "running": "Running",
+    "stopped": "Stopped",
+    "maintenance": "Maintenance",
+    "lostNode": "Lost node",
+    "deleted": "Deleted",
+    "unknown": "Unknown",
+    "ofCount": "of {count} VM | of {count} VMs",
+    "nodeRoles": "Node roles",
+    "noNodeRoles": "No node roles are assigned.",
+    "roleAria": "{role} role: {count} node | {role} role: {count} nodes",
+    "networkTypes": "Network types",
+    "noNetworks": "No virtual networks are registered.",
+    "networkAria": "{type} network: {count} | {type} networks: {count}",
+    "portGroups": "Port groups",
+    "attentionTitle": "Attention",
+    "noWarningsTitle": "No dashboard warnings",
+    "noWarningsDescription": "No dashboard warning indicators are present in this snapshot.",
+    "recentActivity": "Recent activity",
+    "recentSubtitle": "The six most recently queued tasks visible to you",
+    "noRecentActivity": "No recent activity.",
+    "kpis": {
+      "vms": "Virtual Machines",
+      "nodes": "Nodes",
+      "storagePools": "Storage Pools",
+      "networks": "Networks",
+      "images": "Images",
+      "activeTasks": "Active Tasks",
+      "running": "{count} VM running | {count} VMs running",
+      "cpuCores": "{count} CPU core | {count} CPU cores",
+      "portGroups": "{count} port group | {count} port groups",
+      "inventoryImages": "Inventory images",
+      "inProgress": "Queued or in progress"
+    },
+    "metrics": {
+      "vcpu": "vCPU allocation",
+      "memory": "Memory allocation",
+      "storage": "Storage usage",
+      "ofCores": "{value} of {total} cores",
+      "ofValues": "{value} of {total}"
+    },
+    "attention": {
+      "failedTasks": "Failed or lost task in the last 24 hours: {count} | Failed or lost tasks in the last 24 hours: {count}",
+      "failedTasksDetail": "Errors or lost tasks in the last 24 hours",
+      "highStorage": "Storage pool at high usage: {count} | Storage pools at high usage: {count}",
+      "highStorageDetail": "More than 80% of capacity is used",
+      "lostNode": "VM that lost its node: {count} | VMs that lost their node: {count}",
+      "lostNodeDetail": "Inventory reports a lost-node VM state",
+      "maintenance": "VM in maintenance: {count} | VMs in maintenance: {count}",
+      "maintenanceDetail": "Review before scheduling lifecycle operations",
+      "deleted": "Deleted VM in inventory: {count} | Deleted VMs in inventory: {count}",
+      "deletedDetail": "Review inventory state before relying on capacity totals",
+      "unknown": "VM with unknown state: {count} | VMs with unknown state: {count}",
+      "unknownDetail": "Run an inventory scan to refresh their state"
+    }
+  },
+  "agent": {
+    "documentTitle": "Agent control",
+    "heading": "Agent control",
+    "description": "Manage Codex terminal registration, short-lived leases, and mutation suspension with WebAuthn.",
+    "actions": {
+      "reload": "Reload",
+      "register": "Register",
+      "applyWithWebAuthn": "Apply with WebAuthn",
+      "approve": "Approve",
+      "effectConfirmed": "Effect confirmed",
+      "effectAbsent": "Effect absent",
+      "resetBreaker": "Reset breaker",
+      "revoke": "Revoke"
+    },
+    "warnings": {
+      "mutation": "When mutations are enabled, operations within a lease are executed without additional confirmation. Deletions and network changes cannot be undone without backups or out-of-band recovery.",
+      "reconciliation": "Confirm the actual state of the external infrastructure before recording a result. Retrying before confirmation may cause the same side effect twice."
+    },
+    "webauthn": {
+      "title": "WebAuthn credential",
+      "description": "Register a security key or platform authenticator used to approve pairing and suspension operations. Your current password is used only for reauthentication and is not stored.",
+      "credentialName": "Credential name",
+      "currentPassword": "Current password"
+    },
+    "control": {
+      "title": "Global mutation control",
+      "mutationsEnabled": "Enable Agent mutations",
+      "shadowMode": "Shadow / read-only mode",
+      "enabledRiskLevels": "Enabled risk levels",
+      "allowDeleteWithoutRecovery": "Allow deletion without a recovery method",
+      "allowNetworkChangeWithoutOob": "Allow network changes without out-of-band recovery",
+      "reason": "Reason for change (recorded in the audit log)",
+      "lastUpdated": "Last updated: {date} / {user}"
+    },
+    "pairings": {
+      "title": "Pending device pairings",
+      "empty": "There are no devices awaiting approval.",
+      "device": "Device",
+      "requestedScopes": "Requested scopes",
+      "expires": "Expires",
+      "pairingCode": "Pairing code",
+      "codeLabel": "Code displayed by the helper"
+    },
+    "leaseRequests": {
+      "title": "Pending capability leases",
+      "empty": "There are no leases awaiting approval.",
+      "devicePrincipal": "Device / principal",
+      "constraints": "Scope and target constraints",
+      "riskGrants": "Risk grants",
+      "expires": "Expires",
+      "projects": "Projects: {projects}",
+      "nodes": "Nodes: {nodes}",
+      "maxMutations": "Maximum {count} mutation | Maximum {count} mutations",
+      "riskDetails": "destructive={destructive}, delete without recovery={deleteWithoutRecovery}, network without OOB={networkWithoutOob}"
+    },
+    "unknownOperations": {
+      "title": "Unknown operations",
+      "empty": "There are no operations awaiting reconciliation.",
+      "operationAction": "Operation / action",
+      "lastMessage": "Last message",
+      "reason": "Reconciliation reason",
+      "result": "Result",
+      "reasonLabel": "How the actual state was confirmed and supporting evidence"
+    },
+    "devices": {
+      "title": "Paired devices",
+      "reasonLabel": "Reason for revocation or breaker reset (recorded in the audit log)",
+      "device": "Device",
+      "status": "Status",
+      "scopes": "Scopes",
+      "breakerOpen": "Breaker open"
+    },
+    "leases": {
+      "title": "Capability leases",
+      "lease": "Lease",
+      "usageExpiry": "Usage / expiry",
+      "scopes": "Scopes",
+      "device": "Device: {device}",
+      "revoked": "Revoked"
+    },
+    "table": {
+      "actions": "Actions"
+    },
+    "notifications": {
+      "webauthnRegistered": "The WebAuthn credential has been registered.",
+      "pairingApproved": "{device} has been approved.",
+      "leaseApproved": "The lease for {device} has been approved.",
+      "controlUpdated": "The global Agent controls have been updated.",
+      "deviceRevoked": "{device} has been revoked.",
+      "breakerReset": "The breaker for {device} has been reset.",
+      "leaseRevoked": "{lease} has been revoked.",
+      "operationReconciled": "The actual state of {operation} has been recorded."
+    }
+  },
+  "validation": {
+    "characterRestrictions": "Use only A-Z, a-z, 0-9, and hyphens.",
+    "firstCharacter": "The first character must be A-Z or a-z.",
+    "integer": "Enter an integer.",
+    "invalidIp": "Enter a valid IP address.",
+    "invalidUrl": "Enter a valid URL.",
+    "maxLength": "Enter no more than {max} characters.",
+    "required": "This field is required.",
+    "requiredCheckbox": "Select this checkbox.",
+    "tcpPort": "Enter a TCP port from 0 to 65535.",
+    "vlan": "Enter a VLAN ID from 1 to 4094."
+  },
+  "cloudInit": {
+    "chpasswdConflict": "The existing chpasswd.{key} conflicts with the form password. Remove it from YAML before applying the form.",
+    "chpasswdMapping": "The existing chpasswd value must be a mapping to update chpasswd.expire.",
+    "createMappingFailed": "Failed to create a YAML mapping.",
+    "createRunCommandFailed": "Failed to create the runcmd YAML node.",
+    "firstLine": "The first line must be exactly #cloud-config.",
+    "invalidYaml": "The YAML is invalid.",
+    "manualKey": "Manual SSH key on line {index}",
+    "mappingRoot": "The YAML document root must be a mapping.",
+    "multipleDocuments": "Cloud-init user-data must contain exactly one YAML document.",
+    "passwordRequired": "A password is required when SSH password authentication is enabled.",
+    "position": "Line {line}, column {column}: {message}",
+    "privateKey": "{label} contains a private-key marker. Only public keys are allowed.",
+    "publicKeyBlob": "{label} does not contain a valid OpenSSH public-key blob.",
+    "publicKeyFormat": "{label} must use the OpenSSH format ‘type base64 [comment]’.",
+    "selectedKey": "Selected SSH key {index}",
+    "selectedKeyCount": "Selected SSH key {index} must contain exactly one public key.",
+    "serializeFailed": "Failed to serialize cloud-init YAML.",
+    "userMapping": "The existing user value must be a mapping to update user.name.",
+    "username": "The username must match ^[a-z_][a-z0-9_-]{0,31}$ when provided.",
+    "usersDefault": "The existing users value must keep default as its first user before applying the default-user form settings."
+  },
+  "webauthn": {
+    "assertionFailed": "The WebAuthn assertion could not be obtained.",
+    "credentialFailed": "The WebAuthn credential could not be created."
+  },
+  "apiErrors": {
+    "action_adapter_missing": "The action adapter is unavailable.",
+    "action_not_found": "The requested action was not found.",
+    "agent_control_missing": "The Agent control settings are unavailable.",
+    "agent_public_base_url_missing": "The Agent public base URL is not configured.",
+    "agent_signing_key_missing": "The Agent signing key is not configured.",
+    "agent_signing_key_too_short": "The Agent signing key is too short.",
+    "already_initialized": "Virty has already been initialized.",
+    "audit_unavailable": "The audit service is unavailable.",
+    "authentication_required": "Authentication is required.",
+    "bad_request": "The request could not be processed.",
+    "catalog_action_missing_at_dispatch": "The catalog action is no longer available.",
+    "catalog_risk_mismatch_at_dispatch": "The catalog risk level changed before dispatch.",
+    "catalog_selector_mismatch_at_dispatch": "The catalog selector changed before dispatch.",
+    "cdrom_image_not_found": "The CD-ROM image was not found.",
+    "cdrom_image_required": "Select a CD-ROM image.",
+    "challenge_expired": "The authentication challenge has expired.",
+    "challenge_mismatch": "The authentication challenge does not match.",
+    "challenge_not_found": "The authentication challenge was not found.",
+    "challenge_replay": "The authentication challenge has already been used.",
+    "conflict": "The request conflicts with the current resource state.",
+    "copy_source_required": "Select a source image to copy.",
+    "destination_project_denied": "You do not have permission to use the destination project.",
+    "destructive_action_denied": "This destructive action is not permitted.",
+    "destructive_action_denied_at_dispatch": "This destructive action was denied at dispatch.",
+    "device_breaker_open": "The device circuit breaker is open.",
+    "device_inactive": "The device is inactive.",
+    "device_inactive_after_dpop": "The device became inactive during authentication.",
+    "device_inactive_at_dispatch": "The device was inactive at dispatch.",
+    "device_key_exists": "A key is already registered for this device.",
+    "device_key_mismatch": "The device key does not match.",
+    "device_missing_at_handler": "The device was unavailable when the action ran.",
+    "device_not_found": "The device was not found.",
+    "device_principal_changed_after_dpop": "The device principal changed during authentication.",
+    "device_principal_mismatch": "The device principal does not match.",
+    "device_revoked": "The device has been revoked.",
+    "direct_action_kind_mismatch": "The direct action kind does not match.",
+    "direct_request_invalid": "The direct action request is invalid.",
+    "dpop_method_mismatch": "The DPoP HTTP method does not match.",
+    "dpop_replay": "The DPoP proof has already been used.",
+    "dpop_replay_store_unavailable": "The DPoP replay protection store is unavailable.",
+    "dpop_token_mismatch": "The DPoP proof does not match the access token.",
+    "dpop_uri_mismatch": "The DPoP request URI does not match.",
+    "expected_generation_required": "Specify the expected resource generation.",
+    "flavor_constraint_denied": "The flavor is outside the granted constraints.",
+    "flavor_exists": "A flavor with the same name already exists.",
+    "flavor_not_found": "The flavor was not found.",
+    "generation_sentinel_required": "A generation sentinel is required.",
+    "generation_target_invalid": "The generation target is invalid.",
+    "generation_target_missing": "The generation target was not found.",
+    "http_error": "The HTTP request failed.",
+    "idempotency_key_conflict": "The idempotency key was used for a different request.",
+    "idempotency_key_required": "An idempotency key is required.",
+    "identity_target_missing_at_dispatch": "The identity target was unavailable at dispatch.",
+    "image_address_denied": "The image address is not permitted.",
+    "image_filename_required": "The image URL must include a file name.",
+    "image_host_denied": "The image host is not permitted.",
+    "image_host_unresolved": "The image host could not be resolved.",
+    "image_node_mismatch": "The image and VM must be on the same node.",
+    "image_not_found": "The image was not found.",
+    "image_or_flavor_not_found": "The image or flavor was not found.",
+    "image_url_denied": "The image URL is not permitted.",
+    "inactive_user": "This user account is inactive.",
+    "internal_server_error": "An internal server error occurred.",
+    "invalid_action_input": "The action input is invalid.",
+    "invalid_console_ticket": "The console ticket is invalid or has expired.",
+    "invalid_credentials": "The username or password is incorrect.",
+    "invalid_device_key": "The device key is invalid.",
+    "invalid_dpop": "The DPoP proof is invalid.",
+    "invalid_lease": "The capability lease is invalid.",
+    "invalid_lease_request_status": "The lease request is not in a valid state for this operation.",
+    "invalid_mutation_risk": "The mutation risk level is invalid.",
+    "invalid_operation_resolution": "The operation resolution is invalid.",
+    "invalid_pairing_status": "The pairing request is not in a valid state for this operation.",
+    "invalid_ssh_private_key": "The SSH private key is invalid.",
+    "invalid_token": "The authentication token is invalid.",
+    "invalid_value": "The supplied value is invalid.",
+    "invalid_webauthn_assertion": "The WebAuthn assertion is invalid.",
+    "invalid_webauthn_purpose": "The WebAuthn challenge purpose is invalid.",
+    "invalid_webauthn_registration": "The WebAuthn registration response is invalid.",
+    "jsonschema_dependency_missing": "JSON Schema validation is unavailable.",
+    "last_admin_required": "The last administrator cannot be deleted.",
+    "last_admin_scope_required": "The last administrator's admin scope cannot be removed.",
+    "lease_already_exchanged": "The capability lease has already been exchanged.",
+    "lease_expired": "The capability lease has expired.",
+    "lease_inactive_after_dpop": "The capability lease became inactive during authentication.",
+    "lease_inactive_at_dispatch": "The capability lease was inactive at dispatch.",
+    "lease_integrity_error": "The capability lease failed an integrity check.",
+    "lease_mismatch": "The capability lease does not match the request.",
+    "lease_missing": "A capability lease is required.",
+    "lease_missing_at_handler": "The capability lease was unavailable when the action ran.",
+    "lease_not_approved": "The capability lease has not been approved.",
+    "lease_not_found": "The capability lease was not found.",
+    "lease_principal_mismatch": "The capability lease principal does not match.",
+    "lease_request_already_pending": "A lease request is already pending for this device.",
+    "lease_request_capacity_exceeded": "The pending lease request limit has been reached.",
+    "lease_request_not_found": "The lease request was not found.",
+    "lease_request_not_pending": "The lease request is no longer pending.",
+    "lease_required": "A capability lease is required for this action.",
+    "lease_revoked": "The capability lease has been revoked.",
+    "lease_scope_escalation": "The requested scope exceeds the capability lease.",
+    "method_not_allowed": "This HTTP method is not allowed.",
+    "mutation_concurrency_limit": "The concurrent mutation limit has been reached.",
+    "mutation_limit_exhausted": "The capability lease mutation limit has been exhausted.",
+    "mutations_disabled": "Agent mutations are disabled.",
+    "mutations_disabled_at_dispatch": "Agent mutations were disabled before dispatch.",
+    "network_constraint_denied": "The network is outside the granted constraints.",
+    "network_node_mismatch": "The network and VM must be on the same node.",
+    "network_node_not_found": "The network node was not found.",
+    "network_not_found": "The network was not found.",
+    "network_or_port_not_found": "The network or port group was not found.",
+    "network_pool_not_found": "The network pool was not found.",
+    "network_port_not_found": "The network port group was not found.",
+    "network_vm_node_mismatch": "The network and VM must be on the same node.",
+    "network_xml_not_found": "Network XML was not found.",
+    "node_denied": "You do not have permission to use this node.",
+    "node_denied_at_dispatch": "Access to the node was denied at dispatch.",
+    "node_missing_at_dispatch": "The node was unavailable at dispatch.",
+    "node_not_found": "The node was not found.",
+    "oob_required": "Out-of-band recovery is required for this network change.",
+    "oob_required_at_dispatch": "Out-of-band recovery was required at dispatch.",
+    "operation_action_mismatch": "The operation action does not match.",
+    "operation_action_not_found": "The operation action was not found.",
+    "operation_dependency_cycle_at_dispatch": "The operation dependencies contain a cycle.",
+    "operation_dependency_invalid_at_dispatch": "The operation dependencies became invalid before dispatch.",
+    "operation_node_denied": "The operation is not permitted on this node.",
+    "operation_not_found": "The operation was not found.",
+    "operation_not_unknown": "The operation is not awaiting reconciliation.",
+    "operation_owner_mismatch": "The operation owner does not match.",
+    "operation_project_denied": "The operation is not permitted for this project.",
+    "operation_root_invalid_at_dispatch": "The root operation became invalid before dispatch.",
+    "operation_target_invalid": "The operation target is invalid.",
+    "operation_target_missing": "The operation target was not found.",
+    "operation_timestamp_missing": "The operation timestamp is missing.",
+    "pairing_capacity_exceeded": "The pending device pairing limit has been reached.",
+    "pairing_expired": "The device pairing request has expired.",
+    "pairing_not_found": "The device pairing request was not found.",
+    "pairing_not_pending": "The device pairing request is no longer pending.",
+    "pairing_scope_escalation": "The approved scopes exceed the pairing request.",
+    "password_reauthentication_failed": "Password reauthentication failed.",
+    "permission_denied": "You do not have permission to perform this operation.",
+    "principal_authority_revoked": "The principal authority has been revoked.",
+    "principal_authority_revoked_at_dispatch": "The principal authority was revoked before dispatch.",
+    "principal_mismatch": "The authenticated principal does not match.",
+    "principal_mismatch_at_handler": "The authenticated principal changed before the action ran.",
+    "principal_not_found": "The principal was not found.",
+    "project_denied": "You do not have permission to access this project.",
+    "project_denied_at_dispatch": "Access to the project was denied at dispatch.",
+    "project_missing_at_dispatch": "The project was unavailable at dispatch.",
+    "project_not_found": "The project was not found.",
+    "project_or_user_not_found": "The project or user was not found.",
+    "project_scope_escalation": "The requested project exceeds the granted scope.",
+    "r3_concurrency_limit": "The concurrent R3 operation limit has been reached.",
+    "rate_limited": "Too many requests were made. Try again later.",
+    "recovery_required": "A verified recovery method is required for this action.",
+    "recovery_required_at_dispatch": "A recovery method was required at dispatch.",
+    "related_image_invalid": "The related image is invalid.",
+    "related_node_changed_at_dispatch": "The related node changed before dispatch.",
+    "related_project_changed_at_dispatch": "The related project changed before dispatch.",
+    "related_target_missing_at_dispatch": "A related target was unavailable at dispatch.",
+    "request_too_large": "The request body is too large.",
+    "resolved_target_missing_at_handler": "The resolved target was unavailable when the action ran.",
+    "resource_id_required": "Specify a resource ID.",
+    "resource_not_found": "The requested resource was not found.",
+    "resource_type_mismatch": "The resource type does not match.",
+    "risk_disabled": "This risk level is disabled.",
+    "risk_disabled_at_dispatch": "This risk level was disabled before dispatch.",
+    "scope_denied": "The required permission scope has not been granted.",
+    "scoped_global_read_denied": "Global read access is not available with this scope.",
+    "self_delete_denied": "You cannot delete your own user account.",
+    "service_unavailable": "The service is temporarily unavailable.",
+    "ssh_key_pair_required": "Both the SSH private key and public key are required.",
+    "ssh_public_key_mismatch": "The SSH public key does not match the private key.",
+    "ssh_public_key_not_found": "The SSH public key was not found.",
+    "stale_dpop": "The DPoP proof is too old.",
+    "stale_generation": "The resource changed after it was read. Refresh and try again.",
+    "storage_constraint_denied": "The storage is outside the granted constraints.",
+    "storage_node_mismatch": "The storage and VM must be on the same node.",
+    "storage_not_found": "The storage was not found.",
+    "storage_pool_not_found": "The storage pool was not found.",
+    "target_busy": "The target is currently busy.",
+    "target_mapping_mismatch": "The target mapping does not match.",
+    "target_not_found": "The target was not found.",
+    "task_not_found": "The task was not found.",
+    "task_ownership_denied": "You do not have permission to access this task.",
+    "task_principal_mismatch_at_dispatch": "The task principal changed before dispatch.",
+    "task_selector_missing": "The task selector is missing.",
+    "token_expired": "The authentication token has expired.",
+    "unknown_action_scope": "The action uses an unknown scope.",
+    "unknown_lease": "The capability lease is unknown.",
+    "unknown_webauthn_credential": "The WebAuthn credential is unknown.",
+    "unsupported_media_type": "The request media type is not supported.",
+    "unsupported_ssh_key": "This SSH key type is not supported.",
+    "user_exists": "A user with the same ID already exists.",
+    "user_id_required": "Enter a user ID.",
+    "user_not_found": "The user was not found.",
+    "username_mismatch": "The user name does not match the authenticated user.",
+    "validation_error": "Review the highlighted input values.",
+    "vm_network_project_denied": "The VM and network must belong to an accessible project.",
+    "vm_not_found": "The VM was not found.",
+    "vm_or_project_not_found": "The VM or project was not found.",
+    "vm_project_denied": "You do not have permission to access the VM project.",
+    "vm_storage_project_denied": "The VM and storage must belong to an accessible project.",
+    "vm_xml_not_found": "VM XML was not found.",
+    "webauthn_challenge_capacity_exceeded": "The pending WebAuthn challenge limit has been reached.",
+    "webauthn_credential_exists": "This WebAuthn credential is already registered.",
+    "webauthn_dependency_missing": "WebAuthn support is unavailable on the server.",
+    "webauthn_enrollment_required": "Register a WebAuthn credential before continuing."
+  },
+  "fieldErrors": {
+    "extra_forbidden": "This field is not allowed.",
+    "greater_than": "Enter a value greater than {limit}.",
+    "greater_than_or_equal": "Enter a value greater than or equal to {limit}.",
+    "invalid_choice": "Select one of the available values.",
+    "invalid_format": "Enter a value in the required format.",
+    "invalid_json": "Enter valid JSON.",
+    "invalid_type": "Enter a value of the required type.",
+    "invalid_value": "Enter a valid value.",
+    "less_than": "Enter a value less than {limit}.",
+    "less_than_or_equal": "Enter a value less than or equal to {limit}.",
+    "multiple_of": "Enter a multiple of {multiple}.",
+    "required": "This field is required.",
+    "too_long": "Enter no more than {maximum} characters or items.",
+    "too_short": "Enter at least {minimum} characters or items."
+  },
+  "apiFields": {
+    "admin": "Administrator mode",
+    "challengeId": "Challenge ID",
+    "cpu": "CPU",
+    "credentialName": "Credential name",
+    "currentPassword": "Current password",
+    "description": "Description",
+    "imageUrl": "Image URL",
+    "limit": "Items per page",
+    "memoryMegaByte": "Memory",
+    "name": "Name",
+    "nodeName": "Node",
+    "page": "Page",
+    "password": "Password",
+    "path": "Path",
+    "port": "Port",
+    "projectId": "Project",
+    "publicKey": "Public key",
+    "reason": "Reason",
+    "request": "Request",
+    "scope": "Scope",
+    "storageUuid": "Storage",
+    "userId": "User ID",
+    "userName": "User name",
+    "username": "User name",
+    "uuid": "UUID"
+  },
+  "domain": {
+    "taskStatus": {
+      "error": "Error",
+      "finish": "Finished",
+      "incomplete": "Incomplete",
+      "init": "Initializing",
+      "lost": "Lost",
+      "start": "Running",
+      "unknown": "Unknown",
+      "wait": "Waiting"
+    },
+    "taskResource": {
+      "image": "Image",
+      "network": "Network",
+      "node": "Node",
+      "storage": "Storage",
+      "user": "User",
+      "vm": "VM"
+    },
+    "taskMethod": {
+      "delete": "DELETE",
+      "get": "GET",
+      "patch": "PATCH",
+      "post": "POST",
+      "put": "PUT"
+    },
+    "nodeRole": {
+      "libvirt": "libvirt",
+      "ssh": "SSH"
+    },
+    "networkType": {
+      "bridge": "Bridge",
+      "internal": "Internal",
+      "isolated": "Isolated",
+      "nat": "NAT",
+      "openvswitch": "Open vSwitch",
+      "route": "Routed"
+    },
+    "vmStatus": {
+      "1": "Running",
+      "5": "Stopped",
+      "7": "Maintenance",
+      "10": "Deleted",
+      "20": "Lost node"
+    },
+    "nodeStatus": {
+      "10": "Ready",
+      "init": "Initializing",
+      "error": "Error"
+    },
+    "agentStatus": {
+      "pending": "Pending",
+      "active": "Active",
+      "approved": "Approved",
+      "expired": "Expired",
+      "rejected": "Rejected",
+      "revoked": "Revoked",
+      "queued": "Queued",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "cancel_requested": "Cancellation requested",
+      "cancelled": "Cancelled",
+      "reconciling": "Reconciling",
+      "unknown": "Unknown"
+    },
+    "boolean": {
+      "true": "Yes",
+      "false": "No"
+    },
+    "storageRole": {
+      "img": "VM image",
+      "iso": "ISO installer",
+      "template": "Template image",
+      "initIso": "Cloud-init"
+    },
+    "userScope": {
+      "admin": "Administrator (admin)",
+      "user": "Legacy standard user (user)",
+      "inventory": {
+        "read": "Read inventory (inventory.read)"
+      },
+      "vm": {
+        "read": "Read VMs (vm.read)",
+        "create": "Create VMs (vm.create)",
+        "power": "Control VM power (vm.power)",
+        "attach": "Change VM media and networks (vm.attach)",
+        "delete": "Delete VMs (vm.delete)",
+        "project": "Change VM projects (vm.project)"
+      },
+      "node": {
+        "read": "Read nodes (node.read)",
+        "manage": "Manage nodes (node.manage)",
+        "credentials": "Install node credentials (node.credentials)"
+      },
+      "storage": {
+        "read": "Read storage (storage.read)",
+        "manage": "Manage storage (storage.manage)"
+      },
+      "image": {
+        "read": "Read images (image.read)",
+        "manage": "Manage images (image.manage)"
+      },
+      "network": {
+        "read": "Read networks (network.read)",
+        "manage": "Manage networks (network.manage)"
+      },
+      "project": {
+        "read": "Read assigned projects (project.read)",
+        "manage": "Manage projects (project.manage)"
+      },
+      "flavor": {
+        "read": "Read flavors (flavor.read)",
+        "manage": "Manage flavors (flavor.manage)"
+      },
+      "task": {
+        "read": {
+          "self": "Read own tasks (task.read.self)",
+          "any": "Read all tasks (task.read.any)"
+        },
+        "manage": "Cancel and delete tasks (task.manage)"
+      },
+      "identity": {
+        "manage": "Manage users and permissions (identity.manage)"
+      },
+      "metrics": {
+        "read": "Read metrics (metrics.read)"
+      }
+    },
+    "agentScope": {
+      "all": "All Agent actions (*)",
+      "identity": {
+        "admin": "Manage permanent administrator credentials (identity.admin)"
+      },
+      "system": {
+        "all": "All system actions (system.*)",
+        "version": "Read the Virty version (system.version)"
+      },
+      "metrics": {
+        "all": "All metrics actions (metrics.*)",
+        "get": "Read aggregate metrics (metrics.get)"
+      },
+      "task": {
+        "all": "All task actions (task.*)",
+        "list": "List tasks (task.list)",
+        "incomplete": "List incomplete tasks (task.incomplete)",
+        "get": "Read task details (task.get)",
+        "deleteAll": "Delete task history (task.delete-all)"
+      },
+      "node": {
+        "all": "All node actions (node.*)",
+        "list": "List nodes (node.list)",
+        "sshKey": {
+          "write": "Install the management SSH key (node.ssh-key.write)"
+        },
+        "sshPublicKey": {
+          "get": "Read the management SSH public key (node.ssh-public-key.get)"
+        },
+        "get": "Read node details (node.get)",
+        "facts": "Read node facts (node.facts)",
+        "info": "Read node diagnostics (node.info)",
+        "create": "Create nodes (node.create)",
+        "delete": "Delete nodes (node.delete)",
+        "role": {
+          "update": "Update node roles (node.role.update)"
+        }
+      },
+      "vm": {
+        "all": "All VM actions (vm.*)",
+        "list": "List VMs (vm.list)",
+        "get": "Read VM details (vm.get)",
+        "xml": {
+          "get": "Read VM XML (vm.xml.get)"
+        },
+        "refresh": "Refresh VM inventory (vm.refresh)",
+        "create": "Create VMs (vm.create)",
+        "delete": "Delete VMs (vm.delete)",
+        "power": {
+          "update": "Change VM power state (vm.power.update)"
+        },
+        "cdrom": {
+          "update": "Change VM CD-ROM media (vm.cdrom.update)"
+        },
+        "project": {
+          "update": "Change VM project (vm.project.update)"
+        },
+        "network": {
+          "update": "Change VM networks (vm.network.update)"
+        }
+      },
+      "storage": {
+        "all": "All storage actions (storage.*)",
+        "list": "List storage pools (storage.list)",
+        "metadata": {
+          "update": "Update storage metadata (storage.metadata.update)"
+        },
+        "pool": {
+          "list": "List libvirt storage pools (storage.pool.list)",
+          "create": "Create libvirt storage pools (storage.pool.create)",
+          "update": "Update libvirt storage pools (storage.pool.update)"
+        },
+        "get": "Read storage details (storage.get)",
+        "create": "Create storage (storage.create)",
+        "delete": "Delete storage (storage.delete)"
+      },
+      "image": {
+        "all": "All image actions (image.*)",
+        "list": "List images (image.list)",
+        "flavor": {
+          "update": "Change image flavor (image.flavor.update)"
+        },
+        "refresh": "Refresh image inventory (image.refresh)",
+        "download": "Download images (image.download)",
+        "delete": "Delete images (image.delete)"
+      },
+      "network": {
+        "all": "All network actions (network.*)",
+        "list": "List networks (network.list)",
+        "pool": {
+          "list": "List network pools (network.pool.list)",
+          "create": "Create network pools (network.pool.create)",
+          "update": "Update network pools (network.pool.update)",
+          "delete": "Delete network pools (network.pool.delete)"
+        },
+        "get": "Read network details (network.get)",
+        "xml": {
+          "get": "Read network XML (network.xml.get)"
+        },
+        "refresh": "Refresh network inventory (network.refresh)",
+        "create": "Create networks (network.create)",
+        "ovs": {
+          "create": "Create OVS port groups (network.ovs.create)",
+          "delete": "Delete OVS port groups (network.ovs.delete)"
+        },
+        "provider": {
+          "create": "Create provider networks (network.provider.create)"
+        },
+        "delete": "Delete networks (network.delete)"
+      },
+      "project": {
+        "all": "All project actions (project.*)",
+        "list": "List projects (project.list)",
+        "member": {
+          "add": "Add project members (project.member.add)"
+        },
+        "create": "Create projects (project.create)",
+        "delete": "Delete projects (project.delete)"
+      },
+      "user": {
+        "all": "All user actions (user.*)",
+        "me": "Read the lease principal (user.me)",
+        "list": "List users (user.list)",
+        "create": "Create users (user.create)",
+        "update": "Update users (user.update)",
+        "delete": "Delete users (user.delete)"
+      },
+      "flavor": {
+        "all": "All flavor actions (flavor.*)",
+        "list": "List flavors (flavor.list)",
+        "create": "Create flavors (flavor.create)",
+        "delete": "Delete flavors (flavor.delete)"
+      }
+    }
+  },
+  "pages": {
+    "login": {
+      "documentTitle": "Login",
+      "heading": "Login",
+      "username": "User ID",
+      "password": "Password",
+      "submit": "Login",
+      "notifications": {
+        "successTitle": "Login successful",
+        "failureTitle": "Login failed",
+        "redirecting": "You will be redirected automatically.",
+        "unknownError": "Unknown error",
+        "serviceUnavailable": "Unable to reach the authentication service.",
+        "tokenValid": "The saved token is valid.",
+        "tokenExpired": "The saved token has expired.",
+        "tokenValidationFailed": "Unable to validate the saved token."
+      }
+    },
+    "images": {
+      "documentTitle": "Images",
+      "actions": {
+        "rescan": "Rescan",
+        "download": "Download",
+        "delete": "Delete"
+      },
+      "filters": {
+        "node": "Node",
+        "resource": "Storage pool",
+        "search": "Search"
+      },
+      "columns": {
+        "node": "Node",
+        "pool": "Pool",
+        "vmName": "VM name",
+        "capacity": "Capacity",
+        "allocation": "Allocation",
+        "name": "Name",
+        "flavorName": "Flavor name",
+        "actions": "Actions"
+      },
+      "notifications": {
+        "taskQueued": "The task has been queued."
+      }
+    },
+    "networks": {
+      "documentTitle": "Networks",
+      "actions": {
+        "rescan": "Rescan",
+        "create": "Create"
+      },
+      "columns": {
+        "name": "Name",
+        "bridge": "Bridge",
+        "node": "Node",
+        "type": "Type",
+        "uuid": "UUID",
+        "dhcp": "DHCP",
+        "actions": "Actions"
+      },
+      "notifications": {
+        "taskQueued": "The task has been queued."
+      }
+    },
+    "networkDetail": {
+      "actions": {
+        "delete": "Delete"
+      },
+      "sections": {
+        "spec": "Specifications",
+        "portGroups": "Port groups",
+        "info": "Information"
+      },
+      "spec": {
+        "name": "Name:",
+        "uuid": "UUID:",
+        "nodeName": "Node name:",
+        "bridgeName": "Bridge name:",
+        "type": "Type:"
+      },
+      "portGroups": {
+        "name": "Name",
+        "nameExample": "dmz-network",
+        "vlan": "VLAN",
+        "vlanId": "VLAN ID",
+        "vlanIdExample": "810",
+        "default": "Default",
+        "yes": "Yes"
+      },
+      "info": {
+        "xml": "XML"
+      }
+    },
+    "nodes": {
+      "documentTitle": "Nodes",
+      "actions": {
+        "key": "SSH key",
+        "join": "Join"
+      },
+      "columns": {
+        "status": "Status",
+        "name": "Name",
+        "ip": "IP address",
+        "port": "Port",
+        "core": "Cores",
+        "memory": "Memory",
+        "cpu": "CPU",
+        "os": "OS",
+        "qemu": "QEMU",
+        "libvirt": "libvirt",
+        "roles": "Roles",
+        "actions": "Actions"
+      }
+    },
+    "nodeDetail": {
+      "sections": {
+        "spec": "Specifications"
+      },
+      "spec": {
+        "status": "Status:",
+        "cpuModel": "CPU model:",
+        "os": "OS:",
+        "qemuVersion": "QEMU version:",
+        "libvirtVersion": "libvirt version:"
+      },
+      "info": {
+        "top": "Processes (top -b -n 1 | head -n 20)",
+        "free": "Memory (free -h)",
+        "ipRoute": "IP routes (ip r)",
+        "ipNeighbor": "IP neighbors (ip n)",
+        "ipAddress": "IP addresses (ip a)",
+        "filesystem": "Filesystems (df -h)",
+        "storage": "Storage devices (lsblk)",
+        "netplan": "Netplan (netplan get)",
+        "netfilter": "Netfilter (iptables -L)",
+        "nat": "NAT (iptables -L -t nat)"
+      }
+    },
+    "storages": {
+      "documentTitle": "Storage",
+      "actions": {
+        "rescan": "Rescan",
+        "create": "Create"
+      },
+      "columns": {
+        "name": "Name",
+        "node": "Node",
+        "uuid": "UUID",
+        "usage": "Usage",
+        "path": "Path",
+        "role": "Role",
+        "actions": "Actions"
+      },
+      "notifications": {
+        "taskQueued": "The task has been queued."
+      },
+      "capacityGb": "{used}/{capacity} GB"
+    },
+    "storageDetail": {
+      "sections": {
+        "spec": "Specifications",
+        "json": "JSON"
+      },
+      "spec": {
+        "name": "Name:",
+        "nodeName": "Node name:",
+        "path": "Path:",
+        "available": "Available:"
+      },
+      "capacityGb": "{value} GB"
+    },
+    "tasks": {
+      "documentTitle": "Tasks",
+      "heading": "Task list",
+      "filters": {
+        "status": "Status",
+        "resource": "Resource",
+        "method": "Method"
+      },
+      "statuses": {
+        "finish": "Finished",
+        "error": "Error",
+        "init": "Initializing",
+        "wait": "Waiting",
+        "incomplete": "Incomplete"
+      },
+      "resources": {
+        "vm": "VM",
+        "network": "Network",
+        "node": "Node",
+        "storage": "Storage"
+      },
+      "methods": {
+        "post": "POST",
+        "put": "PUT",
+        "delete": "DELETE",
+        "patch": "PATCH"
+      },
+      "columns": {
+        "status": "Status",
+        "postTime": "Submitted at",
+        "userId": "User ID",
+        "request": "Request",
+        "id": "ID",
+        "runTime": "Run time",
+        "actions": "Actions"
+      },
+      "requestParametersWithValue": "JSON parameters: {request}",
+      "durationSeconds": "{value}s"
+    },
+    "users": {
+      "documentTitle": "Users",
+      "actions": {
+        "create": "Create"
+      },
+      "filters": {
+        "search": "Search"
+      },
+      "columns": {
+        "name": "Name",
+        "projects": "Projects",
+        "scopes": "Scopes",
+        "publicKeys": "Public keys"
+      }
+    },
+    "vms": {
+      "documentTitle": "VMs",
+      "actions": {
+        "rescan": "Rescan",
+        "create": "Create"
+      },
+      "filters": {
+        "search": "Search"
+      },
+      "columns": {
+        "status": "Status",
+        "name": "Name",
+        "node": "Node",
+        "uuid": "UUID",
+        "ram": "RAM",
+        "cpu": "CPU",
+        "userId": "User ID",
+        "groupId": "Group ID"
+      },
+      "memoryGib": "{value} GiB",
+      "coreCount": "{count} core | {count} cores",
+      "notifications": {
+        "taskQueued": "The task has been queued."
+      }
+    },
+    "vmDetail": {
+      "actions": {
+        "powerOff": "Power off",
+        "powerOn": "Power on",
+        "console": "Console",
+        "delete": "Delete"
+      },
+      "sections": {
+        "spec": "Specifications",
+        "node": "Node",
+        "network": "Network",
+        "storage": "Storage",
+        "xml": "XML"
+      },
+      "spec": {
+        "status": "Status:",
+        "vcpu": "vCPU:",
+        "memory": "Memory:"
+      },
+      "node": {
+        "name": "Name:",
+        "ip": "Node IP:",
+        "status": "Status:",
+        "vncPort": "VNC port:"
+      },
+      "network": {
+        "type": "Type",
+        "macAddress": "MAC address",
+        "networkName": "Network name",
+        "bridgeDevice": "Bridge device",
+        "ovsPort": "OVS port",
+        "target": "Target",
+        "actions": "Actions"
+      },
+      "storage": {
+        "device": "Device",
+        "type": "Type",
+        "size": "Size",
+        "source": "Source",
+        "target": "Target",
+        "actions": "Actions"
+      },
+      "memoryMb": "{value} MB"
+    }
+  }
+}

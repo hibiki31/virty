@@ -2,9 +2,9 @@
   <div class="d-flex flex-column ga-4">
     <div class="d-flex align-center">
       <div>
-        <h1 class="text-h5">Agent control</h1>
+        <h1 class="text-h5">{{ t("agent.heading") }}</h1>
         <p class="text-body-2 text-medium-emphasis">
-          Codex端末の登録、短命lease、mutation停止をWebAuthnで管理します。
+          {{ t("agent.description") }}
         </p>
       </div>
       <v-spacer />
@@ -14,7 +14,7 @@
         :loading="loading"
         @click="reload"
       >
-        再読込
+        {{ t("agent.actions.reload") }}
       </v-btn>
     </div>
 
@@ -25,31 +25,29 @@
       variant="tonal"
       @click:close="message = null"
     >
-      {{ message.text }}
+      {{ messageText }}
     </v-alert>
 
     <v-alert type="warning" variant="tonal">
-      mutationを有効化すると、lease範囲内の操作は追加確認なしで実行されます。削除やnetwork変更は
-      backup・帯域外復旧がない場合に元へ戻せません。
+      {{ t("agent.warnings.mutation") }}
     </v-alert>
 
     <v-row>
       <v-col cols="12" lg="5">
-        <v-card title="WebAuthn credential" height="100%">
+        <v-card :title="t('agent.webauthn.title')" height="100%">
           <v-card-text>
             <p class="text-body-2 mb-4">
-              pairingや停止操作の承認に使うsecurity keyまたはplatform authenticatorを登録します。
-              現在のpasswordは再認証だけに使われ、保存されません。
+              {{ t("agent.webauthn.description") }}
             </p>
             <v-text-field
               v-model="registration.credentialName"
-              label="Credential name"
+              :label="t('agent.webauthn.credentialName')"
               maxlength="128"
               autocomplete="webauthn"
             />
             <v-text-field
               v-model="registration.currentPassword"
-              label="Current password"
+              :label="t('agent.webauthn.currentPassword')"
               type="password"
               maxlength="128"
               autocomplete="current-password"
@@ -63,57 +61,60 @@
               :disabled="!registration.credentialName || !registration.currentPassword"
               @click="registerWebAuthn"
             >
-              登録
+              {{ t("agent.actions.register") }}
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
 
       <v-col cols="12" lg="7">
-        <v-card title="Global mutation control" height="100%">
+        <v-card :title="t('agent.control.title')" height="100%">
           <v-card-text v-if="control">
             <v-switch
               v-model="controlForm.mutationsEnabled"
               color="error"
-              label="Agent mutationを有効化"
+              :label="t('agent.control.mutationsEnabled')"
               hide-details
             />
             <v-switch
               v-model="controlForm.shadowMode"
               color="warning"
-              label="Shadow / read-only mode"
+              :label="t('agent.control.shadowMode')"
               hide-details
             />
             <v-select
               v-model="controlForm.enabledRiskLevels"
               class="mt-3"
               :items="riskLevels"
-              label="有効なrisk level"
+              :label="t('agent.control.enabledRiskLevels')"
               multiple
               chips
             />
             <v-switch
               v-model="controlForm.allowDeleteWithoutRecovery"
               color="error"
-              label="復旧手段なしの削除を許可"
+              :label="t('agent.control.allowDeleteWithoutRecovery')"
               hide-details
             />
             <v-switch
               v-model="controlForm.allowNetworkChangeWithoutOob"
               color="error"
-              label="帯域外復旧なしのnetwork変更を許可"
+              :label="t('agent.control.allowNetworkChangeWithoutOob')"
               hide-details
             />
             <v-textarea
               v-model="controlForm.reason"
               class="mt-3"
-              label="変更理由（監査ログへ記録）"
+              :label="t('agent.control.reason')"
               maxlength="2000"
               rows="2"
               auto-grow
             />
             <p class="text-caption text-medium-emphasis">
-              最終更新: {{ formatDate(control.updatedAt) }} / {{ control.updatedBy || "-" }}
+              {{ t("agent.control.lastUpdated", {
+                date: displayDate(control.updatedAt),
+                user: control.updatedBy || t("common.values.unknown"),
+              }) }}
             </p>
           </v-card-text>
           <v-card-text v-else>
@@ -127,25 +128,25 @@
               :disabled="!control || !controlForm.reason.trim()"
               @click="updateControl"
             >
-              WebAuthnで反映
+              {{ t("agent.actions.applyWithWebAuthn") }}
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
-    <v-card title="Pending device pairings">
+    <v-card :title="t('agent.pairings.title')">
       <v-card-text v-if="pairings.length === 0" class="text-medium-emphasis">
-        承認待ちの端末はありません。
+        {{ t("agent.pairings.empty") }}
       </v-card-text>
       <v-table v-else>
         <thead>
           <tr>
-            <th>Device</th>
-            <th>Requested scopes</th>
-            <th>Expires</th>
-            <th>Pairing code</th>
-            <th />
+            <th>{{ t("agent.pairings.device") }}</th>
+            <th>{{ t("agent.pairings.requestedScopes") }}</th>
+            <th>{{ t("agent.pairings.expires") }}</th>
+            <th>{{ t("agent.pairings.pairingCode") }}</th>
+            <th>{{ t("agent.table.actions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -154,12 +155,12 @@
               {{ pairing.deviceName }}
               <div class="text-caption text-medium-emphasis">{{ pairing.deviceId }}</div>
             </td>
-            <td>{{ pairing.requestedScopes.join(", ") }}</td>
-            <td>{{ formatDate(pairing.expiresAt) }}</td>
+            <td>{{ agentScopeListLabel(pairing.requestedScopes) }}</td>
+            <td>{{ displayDate(pairing.expiresAt) }}</td>
             <td style="min-width: 16rem">
               <v-text-field
                 v-model="pairingCodes[pairing.pairingId]"
-                label="Helperに表示されたcode"
+                :label="t('agent.pairings.codeLabel')"
                 density="compact"
                 hide-details
                 autocomplete="off"
@@ -173,7 +174,7 @@
                 :disabled="!pairingCodes[pairing.pairingId]"
                 @click="approvePairing(pairing)"
               >
-                承認
+                {{ t("agent.actions.approve") }}
               </v-btn>
             </td>
           </tr>
@@ -181,18 +182,18 @@
       </v-table>
     </v-card>
 
-    <v-card title="Pending capability leases">
+    <v-card :title="t('agent.leaseRequests.title')">
       <v-card-text v-if="leaseRequests.length === 0" class="text-medium-emphasis">
-        承認待ちのleaseはありません。
+        {{ t("agent.leaseRequests.empty") }}
       </v-card-text>
       <v-table v-else>
         <thead>
           <tr>
-            <th>Device / principal</th>
-            <th>Scope and target constraints</th>
-            <th>Risk grants</th>
-            <th>Expires</th>
-            <th />
+            <th>{{ t("agent.leaseRequests.devicePrincipal") }}</th>
+            <th>{{ t("agent.leaseRequests.constraints") }}</th>
+            <th>{{ t("agent.leaseRequests.riskGrants") }}</th>
+            <th>{{ t("agent.leaseRequests.expires") }}</th>
+            <th>{{ t("agent.table.actions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -202,19 +203,31 @@
               <div class="text-caption text-medium-emphasis">{{ request.deviceId }}</div>
             </td>
             <td>
-              <div>{{ request.requestedScopes.join(", ") }}</div>
-              <div class="text-caption">Projects: {{ request.projectIds.join(", ") || "all" }}</div>
-              <div class="text-caption">Nodes: {{ request.nodeIds.join(", ") || "all" }}</div>
-            </td>
-            <td>
-              max {{ request.maxMutations }} mutations
+              <div>{{ agentScopeListLabel(request.requestedScopes) }}</div>
               <div class="text-caption">
-                destructive={{ request.allowDestructive }}, delete-without-recovery={{
-                  request.allowDeleteWithoutRecovery
-                }}, network-without-OOB={{ request.allowNetworkChangeWithoutOob }}
+                {{ t("agent.leaseRequests.projects", {
+                  projects: request.projectIds.join(", ") || t("common.values.all"),
+                }) }}
+              </div>
+              <div class="text-caption">
+                {{ t("agent.leaseRequests.nodes", {
+                  nodes: request.nodeIds.join(", ") || t("common.values.all"),
+                }) }}
               </div>
             </td>
-            <td>{{ formatDate(request.expiresAt) }}</td>
+            <td>
+              {{ t("agent.leaseRequests.maxMutations", {
+                count: formatNumber(request.maxMutations),
+              }, request.maxMutations) }}
+              <div class="text-caption">
+                {{ t("agent.leaseRequests.riskDetails", {
+                  destructive: booleanLabel(request.allowDestructive),
+                  deleteWithoutRecovery: booleanLabel(request.allowDeleteWithoutRecovery),
+                  networkWithoutOob: booleanLabel(request.allowNetworkChangeWithoutOob),
+                }) }}
+              </div>
+            </td>
+            <td>{{ displayDate(request.expiresAt) }}</td>
             <td>
               <v-btn
                 color="primary"
@@ -222,7 +235,7 @@
                 :loading="busy === `lease-request:${request.requestId}`"
                 @click="approveLease(request)"
               >
-                承認
+                {{ t("agent.actions.approve") }}
               </v-btn>
             </td>
           </tr>
@@ -230,21 +243,20 @@
       </v-table>
     </v-card>
 
-    <v-card title="Unknown operations">
+    <v-card :title="t('agent.unknownOperations.title')">
       <v-alert class="ma-4 mb-0" type="warning" variant="tonal">
-        外部基盤の実状態を確認してから結果を確定してください。確認前の再実行は、同じ副作用を
-        二重に発生させる可能性があります。
+        {{ t("agent.warnings.reconciliation") }}
       </v-alert>
       <v-card-text v-if="unknownOperations.length === 0" class="text-medium-emphasis">
-        整合確認待ちのoperationはありません。
+        {{ t("agent.unknownOperations.empty") }}
       </v-card-text>
       <v-table v-else>
         <thead>
           <tr>
-            <th>Operation / action</th>
-            <th>Last message</th>
-            <th>確認理由</th>
-            <th>確認結果</th>
+            <th>{{ t("agent.unknownOperations.operationAction") }}</th>
+            <th>{{ t("agent.unknownOperations.lastMessage") }}</th>
+            <th>{{ t("agent.unknownOperations.reason") }}</th>
+            <th>{{ t("agent.unknownOperations.result") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -257,7 +269,7 @@
             <td style="min-width: 20rem">
               <v-textarea
                 v-model="reconciliationReasons[operation.operationId]"
-                label="実状態を確認した方法と根拠"
+                :label="t('agent.unknownOperations.reasonLabel')"
                 maxlength="2000"
                 rows="2"
                 auto-grow
@@ -274,7 +286,7 @@
                 :disabled="!reconciliationReasons[operation.operationId]?.trim()"
                 @click="reconcileOperation(operation, 'effect_confirmed')"
               >
-                効果あり
+                {{ t("agent.actions.effectConfirmed") }}
               </v-btn>
               <v-btn
                 color="warning"
@@ -284,7 +296,7 @@
                 :disabled="!reconciliationReasons[operation.operationId]?.trim()"
                 @click="reconcileOperation(operation, 'effect_absent')"
               >
-                効果なし
+                {{ t("agent.actions.effectAbsent") }}
               </v-btn>
             </td>
           </tr>
@@ -294,11 +306,11 @@
 
     <v-row>
       <v-col cols="12" xl="6">
-        <v-card title="Paired devices" height="100%">
+        <v-card :title="t('agent.devices.title')" height="100%">
           <v-card-text>
             <v-textarea
               v-model="managementReason"
-              label="失効・breaker reset理由（監査ログへ記録）"
+              :label="t('agent.devices.reasonLabel')"
               maxlength="2000"
               rows="2"
               auto-grow
@@ -307,10 +319,10 @@
           <v-table>
             <thead>
               <tr>
-                <th>Device</th>
-                <th>Status</th>
-                <th>Scopes</th>
-                <th />
+                <th>{{ t("agent.devices.device") }}</th>
+                <th>{{ t("agent.devices.status") }}</th>
+                <th>{{ t("agent.devices.scopes") }}</th>
+                <th>{{ t("agent.table.actions") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -320,12 +332,12 @@
                   <div class="text-caption text-medium-emphasis">{{ device.id }}</div>
                 </td>
                 <td>
-                  {{ device.status }}
+                  {{ agentStatusLabel(device.status) }}
                   <v-chip v-if="device.breakerOpenedAt" color="error" size="x-small">
-                    breaker open
+                    {{ t("agent.devices.breakerOpen") }}
                   </v-chip>
                 </td>
-                <td>{{ device.allowedScopes.join(", ") }}</td>
+                <td>{{ agentScopeListLabel(device.allowedScopes) }}</td>
                 <td class="text-no-wrap">
                   <v-btn
                     v-if="device.breakerOpenedAt"
@@ -336,7 +348,7 @@
                     :disabled="!managementReason.trim()"
                     @click="resetBreaker(device)"
                   >
-                    Breaker reset
+                    {{ t("agent.actions.resetBreaker") }}
                   </v-btn>
                   <v-btn
                     color="error"
@@ -346,7 +358,7 @@
                     :disabled="device.status === 'revoked' || !managementReason.trim()"
                     @click="revokeDevice(device)"
                   >
-                    失効
+                    {{ t("agent.actions.revoke") }}
                   </v-btn>
                 </td>
               </tr>
@@ -356,28 +368,32 @@
       </v-col>
 
       <v-col cols="12" xl="6">
-        <v-card title="Capability leases" height="100%">
+        <v-card :title="t('agent.leases.title')" height="100%">
           <v-table>
             <thead>
               <tr>
-                <th>Lease</th>
-                <th>Usage / expiry</th>
-                <th>Scopes</th>
-                <th />
+                <th>{{ t("agent.leases.lease") }}</th>
+                <th>{{ t("agent.leases.usageExpiry") }}</th>
+                <th>{{ t("agent.leases.scopes") }}</th>
+                <th>{{ t("agent.table.actions") }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="lease in leases" :key="lease.leaseId">
                 <td>
                   {{ lease.leaseId }}
-                  <div class="text-caption">Device: {{ lease.deviceId }}</div>
+                  <div class="text-caption">
+                    {{ t("agent.leases.device", { device: lease.deviceId }) }}
+                  </div>
                 </td>
                 <td>
-                  {{ lease.mutationsUsed }} / {{ lease.maxMutations }}
-                  <div class="text-caption">{{ formatDate(lease.expiresAt) }}</div>
-                  <v-chip v-if="lease.revokedAt" color="error" size="x-small">revoked</v-chip>
+                  {{ formatNumber(lease.mutationsUsed) }} / {{ formatNumber(lease.maxMutations) }}
+                  <div class="text-caption">{{ displayDate(lease.expiresAt) }}</div>
+                  <v-chip v-if="lease.revokedAt" color="error" size="x-small">
+                    {{ t("agent.leases.revoked") }}
+                  </v-chip>
                 </td>
-                <td>{{ lease.scopes.join(", ") }}</td>
+                <td>{{ agentScopeListLabel(lease.scopes) }}</td>
                 <td>
                   <v-btn
                     color="error"
@@ -387,7 +403,7 @@
                     :disabled="Boolean(lease.revokedAt) || !managementReason.trim()"
                     @click="revokeLease(lease)"
                   >
-                    失効
+                    {{ t("agent.actions.revoke") }}
                   </v-btn>
                 </td>
               </tr>
@@ -401,7 +417,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Agent control
+  titleKey: agent.documentTitle
   requiresAdmin: true
 </route>
 
@@ -411,6 +427,20 @@ import {
   createWebAuthnCredential,
   getWebAuthnAssertion,
 } from "@/composables/webauthn";
+import {
+  formatNotificationText,
+  notificationContentFromError,
+  type NotificationContent,
+} from "@/composables/notify";
+import {
+  agentScopeListLabel,
+  agentStatusLabel,
+  booleanLabel,
+  formatDateTime,
+  formatNumber,
+  translationRef,
+} from "@/composables/i18n";
+import { useI18n } from "vue-i18n";
 
 type Pairing = {
   pairingId: string;
@@ -477,9 +507,17 @@ type WebAuthnOptions = {
   publicKey: Record<string, unknown>;
 };
 
+const { t } = useI18n({ useScope: "global" });
+
 const loading = ref(false);
 const busy = ref<string | null>(null);
-const message = ref<{ type: "success" | "error" | "warning"; text: string } | null>(null);
+const message = ref<{
+  type: "success" | "error" | "warning";
+  content: NotificationContent;
+} | null>(null);
+const messageText = computed(() =>
+  message.value ? formatNotificationText(message.value.content) : "",
+);
 const pairings = ref<Pairing[]>([]);
 const leaseRequests = ref<LeaseRequest[]>([]);
 const devices = ref<Device[]>([]);
@@ -500,29 +538,12 @@ const controlForm = reactive({
   reason: "",
 });
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "short",
-    timeStyle: "medium",
-  }).format(new Date(value));
-}
-
-function errorText(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "object" && error !== null) {
-    const detail = (error as { detail?: unknown }).detail;
-    if (typeof detail === "string") return detail;
-    if (typeof detail === "object" && detail !== null) {
-      const text = (detail as { message?: unknown }).message;
-      if (typeof text === "string") return text;
-    }
-  }
-  return "Agent API requestに失敗しました";
+function displayDate(value: string | null | undefined): string {
+  return formatDateTime(value, "medium") || t("common.values.unavailable");
 }
 
 function showError(error: unknown): void {
-  message.value = { type: "error", text: errorText(error) };
+  message.value = { type: "error", content: notificationContentFromError(error) };
 }
 
 function requireData<T>(data: T | undefined, error: unknown): T {
@@ -593,7 +614,10 @@ async function registerWebAuthn(): Promise<void> {
     });
     requireData(completeResponse.data, completeResponse.error);
     registration.currentPassword = "";
-    message.value = { type: "success", text: "WebAuthn credentialを登録しました" };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.webauthnRegistered"),
+    };
   } catch (error) {
     showError(error);
   } finally {
@@ -623,7 +647,12 @@ async function approvePairing(pairing: Pairing): Promise<void> {
     );
     requireData(approveResponse.data, approveResponse.error);
     delete pairingCodes[pairing.pairingId];
-    message.value = { type: "success", text: `${pairing.deviceName}を承認しました` };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.pairingApproved", {
+        device: pairing.deviceName,
+      }),
+    };
     await reload();
   } catch (error) {
     showError(error);
@@ -649,7 +678,12 @@ async function approveLease(request: LeaseRequest): Promise<void> {
       },
     );
     requireData(approveResponse.data, approveResponse.error);
-    message.value = { type: "success", text: `${request.deviceName}のleaseを承認しました` };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.leaseApproved", {
+        device: request.deviceName,
+      }),
+    };
     await reload();
   } catch (error) {
     showError(error);
@@ -682,7 +716,10 @@ async function updateControl(): Promise<void> {
       body: { ...change, challengeId: options.challengeId, credential },
     });
     applyControl(requireData(updateResponse.data, updateResponse.error));
-    message.value = { type: "success", text: "Agent global controlを更新しました" };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.controlUpdated"),
+    };
   } catch (error) {
     showError(error);
   } finally {
@@ -708,7 +745,10 @@ async function revokeDevice(device: Device): Promise<void> {
       },
     });
     requireData(response.data, response.error);
-    message.value = { type: "success", text: `${device.name}を失効しました` };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.deviceRevoked", { device: device.name }),
+    };
     await reload();
   } catch (error) {
     showError(error);
@@ -738,7 +778,10 @@ async function resetBreaker(device: Device): Promise<void> {
       },
     );
     requireData(response.data, response.error);
-    message.value = { type: "success", text: `${device.name}のbreakerをresetしました` };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.breakerReset", { device: device.name }),
+    };
     await reload();
   } catch (error) {
     showError(error);
@@ -768,7 +811,10 @@ async function revokeLease(lease: Lease): Promise<void> {
       },
     );
     requireData(response.data, response.error);
-    message.value = { type: "success", text: `${lease.leaseId}を失効しました` };
+    message.value = {
+      type: "success",
+      content: translationRef("agent.notifications.leaseRevoked", { lease: lease.leaseId }),
+    };
     await reload();
   } catch (error) {
     showError(error);
@@ -805,7 +851,9 @@ async function reconcileOperation(
     delete reconciliationReasons[operation.operationId];
     message.value = {
       type: "success",
-      text: `${operation.operationId}の実状態を確定しました`,
+      content: translationRef("agent.notifications.operationReconciled", {
+        operation: operation.operationId,
+      }),
     };
     await reload();
   } catch (error) {

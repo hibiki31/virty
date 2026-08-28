@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
-from mixin.exception import HTTPException
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from module.backends import create_ssh_backend
 from resource_authorization import allowed_node_names, require_admin
@@ -157,21 +157,30 @@ def create_ssh_key_pair(
             
     else:
         if not model.private_key or not model.public_key:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Private and public keys are required",
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                ApiErrorCode.SSH_KEY_PAIR_REQUIRED,
+                "Both private and public SSH keys are required.",
             )
         try:
             private_key = serialization.load_ssh_private_key(model.private_key.encode(), password=None)
         except (TypeError, ValueError):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                ApiErrorCode.UNSUPPORTED_SSH_KEY,
+                "The SSH private key format is not supported.",
+            )
 
         if isinstance(private_key, rsa.RSAPrivateKey):
             key_name = "id_rsa"
         elif isinstance(private_key, ed25519.Ed25519PrivateKey):
             key_name = "id_ed25519"
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Unknown or unsupported key format")
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                ApiErrorCode.UNSUPPORTED_SSH_KEY,
+                "The SSH private key format is not supported.",
+            )
 
         derived_public_key = private_key.public_key().public_bytes(
             encoding=serialization.Encoding.OpenSSH,
@@ -179,9 +188,10 @@ def create_ssh_key_pair(
         ).decode("ascii")
         supplied_parts = model.public_key.strip().split()
         if supplied_parts[:2] != derived_public_key.split()[:2]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Public key does not match the private key",
+            raise ApiError(
+                status.HTTP_400_BAD_REQUEST,
+                ApiErrorCode.SSH_PUBLIC_KEY_MISMATCH,
+                "The SSH public key does not match the private key.",
             )
         _install_ssh_key_pair(
             key_name=key_name,
@@ -208,9 +218,10 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
         None,
     )
     if pub_key_path is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="SSH public key not found",
+        raise ApiError(
+            status.HTTP_404_NOT_FOUND,
+            ApiErrorCode.SSH_PUBLIC_KEY_NOT_FOUND,
+            "The SSH public key was not found.",
         )
 
     public_key = pub_key_path.read_text(encoding="utf-8")
@@ -228,7 +239,7 @@ def get_node(
     node = db.query(NodeModel).filter(NodeModel.name==name).one_or_none()
     allowed_nodes = allowed_node_names(db, cu)
     if node is None or (allowed_nodes is not None and name not in allowed_nodes):
-        raise HTTPException(status_code=404, detail="node is not found")
+        raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
 
     return node
 
@@ -244,7 +255,7 @@ def get_node_facts(
     node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
     
     if node is None:
-        raise HTTPException(status_code=404, detail="Node not found")
+        raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
 
     return node.ansible_facts
 
@@ -260,7 +271,7 @@ def get_node_info(
     node = db.query(NodeModel).filter(NodeModel.name == name).one_or_none()
     
     if node is None:
-        raise HTTPException(status_code=404, detail="Node not found")
+        raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     
     ssh_manager = create_ssh_backend(
         user=node.user_name,

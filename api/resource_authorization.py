@@ -4,13 +4,13 @@ projectが参照するresource poolを正本とし、clientが送るnode名やpr
 認可根拠にしない。対応先を安全に導出できないglobal操作はrouter側でadmin限定にする。
 """
 
-from fastapi import HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser
 from domain.models import DomainModel
 from flavor.models import FlavorModel
+from mixin.exception import ApiError, ApiErrorCode
 from network.models import (
     NetworkModel,
     NetworkPoolModel,
@@ -37,10 +37,11 @@ def require_admin(current_user: CurrentUser) -> None:
     current_user.verify_scope(["admin"])
 
 
-def _not_found(resource: str) -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"{resource} not found",
+def _not_found(code: ApiErrorCode) -> ApiError:
+    return ApiError(
+        404,
+        code,
+        "The requested resource was not found.",
     )
 
 
@@ -176,7 +177,7 @@ def get_authorized_storage(
     row = db.get(StorageModel, storage_id)
     allowed = allowed_storage_ids(db, current_user)
     if row is None or (allowed is not None and row.uuid not in allowed):
-        raise _not_found("storage")
+        raise _not_found(ApiErrorCode.STORAGE_NOT_FOUND)
     return row
 
 
@@ -188,7 +189,7 @@ def get_authorized_storage_pool(
     row = db.get(StoragePoolModel, pool_id)
     allowed = allowed_storage_pool_ids(db, current_user)
     if row is None or (allowed is not None and row.id not in allowed):
-        raise _not_found("storage pool")
+        raise _not_found(ApiErrorCode.STORAGE_POOL_NOT_FOUND)
     return row
 
 
@@ -200,7 +201,7 @@ def get_authorized_network(
     row = db.get(NetworkModel, network_id)
     allowed = allowed_network_ids(db, current_user)
     if row is None or (allowed is not None and row.uuid not in allowed):
-        raise _not_found("network")
+        raise _not_found(ApiErrorCode.NETWORK_NOT_FOUND)
     return row
 
 
@@ -212,7 +213,7 @@ def get_authorized_network_pool(
     row = db.get(NetworkPoolModel, pool_id)
     allowed = allowed_network_pool_ids(db, current_user)
     if row is None or (allowed is not None and row.id not in allowed):
-        raise _not_found("network pool")
+        raise _not_found(ApiErrorCode.NETWORK_POOL_NOT_FOUND)
     return row
 
 
@@ -224,7 +225,7 @@ def get_authorized_flavor(
     row = db.get(FlavorModel, flavor_id)
     allowed = allowed_flavor_ids(db, current_user)
     if row is None or (allowed is not None and row.id not in allowed):
-        raise _not_found("flavor")
+        raise _not_found(ApiErrorCode.FLAVOR_NOT_FOUND)
     return row
 
 
@@ -237,5 +238,5 @@ def get_authorized_project(
     if row is None or (
         not is_admin(current_user) and project_id not in current_user.projects
     ):
-        raise _not_found("project")
+        raise _not_found(ApiErrorCode.PROJECT_NOT_FOUND)
     return row

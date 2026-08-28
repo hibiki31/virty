@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from auth.router import CurrentUser, get_current_user
 from domain.models import DomainModel
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from project.models import ProjectModel
 from project.schemas import (
@@ -84,9 +85,10 @@ def update_project(
                 UserModel.username==request.user_id
             ).one()
     except NoResultFound:
-        raise  HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The specified value is invalid"
+        raise ApiError(
+            status.HTTP_400_BAD_REQUEST,
+            ApiErrorCode.INVALID_VALUE,
+            "The specified value is invalid.",
         )
 
     project.users.append(user)
