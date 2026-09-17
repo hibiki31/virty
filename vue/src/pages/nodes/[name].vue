@@ -55,8 +55,11 @@ const route = useRoute()
 import { getNodeStatusColor } from '@/composables/nodes'
 import { nodeStatusLabel, useLocalizedDocumentTitle } from '@/composables/i18n';
 import { useI18n } from 'vue-i18n';
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n({ useScope: 'global' })
+const auth = useAuthStore()
 
 type typeNode = paths['/api/nodes/{name}']['get']['responses']['200']['content']['application/json']
 type typeNodeInfo = paths['/api/nodes/{name}/info']['get']['responses']['200']['content']['application/json']
@@ -70,7 +73,8 @@ function reload() {
   if ('name' in route.params) {
     apiClient.GET('/api/nodes/{name}', {
       params: {
-        path: { name: route.params.name }
+        path: { name: route.params.name },
+        query: { admin: hasAdminScope(auth.scopes) },
       }
     }).then((res) => {
       if (res.data) {
@@ -80,7 +84,8 @@ function reload() {
 
     apiClient.GET('/api/nodes/{name}/info', {
       params: {
-        path: { name: route.params.name }
+        path: { name: route.params.name },
+        query: { admin: hasAdminScope(auth.scopes) },
       }
     }).then((res) => {
       if (res.data) {

@@ -5,6 +5,7 @@ import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
@@ -39,11 +40,15 @@ def _get_authorized_node(
     db: Session,
     current_user: CurrentUser,
     name: str,
+    *,
+    admin: bool = False,
 ) -> NodeModel:
-    """通常readのProject境界内にあるnodeだけを返す。"""
+    """通常readはProject境界、明示的な管理readはadmin権限を検査する。"""
 
+    if admin:
+        require_admin(current_user)
     node = db.get(NodeModel, name)
-    if node is None or name not in allowed_node_names(db, current_user):
+    if node is None or (not admin and name not in allowed_node_names(db, current_user)):
         raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     return node
 
@@ -121,11 +126,13 @@ def get_nodes(
         param: NodeForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["node.read"])
+    if param.admin:
+        require_admin(current_user)
     query = db.query(NodeModel)
-    allowed_nodes = allowed_node_names(db, current_user, param.project_id)
-    if allowed_nodes is not None:
+    if not param.admin or param.project_id is not None:
+        allowed_nodes = allowed_node_names(db, current_user, param.project_id)
         query = query.filter(NodeModel.name.in_(allowed_nodes))
     if param.name_like:
         query = query.filter(NodeModel.name.like(f'%{param.name_like}%'))
@@ -245,34 +252,37 @@ def get_ssh_key_pair(current_user: CurrentUser = Depends(get_current_user)):
 @app.get("/{name}", response_model=Node)
 def get_node(
         name: str,
+        admin: bool = False,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> NodeModel:
     cu.verify_scope(["node.read"])
-    return _get_authorized_node(db, cu, name)
+    return _get_authorized_node(db, cu, name, admin=admin)
 
 
 @app.get("/{name}/facts")
 def get_node_facts(
         name: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    node = _get_authorized_node(db, current_user, name)
+    node = _get_authorized_node(db, current_user, name, admin=admin)
     return node.ansible_facts
 
 
 @app.get("/{name}/info",response_model=NodeInfo)
 def get_node_info(
         name: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> NodeInfo:
     current_user.verify_scope(["node.read"])
     require_admin(current_user)
-    node = _get_authorized_node(db, current_user, name)
+    node = _get_authorized_node(db, current_user, name, admin=admin)
     ssh_manager = create_ssh_backend(
         user=node.user_name,
         domain=node.domain,

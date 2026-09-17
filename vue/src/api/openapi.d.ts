@@ -5067,7 +5067,9 @@ export interface operations {
     };
     get_node: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;
@@ -5107,7 +5109,9 @@ export interface operations {
     };
     get_node_facts: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;
@@ -5122,7 +5126,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -5147,7 +5153,9 @@ export interface operations {
     };
     get_node_info: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;

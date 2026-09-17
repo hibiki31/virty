@@ -174,6 +174,11 @@ row lockだけでなく、外部resourceへの重複実行と冪等性を再検�
 server側で導出する。nodeは許可VM・storage・networkが存在するnodeだけを参照できる。projectへ安全に
 対応付けられない全体再走査、node診断、SSH鍵、resource新規作成はadmin限定とする。
 
+node登録直後はProject grantがなくても管理できるよう、node routerの一覧・詳細・facts・infoには
+`admin=true`で明示する管理用readを設ける。DBとtoken双方のadmin scopeを検査してからnode全体を
+参照し、一覧にProject filterがある場合は従来のmembershipとgrantによる絞り込みを優先する。
+共通の`allowed_node_names`は変更せず、通常read、dashboard、AgentのProject境界を保持する。
+
 ### Project共同管理境界
 
 Project IDは重複しない6桁hex、名称は重複可能な表示値とする。membership、storage pool、network pool、flavorの
