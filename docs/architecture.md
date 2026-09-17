@@ -174,10 +174,11 @@ row lockだけでなく、外部resourceへの重複実行と冪等性を再検�
 server側で導出する。nodeは許可VM・storage・networkが存在するnodeだけを参照できる。projectへ安全に
 対応付けられない全体再走査、node診断、SSH鍵、resource新規作成はadmin限定とする。
 
-node登録直後はProject grantがなくても管理できるよう、node routerの一覧・詳細・facts・infoには
-`admin=true`で明示する管理用readを設ける。DBとtoken双方のadmin scopeを検査してからnode全体を
-参照し、一覧にProject filterがある場合は従来のmembershipとgrantによる絞り込みを優先する。
-共通の`allowed_node_names`は変更せず、通常read、dashboard、AgentのProject境界を保持する。
+Project未割当resourceも管理できるよう、VM、node、storage、image、network、各pool、flavor、Projectの
+一覧と提供済みの詳細・XML・node診断、dashboardには`admin=true`で明示する管理用readを設ける。
+共通判定でDBとtoken双方のadmin scopeを検査し、Project filterがない場合だけ全体参照を許可する。
+Project filter指定時は従来のmembershipとgrant、networkのportgroup単位grantを維持する。
+共通の`allowed_*`は変更せず、通常read、変更操作、AgentのProject境界を保持する。
 
 ### Project共同管理境界
 
@@ -207,8 +208,8 @@ principalの最新membershipまたはpersonal ownerを再照合し、dispatchか
 
 resource poolは複数Projectから共有される独立resourceである。Project grant更新はID集合の完全置換として行い、
 所属VMが参照中のstorage、network、flavorをgrant外にする変更を拒否する。CPU・memory・storage limitは互換表示値で、
-現時点の配置・作成処理ではquotaとして強制しない。未grant resourceの選択肢は通常のresource一覧へadmin bypassを
-設けず、Project配下のglobal admin専用candidate APIから取得する。
+現時点の配置・作成処理ではquotaとして強制しない。grant編集の未grant resource候補は引き続き
+Project配下のglobal admin専用candidate APIから取得する。作成・変更dialogのProject選択には所属Project一覧を使う。
 
 ### Inventory同期
 
@@ -220,8 +221,8 @@ VM、storage、image、networkの一覧は、管理node上のlibvirt状態を走
 
 Web dashboardはBearer token付きの型付きclientで専用のdashboard query APIを呼び、APIが
 認証利用者の参照範囲に合わせてDB上のinventory cacheとtask recordを表示用に集約する。
-各resourceとtaskには既存queryと同じscope認可とproject・resource poolによる絞り込みを適用し、
-frontendで権限範囲を拡張しない。
+通常readは各resourceとtaskに既存queryと同じscope認可とproject・resource poolによる絞り込みを適用する。
+管理画面が明示する`admin=true`はserverでadmin権限を検査し、全resourceと全taskを集計する。
 
 VM、node、storage、image、network、各pool、flavorの一覧は任意のProject filterを受け取り、指定時は
 Projectの存在と認可を404で秘匿したうえで、そのProjectだけから導出したresourceを返す。WebはfilterをURL queryに

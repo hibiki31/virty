@@ -40,9 +40,9 @@ export async function getProjectList(
   return response.data ?? initProjectPage;
 }
 
-export async function getProject(projectId: string): Promise<ProjectDetail> {
+export async function getProject(projectId: string, admin = false): Promise<ProjectDetail> {
   const response = await apiClient.GET("/api/projects/{project_id}", {
-    params: { path: { project_id: projectId } },
+    params: { path: { project_id: projectId }, query: { admin } },
   });
   return requireData(response.data, response.error);
 }

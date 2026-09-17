@@ -1,5 +1,5 @@
 from os.path import join
-from typing import List
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -18,6 +18,7 @@ from resource_authorization import (
     allowed_network_port_names,
     allowed_network_pool_ids,
     get_authorized_network,
+    is_global_inventory,
     require_admin,
 )
 from settings import DATA_ROOT
@@ -43,9 +44,13 @@ def _network_response(
     db: Session,
     current_user: CurrentUser,
     project_id: str | None,
+    *,
+    admin: bool = False,
 ) -> Network:
     """network全体grantがない場合は許可portgroupだけを応答へ残す。"""
     response = Network.model_validate(model)
+    if is_global_inventory(current_user, admin=admin, project_id=project_id):
+        return response
     allowed_port_names = allowed_network_port_names(
         db,
         current_user,
@@ -68,11 +73,11 @@ def get_networks(
         param: NetworkForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["network.read"])
     query = db.query(NetworkModel)
-    allowed_networks = allowed_network_ids(db, current_user, param.project_id)
-    if allowed_networks is not None:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
+        allowed_networks = allowed_network_ids(db, current_user, param.project_id)
         query = query.filter(NetworkModel.uuid.in_(allowed_networks))
     
     if param.name_like:
@@ -92,7 +97,7 @@ def get_networks(
     return {
         "count": count,
         "data": [
-            _network_response(model, db, current_user, param.project_id)
+            _network_response(model, db, current_user, param.project_id, admin=param.admin)
             for model in query.all()
         ],
     }
@@ -101,13 +106,14 @@ def get_networks(
 @app.get("/pools", response_model=List[NetworkPool])
 def get_network_pools(
         project_id: str | None = Query(default=None, alias="projectId"),
+        admin: bool = False,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-):
+) -> list[NetworkPoolModel]:
     current_user.verify_scope(["network.read"])
     query = db.query(NetworkPoolModel)
-    allowed_pools = allowed_network_pool_ids(db, current_user, project_id)
-    if allowed_pools is not None:
+    if not is_global_inventory(current_user, admin=admin, project_id=project_id):
+        allowed_pools = allowed_network_pool_ids(db, current_user, project_id)
         query = query.filter(NetworkPoolModel.id.in_(allowed_pools))
     return query.all()
 
@@ -192,24 +198,26 @@ def delete_network_pool(
 def get_network(
         uuid: str,
         project_id: str | None = Query(default=None, alias="projectId"),
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> Network:
     current_user.verify_scope(["network.read"])
-    model = get_authorized_network(db, uuid, current_user, project_id)
-    return _network_response(model, db, current_user, project_id)
+    model = get_authorized_network(db, uuid, current_user, project_id, admin=admin)
+    return _network_response(model, db, current_user, project_id, admin=admin)
 
 
 @app.get("/{uuid}/xml",response_model=NetworkXML)
 def get_network_xml(
         uuid: str,
         project_id: str | None = Query(default=None, alias="projectId"),
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> NetworkXML:
     current_user.verify_scope(["network.read"])
-    get_authorized_network(db, uuid, current_user, project_id)
-    if allowed_network_port_names(
+    get_authorized_network(db, uuid, current_user, project_id, admin=admin)
+    if not is_global_inventory(current_user, admin=admin, project_id=project_id) and allowed_network_port_names(
         db,
         current_user,
         uuid,

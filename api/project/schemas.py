@@ -40,6 +40,7 @@ class ProjectForNameUpdate(BaseSchema):
 
 
 class ProjectForQuery(BaseSchema):
+    admin: bool = False
     limit: int = Field(default=25, ge=0, le=1000)
     page: int = Field(default=0, ge=0)
     name_like: str | None = Field(default=None, max_length=255)

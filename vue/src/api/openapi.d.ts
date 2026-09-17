@@ -4905,7 +4905,9 @@ export interface operations {
     };
     get_dashboard: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5364,7 +5366,9 @@ export interface operations {
     };
     get_vm: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5448,7 +5452,9 @@ export interface operations {
     };
     get_vm_xml: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5869,6 +5875,7 @@ export interface operations {
         parameters: {
             query?: {
                 projectId?: string | null;
+                admin?: boolean;
             };
             header?: never;
             path?: never;
@@ -6031,7 +6038,9 @@ export interface operations {
     };
     get_storage: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -6412,6 +6421,7 @@ export interface operations {
         parameters: {
             query?: {
                 projectId?: string | null;
+                admin?: boolean;
             };
             header?: never;
             path?: never;
@@ -6576,6 +6586,7 @@ export interface operations {
         parameters: {
             query?: {
                 projectId?: string | null;
+                admin?: boolean;
             };
             header?: never;
             path: {
@@ -6618,6 +6629,7 @@ export interface operations {
         parameters: {
             query?: {
                 projectId?: string | null;
+                admin?: boolean;
             };
             header?: never;
             path: {
@@ -7071,6 +7083,7 @@ export interface operations {
     get_projects: {
         parameters: {
             query?: {
+                admin?: boolean;
                 limit?: number;
                 page?: number;
                 nameLike?: string | null;
@@ -7112,7 +7125,9 @@ export interface operations {
     };
     get_project: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 project_id: string;

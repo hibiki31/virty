@@ -282,7 +282,7 @@ useLocalizedDocumentTitle(() => project.value
 async function reload() {
   loading.value = true
   try {
-    project.value = await getProject(projectId.value)
+    project.value = await getProject(projectId.value, isAdmin)
     name.value = project.value.name
   } catch (error) {
     notify('error', translationRef('pages.projectDetail.notifications.loadFailed'), notificationContentFromError(error))

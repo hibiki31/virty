@@ -128,7 +128,7 @@ def test_project_crud_task_status_path_and_validation(
             params={"admin": "true", "nameLike": project_name},
         )
         assert admin_list_response.status_code == 200
-        assert admin_list_response.json()["count"] == 0
+        assert admin_list_response.json()["count"] == 1
         assert api_client.get(
             f"/api/projects/{project_id}",
             headers=_headers(creator),

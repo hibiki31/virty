@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from auth.router import CurrentUser
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.schemas import BaseSchema
+from resource_authorization import is_global_inventory
 from user.models import association_users_to_projects
 
 from .models import DomainModel
@@ -121,11 +122,14 @@ def get_authorized_domain(
     db: Session,
     uuid: str,
     current_user: CurrentUser,
+    *,
+    admin: bool = False,
 ) -> DomainModel:
+    global_inventory = is_global_inventory(current_user, admin=admin)
     domain = db.query(DomainModel).filter(DomainModel.uuid == uuid).one_or_none()
     if domain is None:
         raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
-    if not can_access_domain(current_user, domain):
+    if not global_inventory and not can_access_domain(current_user, domain):
         # resourceの存在自体を権限外のprincipalへ知らせない。
         raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
     return domain

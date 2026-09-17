@@ -143,7 +143,7 @@ function reload() {
     apiClient.GET('/api/networks/{uuid}', {
       params: {
         path: { uuid: route.params.uuid },
-        query: { projectId: projectId.value },
+        query: { projectId: projectId.value, admin: isAdmin },
       }
     }).then((res) => {
       if (res.data) {
@@ -154,7 +154,7 @@ function reload() {
     apiClient.GET('/api/networks/{uuid}/xml', {
       params: {
         path: { uuid: route.params.uuid },
-        query: { projectId: projectId.value },
+        query: { projectId: projectId.value, admin: isAdmin },
       }
     }).then((res) => {
       if (res.data) {

@@ -416,6 +416,10 @@ import { useReloadListener } from '@/composables/trigger'
 import { getMethodColor, getResourceIcon, getStatusColor } from '@/composables/task'
 import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 type KpiItem = {
   title: string
@@ -654,7 +658,7 @@ function loadDashboard(): Promise<void> {
 
   isLoading.value = true
   loadError.value = false
-  const request = getDashboard()
+  const request = getDashboard(hasAdminScope(auth.scopes))
     .then((response) => {
       dashboard.value = response
     })

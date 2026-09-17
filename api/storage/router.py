@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
@@ -19,6 +19,7 @@ from resource_authorization import (
     allowed_storage_ids,
     allowed_storage_pool_ids,
     get_authorized_storage,
+    is_global_inventory,
     require_admin,
 )
 
@@ -49,7 +50,7 @@ def get_storages(
         param: StorageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["storage.read"])
     image_sum = db.query(
         ImageModel.storage_uuid,
@@ -65,8 +66,8 @@ def get_storages(
         image_sum,
         StorageModel.uuid==image_sum.c.storage_uuid
     ).order_by(StorageModel.name,StorageModel.node_name)
-    allowed_storages = allowed_storage_ids(db, current_user, param.project_id)
-    if allowed_storages is not None:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
+        allowed_storages = allowed_storage_ids(db, current_user, param.project_id)
         query = query.filter(StorageModel.uuid.in_(allowed_storages))
 
     if param.node_name:
@@ -108,13 +109,14 @@ def update_storage_metadata(
 @app.get("/pools", response_model=List[StoragePool])
 def get_storage_pools(
         project_id: str | None = Query(default=None, alias="projectId"),
+        admin: bool = False,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user)
-):
+) -> list[StoragePoolModel]:
     current_user.verify_scope(["storage.read"])
     query = db.query(StoragePoolModel)
-    allowed_pools = allowed_storage_pool_ids(db, current_user, project_id)
-    if allowed_pools is not None:
+    if not is_global_inventory(current_user, admin=admin, project_id=project_id):
+        allowed_pools = allowed_storage_pool_ids(db, current_user, project_id)
         query = query.filter(StoragePoolModel.id.in_(allowed_pools))
     return query.all()
 
@@ -219,11 +221,12 @@ def delete_storage_pool(
 @app.get("/{uuid}", response_model=Storage)
 def get_storage(
         uuid: str,
+        admin: bool = False,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db)
-):
+) -> StorageModel:
     cu.verify_scope(["storage.read"])
-    get_authorized_storage(db, uuid, cu)
+    get_authorized_storage(db, uuid, cu, admin=admin)
     image_sum = db.query(
         ImageModel.storage_uuid,
         func.sum(ImageModel.capacity).label('sum_capacity'),

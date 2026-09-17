@@ -17,7 +17,7 @@ from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from module.backends import create_ssh_backend
-from resource_authorization import allowed_node_names, require_admin
+from resource_authorization import allowed_node_names, is_global_inventory, require_admin
 
 from .models import NodeModel
 from .schemas import (
@@ -45,10 +45,9 @@ def _get_authorized_node(
 ) -> NodeModel:
     """通常readはProject境界、明示的な管理readはadmin権限を検査する。"""
 
-    if admin:
-        require_admin(current_user)
+    global_inventory = is_global_inventory(current_user, admin=admin)
     node = db.get(NodeModel, name)
-    if node is None or (not admin and name not in allowed_node_names(db, current_user)):
+    if node is None or (not global_inventory and name not in allowed_node_names(db, current_user)):
         raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     return node
 
@@ -128,10 +127,8 @@ def get_nodes(
         db: Session = Depends(get_db)
 ) -> dict[str, Any]:
     current_user.verify_scope(["node.read"])
-    if param.admin:
-        require_admin(current_user)
     query = db.query(NodeModel)
-    if not param.admin or param.project_id is not None:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
         allowed_nodes = allowed_node_names(db, current_user, param.project_id)
         query = query.filter(NodeModel.name.in_(allowed_nodes))
     if param.name_like:

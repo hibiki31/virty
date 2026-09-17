@@ -207,7 +207,7 @@ import { apiClient } from '@/api';
 const route = useRoute()
 import type { schemas } from '@/composables/schemas';
 import { formatProjectName } from '@/composables/project';
-import { hasScope } from '@/composables/auth';
+import { hasAdminScope, hasScope } from '@/composables/auth';
 import { useAuthStore } from '@/stores/auth';
 import {
   formatNumber,
@@ -258,7 +258,8 @@ async function reload() {
     console.debug(route.params.uuid)
     const res = await apiClient.GET('/api/vms/{uuid}', {
       params: {
-        path: { uuid: route.params.uuid }
+        path: { uuid: route.params.uuid },
+        query: { admin: hasAdminScope(auth.scopes) },
       }
     })
     if (res.data) {
@@ -267,7 +268,8 @@ async function reload() {
 
     const resXML = await apiClient.GET('/api/vms/{uuid}/xml', {
       params: {
-        path: { uuid: route.params.uuid }
+        path: { uuid: route.params.uuid },
+        query: { admin: hasAdminScope(auth.scopes) },
       }
     })
     if (resXML.data) {

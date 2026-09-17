@@ -2,6 +2,7 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 from os.path import join
+from typing import Any
 
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import or_
@@ -16,6 +17,7 @@ from network.models import NetworkModel
 from resource_authorization import (
     get_authorized_project,
     get_member_project,
+    is_global_inventory,
 )
 from settings import DATA_ROOT
 from storage.models import ImageModel, StorageModel
@@ -98,14 +100,15 @@ def get_vms(
         param: DomainForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["vm.read"])
     query = db.query(DomainModel)
 
-    query = query.filter(or_(
-        DomainModel.owner_user_id == current_user.id,
-        DomainModel.owner_project_id.in_(current_user.projects),
-    ))
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
+        query = query.filter(or_(
+            DomainModel.owner_user_id == current_user.id,
+            DomainModel.owner_project_id.in_(current_user.projects),
+        ))
     if param.project_id is not None:
         get_authorized_project(db, param.project_id, current_user)
         query = query.filter(DomainModel.owner_project_id == param.project_id)
@@ -127,11 +130,12 @@ def get_vms(
 @app.get("/{uuid}",response_model=DomainDetail, operation_id="get_vm")
 def get_vm(
         uuid: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+    ) -> DomainDetail:
     current_user.verify_scope(["vm.read"])
-    domain = get_authorized_domain(db, uuid, current_user)
+    domain = get_authorized_domain(db, uuid, current_user, admin=admin)
     return _get_domain_detail(domain, db)
 
 
@@ -176,11 +180,12 @@ def update_vm_project(
 @app.get("/{uuid}/xml",response_model=DomainXML)
 def get_vm_xml(
         uuid: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> DomainXML:
     current_user.verify_scope(["vm.read"])
-    get_authorized_domain(db, uuid, current_user)
+    get_authorized_domain(db, uuid, current_user, admin=admin)
     try:
         with open(join(DATA_ROOT, "xml/domain", f"{uuid}.xml")) as f:
             domain_xml = DomainXML(xml=redact_domain_xml_secrets(f.read()))

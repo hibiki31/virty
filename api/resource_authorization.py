@@ -35,6 +35,18 @@ def require_admin(current_user: CurrentUser) -> None:
     current_user.verify_scope(["admin"])
 
 
+def is_global_inventory(
+    current_user: CurrentUser,
+    *,
+    admin: bool,
+    project_id: str | None = None,
+) -> bool:
+    """明示的な管理readを認可し、Project指定時は通常の境界を維持する。"""
+    if admin:
+        require_admin(current_user)
+    return admin and project_id is None
+
+
 def _not_found(code: ApiErrorCode) -> ApiError:
     return ApiError(
         404,
@@ -411,9 +423,12 @@ def get_authorized_storage(
     db: Session,
     storage_id: str,
     current_user: CurrentUser,
+    *,
+    admin: bool = False,
 ) -> StorageModel:
+    global_inventory = is_global_inventory(current_user, admin=admin)
     row = db.get(StorageModel, storage_id)
-    allowed = allowed_storage_ids(db, current_user)
+    allowed = None if global_inventory else allowed_storage_ids(db, current_user)
     if row is None or (allowed is not None and row.uuid not in allowed):
         raise _not_found(ApiErrorCode.STORAGE_NOT_FOUND)
     return row
@@ -436,9 +451,12 @@ def get_authorized_network(
     network_id: str,
     current_user: CurrentUser,
     project_id: str | None = None,
+    *,
+    admin: bool = False,
 ) -> NetworkModel:
+    global_inventory = is_global_inventory(current_user, admin=admin, project_id=project_id)
     row = db.get(NetworkModel, network_id)
-    allowed = allowed_network_ids(db, current_user, project_id)
+    allowed = None if global_inventory else allowed_network_ids(db, current_user, project_id)
     if row is None or (allowed is not None and row.uuid not in allowed):
         raise _not_found(ApiErrorCode.NETWORK_NOT_FOUND)
     return row

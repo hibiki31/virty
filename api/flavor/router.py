@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -10,7 +12,7 @@ from project.service import (
     ProjectGrantNotFoundError,
     ensure_flavor_deletable,
 )
-from resource_authorization import allowed_flavor_ids, require_admin
+from resource_authorization import allowed_flavor_ids, is_global_inventory, require_admin
 
 from .models import FlavorModel
 from .schemas import Flavor, FlavorForCreate, FlavorForQuery, FlavorPage
@@ -45,11 +47,11 @@ def get_flavors(
         param: FlavorForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["flavor.read"])
     query = db.query(FlavorModel)
-    allowed_flavors = allowed_flavor_ids(db, current_user, param.project_id)
-    if allowed_flavors is not None:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
+        allowed_flavors = allowed_flavor_ids(db, current_user, param.project_id)
         query = query.filter(FlavorModel.id.in_(allowed_flavors))
     
     if param.name_like:

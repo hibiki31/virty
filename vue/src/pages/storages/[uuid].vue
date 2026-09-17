@@ -42,8 +42,11 @@ import { apiClient } from '@/api';
 import { useRoute } from 'vue-router';
 import { formatNumber, useLocalizedDocumentTitle } from '@/composables/i18n';
 import { useI18n } from 'vue-i18n';
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const auth = useAuthStore()
 const data = ref<schemas['Storage']>()
 const { t } = useI18n({ useScope: 'global' })
 
@@ -53,7 +56,8 @@ function reload() {
   if ('uuid' in route.params) {
     apiClient.GET('/api/storages/{uuid}', {
       params: {
-        path: { uuid: route.params.uuid }
+        path: { uuid: route.params.uuid },
+        query: { admin: hasAdminScope(auth.scopes) },
       }
     }).then((res) => {
       if (res.data) {

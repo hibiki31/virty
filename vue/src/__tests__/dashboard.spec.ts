@@ -20,6 +20,7 @@ import { setLocale } from "@/plugins/i18n";
 import { flushPromises, mount } from "@vue/test-utils";
 import { defineComponent, nextTick } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createPinia } from "pinia";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -202,6 +203,7 @@ const dashboardStubs = {
 function mountDashboard() {
   return mount(DashboardPage, {
     global: {
+      plugins: [createPinia()],
       stubs: dashboardStubs,
     },
   });
@@ -217,7 +219,9 @@ describe("dashboard APIと表示helper", () => {
     mocks.get.mockResolvedValue(ok());
 
     await expect(getDashboard()).resolves.toBe(dashboard);
-    expect(mocks.get).toHaveBeenCalledWith("/api/dashboard");
+    expect(mocks.get).toHaveBeenCalledWith("/api/dashboard", {
+      params: { query: { admin: false } },
+    });
   });
 
   it("response dataがない場合はstatus付きerrorにする", async () => {

@@ -19,8 +19,10 @@ export class DashboardLoadError extends Error {
   }
 }
 
-export async function getDashboard(): Promise<DashboardResponse> {
-  const response = await apiClient.GET("/api/dashboard");
+export async function getDashboard(admin = false): Promise<DashboardResponse> {
+  const response = await apiClient.GET("/api/dashboard", {
+    params: { query: { admin } },
+  });
 
   if (response.data) {
     return response.data;

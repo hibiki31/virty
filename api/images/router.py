@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import tuple_
 from sqlalchemy.orm import Session
@@ -14,6 +16,7 @@ from resource_authorization import (
     allowed_image_keys,
     get_member_project,
     get_project_storage,
+    is_global_inventory,
     project_flavor_ids,
 )
 from storage.models import ImageModel, StorageMetadataModel, StorageModel
@@ -35,8 +38,9 @@ def get_images(
         param: ImageForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["image.read"])
+    global_inventory = is_global_inventory(current_user, admin=param.admin, project_id=param.project_id)
     if param.project_id is not None:
         get_member_project(db, param.project_id, current_user)
     query = db.query(
@@ -51,11 +55,12 @@ def get_images(
     ).outerjoin(
         FlavorModel
     )
-    visible_images = allowed_image_keys(db, current_user, param.project_id)
-    query = query.filter(tuple_(
-        ImageModel.storage_uuid,
-        ImageModel.path,
-    ).in_(visible_images))
+    if not global_inventory:
+        visible_images = allowed_image_keys(db, current_user, param.project_id)
+        query = query.filter(tuple_(
+            ImageModel.storage_uuid,
+            ImageModel.path,
+        ).in_(visible_images))
 
     if param.pool_uuid:
         query = query.filter(StorageModel.uuid==param.pool_uuid)

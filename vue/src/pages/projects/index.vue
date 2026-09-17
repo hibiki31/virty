@@ -74,6 +74,7 @@ const itemsPerPage = ref(20)
 const page = ref(1)
 const items = ref<ProjectPage>(initProjectPage)
 const query = ref<ProjectListQuery>({
+  admin: isAdmin,
   limit: 20,
   page: 1,
   nameLike: '',

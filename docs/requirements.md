@@ -52,7 +52,10 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - SSH接続情報を持つnodeを登録し、roleを割り当てられる。
 - global adminはnode管理画面でProject未割当のnodeも一覧・詳細・診断情報を参照できる。
   管理用readは`admin=true`の明示指定とserver側のadmin権限確認を必要とし、Project filter指定時は
-  所属Projectのresource境界を維持する。通常readとAgentの参照範囲は拡張しない。
+  所属Projectのresource境界を維持する。
+- 同じ管理用readをVM、storage、image、network、storage/network pool、flavor、Projectの一覧と
+  提供済みの詳細・XML、dashboardにも適用する。dashboardは全resourceと全taskを集計する。
+  通常read、Projectを選択する作成・変更操作、Agentの参照範囲は拡張しない。
 - nodeのOS、CPU、memory、libvirt/QEMU、network、filesystemなどの情報を取得できる。
 - libvirt上のVM、storage pool・volume、virtual networkを再走査し、control planeのDBへ反映できる。
 

@@ -9,7 +9,7 @@ from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from network.models import NetworkPoolModel
-from resource_authorization import require_admin
+from resource_authorization import is_global_inventory, require_admin
 from storage.models import StoragePoolModel
 from user.models import UserModel
 
@@ -180,9 +180,9 @@ def get_projects(
     current_user: CurrentUser = Depends(get_current_user),
 ) -> ProjectPage:
     current_user.verify_scope(["project.read"])
-    query = db.query(ProjectModel).filter(
-        ProjectModel.id.in_(current_user.projects),
-    )
+    query = db.query(ProjectModel)
+    if not is_global_inventory(current_user, admin=param.admin):
+        query = query.filter(ProjectModel.id.in_(current_user.projects))
     if param.name_like:
         query = query.filter(ProjectModel.name.like(f"%{param.name_like}%"))
 
@@ -201,10 +201,16 @@ def get_projects(
 @app.get("/{project_id}", response_model=ProjectDetail)
 def get_project(
     project_id: str,
+    admin: bool = False,
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ) -> ProjectDetail:
     current_user.verify_scope(["project.read"])
+    if is_global_inventory(current_user, admin=admin):
+        project = db.get(ProjectModel, project_id)
+        if project is None:
+            raise ApiError(404, ApiErrorCode.PROJECT_NOT_FOUND, "The project was not found.")
+        return _detail(db, project)
     return _detail(db, _get_member_project(db, project_id, current_user))
 
 
