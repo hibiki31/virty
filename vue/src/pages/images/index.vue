@@ -1,13 +1,13 @@
 <template>
   <v-card>
-    <image-delete-dialog v-model="stateDeleteDialog" :item="imageSelected"></image-delete-dialog>
-    <image-download-dialog v-model="stateCreateDialog"></image-download-dialog>
+    <image-delete-dialog v-if="isAdmin" v-model="stateDeleteDialog" :item="imageSelected"></image-delete-dialog>
+    <image-download-dialog v-if="isAdmin" v-model="stateCreateDialog"></image-download-dialog>
     <v-card-actions>
       <!-- ボタン -->
-      <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.images.actions.rescan') }}</v-btn>
-      <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
+      <v-btn v-if="isAdmin" prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.images.actions.rescan') }}</v-btn>
+      <v-btn v-if="isAdmin" prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">{{ t('pages.images.actions.download') }}</v-btn>
-      <v-btn prepend-icon="mdi-delete" variant="flat" color="error" size="small" @click="stateDeleteDialog = true"
+      <v-btn v-if="isAdmin" prepend-icon="mdi-delete" variant="flat" color="error" size="small" @click="stateDeleteDialog = true"
         :disabled="imageSelected.length === 0">{{ t('pages.images.actions.delete') }}</v-btn>
       <v-spacer></v-spacer>
       <!-- フィルタ -->

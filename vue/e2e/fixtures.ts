@@ -336,6 +336,12 @@ export const test = base.extend<Fixtures>({
     await context.addCookies([
       { name: "accessToken", url: playwrightBaseURL, value: accessToken },
     ]);
+    // 既存の管理画面flowはtab内の選択を復元する。switch自体は専用flowで検証する。
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('virty:e2e-mode-initialized')) return;
+      sessionStorage.setItem('virty:admin-mode', 'operator');
+      sessionStorage.setItem('virty:e2e-mode-initialized', 'true');
+    });
     await use(page);
   },
 });

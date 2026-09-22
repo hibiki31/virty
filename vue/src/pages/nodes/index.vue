@@ -1,9 +1,9 @@
 <template>
   <v-card>
-    <node-add-dialog v-model="dialogAdd"></node-add-dialog>
-    <node-key-dialog v-model="dialogKey"></node-key-dialog>
-    <node-delete-dialog v-model="dialogDelete" :item="dataDailogDelete"></node-delete-dialog>
-    <v-card-actions>
+    <node-add-dialog v-if="isAdmin" v-model="dialogAdd"></node-add-dialog>
+    <node-key-dialog v-if="isAdmin" v-model="dialogKey"></node-key-dialog>
+    <node-delete-dialog v-if="isAdmin" v-model="dialogDelete" :item="dataDailogDelete"></node-delete-dialog>
+    <v-card-actions v-if="isAdmin">
       <v-btn prepend-icon="mdi-file-key" variant="flat" color="primary" size="small"
         @click="dialogKey = true">{{ t('pages.nodes.actions.key') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
@@ -23,7 +23,7 @@
       <template v-slot:item.core="{ value }">{{ formatNumber(value) }}</template>
       <template v-slot:item.memory="{ value }">{{ formatNumber(value) }}</template>
       <template v-slot:item.actions="{ item }">
-        <v-icon color="medium-emphasis" icon="mdi-delete" :aria-label="t('common.actions.delete')" role="button" tabindex="0"
+        <v-icon v-if="isAdmin" color="medium-emphasis" icon="mdi-delete" :aria-label="t('common.actions.delete')" role="button" tabindex="0"
           @click="dataDailogDelete = item; dialogDelete = true"></v-icon>
       </template>
     </v-data-table>
@@ -50,6 +50,7 @@ const { t } = useI18n({ useScope: 'global' })
 
 const loading = ref(false)
 const auth = useAuthStore()
+const isAdmin = hasAdminScope(auth.scopes)
 const { projectId } = useProjectFilter()
 const pageState = ref(1)
 

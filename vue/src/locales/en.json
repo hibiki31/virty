@@ -143,6 +143,9 @@
     "label": "Select language"
   },
   "appBar": {
+    "adminMode": "Administrator mode",
+    "generalMode": "General mode",
+    "switchAdminMode": "Toggle administrator mode",
     "autoReload": "Enable automatic reload",
     "logout": "Log out",
     "logoutComplete": "You have been logged out",

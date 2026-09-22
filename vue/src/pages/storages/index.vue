@@ -1,9 +1,9 @@
 <template>
   <v-card>
-    <storage-add-dialog v-model="stateCreateDialog"></storage-add-dialog>
-    <storage-metadata-edit v-model="stateEditDialog" :uuid="stateEditUUID"></storage-metadata-edit>
-    <storage-delete-dialog v-model="dialogDelete" :item="dataDailogDelete"></storage-delete-dialog>
-    <v-card-actions>
+    <storage-add-dialog v-if="isAdmin" v-model="stateCreateDialog"></storage-add-dialog>
+    <storage-metadata-edit v-if="isAdmin" v-model="stateEditDialog" :uuid="stateEditUUID"></storage-metadata-edit>
+    <storage-delete-dialog v-if="isAdmin" v-model="dialogDelete" :item="dataDailogDelete"></storage-delete-dialog>
+    <v-card-actions v-if="isAdmin">
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.storages.actions.rescan') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">{{ t('pages.storages.actions.create') }}</v-btn>
@@ -19,9 +19,9 @@
         {{ storageRoleLabel(item.metaData?.rool) }}
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-icon color="medium-emphasis" icon="mdi-pencil" class="pr-5" :aria-label="t('common.actions.edit')" role="button" tabindex="0"
+        <v-icon v-if="isAdmin" color="medium-emphasis" icon="mdi-pencil" class="pr-5" :aria-label="t('common.actions.edit')" role="button" tabindex="0"
           @click="stateEditDialog = true; stateEditUUID = item.uuid"></v-icon>
-        <v-icon color="medium-emphasis" icon="mdi-delete" :aria-label="t('common.actions.delete')" role="button" tabindex="0"
+        <v-icon v-if="isAdmin" color="medium-emphasis" icon="mdi-delete" :aria-label="t('common.actions.delete')" role="button" tabindex="0"
           @click="dataDailogDelete = item; dialogDelete = true"></v-icon>
       </template>
       <template v-slot:item.usage="{ item }">

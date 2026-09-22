@@ -7,6 +7,21 @@ const publickey = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3Bxc
 type User = { username: string; scopes: { name: string }[]; projects: []; publickeys: { name: string; publickey: string }[] };
 const member = (): User => ({ username: 'alice', scopes: [{ name: 'user' }, { name: 'future.scope' }], projects: [], publickeys: [] });
 
+test('未保存の本人設定があるときはモード切替の破棄確認を取消できる', async ({ authenticatedPage: page }) => {
+  await installUsers(page);
+  await page.goto('/account');
+  await page.getByTestId('key-name-0').locator('input').fill('unsaved-key');
+  page.once('dialog', prompt => prompt.dismiss());
+  await page.getByTestId('admin-mode-switch').locator('input').click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByTestId('admin-mode-switch').locator('input')).toBeChecked();
+  await expect(page.getByTestId('key-name-0').locator('input')).toHaveValue('unsaved-key');
+  page.once('dialog', prompt => prompt.accept());
+  await page.getByTestId('admin-mode-switch').locator('input').uncheck();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId('admin-mode-switch').locator('input')).not.toBeChecked();
+});
+
 async function installUsers(page: Page) {
   const users = new Map<string, User>([['operator', { ...member(), username: 'operator', scopes: [{ name: 'admin' }] }]]);
   const state = { failCreate: true, failDelete: true, failKeys: true, failPassword: true, writes: [] as { path: string; body: Record<string, unknown> }[] };

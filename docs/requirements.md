@@ -138,6 +138,14 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 ## 提供中のWeb UI範囲
 
+admin権限を持つ利用者はApp barのswitchで「一般モード」と「管理者権限モード」を明示的に切り替える。
+新規loginは一般モードで開始し、選択は同じtabの再読込で保持する。logout・別利用者のloginでは解除する。
+現在のモードは狭い画面でも文字で表示する。切替時は未保存編集の破棄を確認し、dashboardへ再読込して
+一覧・詳細・dialog・task監視に以前の管理用dataを残さない。
+管理者権限モードだけで管理用read、管理専用menu・route、管理者用作成・変更操作を提供する。
+一般モードでは所属Project・本人の通常参照範囲と明示的な個別scopeを使う。
+これはWeb UIの操作モードであり、accountの付与権限・JWTやserverの認可規則を変更するものではない。
+
 Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者管理・本人設定、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
 Project画面は一覧・詳細、使用量と非強制limit、member、resource grantを表示し、権限に応じて作成、名称変更、

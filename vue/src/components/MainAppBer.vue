@@ -1,10 +1,17 @@
 <template>
-  <v-app-bar color="primary" prominent density="compact">
+  <v-app-bar color="primary" prominent density="compact"
+    :extension-height="auth.canUseAdminMode && route.meta.projectFilter && xs ? 104 : 56">
     <v-app-bar-nav-icon variant="text" :aria-label="t('appBar.toggleNavigation')"
       @click.stop="state.showSideDrawer = !state.showSideDrawer"></v-app-bar-nav-icon>
     <v-toolbar-title class="d-none d-sm-flex">Virty</v-toolbar-title>
 
     <v-spacer></v-spacer>
+
+    <v-switch v-if="auth.canUseAdminMode && lgAndUp" :model-value="auth.adminMode"
+      :label="t(auth.adminMode ? 'appBar.adminMode' : 'appBar.generalMode')"
+      :aria-label="t('appBar.switchAdminMode')" data-testid="admin-mode-switch"
+      class="d-none d-lg-flex flex-grow-0 mx-3" color="warning" hide-details
+      @update:model-value="changeMode" />
 
     <ProjectFilterSelect
       v-if="route.meta.projectFilter && !xs"
@@ -29,16 +36,21 @@
       size="24"></v-progress-circular>
 
     <v-btn variant="text" icon="mdi-logout-variant" :aria-label="t('appBar.logout')" @click="logout"></v-btn>
-    <template v-if="route.meta.projectFilter && xs" #extension>
-      <div class="app-bar-project-row px-4 pb-2">
-        <ProjectFilterSelect :model-value="projectId" @update:model-value="updateProjectFilter" />
+    <template v-if="(auth.canUseAdminMode && !lgAndUp) || (route.meta.projectFilter && xs)" #extension>
+      <div class="app-bar-project-row d-flex flex-wrap align-center ga-2 px-4 pb-2">
+        <v-switch v-if="auth.canUseAdminMode && !lgAndUp" :model-value="auth.adminMode"
+          :label="t(auth.adminMode ? 'appBar.adminMode' : 'appBar.generalMode')"
+          :aria-label="t('appBar.switchAdminMode')" data-testid="admin-mode-switch"
+          class="flex-grow-0" color="warning" hide-details @update:model-value="changeMode" />
+        <ProjectFilterSelect v-if="route.meta.projectFilter && xs" class="app-bar-project-mobile"
+          :model-value="projectId" @update:model-value="updateProjectFilter" />
       </div>
     </template>
   </v-app-bar>
 </template>
 
 <script lang="ts" setup>
-import { removeAuth } from '@/composables/auth'
+import { hasAdminScope, removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
 import { applyTaskPollingSnapshot, createTaskPoller } from '@/composables/taskPolling'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -61,7 +73,7 @@ const state = useStateStore()
 const auth = useAuthStore()
 const app = useAppStore()
 const route = useRoute()
-const { xs } = useDisplay()
+const { xs, lgAndUp } = useDisplay()
 const { projectId, updateProjectFilter } = useProjectFilter()
 const { t } = useI18n({ useScope: 'global' })
 
@@ -71,6 +83,12 @@ watch(() => route.fullPath, () => {
 
 const taskCount = ref(0)
 const enableAutoReload = ref(true)
+
+function changeMode(enabled: boolean | null) {
+  if (!window.dispatchEvent(new Event('virty:before-mode-change', { cancelable: true }))) return
+  auth.setAdminMode(enabled === true)
+  window.location.assign(import.meta.env.BASE_URL)
+}
 
 const logout = async () => {
   if (!window.dispatchEvent(new Event('virty:before-logout', { cancelable: true }))) return
@@ -90,7 +108,7 @@ const taskPoller = createTaskPoller({
       params: {
         query: {
           referenceHash,
-          admin: true
+          admin: hasAdminScope(auth.scopes)
         }
       },
       signal,
@@ -135,4 +153,10 @@ onBeforeUnmount(() => {
 .app-bar-project-row {
   width: 100%;
 }
+
+.app-bar-project-mobile {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 </style>

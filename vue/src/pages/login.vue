@@ -99,7 +99,7 @@ const validateToken = async () => {
 
     if (res.response.ok) {
       notify('success', translationRef('pages.login.notifications.successTitle'), translationRef('pages.login.notifications.tokenValid'))
-      auth.loginSuccess(accessToken)
+      auth.loginSuccess(accessToken, true)
       await router.push((route.query.redirect as string | undefined) ?? '/')
     } else {
       notify('error', translationRef('pages.login.notifications.failureTitle'), apiErrorRef(res.error))

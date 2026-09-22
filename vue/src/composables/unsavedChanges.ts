@@ -18,10 +18,12 @@ export function useUnsavedChanges(dirty: Ref<boolean>, busy: Ref<boolean>) {
   onMounted(() => {
     window.addEventListener('beforeunload', beforeUnload);
     window.addEventListener('virty:before-logout', beforeLogout);
+    window.addEventListener('virty:before-mode-change', beforeLogout);
   });
   onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', beforeUnload);
     window.removeEventListener('virty:before-logout', beforeLogout);
+    window.removeEventListener('virty:before-mode-change', beforeLogout);
   });
   onBeforeRouteLeave(confirmDiscard);
   return { confirmDiscard };

@@ -6,7 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   app: { projectId: null, $reset: vi.fn() },
-  auth: { authed: true, loginFailure: vi.fn() },
+  auth: { authed: true, scopes: ['user'], loginFailure: vi.fn() },
+  apiGet: vi.fn(),
   createTaskPoller: vi.fn(),
   notify: vi.fn(),
   poller: { isRunning: vi.fn(), start: vi.fn(), stop: vi.fn() },
@@ -31,8 +32,11 @@ vi.mock("vuetify", () => ({ useDisplay: () => ({ xs: false }) }));
 vi.mock("@/stores/state", () => ({ useStateStore: () => mocks.state }));
 vi.mock("@/composables/notify", () => ({ default: mocks.notify }));
 vi.mock("@/composables/sleep", () => ({ asyncSleep: vi.fn() }));
-vi.mock("@/composables/auth", () => ({ removeAuth: vi.fn() }));
-vi.mock("@/api", () => ({ apiClient: { GET: vi.fn() } }));
+vi.mock("@/composables/auth", async importOriginal => ({
+  ...await importOriginal<typeof import('@/composables/auth')>(),
+  removeAuth: vi.fn(),
+}));
+vi.mock("@/api", () => ({ apiClient: { GET: mocks.apiGet } }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,6 +46,19 @@ beforeEach(() => {
 });
 
 describe("MainAppBer task polling", () => {
+  it.each([false, true])("task監視に実効管理者モード=%sを指定する", async admin => {
+    mocks.auth.scopes = admin ? ['admin'] : ['user'];
+    mocks.apiGet.mockResolvedValue({ data: { count: 0, hash: 'empty', uuids: [] } });
+    const wrapper = mount(MainAppBer, { global: { stubs: componentStubs } });
+    const options = mocks.createTaskPoller.mock.calls[0][0];
+    const signal = new AbortController().signal;
+    await options.request('hash', signal);
+    expect(mocks.apiGet).toHaveBeenCalledWith('/api/tasks/incomplete', {
+      params: { query: { referenceHash: 'hash', admin } }, signal,
+    });
+    wrapper.unmount();
+  });
+
   it("desktop selectorとnarrow向けcompact selectorを排他的なbreakpoint classで配置する", () => {
     const wrapper = mount(MainAppBer, {
       global: { stubs: componentStubs },

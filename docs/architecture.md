@@ -246,6 +246,14 @@ VM、storage、image、networkの一覧は、管理node上のlibvirt状態を走
 
 ### Dashboard snapshot
 
+Webのauth storeはJWTの付与scopeと操作モードを分離し、既存の画面・routerが参照する`scopes`を
+実効scopeとして導出する。一般モードでは`admin`の包括権限を通常の`user`参照権限に置き換え、
+明示的な個別scopeは保持する。切替可能性は元の付与scopeから判定する。
+App barはtab内のsessionStorageへ利用者名と選択を保存し、切替時にdashboardを再読込する。
+この境界で全画面とtask pollerを破棄・再作成し、setup時に確定するqueryや遅延responseの持越しを避ける。
+対象はdashboard、VM・Project・node・storage・image・network・taskの一覧と詳細、管理専用route、
+作成・変更dialog、navigation、App barのtask監視である。APIの認可は引き続きserverが担当する。
+
 Web dashboardはBearer token付きの型付きclientで専用のdashboard query APIを呼び、APIが
 認証利用者の参照範囲に合わせてDB上のinventory cacheとtask recordを表示用に集約する。
 通常readは各resourceとtaskに既存queryと同じscope認可とproject・resource poolによる絞り込みを適用する。

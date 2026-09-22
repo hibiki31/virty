@@ -143,6 +143,9 @@
     "label": "表示言語を選択"
   },
   "appBar": {
+    "adminMode": "管理者権限モード",
+    "generalMode": "一般モード",
+    "switchAdminMode": "管理者権限モードを切り替え",
     "autoReload": "自動再読み込みを有効化",
     "logout": "ログアウト",
     "logoutComplete": "ログアウトしました",
