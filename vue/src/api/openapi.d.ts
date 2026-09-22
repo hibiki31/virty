@@ -6030,7 +6030,9 @@ export interface operations {
     };
     update_storage_metadata: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

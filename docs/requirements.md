@@ -97,6 +97,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 ### Storage・image・network
 
 - storage poolの発見、登録、metadata更新、再走査、削除を行える。
+- global adminは明示的な管理用指定により、Project未割当を含む全storageのmetadataを更新できる。
+  通常のmetadata更新は所属Projectからgrantされたstorageに限定する。
 - volume/imageの一覧、metadata更新、HTTP download、削除を行える。
 - global adminは明示的な管理用指定により、Project未割当を含む全storageへimageをdownloadできる。
   通常のdownloadは所属Projectからgrantされたstorageに限定する。

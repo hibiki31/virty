@@ -13,7 +13,7 @@ from mixin.database import SessionLocal
 from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
 from node.models import NodeModel
 from project.models import ProjectModel
-from storage.models import AssociationStoragePoolModel, ImageModel, StorageModel, StoragePoolModel
+from storage.models import AssociationStoragePoolModel, ImageModel, StorageMetadataModel, StorageModel, StoragePoolModel
 from task.functions import TaskManager
 from task.models import TaskModel
 from user.models import UserModel, UserScopeModel
@@ -72,6 +72,7 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
                 UserScopeModel(user_id=admin_name, name="admin"),
                 UserScopeModel(user_id=member_name, name="user"),
                 UserScopeModel(user_id=member_name, name="image.manage"),
+                UserScopeModel(user_id=member_name, name="storage.manage"),
             ])
             project = ProjectModel(id=project_id, name=prefix, users=[admin, member])
             db.add(project)
@@ -221,6 +222,48 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
                 params={"admin": True},
             ).status_code == 403
         assert api_client.get("/api/projects/missing", headers=admin_headers, params={"admin": True}).status_code == 404
+
+        metadata_body = {"uuid": storage_ids[1], "deviceType": "ssd", "protocol": "local", "rool": "iso"}
+        # 管理者一覧からProject未割当storageのmetadataを作成・更新できる。
+        for device_type in ("ssd", "nvme"):
+            metadata_body["deviceType"] = device_type
+            updated = api_client.patch(
+                "/api/storages", headers=admin_headers, params={"admin": True}, json=metadata_body,
+            )
+            assert updated.status_code == 200, updated.text
+            with SessionLocal() as db:
+                metadata = db.get(StorageMetadataModel, storage_ids[1])
+                assert metadata is not None
+                assert (metadata.device_type, metadata.protocol, metadata.rool) == (device_type, "local", "iso")
+
+        storage_headers = _headers(member_name, ["storage.manage"], [project_id])
+        rejected_body = {**metadata_body, "deviceType": "hdd"}
+        for headers in (storage_headers, _headers(member_name, ["admin"]), _headers(admin_name, ["storage.manage"])):
+            rejected = api_client.patch(
+                "/api/storages", headers=headers, params={"admin": True}, json=rejected_body,
+            )
+            assert rejected.status_code == 403, rejected.text
+        for headers in (admin_headers, storage_headers):
+            rejected = api_client.patch("/api/storages", headers=headers, json=rejected_body)
+            assert rejected.status_code == 404
+            assert rejected.json()["detail"]["code"] == "storage_not_found"
+        missing = api_client.patch(
+            "/api/storages", headers=admin_headers, params={"admin": True},
+            json={**metadata_body, "uuid": str(uuid4())},
+        )
+        assert missing.status_code == 404
+        assert missing.json()["detail"]["code"] == "storage_not_found"
+        with SessionLocal() as db:
+            metadata = db.get(StorageMetadataModel, storage_ids[1])
+            assert metadata is not None and metadata.device_type == "nvme"
+        # 管理用指定なしの更新は従来どおり所属Projectのgrant内で成功する。
+        allowed_metadata = api_client.patch(
+            "/api/storages", headers=storage_headers, json={**metadata_body, "uuid": storage_ids[0]},
+        )
+        assert allowed_metadata.status_code == 200, allowed_metadata.text
+        with SessionLocal() as db:
+            metadata = db.get(StorageMetadataModel, storage_ids[0])
+            assert metadata is not None and metadata.rool == "iso"
 
         download_path = "/api/tasks/images/download"
         download_body = {"storageUuid": storage_ids[1], "imageUrl": "https://unused.invalid/installer.iso"}

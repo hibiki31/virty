@@ -30,7 +30,7 @@ import { apiClient } from '@/api';
 import notify, { rawTextRef } from '@/composables/notify';
 import { storageRoleLabel, translationRef } from '@/composables/i18n';
 import { useStateStore } from '@/stores/state';
-import { computed } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLocalizedRules } from '@/composables/rules';
 
@@ -72,7 +72,10 @@ const postData = reactive({
 
 function submit() {
   postData.uuid = props.uuid
-  apiClient.PATCH('/api/storages', { body: postData }).then((res) => {
+  apiClient.PATCH('/api/storages', {
+    params: { query: { admin: true } },
+    body: postData,
+  }).then((res) => {
     if (res.data) {
       notify("success", translationRef('dialogs.storageMetadata.changed'), rawTextRef(postData.uuid))
       dialogState.value = false

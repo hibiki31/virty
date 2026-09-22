@@ -191,6 +191,8 @@ Project未割当resourceも管理できるよう、VM、node、storage、image�
 VMのconsole ticket発行も`admin=true`指定時だけ管理者に他人のVMへの接続を許可する。
 image downloadも`admin=true`指定とDB・token双方のadmin scopeを条件に全storageを保存先にできる。
 管理用download dialogは一覧取得と送信の双方で管理用指定を送り、通常のdownloadとAgentのgrant境界は維持する。
+storage metadata更新にも同じ明示的な管理用指定を設け、管理画面の編集dialogから送信する。
+APIはmetadata保存前にDB・token双方のadmin scopeとstorageの存在を確認し、通常更新のgrant境界は維持する。
 共通判定でDBとtoken双方のadmin scopeを検査し、Project filterがない場合だけ全体参照を許可する。
 Project filter指定時は従来のmembershipとgrant、networkのportgroup単位grantを維持する。
 共通の`allowed_*`は変更せず、通常read、変更操作、AgentのProject境界を保持する。

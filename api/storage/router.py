@@ -93,14 +93,15 @@ def get_storages(
     return {"count": count, "data": res}
 
 
-@app.patch("")
+@app.patch("", response_model=None)
 def update_storage_metadata(
         request_model: StorageMetadataForUpdate,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+        admin: bool = False,
+) -> list[StorageModel]:
     current_user.verify_scope(["storage.manage"])
-    get_authorized_storage(db, request_model.uuid, current_user)
+    get_authorized_storage(db, request_model.uuid, current_user, admin=admin)
     db.merge(StorageMetadataModel(**request_model.model_dump()))
     db.commit()
     return db.query(StorageModel).filter(StorageModel.uuid==request_model.uuid).all()
