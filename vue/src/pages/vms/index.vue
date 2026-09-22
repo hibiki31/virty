@@ -1,11 +1,17 @@
 <template>
   <v-card>
     <v-m-add-dialog v-model="stateCreateDialog"></v-m-add-dialog>
-    <v-card-actions>
+    <v-m-add-dialog v-if="hasAdminScope(auth.scopes) && stateAdminCreateDialog"
+      v-model="stateAdminCreateDialog" admin></v-m-add-dialog>
+    <v-card-actions class="flex-wrap ga-2">
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.vms.actions.rescan') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         data-testid="vm-create-open"
         @click="stateCreateDialog = true">{{ t('pages.vms.actions.create') }}</v-btn>
+      <v-btn v-if="hasAdminScope(auth.scopes)" prepend-icon="mdi-shield-plus" variant="tonal" color="primary" size="small"
+        ref="adminCreateButton"
+        data-testid="vm-admin-create-open"
+        @click="stateAdminCreateDialog = true">{{ t('dialogs.vmAdd.adminTitle') }}</v-btn>
       <v-spacer></v-spacer>
       <project-filter-select
         :model-value="query.projectId"
@@ -72,6 +78,14 @@ const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
 const loading = ref(false)
 const stateCreateDialog = ref(false)
+const stateAdminCreateDialog = ref(false)
+const adminCreateButton = ref<{ $el: HTMLButtonElement } | null>(null)
+watch(stateAdminCreateDialog, async open => {
+  if (!open) {
+    await nextTick()
+    adminCreateButton.value?.$el.focus()
+  }
+})
 const itemsPerPage = ref(20)
 const pageState = ref(1)
 

@@ -185,8 +185,13 @@ Project filter指定時は従来のmembershipとgrant、networkのportgroup単�
 
 Project IDは重複しない6桁hex、名称は重複可能な表示値とする。membership、storage pool、network pool、flavorの
 多対多関係には組合せ一意制約を置き、Project別roleや旧`group` tableを認可へ使わない。VMは個人ownerまたは
-Project ownerのどちらか一方だけを持ち、新規VMではProject ownerを必須にする。移行前から存在する未所属VMだけは
-personal legacyとして残す。
+Project ownerのどちらか一方だけを持つ。通常の新規VMではProject ownerを必須にし、管理者用作成経路では
+作成者を個人ownerとして保存する。移行前から存在する未所属VMもpersonal VMとして残す。
+
+管理者用VM作成は専用REST endpointとtask keyで通常のProject作成から分離する。Webは同じformを別dialogとして
+開き、管理用inventory readから候補を取得する。Project grantは要求せず、nodeと各resourceの存在・同一node条件は
+APIとworkerの双方で検査する。workerは外部処理前に作成者の最新admin権限を再確認し、Agent taskは拒否する。
+Project作成endpoint・schemaとAgent catalogの境界は維持する。
 
 共同管理migrationは、NULL・重複membershipを整理した結果memberが0名になるProjectを検出するとupgradeを中止する。
 運用者は該当Projectを確認し、`users_to_projects`へ有効な利用者を1名以上割り当ててからupgradeを再実行する。

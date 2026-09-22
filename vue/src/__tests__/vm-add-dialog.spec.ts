@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
   apiPost: vi.fn(),
-  auth: { username: "alice" },
+  auth: { username: "alice", scopes: ["admin"] },
   getImageList: vi.fn(),
   getNetworkList: vi.fn(),
   getNode: vi.fn(),
@@ -216,9 +216,9 @@ const componentStubs: Record<string, Component> = {
   VWindowItem: ContainerStub,
 };
 
-async function mountDialog(): Promise<VueWrapper> {
+async function mountDialog(admin = false): Promise<VueWrapper> {
   const wrapper = mount(VMAddDialog, {
-    props: { modelValue: true },
+    props: { modelValue: true, admin },
     global: { stubs: componentStubs },
   });
   await flushPromises();
@@ -266,6 +266,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   formValid = true;
   mocks.auth.username = "alice";
+  mocks.auth.scopes = ["admin"];
   mocks.getNode.mockResolvedValue({ count: 0, data: [] });
   mocks.getNetworkList.mockResolvedValue({ count: 0, data: [] });
   mocks.getStorageList.mockResolvedValue({ count: 0, data: [] });
@@ -286,6 +287,53 @@ beforeEach(() => {
 });
 
 describe("VMAddDialog submit", () => {
+  it("管理者用dialogではProjectなしで全resourceを読み込み専用APIへ送る", async () => {
+    mocks.getProjectList.mockResolvedValue({ count: 0, data: [] });
+    const wrapper = await mountDialog(true);
+
+    expect(wrapper.find('[data-testid="vm-project"]').exists()).toBe(false);
+    expect(mocks.getProjectList).not.toHaveBeenCalled();
+    expect(mocks.getNode).toHaveBeenCalledWith(undefined);
+    for (const getResources of [mocks.getNetworkList, mocks.getStorageList, mocks.getImageList]) {
+      expect(getResources).toHaveBeenCalledWith(expect.objectContaining({ admin: true, projectId: undefined }));
+    }
+    await wrapper.get('[data-testid="vm-name"] input').setValue("admin-vm");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost).toHaveBeenCalledWith("/api/tasks/vms/admin", {
+      body: expect.objectContaining({ name: "admin-vm", projectId: null }),
+    });
+    expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
+  });
+
+  it("非管理者は管理者用dialogからresource取得も作成もできない", async () => {
+    mocks.auth.scopes = ["vm.create"];
+    const wrapper = await mountDialog(true);
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.getNode).not.toHaveBeenCalled();
+    expect(mocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("管理者用作成の失敗後も入力を保持して再試行でき、送信中は二重送信しない", async () => {
+    let resolveRequest!: (value: unknown) => void;
+    mocks.apiPost.mockImplementationOnce(() => new Promise(resolve => { resolveRequest = resolve; }));
+    const wrapper = await mountDialog(true);
+    await wrapper.get('[data-testid="vm-name"] input').setValue("retry-vm");
+    await wrapper.get("form").trigger("submit");
+    await wrapper.get("form").trigger("submit");
+    expect(mocks.apiPost).toHaveBeenCalledOnce();
+    resolveRequest({ error: { code: "conflict" } });
+    await flushPromises();
+    expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+    expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect(mocks.apiPost.mock.calls[1][1].body.name).toBe("retry-vm");
+  });
+
   it("invalid formではrequestを送らない", async () => {
     formValid = false;
     const wrapper = await mountDialog();

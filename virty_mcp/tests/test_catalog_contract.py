@@ -77,6 +77,8 @@ def test_catalog_covers_reviewed_management_routes_and_only_excludes_sensitive_r
     excluded = {
         ("GET", "/api/vms/vnc/{token}", "get_vnc_address"),
         ("POST", "/api/vms/{uuid}/console-ticket", "create_console_ticket"),
+        # Projectを経由しない管理者用作成はWeb専用とし、Agentへ公開しない。
+        ("POST", "/api/tasks/vms/admin", "create_admin_vm"),
     }
     catalog = ActionCatalog.load_default()
     catalog_routes = {

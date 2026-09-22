@@ -297,7 +297,7 @@ export const test = base.extend<Fixtures>({
         });
         return;
       }
-      if (path === "/api/tasks/vms" && request.method() === "POST") {
+      if (["/api/tasks/vms", "/api/tasks/vms/admin"].includes(path) && request.method() === "POST") {
         state.vmCreateBodies.push(request.postDataJSON());
         if (state.failVmCreate) {
           state.failVmCreate = false;

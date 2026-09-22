@@ -186,16 +186,23 @@ class CloudInitInsert(BaseSchema):
     userData: str = Field(json_schema_extra={"writeOnly": True})
 
 
-class DomainForCreate(BaseSchema):
+class DomainCreateSpec(BaseSchema):
     type: Literal['manual']
     name: str
     node_name: str
-    project_id: str = Field(min_length=6, max_length=6)
     memory_mega_byte: int
     cpu: int
     disks: List[DomainForCreateDisk]
     interface: List[DomainForCreateInterface]
     cloud_init: CloudInitInsert  | None = None
+
+
+class DomainForCreate(DomainCreateSpec):
+    project_id: str = Field(min_length=6, max_length=6)
+
+
+class DomainForAdminCreate(DomainCreateSpec):
+    project_id: None = None
 
 
 class NetworkForUpdateDomain(BaseSchema):

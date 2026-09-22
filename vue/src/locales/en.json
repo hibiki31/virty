@@ -252,6 +252,8 @@
       "unreachable": "Unable to reach the VM service."
     },
     "vmAdd": {
+      "adminTitle": "Create VM as admin",
+      "adminHelp": "Create a personal VM without a project. All resources on the selected node are available; you will own the VM.",
       "additionalKeys": "Additional SSH public keys",
       "addInterface": "Add interface",
       "applyYaml": "Apply to YAML",
