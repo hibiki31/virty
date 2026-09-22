@@ -793,6 +793,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vms/{uuid}/project": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Vm Project
+         * @description VMを、接続済みresourceを利用できるprojectへ移動する。
+         */
+        patch: operations["update_vm_project"];
+        trace?: never;
+    };
     "/api/vms/{uuid}/xml": {
         parameters: {
             query?: never;
@@ -842,6 +862,23 @@ export interface paths {
         put: operations["refresh_vms"];
         /** Create Vm */
         post: operations["create_vm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/vms/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Admin Vm */
+        post: operations["create_admin_vm"];
         delete?: never;
         options?: never;
         head?: never;
@@ -905,23 +942,6 @@ export interface paths {
         patch: operations["control_vm_cdrom"];
         trace?: never;
     };
-    "/api/tasks/vms/{uuid}/project": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Vm Project */
-        patch: operations["update_vm_project"];
-        trace?: never;
-    };
     "/api/tasks/vms/{uuid}/network": {
         parameters: {
             query?: never;
@@ -979,6 +999,23 @@ export interface paths {
         head?: never;
         /** Update Storage Pool */
         patch: operations["update_storage_pool"];
+        trace?: never;
+    };
+    "/api/storages/pools/{pool_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Storage Pool */
+        delete: operations["delete_storage_pool"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/storages/{uuid}": {
@@ -1137,6 +1174,26 @@ export interface paths {
         patch: operations["update_network_pool"];
         trace?: never;
     };
+    "/api/networks/pools/{pool_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace Network Pool
+         * @description networkとportgroupの構成を完全置換する。
+         */
+        put: operations["replace_network_pool"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/networks/pools/{id}": {
         parameters: {
             query?: never;
@@ -1223,23 +1280,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tasks/networks/providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Network Providers */
-        post: operations["create_network_providers"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/tasks/networks/{uuid}/ovs/{name}": {
         parameters: {
             query?: never;
@@ -1284,6 +1324,91 @@ export interface paths {
         /** Get Current User Profile */
         get: operations["get_current_user_profile"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/publickeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Own Publickeys */
+        put: operations["update_own_publickeys"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Own Password */
+        put: operations["update_own_password"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User Scopes */
+        get: operations["get_user_scopes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/detail/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User */
+        get: operations["get_user"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{username}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reset User Password */
+        put: operations["reset_user_password"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1336,8 +1461,97 @@ export interface paths {
         };
         /** Get Projects */
         get: operations["get_projects"];
-        /** Update Project */
-        put: operations["update_project"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project */
+        get: operations["get_project"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Project Name */
+        patch: operations["update_project_name"];
+        trace?: never;
+    };
+    "/api/projects/{project_id}/members/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Add Project Member */
+        put: operations["add_project_member"];
+        post?: never;
+        /** Remove Project Member */
+        delete: operations["remove_project_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/member-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project Member Candidates */
+        get: operations["get_project_member_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/resource-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Project Resource Grants */
+        put: operations["update_project_resource_grants"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/resource-grant-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Project Resource Grant Candidates
+         * @description global admin向けにProjectへ割当可能なresourceを列挙する。
+         */
+        get: operations["get_project_resource_grant_candidates"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1503,6 +1717,38 @@ export interface components {
             projectId?: string | null;
             /** Nodeid */
             nodeId?: string | null;
+        };
+        /**
+         * ApiErrorCode
+         * @description 通常APIとAgent APIで共有する公開error code。
+         * @enum {string}
+         */
+        ApiErrorCode: "action_adapter_missing" | "action_not_found" | "agent_control_missing" | "agent_public_base_url_missing" | "agent_signing_key_missing" | "agent_signing_key_too_short" | "already_initialized" | "audit_unavailable" | "authentication_required" | "bad_request" | "catalog_action_missing_at_dispatch" | "catalog_risk_mismatch_at_dispatch" | "catalog_selector_mismatch_at_dispatch" | "cdrom_image_not_found" | "cdrom_image_required" | "challenge_expired" | "challenge_mismatch" | "challenge_not_found" | "challenge_replay" | "conflict" | "copy_source_required" | "destination_project_denied" | "destructive_action_denied" | "destructive_action_denied_at_dispatch" | "device_breaker_open" | "device_inactive" | "device_inactive_after_dpop" | "device_inactive_at_dispatch" | "device_key_exists" | "device_key_mismatch" | "device_missing_at_handler" | "device_not_found" | "device_principal_changed_after_dpop" | "device_principal_mismatch" | "device_revoked" | "direct_action_kind_mismatch" | "direct_request_invalid" | "dpop_method_mismatch" | "dpop_replay" | "dpop_replay_store_unavailable" | "dpop_token_mismatch" | "dpop_uri_mismatch" | "expected_generation_required" | "flavor_constraint_denied" | "flavor_exists" | "flavor_in_use" | "flavor_not_found" | "flavor_project_denied" | "generation_sentinel_required" | "generation_target_invalid" | "generation_target_missing" | "global_admin_required" | "global_mutation_requires_unscoped_lease" | "http_error" | "idempotency_key_conflict" | "idempotency_key_required" | "identity_target_missing_at_dispatch" | "image_address_denied" | "image_filename_required" | "image_host_denied" | "image_host_unresolved" | "image_node_mismatch" | "image_not_found" | "image_or_flavor_not_found" | "image_project_grant_denied" | "image_storage_project_denied" | "image_storage_target_missing" | "image_url_denied" | "inactive_user" | "internal_server_error" | "invalid_action_input" | "invalid_console_ticket" | "invalid_credentials" | "invalid_device_key" | "invalid_dpop" | "invalid_lease" | "invalid_lease_request_status" | "invalid_mutation_risk" | "invalid_operation_resolution" | "invalid_pairing_status" | "invalid_ssh_private_key" | "invalid_token" | "invalid_value" | "invalid_webauthn_assertion" | "invalid_webauthn_purpose" | "invalid_webauthn_registration" | "jsonschema_dependency_missing" | "last_admin_required" | "last_admin_scope_required" | "last_project_member_required" | "lease_already_exchanged" | "lease_expired" | "lease_inactive_after_dpop" | "lease_inactive_at_dispatch" | "lease_integrity_error" | "lease_mismatch" | "lease_missing" | "lease_missing_at_handler" | "lease_not_approved" | "lease_not_found" | "lease_principal_mismatch" | "lease_request_already_pending" | "lease_request_capacity_exceeded" | "lease_request_not_found" | "lease_request_not_pending" | "lease_required" | "lease_revoked" | "lease_scope_escalation" | "method_not_allowed" | "mutation_concurrency_limit" | "mutation_limit_exhausted" | "mutation_target_missing" | "mutations_disabled" | "mutations_disabled_at_dispatch" | "network_constraint_denied" | "network_node_mismatch" | "network_node_not_found" | "network_not_found" | "network_or_pool_not_found" | "network_or_port_not_found" | "network_pool_not_found" | "network_pool_in_use" | "network_port_not_found" | "network_vm_node_mismatch" | "network_xml_not_found" | "node_denied" | "node_denied_at_dispatch" | "node_missing_at_dispatch" | "node_not_found" | "oob_required" | "oob_required_at_dispatch" | "operation_action_mismatch" | "operation_action_not_found" | "operation_dependency_cycle_at_dispatch" | "operation_dependency_invalid_at_dispatch" | "operation_node_denied" | "operation_not_found" | "operation_not_unknown" | "operation_owner_mismatch" | "operation_project_denied" | "operation_root_invalid_at_dispatch" | "operation_target_invalid" | "operation_target_missing" | "operation_timestamp_missing" | "pairing_capacity_exceeded" | "pairing_expired" | "pairing_not_found" | "pairing_not_pending" | "pairing_scope_escalation" | "password_reauthentication_failed" | "permission_denied" | "principal_authority_revoked" | "principal_authority_revoked_at_dispatch" | "principal_mismatch" | "principal_mismatch_at_handler" | "principal_not_found" | "principal_project_revoked" | "project_constraint_denied" | "project_denied" | "project_denied_at_dispatch" | "project_missing_at_dispatch" | "project_grant_conflict" | "project_grant_not_found" | "project_grant_resource_not_found" | "project_membership_denied" | "project_member_conflict" | "project_member_not_found" | "project_not_empty" | "project_not_found" | "project_or_user_not_found" | "project_scope_escalation" | "project_update_conflict" | "r3_concurrency_limit" | "rate_limited" | "recovery_required" | "recovery_required_at_dispatch" | "related_image_invalid" | "related_node_changed_at_dispatch" | "related_project_changed_at_dispatch" | "related_target_missing_at_dispatch" | "request_too_large" | "resolved_target_missing_at_handler" | "resource_id_required" | "resource_in_use" | "resource_not_found" | "resource_type_mismatch" | "risk_disabled" | "risk_disabled_at_dispatch" | "scope_denied" | "scoped_global_read_denied" | "self_delete_denied" | "service_unavailable" | "ssh_key_pair_required" | "ssh_public_key_mismatch" | "ssh_public_key_not_found" | "stale_dpop" | "stale_generation" | "storage_constraint_denied" | "storage_node_mismatch" | "storage_not_found" | "storage_pool_in_use" | "storage_pool_not_found" | "storage_project_denied" | "target_busy" | "target_mapping_mismatch" | "target_not_found" | "task_not_found" | "task_ownership_denied" | "task_principal_mismatch_at_dispatch" | "task_selector_missing" | "token_expired" | "unknown_action_scope" | "unknown_lease" | "unknown_webauthn_credential" | "unsupported_media_type" | "unsupported_ssh_key" | "user_exists" | "user_id_required" | "user_not_found" | "username_mismatch" | "validation_error" | "vm_network_project_denied" | "vm_copy_source_required" | "vm_image_project_denied" | "vm_not_found" | "vm_owner_denied" | "vm_or_project_not_found" | "vm_project_binding_changed" | "vm_project_denied" | "vm_project_resource_conflict" | "vm_source_denied" | "vm_storage_project_denied" | "vm_xml_not_found" | "webauthn_challenge_capacity_exceeded" | "webauthn_credential_exists" | "webauthn_dependency_missing" | "webauthn_enrollment_required";
+        /** ApiErrorDetail */
+        ApiErrorDetail: {
+            code: components["schemas"]["ApiErrorCode"];
+            /** Message */
+            message: string;
+            /** Params */
+            params?: {
+                [key: string]: string | number | boolean | null;
+            };
+            /** Errors */
+            errors?: components["schemas"]["ApiFieldError"][];
+        };
+        /** ApiErrorResponse */
+        ApiErrorResponse: {
+            detail: components["schemas"]["ApiErrorDetail"];
+        };
+        /** ApiFieldError */
+        ApiFieldError: {
+            /** Field */
+            field: string;
+            code: components["schemas"]["FieldErrorCode"];
+            /** Params */
+            params?: {
+                [key: string]: string | number | boolean | null;
+            };
         };
         /** AuthValidateResponse */
         AuthValidateResponse: {
@@ -1872,6 +2118,29 @@ export interface components {
             /** Capacitygb */
             capacityGb?: number | null;
         };
+        /** DomainForAdminCreate */
+        DomainForAdminCreate: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "manual";
+            /** Name */
+            name: string;
+            /** Nodename */
+            nodeName: string;
+            /** Memorymegabyte */
+            memoryMegaByte: number;
+            /** Cpu */
+            cpu: number;
+            /** Disks */
+            disks: components["schemas"]["DomainForCreateDisk"][];
+            /** Interface */
+            interface: components["schemas"]["DomainForCreateInterface"][];
+            cloudInit?: components["schemas"]["CloudInitInsert"] | null;
+            /** Projectid */
+            projectId?: null;
+        };
         /** DomainForCreate */
         DomainForCreate: {
             /**
@@ -1892,6 +2161,8 @@ export interface components {
             /** Interface */
             interface: components["schemas"]["DomainForCreateInterface"][];
             cloudInit?: components["schemas"]["CloudInitInsert"] | null;
+            /** Projectid */
+            projectId: string;
         };
         /** DomainForCreateDisk */
         DomainForCreateDisk: {
@@ -1960,6 +2231,12 @@ export interface components {
             /** Xml */
             xml: string;
         };
+        /**
+         * FieldErrorCode
+         * @description Pydantic固有表現から独立した公開field error code。
+         * @enum {string}
+         */
+        FieldErrorCode: "extra_forbidden" | "greater_than" | "greater_than_or_equal" | "invalid_choice" | "invalid_format" | "invalid_json" | "invalid_type" | "invalid_value" | "less_than" | "less_than_or_equal" | "multiple_of" | "required" | "too_long" | "too_short" | "password_policy" | "invalid_public_key" | "duplicate_key_name" | "key_name_required" | "invalid_username";
         /** Flavor */
         Flavor: {
             /** Name */
@@ -1999,11 +2276,6 @@ export interface components {
             /** Data */
             data: components["schemas"]["Flavor"][];
         };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
         /** Image */
         Image: {
             /** Name */
@@ -2042,6 +2314,8 @@ export interface components {
         };
         /** ImageForUpdateImageFlavor */
         ImageForUpdateImageFlavor: {
+            /** Projectid */
+            projectId: string;
             /** Storageuuid */
             storageUuid: string;
             /** Path */
@@ -2365,18 +2639,35 @@ export interface components {
         /** NetworkPool */
         NetworkPool: {
             /** Id */
-            id?: number | null;
+            id: number;
             /** Name */
-            name?: string | null;
+            name: string | null;
             /** Networks */
-            networks?: components["schemas"]["NetworkForNetworkPool"][] | null;
+            networks: components["schemas"]["NetworkForNetworkPool"][];
             /** Ports */
-            ports?: components["schemas"]["NetworkPoolPort"][] | null;
+            ports: components["schemas"]["NetworkPoolPort"][];
+        };
+        /** NetworkPoolDeleteResponse */
+        NetworkPoolDeleteResponse: {
+            /**
+             * Deleted
+             * @constant
+             */
+            deleted: true;
+            /** Id */
+            id: number;
         };
         /** NetworkPoolForCreate */
         NetworkPoolForCreate: {
             /** Name */
             name: string;
+        };
+        /** NetworkPoolForReplace */
+        NetworkPoolForReplace: {
+            /** Networkuuids */
+            networkUuids: string[];
+            /** Ports */
+            ports: components["schemas"]["NetworkPoolPortSelection"][];
         };
         /** NetworkPoolForUpdate */
         NetworkPoolForUpdate: {
@@ -2395,6 +2686,13 @@ export interface components {
             vlanId?: number | null;
             network: components["schemas"]["NetworkForNetworkPool"];
         };
+        /** NetworkPoolPortSelection */
+        NetworkPoolPortSelection: {
+            /** Networkuuid */
+            networkUuid: string;
+            /** Portname */
+            portName: string;
+        };
         /** NetworkPortgroup */
         NetworkPortgroup: {
             /** Name */
@@ -2403,25 +2701,6 @@ export interface components {
             vlanId?: string | null;
             /** Isdefault */
             isDefault: boolean;
-        };
-        /** NetworkProviderForCreate */
-        NetworkProviderForCreate: {
-            /** Name */
-            name?: string | null;
-            /** Dnsdomain */
-            dnsDomain?: string | null;
-            /** Networkaddress */
-            networkAddress?: string | null;
-            /** Networkprefix */
-            networkPrefix?: string | null;
-            /** Gatewayaddress */
-            gatewayAddress?: string | null;
-            /** Dhcpstart */
-            dhcpStart?: string | null;
-            /** Dhcpend */
-            dhcpEnd?: string | null;
-            /** Networknode */
-            networkNode?: string | null;
         };
         /** NetworkXML */
         NetworkXML: {
@@ -2521,12 +2800,11 @@ export interface components {
         NodeRoleForUpdate: {
             /** Nodename */
             nodeName: string;
-            /** Rolename */
-            roleName: string;
-            /** Extrajson */
-            extraJson?: {
-                [key: string]: unknown;
-            } | null;
+            /**
+             * Rolename
+             * @constant
+             */
+            roleName: "libvirt";
         };
         /** OperationAccepted */
         OperationAccepted: {
@@ -2607,6 +2885,11 @@ export interface components {
             retryable: boolean;
             /** Result */
             result?: unknown | null;
+        };
+        /** OwnPublickeysUpdate */
+        OwnPublickeysUpdate: {
+            /** Publickeys */
+            publickeys: components["schemas"]["UserPublickeyInput"][];
         };
         /** P256PublicKeyJwk */
         P256PublicKeyJwk: {
@@ -2705,59 +2988,133 @@ export interface components {
              */
             expiresAt: string;
         };
+        /** PasswordChange */
+        PasswordChange: {
+            /** Newpassword */
+            newPassword: string;
+            /** Currentpassword */
+            currentPassword: string;
+        };
+        /** PasswordReset */
+        PasswordReset: {
+            /** Newpassword */
+            newPassword: string;
+        };
         /** PowerStatusForUpdateDomain */
         PowerStatusForUpdateDomain: {
             /** Status */
             status?: string | null;
         };
-        /** Project */
-        Project: {
+        /** ProjectDetail */
+        ProjectDetail: {
             /** Id */
             id: string;
             /** Name */
             name: string;
-            /** Memoryg */
-            memoryG: number;
-            /** Core */
-            core: number;
-            /** Storagecapacityg */
-            storageCapacityG: number;
-            /** Users */
-            users: components["schemas"]["ProjectUser"][];
-            /** Usedmemoryg */
-            usedMemoryG: number;
+            /** Membercount */
+            memberCount: number;
             /** Usedcore */
             usedCore: number;
-            /** Networkpools */
-            networkPools: unknown;
+            /** Usedmemoryg */
+            usedMemoryG: number;
+            /** Usedstorageg */
+            usedStorageG: number;
+            limits: components["schemas"]["ProjectLimits"];
+            /** Members */
+            members: components["schemas"]["ProjectMember"][];
+            resourceGrants: components["schemas"]["ProjectResourceGrantsUpdate"];
             /** Storagepools */
-            storagePools: unknown;
+            storagePools: components["schemas"]["ProjectResourceReference"][];
+            /** Networkpools */
+            networkPools: components["schemas"]["ProjectResourceReference"][];
+            /** Flavors */
+            flavors: components["schemas"]["ProjectResourceReference"][];
         };
         /** ProjectForCreate */
         ProjectForCreate: {
-            /** Projectname */
-            projectName: string;
-            /** Userids */
-            userIds: string[];
+            /** Name */
+            name: string;
+            /** Memberids */
+            memberIds: string[];
         };
-        /** ProjectForUpdate */
-        ProjectForUpdate: {
-            /** Projectid */
-            projectId: string;
-            /** Userid */
-            userId: string;
+        /** ProjectForNameUpdate */
+        ProjectForNameUpdate: {
+            /** Name */
+            name: string;
+        };
+        /** ProjectLimits */
+        ProjectLimits: {
+            /** Core */
+            core: number;
+            /** Memoryg */
+            memoryG: number;
+            /** Storagecapacityg */
+            storageCapacityG: number | null;
+            /**
+             * Enforced
+             * @default false
+             * @constant
+             */
+            enforced: false;
+        };
+        /** ProjectMember */
+        ProjectMember: {
+            /** Username */
+            username: string;
+        };
+        /** ProjectMemberPage */
+        ProjectMemberPage: {
+            /** Count */
+            count: number;
+            /** Data */
+            data: components["schemas"]["ProjectMember"][];
         };
         /** ProjectPage */
         ProjectPage: {
             /** Count */
             count: number;
             /** Data */
-            data: components["schemas"]["Project"][];
+            data: components["schemas"]["ProjectSummary"][];
         };
-        /** ProjectUser */
-        ProjectUser: {
-            /** Username */
-            username: string;
+        /** ProjectResourceGrantCandidates */
+        ProjectResourceGrantCandidates: {
+            /** Storagepools */
+            storagePools: components["schemas"]["ProjectResourceReference"][];
+            /** Networkpools */
+            networkPools: components["schemas"]["ProjectResourceReference"][];
+            /** Flavors */
+            flavors: components["schemas"]["ProjectResourceReference"][];
+        };
+        /** ProjectResourceGrantsUpdate */
+        ProjectResourceGrantsUpdate: {
+            /** Storagepoolids */
+            storagePoolIds: number[];
+            /** Networkpoolids */
+            networkPoolIds: number[];
+            /** Flavorids */
+            flavorIds: number[];
+        };
+        /** ProjectResourceReference */
+        ProjectResourceReference: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** ProjectSummary */
+        ProjectSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Membercount */
+            memberCount: number;
+            /** Usedcore */
+            usedCore: number;
+            /** Usedmemoryg */
+            usedMemoryG: number;
+            /** Usedstorageg */
+            usedStorageG: number;
         };
         /** SSHKeyPair */
         SSHKeyPair: {
@@ -2873,6 +3230,16 @@ export interface components {
             /** Storages */
             storages: components["schemas"]["StorageContainerForStoragePool"][];
         };
+        /** StoragePoolDeleteResponse */
+        StoragePoolDeleteResponse: {
+            /**
+             * Deleted
+             * @constant
+             */
+            deleted: true;
+            /** Id */
+            id: number;
+        };
         /** StoragePoolForCreate */
         StoragePoolForCreate: {
             /** Name */
@@ -2962,15 +3329,6 @@ export interface components {
             /** Data */
             data: components["schemas"]["Task"][];
         };
-        /** TokenData */
-        TokenData: {
-            /** Id */
-            id?: string | null;
-            /** Scopes */
-            scopes?: string[];
-            /** Role */
-            role?: string[];
-        };
         /** TokenRFC6749Response */
         TokenRFC6749Response: {
             /** Access Token */
@@ -2995,10 +3353,8 @@ export interface components {
             username: string;
             /** Scopes */
             scopes?: components["schemas"]["UserScope"][];
-            /** Projects */
-            projects?: components["schemas"]["UserProject"][];
             /** Publickeys */
-            publickeys?: components["schemas"]["UserPublickey"][];
+            publickeys?: components["schemas"]["UserPublickeyInput"][];
             /** Password */
             password: string;
         };
@@ -3007,7 +3363,7 @@ export interface components {
             /** Scopes */
             scopes: components["schemas"]["UserScope"][];
             /** Publickeys */
-            publickeys: components["schemas"]["UserPublickey"][];
+            publickeys: components["schemas"]["UserPublickeyInput"][];
         };
         /** UserPage */
         UserPage: {
@@ -3016,13 +3372,37 @@ export interface components {
             /** Data */
             data: components["schemas"]["User"][];
         };
+        /** UserProfile */
+        UserProfile: {
+            /** Id */
+            id?: string | null;
+            /** Scopes */
+            scopes?: string[];
+            /** Role */
+            role?: string[];
+            /** Username */
+            username: string;
+            /** Projects */
+            projects?: components["schemas"]["UserProject"][];
+            /** Publickeys */
+            publickeys?: components["schemas"]["UserPublickey"][];
+        };
         /** UserProject */
         UserProject: {
+            /** Id */
+            id: string;
             /** Name */
             name: string;
         };
         /** UserPublickey */
         UserPublickey: {
+            /** Name */
+            name: string;
+            /** Publickey */
+            publickey: string;
+        };
+        /** UserPublickeyInput */
+        UserPublickeyInput: {
             /** Name */
             name: string;
             /** Publickey */
@@ -3037,19 +3417,6 @@ export interface components {
         UserScope: {
             /** Name */
             name: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
         /** Version */
         Version: {
@@ -3177,7 +3544,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3198,6 +3574,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3229,7 +3623,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3260,7 +3663,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3293,7 +3705,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3326,7 +3747,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3347,6 +3777,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthValidateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3379,7 +3827,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3412,7 +3869,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3433,6 +3899,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PairingRequestSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3467,7 +3951,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3502,7 +3995,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3535,7 +4037,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3568,7 +4079,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3603,7 +4123,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3636,7 +4165,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3669,7 +4207,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3690,6 +4237,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LeaseRequestSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3720,7 +4285,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3755,7 +4329,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3793,7 +4376,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3827,7 +4419,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3861,7 +4462,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3886,6 +4496,24 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     list_devices: {
@@ -3904,6 +4532,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeviceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3934,7 +4580,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -3969,7 +4624,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4000,7 +4664,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4035,7 +4708,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4056,6 +4738,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LeaseManagementResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4086,7 +4786,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4121,7 +4830,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4142,6 +4860,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ControlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4174,7 +4910,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4195,6 +4940,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperationResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4227,7 +4990,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4262,7 +5034,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4297,14 +5078,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_dashboard: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4320,6 +5112,24 @@ export interface operations {
                     "application/json": components["schemas"]["DashboardResponse"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     get_nodes: {
@@ -4329,6 +5139,7 @@ export interface operations {
                 page?: number;
                 admin?: boolean;
                 nameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4351,7 +5162,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4372,6 +5192,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SSHPublicKey"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4404,14 +5242,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_node: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;
@@ -4435,14 +5284,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_node_facts: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;
@@ -4457,7 +5317,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -4466,14 +5328,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_node_info: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 name: string;
@@ -4497,7 +5370,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4530,7 +5412,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4561,7 +5452,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4594,7 +5494,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4607,6 +5516,7 @@ export interface operations {
                 admin?: boolean;
                 nameLike?: string | null;
                 nodeNameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4629,14 +5539,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_vm: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -4660,14 +5581,69 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_vm_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainProjectForUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_vm_xml: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -4691,14 +5667,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     create_console_ticket: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -4722,7 +5709,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4743,6 +5739,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4775,7 +5789,58 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    create_admin_vm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainForAdminCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4806,7 +5871,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4841,14 +5915,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     control_vm_cdrom: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -4876,42 +5961,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
-        };
-    };
-    update_vm_project: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DomainProjectForUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description API Error */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4946,7 +6005,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -4959,6 +6027,7 @@ export interface operations {
                 admin?: boolean;
                 nameLike?: string | null;
                 nodeName?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4981,14 +6050,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     update_storage_metadata: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5014,14 +6094,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_storage_pools: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5035,6 +6127,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoragePool"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5058,7 +6168,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StoragePool"];
                 };
             };
             /** @description Validation Error */
@@ -5067,7 +6177,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5091,7 +6210,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StoragePool"];
                 };
             };
             /** @description Validation Error */
@@ -5100,14 +6219,65 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_storage_pool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pool_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoragePoolDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_storage: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5131,7 +6301,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5164,7 +6343,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5195,7 +6383,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5227,7 +6424,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5243,6 +6449,7 @@ export interface operations {
                 name?: string | null;
                 nameLike?: string | null;
                 rool?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5265,7 +6472,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5289,7 +6505,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Image"];
                 };
             };
             /** @description Validation Error */
@@ -5298,7 +6514,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5321,11 +6546,31 @@ export interface operations {
                     "application/json": components["schemas"]["Task"][];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     download_image: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5351,7 +6596,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5365,6 +6619,7 @@ export interface operations {
                 nameLike?: string | null;
                 nodeNameLike?: string | null;
                 type?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5387,14 +6642,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_network_pools: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5408,6 +6675,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NetworkPool"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5431,7 +6716,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPool"];
                 };
             };
             /** @description Validation Error */
@@ -5440,7 +6725,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5464,7 +6758,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPool"];
                 };
             };
             /** @description Validation Error */
@@ -5473,7 +6767,60 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    replace_network_pool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pool_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkPoolForReplace"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPool"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5495,7 +6842,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NetworkPoolDeleteResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5504,14 +6851,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_network: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5535,14 +6894,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
     get_network_xml: {
         parameters: {
-            query?: never;
+            query?: {
+                projectId?: string | null;
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;
@@ -5566,7 +6937,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5587,6 +6967,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5619,7 +7017,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5654,40 +7061,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
-        };
-    };
-    create_network_providers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NetworkProviderForCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description API Error */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Task"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5719,7 +7102,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5750,7 +7142,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5770,7 +7171,227 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenData"];
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_own_publickeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnPublickeysUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_own_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_user_scopes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5804,7 +7425,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5837,7 +7467,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5872,7 +7511,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5894,7 +7542,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": number;
                 };
             };
             /** @description Validation Error */
@@ -5903,7 +7551,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5937,21 +7594,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
     };
-    update_project: {
+    get_project: {
+        parameters: {
+            query?: {
+                admin?: boolean;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_project_name: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                project_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProjectForUpdate"];
+                "application/json": components["schemas"]["ProjectForNameUpdate"];
             };
         };
         responses: {
@@ -5961,7 +7671,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProjectDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5970,7 +7680,226 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    add_project_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_project_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_project_member_candidates: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                nameLike?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_project_resource_grants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectResourceGrantsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_project_resource_grant_candidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectResourceGrantCandidates"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -5994,7 +7923,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
             /** @description Validation Error */
@@ -6003,7 +7932,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -6025,7 +7963,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Task"][];
                 };
             };
             /** @description Validation Error */
@@ -6034,7 +7972,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -6046,6 +7993,7 @@ export interface operations {
                 page?: number;
                 admin?: boolean;
                 nameLike?: string | null;
+                projectId?: string | null;
             };
             header?: never;
             path?: never;
@@ -6068,7 +8016,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -6101,7 +8058,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -6132,7 +8098,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -6176,6 +8151,24 @@ export interface operations {
                     "text/plain": string;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     get_version: {
@@ -6196,6 +8189,24 @@ export interface operations {
                     "application/json": components["schemas"]["Version"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     get_fastapi_metrics: {
@@ -6213,6 +8224,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };

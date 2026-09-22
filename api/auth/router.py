@@ -3,7 +3,7 @@ from typing import Any
 from uuid import uuid4
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm,
@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from mixin.database import get_db
-from mixin.exception import NoResultFound
+from mixin.exception import ApiError, ApiErrorCode, NoResultFound
 from mixin.log import setup_logger
 from settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -21,10 +21,11 @@ from settings import (
     JWT_ISSUER,
     SECRET_KEY,
 )
-from user.models import UserModel, UserScopeModel
-from user.schemas import UserResponse
+from user.models import UserModel
+from user.schemas import UserForCreate, UserResponse, UserScope
+from user.service import create_user_record
 
-from .function import get_password_hash, verify_password
+from .function import verify_password
 from .schemas import AuthValidateResponse, SetupRequest, TokenRFC6749Response
 
 logger = setup_logger(__name__)
@@ -102,6 +103,7 @@ class CurrentUser(BaseModel):
     scopes: list[str] = Field(default_factory=list)
     token_scopes: list[str] | None = None
     projects: list[str] = Field(default_factory=list)
+    session_generation: str | None = None
 
     def verify_scope(self, scopes: list[str], return_bool: bool = False) -> bool:
         for required_scope in scopes:
@@ -114,18 +116,12 @@ class CurrentUser(BaseModel):
             if not (granted_by_database and granted_by_token):
                 if return_bool:
                     return False
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions",
+                raise ApiError(
+                    status.HTTP_403_FORBIDDEN,
+                    ApiErrorCode.SCOPE_DENIED,
+                    "The required permission is missing.",
                 )
         return True
-
-    def can_access_project(self, project_id: str | None) -> bool:
-        return (
-            self.verify_scope(["admin"], return_bool=True)
-            or project_id is None
-            or project_id in self.projects
-        )
 
 # JWTトークンの設定
 ALGORITHM = "HS256"
@@ -159,9 +155,10 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> CurrentUser:
     if token is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.AUTHENTICATION_REQUIRED,
+            "Authentication is required.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
@@ -185,24 +182,36 @@ def get_current_user(
         ):
             raise jwt.InvalidTokenError("required claims are invalid")
     except jwt.exceptions.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Signature has expired",
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.TOKEN_EXPIRED,
+            "The access token has expired.",
             headers={"WWW-Authenticate": "Bearer"}
         )
     except jwt.exceptions.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Illegal jwt",
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.INVALID_TOKEN,
+            "The access token is invalid.",
             headers={"WWW-Authenticate": "Bearer"}
         )
     
     
     user = db.query(UserModel).filter(UserModel.username == user_id).one_or_none()
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User is no longer active",
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.INACTIVE_USER,
+            "The user is no longer active.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    generation = payload.get("session_generation")
+    if generation != user.session_generation:
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.INVALID_TOKEN,
+            "The access token is no longer valid. Please sign in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -210,6 +219,7 @@ def get_current_user(
     current_user = CurrentUser(
         id=user_id,
         token=token,
+        session_generation=generation,
         scopes=[scope.name for scope in user.scopes],
         token_scopes=token_scopes,
         projects=[
@@ -230,21 +240,17 @@ def get_current_user(
 def api_auth_setup(
         model: SetupRequest, 
         db: Session = Depends(get_db),
-):
+) -> UserModel:
     if db.query(UserModel).count():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Already initialized"
+        raise ApiError(
+            status.HTTP_409_CONFLICT,
+            ApiErrorCode.ALREADY_INITIALIZED,
+            "Virty has already been initialized.",
         )
-    user = UserModel(
-        username=model.username,
-        hashed_password=get_password_hash(model.password)
-    )
-    db.add_all([
-        user,
-        UserScopeModel(user_id=model.username, name="admin"),
-        UserScopeModel(user_id=model.username, name="user")
-    ])
+    user = create_user_record(db, UserForCreate(
+        username=model.username, password=model.password,
+        scopes=[UserScope(name="admin")],
+    ))
     db.commit()
 
     return user
@@ -258,20 +264,29 @@ def login(
         response: Response,
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: Session = Depends(get_db)
-    ):
+    ) -> dict[str, str]:
 
     try:
-        user = db.query(UserModel).filter(UserModel.username==form_data.username).one()
+        user = db.query(UserModel).filter(UserModel.username==form_data.username).with_for_update(of=UserModel).one()
     except NoResultFound:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.INVALID_CREDENTIALS,
+            "The username or password is incorrect.",
+        )
     
     if not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise ApiError(
+            status.HTTP_401_UNAUTHORIZED,
+            ApiErrorCode.INVALID_CREDENTIALS,
+            "The username or password is incorrect.",
+        )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={
             "sub": user.username,
+            "session_generation": user.session_generation,
             # "scopes": form_data.scopes,
             "scopes": [i.name for i in list(user.scopes)],
             "projects": [i.id for i in list(user.projects)]

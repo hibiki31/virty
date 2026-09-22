@@ -8,9 +8,10 @@ from fastapi import FastAPI
 from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
 
-from auth.router import create_access_token
+from auth.router import create_access_token, get_current_user
 from domain.models import DomainModel
 from mixin.database import SessionLocal
+from mixin.exception import ApiErrorCode, FieldErrorCode
 from node.models import NodeModel
 from project.models import ProjectModel
 from task.models import TaskModel
@@ -25,7 +26,6 @@ REQUIRED_BODY_OPERATIONS = [
     ("patch", "/api/tasks/vms/missing/network", "/api/tasks/vms/{uuid}/network"),
     ("post", "/api/tasks/networks", "/api/tasks/networks"),
     ("post", "/api/tasks/networks/missing/ovs", "/api/tasks/networks/{uuid}/ovs"),
-    ("post", "/api/tasks/networks/providers", "/api/tasks/networks/providers"),
     ("post", "/api/tasks/nodes", "/api/tasks/nodes"),
     ("post", "/api/tasks/storages", "/api/tasks/storages"),
     ("patch", "/api/storages", "/api/storages"),
@@ -69,7 +69,8 @@ def test_mutation_request_bodies_are_required(
     username = f"body-contract-{uuid4().hex}"
     try:
         with SessionLocal.begin() as db:
-            db.add(UserModel(username=username, hashed_password="unused"))
+            user = UserModel(username=username, hashed_password="unused")
+            db.add(user)
             db.add(UserScopeModel(user_id=username, name="admin"))
 
         response = api_client.request(
@@ -103,6 +104,239 @@ def test_openapi_operation_ids_remain_route_names(api_client: TestClient) -> Non
 
     assert len(operation_ids) == len(set(operation_ids))
     assert set(operation_ids) == route_names
+
+
+def test_openapi_publishes_common_error_contract(api_client: TestClient) -> None:
+    schema = api_client.get("/api/openapi.json").json()
+    schemas = schema["components"]["schemas"]
+
+    api_codes = set(schemas["ApiErrorCode"]["enum"])
+    field_codes = set(schemas["FieldErrorCode"]["enum"])
+    assert api_codes == {code.value for code in ApiErrorCode}
+    assert field_codes == {code.value for code in FieldErrorCode}
+    assert "HTTPValidationError" not in schemas
+    assert "ValidationError" not in schemas
+
+    detail_schema = schemas["ApiErrorDetail"]
+    field_schema = schemas["ApiFieldError"]
+    assert "params" not in detail_schema.get("required", [])
+    assert "errors" not in detail_schema.get("required", [])
+    assert detail_schema["properties"]["params"]["type"] == "object"
+    assert detail_schema["properties"]["errors"]["type"] == "array"
+    assert "params" not in field_schema.get("required", [])
+    assert field_schema["properties"]["params"]["type"] == "object"
+
+    responses = schema["paths"]["/api/auth"]["post"]["responses"]
+    for status_code in ("default", "422"):
+        response_schema = responses[status_code]["content"]["application/json"][
+            "schema"
+        ]
+        assert response_schema == {
+            "$ref": "#/components/schemas/ApiErrorResponse"
+        }
+
+    metrics_responses = schema["paths"]["/api/metrics"]["get"]["responses"]
+    for status_code in ("default", "422"):
+        content = metrics_responses[status_code]["content"]
+        assert set(content) == {"application/json"}
+        assert content["application/json"][
+            "schema"
+        ] == {"$ref": "#/components/schemas/ApiErrorResponse"}
+
+
+def test_runtime_errors_use_common_safe_envelope(api_client: TestClient) -> None:
+    unauthenticated = api_client.get("/api/tasks")
+    assert unauthenticated.status_code == 401
+    assert unauthenticated.json() == {
+        "detail": {
+            "code": "authentication_required",
+            "message": "Authentication is required.",
+        }
+    }
+    assert unauthenticated.headers["www-authenticate"] == "Bearer"
+
+    missing_route = api_client.get("/api/route-that-does-not-exist")
+    assert missing_route.status_code == 404
+    assert missing_route.json() == {
+        "detail": {
+            "code": "resource_not_found",
+            "message": "The requested resource was not found.",
+        }
+    }
+
+    invalid_credentials = api_client.post(
+        "/api/auth",
+        data={"username": "missing-user", "password": "wrong-password"},
+    )
+    assert invalid_credentials.status_code == 401
+    assert invalid_credentials.json() == {
+        "detail": {
+            "code": "invalid_credentials",
+            "message": "The username or password is incorrect.",
+        }
+    }
+
+    missing_form_field = api_client.post(
+        "/api/auth",
+        data={"username": "missing-password"},
+    )
+    assert missing_form_field.status_code == 422
+    assert missing_form_field.json() == {
+        "detail": {
+            "code": "validation_error",
+            "message": "Request validation failed.",
+            "errors": [
+                {"field": "body.password", "code": "required"},
+            ],
+        }
+    }
+
+    secret = "scope.DoNotReturnThisSecret"
+    invalid_body = api_client.post(
+        "/api/agent/v1/pairings",
+        json={
+            "deviceName": "",
+            "publicKeyJwk": {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "A" * 43,
+                "y": "A" * 43,
+            },
+            "requestedScopes": [secret, secret],
+        },
+    )
+    assert invalid_body.status_code == 422
+    assert invalid_body.json()["detail"] == {
+        "code": "validation_error",
+        "message": "Request validation failed.",
+        "errors": [
+            {
+                "field": "body.deviceName",
+                "code": "too_short",
+                "params": {"minimum": 1},
+            },
+            {"field": "body.requestedScopes", "code": "invalid_value"},
+        ],
+    }
+    assert secret not in invalid_body.text
+    assert "input" not in invalid_body.text
+    assert "ctx" not in invalid_body.text
+    assert invalid_body.headers["cache-control"] == "no-store"
+
+    missing_pairing = api_client.get(
+        "/api/agent/v1/pairings/missing-pairing",
+        headers={"X-Pairing-Code": "not-a-secret-code"},
+    )
+    assert missing_pairing.status_code == 404
+    assert missing_pairing.json() == {
+        "detail": {
+            "code": "pairing_not_found",
+            "message": "The requested resource was not found.",
+        }
+    }
+    assert missing_pairing.headers["cache-control"] == "no-store"
+
+
+def test_rejected_agent_cors_preflight_uses_common_safe_envelope(
+    api_client: TestClient,
+) -> None:
+    response = api_client.options(
+        "/api/agent/v1/devices",
+        headers={
+            "Origin": "https://cors-contract.invalid",
+            # allow_methods=["*"]が展開する標準method外を指定して必ず拒否させる。
+            "Access-Control-Request-Method": "BREW",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": {
+            "code": "bad_request",
+            "message": "The CORS preflight request was rejected.",
+        }
+    }
+    assert response.headers["content-type"] == "application/json"
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_unexpected_runtime_error_uses_safe_common_envelope(
+    api_client: TestClient,
+) -> None:
+    application = cast(FastAPI, api_client.app)
+    secret = "DoNotReturnThisInternalFailure"
+
+    def fail_authentication() -> None:
+        raise RuntimeError(secret)
+
+    application.dependency_overrides[get_current_user] = fail_authentication
+    client = TestClient(application, raise_server_exceptions=False)
+    try:
+        response = client.get("/api/tasks")
+    finally:
+        client.close()
+        application.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": {
+            "code": "internal_server_error",
+            "message": "An internal server error occurred.",
+        }
+    }
+    assert secret not in response.text
+
+
+def test_forbidden_and_conflict_use_common_runtime_contract(
+    api_client: TestClient,
+) -> None:
+    suffix = uuid4().hex
+    limited_username = f"error-contract-limited-{suffix}"
+    admin_username = f"error-contract-admin-{suffix}"
+    usernames = [limited_username, admin_username]
+
+    try:
+        with SessionLocal.begin() as db:
+            db.add_all([
+                UserModel(username=limited_username, hashed_password="unused"),
+                UserModel(username=admin_username, hashed_password="unused"),
+            ])
+            db.add_all([
+                UserScopeModel(user_id=limited_username, name="vm.read"),
+                UserScopeModel(user_id=admin_username, name="admin"),
+            ])
+
+        forbidden = api_client.get(
+            "/api/dashboard",
+            headers=_headers(limited_username, scopes=["vm.read"]),
+        )
+        assert forbidden.status_code == 403
+        assert forbidden.json() == {
+            "detail": {
+                "code": "scope_denied",
+                "message": "The required permission is missing.",
+            }
+        }
+
+        conflict = api_client.delete(
+            f"/api/users/{admin_username}",
+            headers=_headers(admin_username),
+        )
+        assert conflict.status_code == 409
+        assert conflict.json() == {
+            "detail": {
+                "code": "self_delete_denied",
+                "message": "The current administrator cannot delete its own account.",
+            }
+        }
+    finally:
+        with SessionLocal.begin() as db:
+            db.query(UserScopeModel).filter(
+                UserScopeModel.user_id.in_(usernames),
+            ).delete(synchronize_session=False)
+            db.query(UserModel).filter(UserModel.username.in_(usernames)).delete(
+                synchronize_session=False,
+            )
 
 
 def test_prometheus_uses_templated_route_name(api_client: TestClient) -> None:
@@ -227,9 +461,13 @@ def test_network_create_accepts_isolated_and_rejects_obsolete_typo(
             db.query(UserModel).filter(UserModel.username == username).delete()
 
 
-def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
+def test_vm_project_update_uses_path_uuid(
+    api_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     suffix = uuid4().hex
     username = f"vm-project-user-{suffix}"
+    outsider_username = f"vm-project-outsider-{suffix}"
     node_name = f"vm-project-node-{suffix}"
     target_uuid = str(uuid4())
     other_uuid = str(uuid4())
@@ -237,17 +475,23 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
 
     try:
         with SessionLocal.begin() as db:
-            db.add(UserModel(username=username, hashed_password="unused"))
+            user = UserModel(username=username, hashed_password="unused")
+            db.add(user)
+            db.add(UserModel(
+                username=outsider_username,
+                hashed_password="unused",
+            ))
             db.add(UserScopeModel(user_id=username, name="admin"))
-            db.add(ProjectModel(
+            db.add(UserScopeModel(user_id=outsider_username, name="admin"))
+            project = ProjectModel(
                 id=project_id,
                 name=f"vm-project-{suffix}",
-                is_admin=False,
                 core=8,
                 memory_g=16,
                 storage_capacity_g=128,
-                user_installable=True,
-            ))
+            )
+            project.users.append(user)
+            db.add(project)
             db.add(NodeModel(
                 name=node_name,
                 description="VM project contract test",
@@ -264,16 +508,18 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
                 ansible_facts={},
             ))
             db.flush()
+            target_domain = DomainModel(
+                uuid=target_uuid,
+                name=f"vm-project-target-{suffix}",
+                core=2,
+                memory=2048,
+                status=5,
+                node_name=node_name,
+                update_token=suffix,
+            )
+            target_domain.owner_user_id = username
             db.add_all([
-                DomainModel(
-                    uuid=target_uuid,
-                    name=f"vm-project-target-{suffix}",
-                    core=2,
-                    memory=2048,
-                    status=5,
-                    node_name=node_name,
-                    update_token=suffix,
-                ),
+                target_domain,
                 DomainModel(
                     uuid=other_uuid,
                     name=f"vm-project-other-{suffix}",
@@ -285,18 +531,48 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
                 ),
             ])
 
+        denied_response = api_client.patch(
+            f"/api/vms/{target_uuid}/project",
+            headers=_headers(outsider_username),
+            json={"projectId": project_id},
+        )
+        assert denied_response.status_code == 404
+
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                "domain.service.domain_project_resource_conflicts",
+                lambda _db, _domain, _project_id: ["storage:ungranted"],
+            )
+            conflict_response = api_client.patch(
+                f"/api/vms/{other_uuid}/project",
+                headers=_headers(username, projects=[project_id]),
+                json={"projectId": project_id},
+            )
+        assert conflict_response.status_code == 409, conflict_response.text
+        assert conflict_response.json()["detail"]["code"] == (
+            ApiErrorCode.VM_PROJECT_RESOURCE_CONFLICT
+        )
+
         response = api_client.patch(
-            f"/api/tasks/vms/{target_uuid}/project",
-            headers=_headers(username),
+            f"/api/vms/{target_uuid}/project",
+            headers=_headers(username, projects=[project_id]),
             json={"projectId": project_id},
         )
         assert response.status_code == 200, response.text
+
+        legacy_response = api_client.patch(
+            f"/api/vms/{other_uuid}/project",
+            headers=_headers(username, projects=[project_id]),
+            json={"projectId": project_id},
+        )
+        assert legacy_response.status_code == 200, legacy_response.text
 
         with SessionLocal() as db:
             target = db.query(DomainModel).filter(DomainModel.uuid == target_uuid).one()
             other = db.query(DomainModel).filter(DomainModel.uuid == other_uuid).one()
             assert target.owner_project_id == project_id
-            assert other.owner_project_id is None
+            assert target.owner_user_id is None
+            assert other.owner_project_id == project_id
 
         schema = api_client.get("/api/openapi.json").json()
         body_schema = schema["components"]["schemas"]["DomainProjectForUpdate"]
@@ -309,4 +585,6 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
             ).delete(synchronize_session=False)
             db.query(ProjectModel).filter(ProjectModel.id == project_id).delete()
             db.query(NodeModel).filter(NodeModel.name == node_name).delete()
-            db.query(UserModel).filter(UserModel.username == username).delete()
+            db.query(UserModel).filter(
+                UserModel.username.in_([username, outsider_username]),
+            ).delete(synchronize_session=False)

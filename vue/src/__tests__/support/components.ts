@@ -1,4 +1,4 @@
-import { defineComponent, h, type Component, type PropType } from "vue";
+import { computed, defineComponent, h, type Component, type PropType } from "vue";
 
 let formValidity = true;
 
@@ -75,9 +75,23 @@ export const TextFieldStub = defineComponent({
     modelValue: {
       type: [String, Number] as PropType<string | number | null>,
     },
+    rules: {
+      type: Array as PropType<Array<(value: unknown) => true | string>>,
+      default: () => [],
+    },
     type: String,
   },
   emits: ["change", "keydown", "update:modelValue"],
+  setup(props) {
+    const validationMessage = computed(() => {
+      for (const rule of props.rules) {
+        const result = rule(props.modelValue ?? "");
+        if (result !== true) return result;
+      }
+      return "";
+    });
+    return { validationMessage };
+  },
   template: `
     <label v-bind="$attrs">
       {{ label }}
@@ -89,6 +103,7 @@ export const TextFieldStub = defineComponent({
         @change="$emit('change', $event.target.value)"
         @keydown="$emit('keydown', $event)"
       >
+      <span class="validation-message">{{ validationMessage }}</span>
     </label>
   `,
 });
@@ -152,8 +167,16 @@ export const SelectStub = defineComponent({
   template: '<div v-bind="$attrs" :data-label="label"><slot />{{ label }}</div>',
 });
 
+export const LocaleSwitcherStub = defineComponent({
+  name: "LocaleSwitcher",
+  inheritAttrs: false,
+  props: { compact: Boolean },
+  template: '<div v-bind="$attrs" :data-compact="compact" />',
+});
+
 export const componentStubs: Record<string, Component> = {
   CodeFeild: ContainerStub,
+  LocaleSwitcher: LocaleSwitcherStub,
   RouterLink: ContainerStub,
   SetupDialog: ContainerStub,
   VAlert: ContainerStub,

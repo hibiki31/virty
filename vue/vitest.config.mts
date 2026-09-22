@@ -15,9 +15,12 @@ export default defineConfig({
   },
   test: {
     clearMocks: true,
+    // 並行するworktree検証やimage buildとのCPU競合を抑える。
+    maxWorkers: 2,
     environment: "jsdom",
     include: ["src/**/*.spec.ts", "e2e/**/*.unit.ts"],
     restoreMocks: true,
+    setupFiles: ["src/__tests__/setup.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
@@ -36,6 +39,12 @@ export default defineConfig({
           statements: 90,
         },
         "src/composables/pagination.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
+        "src/composables/projectFilter.ts": {
           branches: 80,
           functions: 80,
           lines: 90,

@@ -1,6 +1,8 @@
 import { apiClient } from "@/api";
 import type { paths, components } from "@/api/openapi";
 import { toApiPageQuery } from "@/composables/pagination";
+import { formatNumber, translationRef } from "@/composables/i18n";
+import notify, { apiErrorRef } from "@/composables/notify";
 
 export type bodyPostVM = components["schemas"]["DomainForCreate"];
 export type typeListVM =
@@ -67,26 +69,40 @@ export function vmPowerOn(uuid: string) {
   });
 }
 
-export async function openVNC(uuid: string) {
+export async function openVNC(uuid: string, admin = false) {
   const consoleWindow = window.open("about:blank", "_blank");
   if (consoleWindow) consoleWindow.opener = null;
 
-  const response = await apiClient.POST("/api/vms/{uuid}/console-ticket", {
-    params: { path: { uuid } },
-  });
-  if (!response.data) {
-    consoleWindow?.close();
-    return;
-  }
+  try {
+    const response = await apiClient.POST("/api/vms/{uuid}/console-ticket", {
+      params: { path: { uuid }, query: { admin } },
+    });
+    if (!response.data) {
+      consoleWindow?.close();
+      notify(
+        "error",
+        translationRef("pages.vmDetail.notifications.consoleFailed"),
+        apiErrorRef(response.error),
+      );
+      return;
+    }
 
-  const token = encodeURIComponent(response.data.token);
-  const consoleUrl =
-    `/novnc/vnc.html?resize=remote&autoconnect=true` +
-    `&path=novnc/websockify?token=${token}`;
-  if (consoleWindow) {
-    consoleWindow.location.href = consoleUrl;
-  } else {
-    window.open(consoleUrl, "_blank", "noopener,noreferrer");
+    const token = encodeURIComponent(response.data.token);
+    const consoleUrl =
+      `/novnc/vnc.html?resize=remote&autoconnect=true` +
+      `&path=novnc/websockify?token=${token}`;
+    if (consoleWindow) {
+      consoleWindow.location.href = consoleUrl;
+    } else {
+      window.open(consoleUrl, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    consoleWindow?.close();
+    notify(
+      "error",
+      translationRef("pages.vmDetail.notifications.consoleFailed"),
+      translationRef("pages.vmDetail.notifications.consoleUnreachable"),
+    );
   }
 }
 
@@ -105,5 +121,5 @@ export function getStorageFileName(source: string) {
 }
 
 export function formatStorageCapacity(capacityGb: number | null | undefined) {
-  return capacityGb == null ? "-" : `${capacityGb} GB`;
+  return capacityGb == null ? "-" : `${formatNumber(capacityGb)} GB`;
 }

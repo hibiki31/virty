@@ -30,6 +30,10 @@ x-web-e2e-http-build: &web-e2e-http-build
   context: ./vue
   target: e2e-http
 
+x-web-fullstack-build: &web-fullstack-build
+  context: ./vue
+  target: e2e-fullstack
+
 x-mcp-development-build: &mcp-development-build
   context: .
   dockerfile: virty_mcp/Dockerfile
@@ -66,6 +70,12 @@ x-api-test-environment: &api-test-environment
   SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db-test:5432/virty_test
   VIRTY_BACKEND_MODE: fake
   VIRTY_TESTING: "1"
+
+x-api-e2e-environment: &api-e2e-environment
+  <<: *api-test-environment
+  SQLALCHEMY_DATABASE_URL: postgresql://postgres:${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}@db-e2e:5432/virty_test_e2e
+  VIRTY_BACKEND_MODE: e2e
+  VIRTY_WORKER_READY_FILE: /workspace/api/data/e2e-worker.ready
 
 x-infra-test-environment: &infra-test-environment
   AGENT_LEASE_SIGNING_KEY: ${VIRTY_AGENT_LEASE_SIGNING_KEY:?VIRTY_AGENT_LEASE_SIGNING_KEY is required}
@@ -508,7 +518,17 @@ services:
   web-production-verify:
     build: *web-production-build
     profiles: [verify]
-    command: ["true"]
+    command:
+      - sh
+      - -ceu
+      - |
+        nginx -t
+        nginx
+        wget -qO- http://127.0.0.1/ >/dev/null
+        nginx -s quit
+    extra_hosts:
+      - api=127.0.0.1
+      - proxy=127.0.0.1
     network_mode: none
 
   web-e2e-server:
@@ -534,6 +554,112 @@ services:
     networks: [verify-internal]
     depends_on:
       web-e2e-server:
+        condition: service_healthy
+
+  db-e2e:
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
+    profiles: [verify]
+    environment:
+      POSTGRES_DB: virty_test_e2e
+      POSTGRES_PASSWORD: ${VIRTY_DEV_DB_PASSWORD:?VIRTY_DEV_DB_PASSWORD is required}
+      POSTGRES_USER: postgres
+    healthcheck: *postgres-healthcheck
+    networks: [e2e-internal]
+    tmpfs:
+      - /var/lib/postgresql
+
+  api-e2e-volume-init:
+    build: *api-check-build
+    profiles: [verify]
+    user: "0:0"
+    command: ["sh", "-ceu", "chown 1000:1000 /workspace/api/data && chmod 0700 /workspace/api/data"]
+    network_mode: none
+    volumes:
+      - e2e-data:/workspace/api/data
+
+  api-migrate-e2e:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-e2e-environment
+    networks: [e2e-internal]
+    volumes:
+      - e2e-data:/workspace/api/data
+    depends_on:
+      api-e2e-volume-init:
+        condition: service_completed_successfully
+      db-e2e:
+        condition: service_healthy
+
+  worker-e2e:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command: ["python", "worker.py"]
+    environment: *api-e2e-environment
+    networks: [e2e-internal]
+    volumes:
+      - e2e-data:/workspace/api/data
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /workspace/api/data/e2e-worker.ready"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+      start_period: 2s
+    depends_on:
+      api-migrate-e2e:
+        condition: service_completed_successfully
+
+  api-e2e:
+    build: *api-check-build
+    profiles: [verify]
+    working_dir: /workspace/api
+    command: ["uvicorn", "tests.e2e.app:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+    environment: *api-e2e-environment
+    networks: [e2e-internal]
+    volumes:
+      - e2e-data:/workspace/api/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/__e2e/ready', timeout=2)
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+    depends_on:
+      worker-e2e:
+        condition: service_healthy
+
+  web-fullstack-server:
+    build: *web-fullstack-build
+    profiles: [verify]
+    networks: [e2e-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/api/__e2e/ready >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 2s
+    depends_on:
+      api-e2e:
+        condition: service_healthy
+
+  web-fullstack:
+    build:
+      context: ./vue
+      dockerfile: Dockerfile.playwright
+    profiles: [verify]
+    working_dir: /workspace/vue
+    command: ["pnpm", "run", "test:e2e:fullstack"]
+    environment:
+      PLAYWRIGHT_BASE_URL: http://web-fullstack-server
+    networks: [e2e-internal]
+    depends_on:
+      web-fullstack-server:
         condition: service_healthy
 
   proxy-production-verify:
@@ -717,6 +843,7 @@ volumes:
   api-quick-cache:
   api-ssh:
   db-data:
+  e2e-data:
   infra-data:
   infra-db-data:
   infra-ssh:
@@ -726,5 +853,7 @@ volumes:
   web-quick-cache:
 
 networks:
+  e2e-internal:
+    internal: true
   verify-internal:
     internal: true

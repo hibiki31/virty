@@ -106,7 +106,10 @@ cd /absolute/path/to/virty/virty_mcp
 contract testは次をfail closedで確認する。
 
 - helper catalogと`api/agent/catalog.py`のaction ID、risk、mutation、destructive、resource typeが一致する。
-- 現行routerの管理endpointがcatalogへ明示対応し、auth/setup/VNC系が除外される。
+- 現行routerの管理endpointがcatalogへ明示対応し、auth/setup/VNC系とWeb設定専用APIが除外される。
+  本人公開鍵・password変更、管理者password再設定、編集用詳細・scope候補取得はWeb用であり、
+  Agentは既存の`user.me`・`user.list`・`user.update`を使う。password更新は全Web JWTを失効させるが、
+  Agent端末・leaseの失効管理は独立する。
 - 全schemaがJSON Schema 2020-12として有効で、rootが`additionalProperties=false`である。
 - DPoP proofがmethod、URL、lease tokenの`ath`へ束縛され、ES256署名が検証できる。
 - Tasks対応/非対応fallback、冪等性envelope、秘密値redaction、stdio framingが維持される。

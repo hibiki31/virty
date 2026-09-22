@@ -25,6 +25,10 @@ from .models import (
     AgentDeviceModel,
     AuditEventModel,
 )
+from .project_boundary import (
+    validate_mutation_lease_constraints,
+    validate_project_mutation_targets,
+)
 
 BREAKER_WINDOW_MINUTES = 30
 BREAKER_FAILURE_LIMIT = 3
@@ -164,6 +168,15 @@ def authenticate_lease(
             "principal_authority_revoked",
             "能力lease principalの管理権限は失効しています",
         )
+    current_project_ids = {project.id for project in principal.projects}
+    if any(
+        project_id not in current_project_ids
+        for project_id in lease.project_ids
+    ):
+        raise AuthenticationError(
+            "principal_project_revoked",
+            "能力leaseのProject所属は失効しています",
+        )
     lease.last_used_at = now
     return LeaseContext(lease=lease, device=device, claims=claims, token=token)
 
@@ -193,6 +206,12 @@ def authorize_action(
     collection: bool = False,
 ) -> None:
     require_scope(list(context.lease.scopes or []), definition.required_scope)
+    validate_mutation_lease_constraints(
+        action_id=definition.action_id,
+        mutation=definition.mutation,
+        project_ids=context.lease.project_ids,
+        node_ids=context.lease.node_ids,
+    )
     if resource_type != definition.resource_type:
         raise AuthorizationError(
             "resource_type_mismatch",
@@ -298,6 +317,12 @@ def authorize_operation_access(
             "operation作成者と能力lease principalが一致しません",
         )
     require_scope(list(context.lease.scopes or []), definition.required_scope)
+    validate_mutation_lease_constraints(
+        action_id=definition.action_id,
+        mutation=definition.mutation,
+        project_ids=context.lease.project_ids,
+        node_ids=context.lease.node_ids,
+    )
     if definition.destructive and not context.lease.allow_destructive:
         raise AuthorizationError(
             "destructive_action_denied",
@@ -331,6 +356,12 @@ def authorize_operation_access(
                 "operation_node_denied",
                 "operation targetは現在のnode制約外です",
             )
+    validate_project_mutation_targets(
+        db,
+        principal_id=context.principal_id,
+        action_id=definition.action_id,
+        targets=targets,
+    )
 
 
 def _check_concurrency(
@@ -782,6 +813,20 @@ def _validate_task_constraints(
         targets = [targets]
     operation_root = _task_operation_root(db, task)
     action_id = _task_action_id(db, task)
+    definition = ACTIONS.get(action_id)
+    if definition is not None:
+        validate_mutation_lease_constraints(
+            action_id=definition.action_id,
+            mutation=definition.mutation,
+            project_ids=lease.project_ids,
+            node_ids=lease.node_ids,
+        )
+    validate_project_mutation_targets(
+        db,
+        principal_id=lease.principal_id,
+        action_id=action_id,
+        targets=targets,
+    )
     # dependent inventory taskにexpectedGenerationを複製すると、更新後の
     # generationを古いtokenで検査してしまう。create/refreshの
     # placeholder判定だけはoperation rootのsentinelを正本にする。
@@ -1199,8 +1244,13 @@ def _hash_non_versioned_resource(
         value = {
             "id": project.id,
             "name": project.name,
-            "users": sorted(user.username for user in project.users),
+            "members": sorted(user.username for user in project.users),
             "limits": [project.core, project.memory_g, project.storage_capacity_g],
+            "resourceGrants": {
+                "storagePoolIds": sorted(pool.id for pool in project.storage_pools),
+                "networkPoolIds": sorted(pool.id for pool in project.network_pools),
+                "flavorIds": sorted(flavor.id for flavor in project.flavors),
+            },
         }
     elif resource_type == "user":
         from user.models import UserModel

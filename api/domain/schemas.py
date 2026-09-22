@@ -62,6 +62,7 @@ class Domain(BaseSchema):
 class DomainForQuery(GetPagination):
     name_like: str  | None = None
     node_name_like: str  | None = None
+    project_id: str | None = None
 
 
 class DomainPage(BaseSchema):
@@ -101,7 +102,7 @@ class DomainPatchCore(BaseSchema):
 
 
 class DomainProjectForUpdate(BaseSchema):
-    project_id: str
+    project_id: str = Field(min_length=6, max_length=6)
 
 
 class DomainForDelete(DomainBase):
@@ -185,7 +186,7 @@ class CloudInitInsert(BaseSchema):
     userData: str = Field(json_schema_extra={"writeOnly": True})
 
 
-class DomainForCreate(BaseSchema):
+class DomainCreateSpec(BaseSchema):
     type: Literal['manual']
     name: str
     node_name: str
@@ -196,24 +197,15 @@ class DomainForCreate(BaseSchema):
     cloud_init: CloudInitInsert  | None = None
 
 
+class DomainForCreate(DomainCreateSpec):
+    project_id: str = Field(min_length=6, max_length=6)
+
+
+class DomainForAdminCreate(DomainCreateSpec):
+    project_id: None = None
+
+
 class NetworkForUpdateDomain(BaseSchema):
     mac: str
     network_uuid: str
     port: str  | None = None
-
-
-class InterfaceForDomainTicket(BaseSchema):
-    id: int
-    mac: str  | None = None
-
-
-class DomainInProjectForCreate(BaseSchema):
-    project_id: str
-    name: str
-    memory: int
-    core: int
-    flavor_id: int
-    flavor_size_g: int
-    storage_pool_id: int
-    interfaces: list[InterfaceForDomainTicket]
-    cloud_init: CloudInitInsert  | None = None

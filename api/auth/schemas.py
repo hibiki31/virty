@@ -1,8 +1,10 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mixin.schemas import BaseSchema
+from auth.password import NewPassword
+from user.schemas import UserForCreate
 
 
 # RFCでスネークケース指定あるやんけ
@@ -22,5 +24,10 @@ class TokenData(BaseSchema):
     projects: List[str] = Field(default_factory=list)
 
 class SetupRequest(BaseSchema):
-    username: str
-    password: str = Field(json_schema_extra={"writeOnly": True})
+    username: str = Field(min_length=1, max_length=255)
+    password: NewPassword
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        return UserForCreate.validate_username(value)

@@ -71,7 +71,7 @@ def test_console_ticket_is_opaque_and_single_use(
 ) -> None:
     create_db = _CreateSession()
     user = CurrentUser(id="alice", token="token", scopes=["vm.read"])
-    monkeypatch.setattr(router, "get_authorized_domain", lambda *_args: object())
+    monkeypatch.setattr(router, "get_authorized_domain", lambda *_args, **_kwargs: object())
 
     http_response = Response()
     ticket = router.create_console_ticket(

@@ -24,4 +24,5 @@ class FlavorPage(BaseSchema):
     
 
 class FlavorForQuery(GetPagination):
-    name_like: str| None = None 
+    name_like: str| None = None
+    project_id: str | None = None

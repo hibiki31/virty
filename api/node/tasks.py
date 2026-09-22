@@ -85,16 +85,8 @@ def patch_node_role(db: Session, model: TaskModel, req: TaskRequest):
     body = NodeRoleForUpdate.model_validate(req.body)
 
     node_name = body.node_name
-    add_role_name = body.role_name
-    
     node = db.query(NodeModel).filter(NodeModel.name==node_name).one()
-
-    if add_role_name == "libvirt":
-        patch_node_role_libvirt(db=db, task=model, node=node)
-    elif add_role_name == "ovs":
-        patch_node_role_ovs(db=db, task=model, node=node, request=body)
-    # elif add_role_name == "vxlan_overlay":
-    #     patch_node_role_vxlan_overlay(db=db, task=model, node=node, request=body)
+    patch_node_role_libvirt(db=db, task=model, node=node)
     
     for i in ["virty-vm-image", "virty-installer-iso", "virty-template-image"]:
         try:
@@ -127,28 +119,6 @@ def patch_node_role(db: Session, model: TaskModel, req: TaskRequest):
     
     model.message = "Node patch has been successfull"
 
-
-# def patch_node_role_vxlan_overlay(db:Session, task: TaskModel, node:NodeModel, request:NodeRolePatch):
-#     ansible_manager = AnsibleManager(user=node.user_name, domain=node.domain)
-    
-#     role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="vxlan_overlay").one_or_none()
-    
-#     if role_model == None:
-#         role_model = NodeRoleModel(name="vxlan_overlay")
-#         db.add(role_model)
-
-#     if not db.query(AssociationNodeToRole).filter(
-#             AssociationNodeToRole.node_name==node.name, 
-#             AssociationNodeToRole.role_name=="vxlan_overlay"
-#         ).one_or_none():
-#         a = AssociationNodeToRole(extra_json=request.extra_json)
-#         a.role = role_model
-#         node.roles.append(a)
-
-#     db.commit()
-
-#     return node
-
 def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
     
     ansible_manager = create_ansible_backend(user=node.user_name, domain=node.domain)
@@ -180,29 +150,3 @@ def patch_node_role_libvirt(db:Session, task: TaskModel, node:NodeModel):
         node.roles.append(a)
 
     db.commit()
-
-
-def patch_node_role_ovs(db:Session, task: TaskModel, node:NodeModel, request:NodeRoleForUpdate):
-    
-    ansible_manager = create_ansible_backend(user=node.user_name, domain=node.domain)
-
-    res = ansible_manager.run(playbook_name="pb_init_ovs")
-    task.message = "ansible run successfull " + str(res.status)
-    
-    role_model = db.query(NodeRoleModel).filter(NodeRoleModel.name=="ovs").one_or_none()
-    
-    if role_model is None:
-        role_model = NodeRoleModel(name="ovs")
-        db.add(role_model)
-
-    if not db.query(AssociationNodeToRoleModel).filter(
-            AssociationNodeToRoleModel.node_name==node.name, 
-            AssociationNodeToRoleModel.role_name=="ovs"
-        ).one_or_none():
-        a = AssociationNodeToRoleModel(extra_json=request.extra_json or {})
-        a.role = role_model
-        node.roles.append(a)
-
-    db.commit()
-
-    return node

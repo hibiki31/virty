@@ -2,12 +2,13 @@ import hashlib
 import time
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import desc, not_, or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from resource_authorization import require_admin
 from task.functions import ARCHIVABLE_STATUSES, archive_terminal_tasks
 from task.models import TaskModel
@@ -153,8 +154,8 @@ def get_task(
         .one_or_none()
     )
     if task is None:
-        raise HTTPException(status_code=404, detail="task uuid not found")
+        raise ApiError(404, ApiErrorCode.TASK_NOT_FOUND, "The task was not found.")
     if not can_read_any and task.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="task uuid not found")
+        raise ApiError(404, ApiErrorCode.TASK_NOT_FOUND, "The task was not found.")
     
     return task

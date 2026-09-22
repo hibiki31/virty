@@ -21,6 +21,7 @@ vi.mock("@/api", () => ({
 }));
 vi.mock("@/composables/nodes", () => ({ getNode: mocks.getNode }));
 vi.mock("@/composables/notify", () => ({
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
   default: mocks.notify,
   notifyTask: mocks.notifyTask,
 }));
@@ -102,7 +103,7 @@ describe("NetworkAddDialog", () => {
     const bridgeWrapper = await mountDialog();
     await fillRequired(bridgeWrapper);
     select(bridgeWrapper, "Mode").vm.$emit("update:modelValue", "bridge");
-    await field(bridgeWrapper, "Bridge Name").get("input").setValue("br-test");
+    await field(bridgeWrapper, "Bridge name").get("input").setValue("br-test");
     await bridgeWrapper.get("form").trigger("submit");
     await flushPromises();
 
@@ -116,7 +117,7 @@ describe("NetworkAddDialog", () => {
     const ovsWrapper = await mountDialog();
     await fillRequired(ovsWrapper);
     select(ovsWrapper, "Mode").vm.$emit("update:modelValue", "ovs");
-    await field(ovsWrapper, "Bridge Name").get("input").setValue("ovs-test");
+    await field(ovsWrapper, "Bridge name").get("input").setValue("ovs-test");
     await ovsWrapper.get("form").trigger("submit");
     await flushPromises();
 
@@ -145,7 +146,14 @@ describe("NetworkAddDialog", () => {
   });
 
   it("API errorでは開いたまま通知しloadingを解除する", async () => {
-    mocks.apiPost.mockResolvedValue({ error: { detail: "conflict" } });
+    mocks.apiPost.mockResolvedValue({
+      error: {
+        detail: {
+          code: "conflict",
+          message: "The request conflicts with the current state.",
+        },
+      },
+    });
     const wrapper = await mountDialog();
     await fillRequired(wrapper);
 
@@ -154,8 +162,16 @@ describe("NetworkAddDialog", () => {
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Create Network failed",
-      { detail: "conflict" },
+      { kind: "translation", key: "dialogs.networkAdd.createFailed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "conflict",
+            message: "The request conflicts with the current state.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     const submit = wrapper

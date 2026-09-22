@@ -1,3 +1,5 @@
+import { TranslationError, translationRef } from "@/composables/i18n";
+
 type JsonCredentialDescriptor = Omit<PublicKeyCredentialDescriptor, "id"> & {
   id: string;
 };
@@ -63,7 +65,7 @@ export async function createWebAuthnCredential(
   };
   const credential = await navigator.credentials.create({ publicKey });
   if (!(credential instanceof PublicKeyCredential)) {
-    throw new Error("WebAuthn credentialを作成できませんでした");
+    throw new TranslationError(translationRef("webauthn.credentialFailed"));
   }
   const response = credential.response as AuthenticatorAttestationResponse;
   return {
@@ -91,7 +93,7 @@ export async function getWebAuthnAssertion(
   };
   const credential = await navigator.credentials.get({ publicKey });
   if (!(credential instanceof PublicKeyCredential)) {
-    throw new Error("WebAuthn assertionを取得できませんでした");
+    throw new TranslationError(translationRef("webauthn.assertionFailed"));
   }
   const response = credential.response as AuthenticatorAssertionResponse;
   const serializedResponse: Record<string, string> = {

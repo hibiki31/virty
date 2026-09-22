@@ -1,4 +1,5 @@
 import VMAddDialog from "@/components/vms/VMAddDialog.vue";
+import { setLocale } from "@/plugins/i18n";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import {
   defineComponent,
@@ -12,10 +13,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
   apiPost: vi.fn(),
-  auth: { username: "alice" },
+  auth: { username: "alice", scopes: ["admin"] },
   getImageList: vi.fn(),
   getNetworkList: vi.fn(),
   getNode: vi.fn(),
+  getProjectList: vi.fn(),
   getStorageList: vi.fn(),
   notify: vi.fn(),
   notifyTask: vi.fn(),
@@ -48,7 +50,14 @@ vi.mock("@/composables/image", () => ({
   getImageList: mocks.getImageList,
 }));
 
+vi.mock("@/composables/project", () => ({
+  formatProjectName: (project: { id: string; name: string }) =>
+    `${project.name} (#${project.id})`,
+  getProjectList: mocks.getProjectList,
+}));
+
 vi.mock("@/composables/notify", () => ({
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
   default: mocks.notify,
   notifyTask: mocks.notifyTask,
 }));
@@ -207,9 +216,9 @@ const componentStubs: Record<string, Component> = {
   VWindowItem: ContainerStub,
 };
 
-async function mountDialog(): Promise<VueWrapper> {
+async function mountDialog(admin = false): Promise<VueWrapper> {
   const wrapper = mount(VMAddDialog, {
-    props: { modelValue: true },
+    props: { modelValue: true, admin },
     global: { stubs: componentStubs },
   });
   await flushPromises();
@@ -257,15 +266,74 @@ beforeEach(() => {
   vi.clearAllMocks();
   formValid = true;
   mocks.auth.username = "alice";
+  mocks.auth.scopes = ["admin"];
   mocks.getNode.mockResolvedValue({ count: 0, data: [] });
   mocks.getNetworkList.mockResolvedValue({ count: 0, data: [] });
   mocks.getStorageList.mockResolvedValue({ count: 0, data: [] });
   mocks.getImageList.mockResolvedValue({ count: 0, data: [] });
+  mocks.getProjectList.mockResolvedValue({
+    count: 1,
+    data: [{
+      id: "a1b2c3",
+      name: "Project A",
+      memberCount: 1,
+      usedCore: 0,
+      usedMemoryG: 0,
+      usedStorageG: 0,
+    }],
+  });
   mocks.apiGet.mockResolvedValue({ data: { count: 0, data: [] } });
   mocks.apiPost.mockResolvedValue({ data: [{ uuid: "task-1" }] });
 });
 
 describe("VMAddDialog submit", () => {
+  it("管理者用dialogではProjectなしで全resourceを読み込み専用APIへ送る", async () => {
+    mocks.getProjectList.mockResolvedValue({ count: 0, data: [] });
+    const wrapper = await mountDialog(true);
+
+    expect(wrapper.find('[data-testid="vm-project"]').exists()).toBe(false);
+    expect(mocks.getProjectList).not.toHaveBeenCalled();
+    expect(mocks.getNode).toHaveBeenCalledWith(undefined);
+    for (const getResources of [mocks.getNetworkList, mocks.getStorageList, mocks.getImageList]) {
+      expect(getResources).toHaveBeenCalledWith(expect.objectContaining({ admin: true, projectId: undefined }));
+    }
+    await wrapper.get('[data-testid="vm-name"] input').setValue("admin-vm");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost).toHaveBeenCalledWith("/api/tasks/vms/admin", {
+      body: expect.objectContaining({ name: "admin-vm", projectId: null }),
+    });
+    expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
+  });
+
+  it("非管理者は管理者用dialogからresource取得も作成もできない", async () => {
+    mocks.auth.scopes = ["vm.create"];
+    const wrapper = await mountDialog(true);
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.getNode).not.toHaveBeenCalled();
+    expect(mocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("管理者用作成の失敗後も入力を保持して再試行でき、送信中は二重送信しない", async () => {
+    let resolveRequest!: (value: unknown) => void;
+    mocks.apiPost.mockImplementationOnce(() => new Promise(resolve => { resolveRequest = resolve; }));
+    const wrapper = await mountDialog(true);
+    await wrapper.get('[data-testid="vm-name"] input').setValue("retry-vm");
+    await wrapper.get("form").trigger("submit");
+    await wrapper.get("form").trigger("submit");
+    expect(mocks.apiPost).toHaveBeenCalledOnce();
+    resolveRequest({ error: { code: "conflict" } });
+    await flushPromises();
+    expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+    expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect(mocks.apiPost.mock.calls[1][1].body.name).toBe("retry-vm");
+  });
+
   it("invalid formではrequestを送らない", async () => {
     formValid = false;
     const wrapper = await mountDialog();
@@ -308,6 +376,7 @@ describe("VMAddDialog submit", () => {
       cloudInit: null,
       name: "vm-1",
       nodeName: "node-1",
+      projectId: "a1b2c3",
       disks: [{ savePoolUuid: "pool-1", type: "empty" }],
       interface: [{ networkUuid: "net-1", type: "network" }],
     });
@@ -315,8 +384,68 @@ describe("VMAddDialog submit", () => {
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
   });
 
+  it("選択Projectを全resource queryと作成payloadへ固定する", async () => {
+    mocks.getProjectList.mockResolvedValue({
+      count: 2,
+      data: [
+        { id: "a1b2c3", name: "Project A" },
+        { id: "d4e5f6", name: "Project B" },
+      ],
+    });
+    const wrapper = await mountDialog();
+
+    getSelectStub(wrapper, "vm-project").vm.$emit("update:modelValue", "d4e5f6");
+    await flushPromises();
+
+    expect(mocks.getNode).toHaveBeenCalledWith("d4e5f6");
+    expect(mocks.getNetworkList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+    expect(mocks.getStorageList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+    expect(mocks.getImageList).toHaveBeenCalledWith(expect.objectContaining({ projectId: "d4e5f6" }));
+  });
+
+  it("OVS portgroup名を表示値とVM作成payloadへ使用する", async () => {
+    mocks.getNode.mockResolvedValue({ count: 1, data: [{ name: "node-1" }] });
+    mocks.getNetworkList.mockResolvedValue({
+      count: 1,
+      data: [{
+        name: "ovs-1",
+        nodeName: "node-1",
+        type: "openvswitch",
+        uuid: "network-1",
+        portgroups: [{ name: "tenant-a", vlanId: "321", isDefault: false }],
+      }],
+    });
+    const wrapper = await mountDialog();
+
+    getSelectStub(wrapper, "vm-node").vm.$emit("update:modelValue", "node-1");
+    getSelectStub(wrapper, "vm-network").vm.$emit("update:modelValue", "network-1");
+    await nextTick();
+
+    const portSelect = getSelectStub(wrapper, "vm-network-port");
+    expect(portSelect.props("items")).toEqual([
+      { title: "tenant-a", value: "tenant-a" },
+    ]);
+    portSelect.vm.$emit("update:modelValue", "tenant-a");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(mocks.apiPost.mock.calls[0][1].body.interface).toEqual([
+      expect.objectContaining({
+        networkUuid: "network-1",
+        port: "tenant-a",
+      }),
+    ]);
+  });
+
   it("API errorを通知して開いたままloadingを解除する", async () => {
-    mocks.apiPost.mockResolvedValue({ error: { detail: "conflict" } });
+    mocks.apiPost.mockResolvedValue({
+      error: {
+        detail: {
+          code: "conflict",
+          message: "The request conflicts with the current state.",
+        },
+      },
+    });
     const wrapper = await mountDialog();
 
     await wrapper.get("form").trigger("submit");
@@ -324,8 +453,16 @@ describe("VMAddDialog submit", () => {
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Create VM failed",
-      { detail: "conflict" },
+      { kind: "translation", key: "dialogs.vmAdd.failed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "conflict",
+            message: "The request conflicts with the current state.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     expect(wrapper.getComponent(ButtonStub).props("loading")).toBe(false);
@@ -402,7 +539,15 @@ describe("VMAddDialog cloud-init support", () => {
 
     expect(mocks.apiPost).not.toHaveBeenCalled();
     expect(wrapper.getComponent(TabsStub).props("modelValue")).toBe("yaml");
-    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).not.toBe("");
+    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).toContain(
+      "The YAML is invalid.",
+    );
+
+    setLocale("ja");
+    await nextTick();
+    expect(getTextareaStub(wrapper, "cloud-init-yaml").props("errorMessages")).toContain(
+      "YAMLの形式が正しくありません。",
+    );
   });
 
   it("YAML clear操作のnullを空文字へ正規化し、検証errorとして扱う", async () => {
@@ -441,15 +586,6 @@ describe("VMAddDialog cloud-init support", () => {
   it("現在usernameの完全一致だけから保存鍵を取得し、自動選択しない", async () => {
     mocks.apiGet.mockResolvedValue({
       data: {
-        count: 2,
-        data: [
-          {
-            username: "alice-admin",
-            scopes: [],
-            projects: [],
-            publickeys: [{ name: "wrong", publickey: "ssh-ed25519 WRONG" }],
-          },
-          {
             username: "alice",
             scopes: [],
             projects: [],
@@ -457,8 +593,6 @@ describe("VMAddDialog cloud-init support", () => {
               { name: "laptop", publickey: "ssh-ed25519 AAAA laptop" },
               { name: "desktop", publickey: "ssh-ed25519 BBBB desktop" },
             ],
-          },
-        ],
       },
     });
     const wrapper = await mountDialog();
@@ -466,9 +600,7 @@ describe("VMAddDialog cloud-init support", () => {
     await toggleCloudInit(wrapper, true);
     const select = getSelectStub(wrapper, "cloud-init-saved-public-keys");
 
-    expect(mocks.apiGet).toHaveBeenCalledWith("/api/users", {
-      params: { query: { nameLike: "alice", limit: 0, page: 0 } },
-    });
+    expect(mocks.apiGet).toHaveBeenCalledWith("/api/users/me");
     expect(select.props("items")).toEqual([
       { name: "laptop", publickey: "ssh-ed25519 AAAA laptop" },
       { name: "desktop", publickey: "ssh-ed25519 BBBB desktop" },
@@ -483,15 +615,10 @@ describe("VMAddDialog cloud-init support", () => {
   it("現在usernameが応答にない場合は保存鍵を空のままにする", async () => {
     mocks.apiGet.mockResolvedValue({
       data: {
-        count: 1,
-        data: [
-          {
             username: "alice-admin",
             scopes: [],
             projects: [],
             publickeys: [{ name: "wrong", publickey: "ssh-ed25519 WRONG" }],
-          },
-        ],
       },
     });
     const wrapper = await mountDialog();
@@ -503,7 +630,14 @@ describe("VMAddDialog cloud-init support", () => {
   });
 
   it("保存鍵APIの失敗を警告して手入力を妨げない", async () => {
-    mocks.apiGet.mockResolvedValue({ error: { detail: "unavailable" } });
+    mocks.apiGet.mockResolvedValue({
+      error: {
+        detail: {
+          code: "service_unavailable",
+          message: "The service is temporarily unavailable.",
+        },
+      },
+    });
     const wrapper = await mountDialog();
 
     await toggleCloudInit(wrapper, true);
@@ -511,6 +645,12 @@ describe("VMAddDialog cloud-init support", () => {
     expect(getSelectStub(wrapper, "cloud-init-saved-public-keys").props("items")).toEqual([]);
     expect(wrapper.get('[data-testid="saved-public-keys-error"]').text()).toContain(
       "could not be loaded"
+    );
+
+    setLocale("ja");
+    await nextTick();
+    expect(wrapper.get('[data-testid="saved-public-keys-error"]').text()).toContain(
+      "取得できませんでした"
     );
     expect(wrapper.find('[data-testid="cloud-init-manual-public-keys"] textarea').exists()).toBe(true);
   });

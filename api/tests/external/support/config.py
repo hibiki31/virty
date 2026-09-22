@@ -41,7 +41,11 @@ class InfraConfigError(ValueError):
 
 
 class StrictConfigModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
+
+    def __repr_args__(self) -> list[tuple[str | None, Any]]:
+        # pytestのfixture表示や例外の補助表示にもlab設定値を残さない。
+        return [("redacted", True)]
 
 
 def _validate_resource_name(value: str) -> str:

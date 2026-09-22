@@ -2,7 +2,7 @@
 from io import StringIO
 from typing import Iterable
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select
@@ -63,17 +63,18 @@ class ExpoterEditor():
 
 @app.get(
     "",
-    response_class=PlainTextResponse,
+    # OpenAPI上の成功media typeだけをtext/plainにし、共通errorはJSONのままにする。
+    response_class=Response,
     responses={
         200: {
-            "content": {"text/plain": {"example": "# HELP virty_vm_len Virty Metrics\n# TYPE virty_vm_len gauge\nvirty_vm_len 10\n# HELP virty_vm_cpus Virty Metrics\n# TYPE virty_vm_cpus gauge\nvirty_vm_cpus 4\n# HELP virty_vm_memorys Virty Metrics\n# TYPE virty_vm_memorys gauge\nvirty_vm_memorys 8192\n# HELP virty_task_counter Virty Metrics\n# TYPE virty_task_counter counter\nvirty_task_counter 5\n# HELP virty_task_runtime Virty Metrics\n# TYPE virty_task_runtime counter\nvirty_task_runtime 12345\n# HELP virty_task_summry Virty Metrics\n# TYPE virty_task_summry counter\nvirty_task_summry{status=\"finish\"} 42\nvirty_task_summry{status=\"init\"} 13\nvirty_task_summry{status=\"start\"} 7\n"}}
+            "content": {"text/plain": {"schema": {"type": "string"}, "example": "# HELP virty_vm_len Virty Metrics\n# TYPE virty_vm_len gauge\nvirty_vm_len 10\n# HELP virty_vm_cpus Virty Metrics\n# TYPE virty_vm_cpus gauge\nvirty_vm_cpus 4\n# HELP virty_vm_memorys Virty Metrics\n# TYPE virty_vm_memorys gauge\nvirty_vm_memorys 8192\n# HELP virty_task_counter Virty Metrics\n# TYPE virty_task_counter counter\nvirty_task_counter 5\n# HELP virty_task_runtime Virty Metrics\n# TYPE virty_task_runtime counter\nvirty_task_runtime 12345\n# HELP virty_task_summry Virty Metrics\n# TYPE virty_task_summry counter\nvirty_task_summry{status=\"finish\"} 42\nvirty_task_summry{status=\"init\"} 13\nvirty_task_summry{status=\"start\"} 7\n"}}
         }
     }
 )
 def get_metrics(
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
-    ):
+    ) -> PlainTextResponse:
     current_user.verify_scope(["metrics.read"])
     vm_metric = db.query(
         func.count(DomainModel.uuid), 
@@ -111,4 +112,4 @@ def get_metrics(
         Metric(value=result[1], label={"status": result[0]}) for result in results
     ])
 
-    return ex.render()
+    return PlainTextResponse(ex.render())

@@ -8,6 +8,7 @@ from mixin.database import get_db
 from mixin.log import setup_logger
 from resource_authorization import get_authorized_storage, require_admin
 from task.functions import TaskManager
+from task.models import TaskModel
 from task.schemas import Task
 
 from .schemas import (
@@ -38,10 +39,11 @@ def download_image(
         req: Request,
         body: ImageDownloadForCreate,
         cu: CurrentUser = Depends(get_current_user),
-        db: Session = Depends(get_db)
-):
+        db: Session = Depends(get_db),
+        admin: bool = False,
+) -> list[TaskModel]:
     cu.verify_scope(["image.manage"])
-    get_authorized_storage(db, body.storage_uuid, cu)
+    get_authorized_storage(db, body.storage_uuid, cu, admin=admin)
     task = TaskManager(db=db)
     task.select(method='post', resource='image', object='download')
     task.commit(user=cu, req=req, body=body)

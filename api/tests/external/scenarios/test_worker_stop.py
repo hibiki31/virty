@@ -29,6 +29,7 @@ def test_running_task_becomes_lost_after_worker_restart(
     client,
     created_network,
     created_storage,
+    created_project,
     vm_images,
 ) -> None:
     server = env.servers[0]
@@ -63,6 +64,7 @@ def test_running_task_becomes_lost_after_worker_restart(
         type="manual",
         name=vm_resource_name(vm.name, server.name),
         node_name=server.name,
+        project_id=created_project,
         memory_mega_byte=4096,
         cpu=4,
         disks=[

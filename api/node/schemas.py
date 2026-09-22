@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 from pydantic import Field
 
@@ -37,12 +37,12 @@ class NodePage(BaseSchema):
 
 class NodeForQuery(GetPagination):
     name_like: str | None = None
+    project_id: str | None = None
 
 
 class NodeRoleForUpdate(BaseSchema):
     node_name: str
-    role_name: str
-    extra_json: dict | None = None
+    role_name: Literal["libvirt"]
 
 
 class NodeInterfaceIpv4Info(BaseSchema):

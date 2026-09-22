@@ -54,7 +54,7 @@ def _routes(path: Path) -> set[tuple[str, str, str]]:
     return routes
 
 
-def test_catalog_covers_reviewed_management_routes_and_only_excludes_sensitive_routes() -> None:
+def test_catalog_covers_reviewed_management_routes_and_excludes_web_only_routes() -> None:
     files = [
         API_ROOT / area / filename
         for area in (
@@ -77,6 +77,17 @@ def test_catalog_covers_reviewed_management_routes_and_only_excludes_sensitive_r
     excluded = {
         ("GET", "/api/vms/vnc/{token}", "get_vnc_address"),
         ("POST", "/api/vms/{uuid}/console-ticket", "create_console_ticket"),
+        # 本人passwordによる再認証とWeb設定用APIはAgentへ追加公開しない。
+        # Agentは既存のuser.me/list/updateを専用adapterで実行する。
+        ("PUT", "/api/users/me/publickeys", "update_own_publickeys"),
+        ("PUT", "/api/users/me/password", "update_own_password"),
+        ("PUT", "/api/users/{username}/reset-password", "reset_user_password"),
+        ("GET", "/api/users/scopes", "get_user_scopes"),
+        ("GET", "/api/users/detail/{username}", "get_user"),
+        # Projectを経由しない管理者用作成はWeb専用とし、Agentへ公開しない。
+        ("POST", "/api/tasks/vms/admin", "create_admin_vm"),
+        # Network poolの構成一括編集は管理画面専用とする。
+        ("PUT", "/api/networks/pools/{pool_id}", "replace_network_pool"),
     }
     catalog = ActionCatalog.load_default()
     catalog_routes = {
@@ -100,7 +111,8 @@ def test_auth_setup_and_generic_execution_are_not_exposed() -> None:
 
 def test_all_tool_schemas_are_valid_strict_root_objects() -> None:
     catalog = ActionCatalog.load_default()
-    assert len(catalog.actions) == 63
+    assert len(catalog.actions) == 69
+    assert catalog.get_by_action("network.provider.create") is None
     for action in catalog.actions:
         tool = action.as_mcp_tool()
         Draft202012Validator.check_schema(tool["inputSchema"])
@@ -149,6 +161,14 @@ def test_all_nested_input_objects_are_closed_and_sensitive_cloud_init_is_write_o
     image_download = catalog.get_by_action("image.download")
     assert image_download is not None
     assert image_download.input_schema["properties"]["imageUrl"]["writeOnly"] is True
+
+    grant_candidates = catalog.get_by_action(
+        "project.resource-grant-candidates.get",
+    )
+    assert grant_candidates is not None
+    assert grant_candidates.mutation is False
+    assert grant_candidates.risk == "R0"
+    assert grant_candidates.required == ("projectId",)
 
 
 def test_catalog_order_and_identifiers_are_deterministic_and_unique() -> None:

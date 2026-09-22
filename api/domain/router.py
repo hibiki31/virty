@@ -2,27 +2,39 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 from os.path import join
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
 from module.xmllib import redact_domain_xml_secrets
 from network.models import NetworkModel
-from project.models import ProjectModel
+from resource_authorization import (
+    get_authorized_project,
+    get_member_project,
+    is_global_inventory,
+)
 from settings import DATA_ROOT
 from storage.models import ImageModel, StorageModel
 
-from .authorization import get_authorized_domain
+from .authorization import can_access_domain, get_authorized_domain
 from .models import DomainConsoleTicketModel, DomainModel
+from .service import (
+    DomainProjectMoveConflictError,
+    DomainProjectMoveNotFoundError,
+    move_domain_to_project,
+)
 from .schemas import (
     DomainConsoleTicket,
     DomainDetail,
     DomainForQuery,
     DomainPage,
+    DomainProjectForUpdate,
     DomainXML,
 )
 
@@ -88,17 +100,18 @@ def get_vms(
         param: DomainForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["vm.read"])
     query = db.query(DomainModel)
 
-    if param.admin:
-        current_user.verify_scope(scopes=["admin"])
-    else:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
         query = query.filter(or_(
-                DomainModel.owner_user_id==current_user.id,
-                DomainModel.owner_project.has(ProjectModel.users.any(username=current_user.id))
+            DomainModel.owner_user_id == current_user.id,
+            DomainModel.owner_project_id.in_(current_user.projects),
         ))
+    if param.project_id is not None:
+        get_authorized_project(db, param.project_id, current_user)
+        query = query.filter(DomainModel.owner_project_id == param.project_id)
     if param.name_like:
         query = query.filter(DomainModel.name.like(f'%{param.name_like}%'))
     if param.node_name_like:
@@ -117,27 +130,72 @@ def get_vms(
 @app.get("/{uuid}",response_model=DomainDetail, operation_id="get_vm")
 def get_vm(
         uuid: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-    ):
+    ) -> DomainDetail:
     current_user.verify_scope(["vm.read"])
-    domain = get_authorized_domain(db, uuid, current_user)
+    domain = get_authorized_domain(db, uuid, current_user, admin=admin)
+    return _get_domain_detail(domain, db)
+
+
+@app.patch("/{uuid}/project", response_model=DomainDetail)
+def update_vm_project(
+        uuid: str,
+        request: DomainProjectForUpdate,
+        current_user: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+):
+    """VMを、接続済みresourceを利用できるprojectへ移動する。"""
+    current_user.verify_scope(["vm.project"])
+    admin_move = current_user.verify_scope(["admin"], return_bool=True)
+    get_authorized_domain(db, uuid, current_user, admin=admin_move)
+    get_member_project(db, request.project_id, current_user)
+    try:
+        domain = move_domain_to_project(
+            db,
+            domain_uuid=uuid,
+            destination_project_id=request.project_id,
+            authorize_locked=lambda locked_domain, destination: (
+                (admin_move or can_access_domain(current_user, locked_domain))
+                and destination.id in current_user.projects
+            ),
+        )
+    except DomainProjectMoveNotFoundError as error:
+        raise ApiError(
+            404,
+            ApiErrorCode.VM_OR_PROJECT_NOT_FOUND,
+            "The VM or project was not found.",
+        ) from error
+    except DomainProjectMoveConflictError as error:
+        raise ApiError(
+            409,
+            ApiErrorCode.VM_PROJECT_RESOURCE_CONFLICT,
+            "VM resources are outside the destination project grants.",
+        ) from error
+    db.commit()
+    db.refresh(domain)
     return _get_domain_detail(domain, db)
 
 
 @app.get("/{uuid}/xml",response_model=DomainXML)
 def get_vm_xml(
         uuid: str,
+        admin: bool = False,
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> DomainXML:
     current_user.verify_scope(["vm.read"])
-    get_authorized_domain(db, uuid, current_user)
+    get_authorized_domain(db, uuid, current_user, admin=admin)
     try:
         with open(join(DATA_ROOT, "xml/domain", f"{uuid}.xml")) as f:
             domain_xml = DomainXML(xml=redact_domain_xml_secrets(f.read()))
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Not found domain")
+        raise ApiError(
+            404,
+            ApiErrorCode.VM_XML_NOT_FOUND,
+            "The VM XML was not found.",
+        )
 
     return domain_xml
 
@@ -146,12 +204,13 @@ def get_vm_xml(
 def create_console_ticket(
     uuid: str,
     response: Response,
+    admin: bool = False,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> DomainConsoleTicket:
     """noVNC resolverだけが一度消費できる短命opaque ticketを発行する。"""
     current_user.verify_scope(["vm.read"])
-    get_authorized_domain(db, uuid, current_user)
+    get_authorized_domain(db, uuid, current_user, admin=admin)
     now = datetime.now(UTC)
     expires_in = 60
     token = secrets.token_urlsafe(32)
@@ -183,18 +242,26 @@ def get_vnc_address(
         DomainConsoleTicketModel.token_hash == token_hash,
     ).with_for_update().one_or_none()
     if ticket is None or ticket.used_at is not None:
-        raise HTTPException(status_code=401, detail="Invalid console ticket")
+        raise ApiError(
+            401,
+            ApiErrorCode.INVALID_CONSOLE_TICKET,
+            "The console ticket is invalid or has already been used.",
+        )
     expires_at = ticket.expires_at
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=UTC)
     if expires_at <= now:
-        raise HTTPException(status_code=401, detail="Invalid console ticket")
+        raise ApiError(
+            401,
+            ApiErrorCode.INVALID_CONSOLE_TICKET,
+            "The console ticket is invalid or has expired.",
+        )
 
     domain_model = db.query(DomainModel).filter(
         DomainModel.uuid == ticket.domain_uuid,
     ).one_or_none()
     if domain_model is None:
-        raise HTTPException(status_code=404, detail="VM not found")
+        raise ApiError(404, ApiErrorCode.VM_NOT_FOUND, "The VM was not found.")
 
     ticket.used_at = now
     db.commit()

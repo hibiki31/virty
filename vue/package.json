@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:fullstack": "playwright test --config playwright.fullstack.config.ts",
     "check:quick": "run-p lint type-check test",
     "check:full": "run-s check:web-types check:full:parallel",
     "check:full:parallel": "run-p lint type-check:full test:coverage"
@@ -26,13 +27,13 @@
     "@highlightjs/vue-plugin": "^2.1.0",
     "@kyvg/vue3-notification": "^3.4.1",
     "@mdi/font": "7.4.47",
-    "date-fns": "^4.1.0",
     "highlight.js": "^11.11.1",
     "ipaddr.js": "^2.2.0",
     "jwt-decode": "^4.0.0",
     "openapi-fetch": "^0.14.0",
     "typescript-cookie": "^1.0.6",
     "vue": "^3.5.13",
+    "vue-i18n": "^11.1.12",
     "vuetify": "^3.8.1",
     "yaml": "2.8.0"
   },

@@ -1,16 +1,33 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, String, Table
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import Column, ForeignKey, String, Table, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mixin.database import Base
 
 if TYPE_CHECKING:
     from project.models import ProjectModel
 
-association_users_to_projects = Table('users_to_projects', Base.metadata,
-    Column('user_id', String, ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE')),
-    Column('project_id', String(6), ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'))
+association_users_to_projects = Table(
+    'users_to_projects',
+    Base.metadata,
+    Column(
+        'user_id',
+        String,
+        ForeignKey('users.username', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    ),
+    Column(
+        'project_id',
+        String(6),
+        ForeignKey('projects.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    ),
+    UniqueConstraint(
+        'user_id',
+        'project_id',
+        name='uq_users_to_projects_user_project',
+    ),
 )
 
 
@@ -18,6 +35,8 @@ class UserModel(Base):
     __tablename__ = "users"
     username: Mapped[str] = Column(String, primary_key=True, index=True)
     hashed_password: Mapped[str] = Column(String)
+    # NULLはmigration前の既存ユーザ。新規作成serviceではUUIDを必ず設定する。
+    session_generation: Mapped[str | None] = mapped_column(String(36), nullable=True)
     
     scopes: Mapped[list["UserScopeModel"]] = relationship(
         "UserScopeModel",

@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   getStorageList: vi.fn(),
   notify: vi.fn(),
   notifyTask: vi.fn(),
-  useNotificationNotify: vi.fn(),
 }));
 
 vi.mock("@/api", () => ({ apiClient: { POST: mocks.apiPost } }));
@@ -29,11 +28,9 @@ vi.mock("@/composables/storage", () => ({
   initStorageList: { count: 0, data: [] },
 }));
 vi.mock("@/composables/notify", () => ({
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
   default: mocks.notify,
   notifyTask: mocks.notifyTask,
-}));
-vi.mock("@kyvg/vue3-notification", () => ({
-  useNotification: () => ({ notify: mocks.useNotificationNotify }),
 }));
 
 function button(wrapper: VueWrapper, text: string) {
@@ -80,8 +77,10 @@ describe("NodeAddDialog", () => {
     expect(mocks.apiPost).toHaveBeenCalledWith("/api/tasks/nodes", {
       body: expect.objectContaining({ port: 22 }),
     });
-    expect(mocks.useNotificationNotify).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "success" }),
+    expect(mocks.notify).toHaveBeenCalledWith(
+      "success",
+      { kind: "translation", key: "dialogs.nodeAdd.success" },
+      { kind: "translation", key: "dialogs.nodeAdd.wait" },
     );
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
     expect(button(wrapper, "Register").props("loading")).toBe(false);
@@ -89,15 +88,30 @@ describe("NodeAddDialog", () => {
 
   it("API failureを通知して開いたままloadingを解除する", async () => {
     mocks.apiPost.mockResolvedValue({
-      error: { detail: "invalid node" },
+      error: {
+        detail: {
+          code: "validation_error",
+          message: "Request validation failed.",
+        },
+      },
       response: new Response(null, { status: 422 }),
     });
     const wrapper = await mountDialog(NodeAddDialog);
     button(wrapper, "Register").element.click();
     await flushPromises();
 
-    expect(mocks.useNotificationNotify).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "error" }),
+    expect(mocks.notify).toHaveBeenCalledWith(
+      "error",
+      { kind: "translation", key: "dialogs.nodeAdd.failed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "validation_error",
+            message: "Request validation failed.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     expect(button(wrapper, "Register").props("loading")).toBe(false);
@@ -128,22 +142,37 @@ describe("StorageAddDialog", () => {
 
     expect(mocks.notifyTask).toHaveBeenCalledWith("storage-task");
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
-    expect(button(wrapper, "ADD").props("loading")).toBe(false);
+    expect(button(wrapper, "Add").props("loading")).toBe(false);
   });
 
   it("API failureを通知して開いたままloadingを解除する", async () => {
-    mocks.apiPost.mockResolvedValue({ error: { detail: "storage conflict" } });
+    mocks.apiPost.mockResolvedValue({
+      error: {
+        detail: {
+          code: "conflict",
+          message: "The request conflicts with the current state.",
+        },
+      },
+    });
     const wrapper = await mountDialog(StorageAddDialog);
     await wrapper.get("form").trigger("submit");
     await flushPromises();
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Register Storage failed",
-      { detail: "storage conflict" },
+      { kind: "translation", key: "dialogs.storageAdd.failed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "conflict",
+            message: "The request conflicts with the current state.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
-    expect(button(wrapper, "ADD").props("loading")).toBe(false);
+    expect(button(wrapper, "Add").props("loading")).toBe(false);
   });
 
   it("Cancelでrequestなしに閉じる", async () => {
@@ -170,23 +199,42 @@ describe("ImageDownloadDialog", () => {
     await flushPromises();
 
     expect(mocks.notifyTask).toHaveBeenCalledWith("image-task");
+    expect(mocks.apiPost).toHaveBeenCalledWith("/api/tasks/images/download", {
+      params: { query: { admin: true } },
+      body: expect.objectContaining({ storageUuid: expect.any(String) }),
+    });
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
-    expect(button(wrapper, "ADD").props("loading")).toBe(false);
+    expect(button(wrapper, "Add").props("loading")).toBe(false);
   });
 
   it("API failureを通知して開いたままloadingを解除する", async () => {
-    mocks.apiPost.mockResolvedValue({ error: { detail: "download failed" } });
+    mocks.apiPost.mockResolvedValue({
+      error: {
+        detail: {
+          code: "service_unavailable",
+          message: "The service is temporarily unavailable.",
+        },
+      },
+    });
     const wrapper = await mountDialog(ImageDownloadDialog);
     await wrapper.get("form").trigger("submit");
     await flushPromises();
 
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",
-      "Download Image failed",
-      { detail: "download failed" },
+      { kind: "translation", key: "dialogs.imageDownload.failed" },
+      {
+        kind: "api-error",
+        error: {
+          detail: {
+            code: "service_unavailable",
+            message: "The service is temporarily unavailable.",
+          },
+        },
+      },
     );
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
-    expect(button(wrapper, "ADD").props("loading")).toBe(false);
+    expect(button(wrapper, "Add").props("loading")).toBe(false);
   });
 
   it("Cancelでrequestなしに閉じる", async () => {

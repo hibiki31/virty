@@ -1,10 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from typing import Any
+
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from auth.router import CurrentUser, get_current_user
 from mixin.database import get_db
+from mixin.exception import ApiError, ApiErrorCode
 from mixin.log import setup_logger
-from resource_authorization import allowed_flavor_ids, require_admin
+from project.service import (
+    ProjectConflictError,
+    ProjectGrantNotFoundError,
+    ensure_flavor_deletable,
+)
+from resource_authorization import allowed_flavor_ids, is_global_inventory, require_admin
 
 from .models import FlavorModel
 from .schemas import Flavor, FlavorForCreate, FlavorForQuery, FlavorPage
@@ -22,9 +30,10 @@ def create_flavor(
     current_user.verify_scope(["flavor.manage"])
     require_admin(current_user)
     if db.query(FlavorModel).filter(FlavorModel.name==request_model.name).one_or_none():
-        raise HTTPException(
-            status_code=400,
-            detail=f"{request_model.name} already exists."
+        raise ApiError(
+            400,
+            ApiErrorCode.FLAVOR_EXISTS,
+            "A flavor with this name already exists.",
         )
     
     flavor_model = FlavorModel(**request_model.model_dump())
@@ -38,11 +47,11 @@ def get_flavors(
         param: FlavorForQuery = Depends(),
         current_user: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     current_user.verify_scope(["flavor.read"])
     query = db.query(FlavorModel)
-    allowed_flavors = allowed_flavor_ids(db, current_user)
-    if allowed_flavors is not None:
+    if not is_global_inventory(current_user, admin=param.admin, project_id=param.project_id):
+        allowed_flavors = allowed_flavor_ids(db, current_user, param.project_id)
         query = query.filter(FlavorModel.id.in_(allowed_flavors))
     
     if param.name_like:
@@ -64,12 +73,21 @@ def delete_flavor(
 ):
     cu.verify_scope(["flavor.manage"])
     require_admin(cu)
-    deleted_model = (
-        db.query(FlavorModel).filter(FlavorModel.id == flavor_id).one_or_none()
-    )
-    if deleted_model is None:
-        raise HTTPException(status_code=404, detail="Flavor not found")
-    db.query(FlavorModel).filter(FlavorModel.id==flavor_id).delete()
+    try:
+        deleted_model = ensure_flavor_deletable(db, flavor_id)
+    except ProjectGrantNotFoundError as exc:
+        raise ApiError(
+            404,
+            ApiErrorCode.FLAVOR_NOT_FOUND,
+            "The flavor was not found.",
+        ) from exc
+    except ProjectConflictError as exc:
+        raise ApiError(
+            409,
+            ApiErrorCode.FLAVOR_IN_USE,
+            "The flavor is still in use.",
+        ) from exc
+    db.delete(deleted_model)
     db.commit()
 
     return deleted_model

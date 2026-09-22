@@ -31,8 +31,8 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 | APIだけ高速確認 | `./devctl quick api` | Ruff、mypy、unit test |
 | Webだけ高速確認 | `./devctl quick web` | ESLint、incremental型check、Vitest |
 | MCPだけ高速確認 | `./devctl quick mcp` | Ruff、unit・contract test |
-| 完了前の必須確認 | `./devctl verify` | API、Web、Proxy、MCP helperの完全検証とimage build |
-| 対象限定の完全確認 | `./devctl verify api\|web\|proxy\|mcp` | CIや原因調査用。完了時は引数なしを使う |
+| 完了前の必須確認 | `./devctl verify` | API、Web、全層E2E、Proxy、MCP helperの完全検証とimage build |
+| 対象限定の完全確認 | `./devctl verify api\|web\|e2e\|proxy\|mcp` | CIや原因調査用。完了時は引数なしを使う |
 | 常駐環境 | `./devctl up` | DB、API、worker、Viteを起動しURLを表示 |
 | 状態確認 | `./devctl ports` / `./devctl logs [service]` | 割当portまたはlogを表示 |
 | container shell | `./devctl shell api\|web` | 対象の開発containerへ入る |
@@ -57,11 +57,59 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 - PostgreSQLは配布環境と同じ18系を使い、healthcheck成功後にmigrationとtestを開始する。
 - Python、Node、PostgreSQL、pgAdminのimageと開発toolは追跡fileで固定し、container起動後に
   `apt`、`pip install`、`pnpm install`で環境を作り直さない。
+- APIのOS packageを取得するbaseは、Debianのsecurity support期間内のBookwormを使い、
+  公式Python imageのdigestを固定する。Bullseyeは[2026年8月末にLTSが終了](https://www.debian.org/News/2026/20260831)し、
+  security packageの取得に失敗するため使用しない。base更新時はcache済みlayerの成功だけで判断せず、
+  新しいbaseで`quick api`と引数なし`verify`を通し、CIでもpackage取得と全層E2Eを確認する。
 - source変更では依存layerを再構築しないCOPY順とBuildKit cacheを維持する。
 - `clean`は現worktree由来のprojectだけを対象にする。`docker system prune`や他projectのvolume削除を
   開発手順へ含めない。
 
 ## 高速確認と完全検証
+
+### 全層E2E
+
+全層E2Eは`./devctl verify e2e`を入口とし、引数なし`verify`と専用CI jobにも組み込む。
+引数なし`verify`ではAPI・Web・MCPの並列検証が成功してから全層E2Eを実行し、2種類の
+browser suiteが同時にCPUを奪い合わないようにする。
+配布用Web bundleから実API、専用PostgreSQL、workerまでを通し、SSH・Ansible・libvirtなどの
+外部境界だけをdeterministic fakeへ置き換える。既存のbrowser側API代替testはWeb単体の
+言語・表示幅・操作性の検証として維持する。
+
+全層E2E用DBとnetworkはAPI integrationから分離し、host portを公開しない。testの前提dataは
+試験専用DBへ準備し、各testを単独実行可能にする。初期設定・認証切れ、権限差、Projectとgrant、
+resource一覧とfilter、VM作成、taskの成功・失敗を対象とする。HTTP responseの代替だけで成功させず、
+実APIの結果とtaskの終端状態を確認する。実機境界は標準verify後の専用lab受入で補完する。
+
+試験専用entrypointはproduction appをそのままmountし、productionと同じstartup処理を行う。
+`/api/__e2e/`配下のreset・故障注入・期限切れtoken・task診断はこのentrypointだけに存在し、通常APIと
+OpenAPIへ追加しない。`VIRTY_TESTING=1`、`VIRTY_BACKEND_MODE=e2e`、PostgreSQLの専用DB名
+`virty_test_e2e`を必須とし、reset直前にも実接続先DBを検査する。未完了taskがあるresetを拒否し、
+browserは有限時間で完了を待つ。resetのDB lock競合はrollbackして409を返し、browserが上限時間内で
+再試行する。fake adapterはAPIとworkerで状態を共有し、対応していない外部操作は
+成功を返さず拒否する。
+
+失敗時も`devctl`がcleanup前に`/.artifacts/e2e/<run_id>/`へreport、HTTP/taskの診断、service状態を
+取り出す。reportにはtest名、source位置、結果、時間を、診断にはHTTP method/path/statusと
+task UUID/status/error code、許可された例外型と実在するsource位置だけを記録する。
+認証入力、cookie、response本文、任意log、画面snapshot、
+trace、videoは保存しない。まずreportの失敗位置と対応する診断を照合し、同じ`verify e2e`で再確認する。
+CIでも同じ成果物だけを7日間保持する。実機のraw logやmanifestをこのartifactへ混ぜない。
+
+専用lab受入は設定本文を表示せずread-only preflightを行い、別途承認された5 scenarioを
+直列実行する。各runの独立inventoryが残存0件を証明できなければ後続scenarioへ進まない。
+
+| 対象 | 標準検証の責任 | 専用labの責任 |
+|---|---|---|
+| 初期設定・認証・権限 | browserから実APIでsetup/login、session失効、管理者・member・非member境界を確認 | lab接続用の最小setupのみ |
+| Project・grant | 作成・変更後の再取得、grant外資源の拒否、一覧filterを確認 | VM作成の前提を準備 |
+| VM・非同期task | UIから投入し実workerの終端状態とinventory反映、失敗表示を確認 | disk、libvirt XML、power、CD-ROM、networkの実状態を確認 |
+| node・storage・network・image | API契約、認可、UI表示、外部失敗時のtask制御を確認 | SSH/SFTP/sudo、Ansible、作成・download・copy・削除のpostconditionを確認 |
+| worker停止・process signal | 状態遷移とcleanup判断をunit/integrationで確認 | worker停止・再開とINT/TERM後の独立inventoryを確認 |
+| 日英・画面幅・入力分岐 | unitとAPI代替型browser testで検証 | 対象外 |
+
+各層の成功はその層の境界だけを保証する。全層E2Eのfake adapter成功を実libvirtの動作実績として
+扱わず、標準検証と実機受入の結果を別々に記録する。
 
 ### API
 
@@ -82,6 +130,11 @@ unitは10秒、integrationは60秒、fake task待機は30秒を上限とし、ti
 認証、user、project、flavorのようにlab固有adapterを使わないAPI契約は`integration`で検証し、
 external suiteへ重複させない。
 
+API errorのcontract testは、通常APIとAgent APIの4xx・5xxが共通envelopeを返すこと、codeが
+`lower_snake_case`であること、parameterが許可型だけであることを確認する。422ではfield errorを
+安定したcodeへ正規化し、入力値、validatorのraw message、内部contextがresponseへ含まれないことを
+検査する。旧`detail` string・listやAgent API固有形式は互換対象にせず、testで再導入を拒否する。
+
 ### Web
 
 `quick web`は次を一度ずつ実行する。
@@ -95,36 +148,43 @@ external suiteへ重複させない。
 不一致ではworking treeを書き換えず失敗する。OpenAPI型もAPI schemaから再生成して比較する。
 更新が必要な場合だけ`./devctl generate web-types`または`./devctl generate openapi`を使う。
 
+日英辞書のcontract testはleaf key、補間parameter、複数形の定義を比較し、片方だけの追加、空文言、
+不一致を失敗にする。locale処理は保存値、browser言語、英語fallbackの優先順位と不正保存値をunit testし、
+Vue・Vuetify、`html lang`、route title、日時・数値が一つのlocaleへ追従することを検査する。
+Playwrightでは英語localeを明示した既存critical flowに加え、日本語への切替、再読込後の保持、login・初期設定、
+Vuetify組込文言を確認する。task logなど原文dataがlocale切替で変化しないことも検査する。
+
 coverage summaryは`verify web`とCIのlogへ記録するが、既存codeへ根拠のない一律閾値は設定しない。新規・変更する処理には、
 境界値、失敗path、API response変換を対象にしたtestを追加する。
 認証、API error整形、pagination、task pollingのように複数画面へ影響する共通処理はpure helperへ分離し、
 lines/statements 90%以上、branches/functions 80%以上を対象moduleの回帰gateとする。全体coverageは
 重要flowの代替指標にせず、同じ対象範囲の推移を比較するために記録する。
 
-実browserを必要とするWeb受入は`verify web`だけで実行し、`quick web`へ含めない。Playwrightは
+API代替型のWeb受入は`verify web`で実行し、`quick web`へ含めない。Playwrightは
 production buildと同じbundleをHTTP専用test runtimeで配信し、browser側の`page.route`で必要なAPI responseを
-deterministicにinterceptする。本番runtimeのTLS強制設定は変更せず、別のAPI stub serviceも起動しない。
+deterministicにinterceptする。production Nginx設定は別のsmoke testで構文とHTTP配信を確認し、
+別のAPI stub serviceは起動しない。
 認証redirect、一覧から詳細への遷移、主要dialogのdesktop/narrow viewportを少数のcritical flowとして確認し、
 external labへは接続しない。
+VitestとAPI代替型browser testは2 worker、全層E2Eは1 workerで実行し、worktreeを並行検証するときの
+CPU競合を抑える。再試行で失敗を隠さず、各testのtimeout内に完了することを要求する。
 
-### 2026-08-22の基準計測
+### 2026-09-22の基準計測
 
-最新`master`統合後、Docker Engine 29.7.2、Compose 5.4.0、x86_64、8 CPU、62.7 GiB memoryの
-開発hostで再計測した。base imageと依存layerは取得済みであり、wall timeは性能SLOではなく同じhostでの
-環境比較用基準である。
+最新`master`統合後、8 CPUのLinux開発hostで再計測した。base imageと依存layerは取得済みであり、
+同じhostの別worktreeの検証負荷も変動するため、所要時間を性能SLOとして扱わない。
 
 | 実行 | 確認した基準 |
 |---|---|
-| `./devctl quick api` | Ruff、mypy 136 source、unit 221件成功、Pydantic warning 0 |
-| `./devctl quick web` | ESLint、incremental型check、Vitest 23 file・100件成功 |
-| `./devctl verify api` | migration、OpenAPI drift 0、unit・integration 262件、production image成功 |
-| `./devctl verify web` | Vitest 100件、Playwright 3 flow、OpenAPI・Web生成型drift 0、production image成功 |
-| `./devctl verify` | API 262件、Web 100件、Playwright 3 flow、MCP 51件、Proxyを含め約110秒で成功 |
+| `./devctl quick api` | Ruff、mypy 164 source、unit 333件成功、Pydantic warning 0 |
+| `./devctl quick web` | ESLint、incremental型check、Vitest 31 file・156件成功 |
+| `./devctl verify e2e` | 実API・DB・workerを接続した14件成功、診断artifactの回収成功 |
+| `./devctl verify` | API 421件、Vitest 156件、API代替型Playwright 48件、全層E2E 14件、MCP 51件成功。migration、生成型drift 0、Proxyを含むproduction imageも確認 |
 
-Web全体coverageはstatements 43.17%、branches 45.65%、functions 36.24%、lines 44.74%である。
-個別gateは`auth.ts`と`pagination.ts`が全指標100%、`notify.ts`がstatements/lines 92.30%、
-branches 85.71%、functions 100%、`taskPolling.ts`がstatements 94.11%、branches 84%、
-functions/lines 100%で成功した。引数なし`verify`はAPI、Web、MCPを並列実行し、外部labへ接続しない。
+Web全体coverageはstatements 40.75%、branches 42.13%、functions 36.31%、lines 42.31%である。
+個別gateはcomposableの`auth.ts`、`pagination.ts`、`notify.ts`、`projectFilter.ts`が全指標100%、
+`taskPolling.ts`がstatements 94.11%、branches 84%、functions/lines 100%で成功した。
+標準検証は外部labへ接続しない。実機受入の成功は上記件数へ含めない。
 
 ## 実機SSH・Ansible・libvirt test
 
@@ -173,6 +233,10 @@ OpenAPI schemaと`openapi-typescript`の出力は一時directoryを介してone-
 host portやhost pnpmを使わず、最後だけhost userとして追跡fileへinstallするため所有者を変えない。
 追跡する`vue/src/api/openapi.d.ts`を手編集しない。
 
+error codeまたはfield error codeを追加・変更するときは、backendのcode定義とschema、OpenAPI、
+frontendの日英辞書、API・辞書contract testを同じ変更で更新する。共通error envelopeへの移行では
+旧形式とのdual response期間を設けず、すべての通常API・Agent APIと利用側を一度に切り替える。
+
 ## DB schema変更
 
 1. SQLAlchemy modelとAlembic metadataへのimportを更新する。
@@ -216,8 +280,9 @@ hex 32 byte値はbase64として48 byteに復号されるため使用しない�
 
 ## CI、文書、Git
 
-- CIはAPI、Web、Proxy、MCP helperを分離して`./devctl verify <component>`を実行する。tag publishも同じverifyを
-  registry loginより前に必須化し、component別cache scopeを使う。
+- master向けPRとmaster pushのCIはAPI、Web、全層E2E、Proxy、MCP helperを分離して
+  `./devctl verify <component>`を実行する。API・Web・共通基盤の変更で全層E2E jobを起動する。
+  tag publishは公開対象componentのverifyをregistry loginより前に実行する。cache scopeはcomponentごとに分ける。
 - `docs/development.md`を手順の正本とし、component READMEやCIへcommand列を複製しない。
 - 文書だけの変更でも`git diff --check`と内部linkの存在を確認する。
 - 完了前に引数なしの`./devctl verify`を実行する。実行できない項目と理由は明記する。

@@ -40,6 +40,7 @@ class NetworkForQuery(GetPagination):
     name_like: str | None = None
     node_name_like: str | None = None
     type: str | None = None
+    project_id: str | None = None
 
 
 class NetworkPage(BaseSchema):
@@ -77,17 +78,6 @@ class NetworkOVSForCreate(BaseSchema):
     
 
 
-class NetworkProviderForCreate(BaseSchema):
-    name: str | None = None
-    dns_domain: str | None = None
-    network_address: str | None = None
-    network_prefix: str | None = None
-    gateway_address: str | None = None
-    dhcp_start: str | None = None
-    dhcp_end: str | None = None
-    network_node: str | None = None
-    
-
 class NetworkXML(BaseSchema):
     xml: str 
 
@@ -108,6 +98,16 @@ class NetworkPoolForUpdate(BaseSchema):
     port_name:str | None = None
 
 
+class NetworkPoolPortSelection(BaseSchema):
+    network_uuid: str
+    port_name: str
+
+
+class NetworkPoolForReplace(BaseSchema):
+    network_uuids: list[str]
+    ports: list[NetworkPoolPortSelection]
+
+
 class NetworkForNetworkPool(BaseSchema):
     name: str
     uuid: str
@@ -125,11 +125,12 @@ class NetworkPoolPort(BaseSchema):
 
 
 class NetworkPool(BaseSchema):
-    id: int | None = None
-    name: str | None = None
-    networks: List[NetworkForNetworkPool] | None = None
-    ports: List[NetworkPoolPort] | None = None
-    
+    id: int
+    name: str | None
+    networks: List[NetworkForNetworkPool]
+    ports: List[NetworkPoolPort]
 
-class PostVXLANInternal(BaseSchema):
-    project_id: str
+
+class NetworkPoolDeleteResponse(BaseSchema):
+    deleted: Literal[True]
+    id: int

@@ -1,5 +1,7 @@
 import { apiClient } from "@/api";
 import type { paths } from "@/api/openapi";
+import { hasAdminScope } from "@/composables/auth";
+import { useAuthStore } from "@/stores/auth";
 
 export type typeListNode =
   paths["/api/nodes"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -9,12 +11,13 @@ export const initNodeList: typeListNode = {
   data: [],
 };
 
-export async function getNode() {
+export async function getNode(projectId?: string | null) {
   const res = await apiClient.GET("/api/nodes", {
     params: {
       query: {
-        admin: true,
+        admin: !projectId && hasAdminScope(useAuthStore().scopes),
         limit: 100,
+        projectId,
       },
     },
   });

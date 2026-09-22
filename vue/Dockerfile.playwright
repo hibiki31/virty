@@ -3,7 +3,9 @@ FROM mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425d
 WORKDIR /workspace/vue
 
 RUN corepack enable \
-    && chown pwuser:pwuser /workspace/vue
+    && mkdir -p /workspace/vue/fullstack-results/diagnostics \
+    && chown pwuser:pwuser /workspace/vue \
+    && chown -R pwuser:pwuser /workspace/vue/fullstack-results
 
 USER pwuser
 

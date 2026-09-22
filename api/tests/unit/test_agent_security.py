@@ -5,7 +5,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TypeVar, cast
+from typing import Any, TypeVar, cast
 
 import jwt
 import pytest
@@ -16,17 +16,18 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
+import models as _all_models  # noqa: F401
 from auth.router import CurrentUser
 from agent.actions import (
     _apply_reservation_contract,
+    _preflight_task_action,
     _validate_action_references,
     _validate_identity_admin_scope,
     _validate_public_json,
-    _validate_resolved_constraints,
     public_input_schema,
     resolve_action_target,
 )
-from agent.adapters import ResolvedTarget
+from agent.adapters import ResolvedTarget, _agent_project
 from agent import actions, adapters, tasks as agent_tasks
 from agent.audit import redact_secrets
 from agent.catalog import ACTIONS, PUBLIC_CATALOG
@@ -44,6 +45,7 @@ from agent.exceptions import (
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    NotFoundError,
 )
 from agent.input_models import EmptyInput
 from agent.models import (
@@ -65,7 +67,13 @@ from agent.policy import (
     _validate_task_constraints,
     authenticate_lease,
     authorize_operation_access,
+    resolve_generation,
     validate_worker_dispatch,
+)
+from agent.project_boundary import (
+    PROJECT_MEMBERSHIP_MUTATIONS,
+    validate_mutation_lease_constraints,
+    validate_project_mutation_targets,
 )
 from agent.schemas import (
     ActionRequest,
@@ -75,7 +83,7 @@ from agent.schemas import (
     PairingCreateRequest,
 )
 from agent.router import AgentAPIRoute, app as agent_router, list_operation_reconciliations
-from agent.service import AgentManagementService
+from agent.service import AgentIdentityService, AgentManagementService
 from agent.tasks import worker_task
 from agent.webauthn import (
     AuthenticationVerification,
@@ -87,6 +95,22 @@ from task.functions import calculate_target_reservation_specs
 from task.models import TaskModel, TaskTargetReservationModel
 from task.schemas import TaskRequest
 from user.models import UserModel, UserScopeModel
+from flavor.models import FlavorModel
+from mixin.database import Base
+from domain.models import DomainModel
+from network.models import (
+    NetworkModel,
+    NetworkPoolModel,
+    NetworkPortgroupModel,
+)
+from node.models import NodeModel
+from project.models import ProjectModel
+from storage.models import (
+    AssociationStoragePoolModel,
+    ImageModel,
+    StorageModel,
+    StoragePoolModel,
+)
 
 _T = TypeVar("_T")
 
@@ -137,7 +161,8 @@ def _context(
 
 
 def test_catalog_is_explicit_and_strict() -> None:
-    assert len(ACTIONS) == 63
+    assert len(ACTIONS) == 69
+    assert "network.provider.create" not in ACTIONS
 
     def assert_strict(schema: object) -> None:
         if isinstance(schema, dict):
@@ -152,11 +177,1133 @@ def test_catalog_is_explicit_and_strict() -> None:
     for action_id in ACTIONS:
         assert_strict(public_input_schema(action_id))
     assert {item["action"] for item in PUBLIC_CATALOG["actions"]} == set(ACTIONS)
+    assert {
+        definition.adapter
+        for definition in ACTIONS.values()
+        if definition.kind == "direct"
+    } <= set(adapters.DIRECT_ADAPTERS)
+    assert {
+        definition.adapter
+        for definition in ACTIONS.values()
+        if definition.kind == "read"
+    } <= set(adapters.READ_ADAPTERS)
     assert ACTIONS["user.create"].risk == "R3"
     assert ACTIONS["user.create"].destructive is True
     assert ACTIONS["user.update"].risk == "R3"
+    assert ACTIONS["project.resource-grants.update"].risk == "R3"
+    assert ACTIONS["project.resource-grants.update"].destructive is False
+    assert ACTIONS["project.resource-grant-candidates.get"].risk == "R0"
+    assert ACTIONS["project.resource-grant-candidates.get"].mutation is False
     assert ACTIONS["node.create"].network_change is True
     assert ACTIONS["vm.create"].network_change is True
+
+
+def test_agent_resource_list_catalog_exposes_optional_project_filter() -> None:
+    project_filtered_actions = {
+        "node.list",
+        "vm.list",
+        "storage.list",
+        "storage.pool.list",
+        "image.list",
+        "network.list",
+        "network.pool.list",
+        "flavor.list",
+    }
+    for action_id in project_filtered_actions:
+        schema = public_input_schema(action_id)
+        assert "projectId" in schema["properties"], action_id
+        _validate_public_json(action_id, {"projectId": "aaaaaa"})
+    assert "projectId" not in public_input_schema("project.list")["properties"]
+
+    assert ACTIONS["storage.pool.list"].input_model == (
+        "agent.input_models.AgentProjectFilterInput"
+    )
+    assert ACTIONS["network.pool.list"].input_model == (
+        "agent.input_models.AgentProjectFilterInput"
+    )
+
+
+def test_agent_network_serializer_hides_ungranted_portgroups(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    network = SimpleNamespace(
+        uuid="network-a",
+        name="network-a",
+        description=None,
+        node_name="node-a",
+        bridge="virbr-a",
+        type="openvswitch",
+        active=True,
+        auto_start=True,
+        dhcp=False,
+        ip=None,
+        mac=None,
+        portgroups=[
+            SimpleNamespace(name="tenant-a", vlan_id="101", is_default=False),
+            SimpleNamespace(name="tenant-b", vlan_id="202", is_default=False),
+        ],
+    )
+    monkeypatch.setattr(adapters, "_model_session", lambda _: None)
+    monkeypatch.setattr(adapters, "resolve_generation", lambda *_, **__: "gen")
+
+    serialized = adapters._network_dict(cast(Any, network), {"tenant-a"})
+
+    assert serialized["portgroups"] == [{
+        "name": "tenant-a",
+        "vlanId": "101",
+        "isDefault": False,
+    }]
+
+
+def test_agent_network_xml_is_hidden_for_port_only_grant(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = SimpleNamespace(get=lambda *_: object())
+    monkeypatch.setattr(
+        adapters,
+        "_allowed_network_ids",
+        lambda *_: {"network-a"},
+    )
+    monkeypatch.setattr(
+        adapters,
+        "_allowed_network_port_names",
+        lambda *_: {"tenant-a"},
+    )
+
+    with pytest.raises(NotFoundError) as raised:
+        adapters.network_xml(
+            cast(Session, db),
+            _context(scopes=["network.xml.get"], projects=["project-a"]),
+            None,
+            SimpleNamespace(
+                resource_id="network-a",
+                project_id="project-a",
+            ),
+        )
+
+    assert raised.value.code == "network_xml_not_found"
+
+
+def test_agent_reads_use_current_effective_project_membership(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """global adminでも通常readは現在のProject所属境界を越えない。"""
+
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    monkeypatch.setattr(adapters, "resolve_generation", lambda *_, **__: "gen")
+
+    def node(name: str) -> NodeModel:
+        return NodeModel(
+            name=name,
+            description=name,
+            domain=f"{name}.example.invalid",
+            user_name="virty",
+            port=22,
+            core=8,
+            memory=16384,
+            cpu_gen="x86_64",
+            os_like="linux",
+            os_name="Linux",
+            os_version="1",
+            status=1,
+            ansible_facts={"node": name},
+        )
+
+    def storage(name: str, node_name: str) -> StorageModel:
+        return StorageModel(
+            uuid=name,
+            name=name,
+            node_name=node_name,
+            capacity=1024,
+            available=512,
+            path=f"/{name}",
+            active=True,
+            auto_start=True,
+            status=1,
+            update_token=f"token-{name}",
+        )
+
+    def network(name: str, node_name: str) -> NetworkModel:
+        model = NetworkModel(
+            uuid=name,
+            name=name,
+            node_name=node_name,
+            bridge=f"br-{name}",
+            type="openvswitch",
+            active=True,
+            auto_start=True,
+            update_token=f"token-{name}",
+        )
+        model.description = name
+        model.dhcp = False
+        return model
+
+    def flavor(name: str) -> FlavorModel:
+        return FlavorModel(
+            name=name,
+            os="linux",
+            manual_url=f"https://docs.example.invalid/{name}",
+            icon="linux",
+            cloud_init_ready=False,
+            cloud_init_user="cloud-user",
+            description=name,
+        )
+
+    def vm(
+        name: str,
+        node_name: str,
+        *,
+        owner_user_id: str | None = None,
+        owner_project_id: str | None = None,
+    ) -> DomainModel:
+        model = DomainModel(
+            uuid=name,
+            name=name,
+            core=1,
+            memory=1024,
+            status=1,
+            update_token=f"token-{name}",
+            storage_used=0,
+            node_name=node_name,
+        )
+        model.description = name
+        model.owner_user_id = owner_user_id
+        model.owner_project_id = owner_project_id
+        return model
+
+    with Session(engine) as db:
+        admin = UserModel(username="admin", hashed_password="unused")
+        other = UserModel(username="other", hashed_password="unused")
+        node_a = node("node-a")
+        node_b = node("node-b")
+        node_personal = node("node-personal")
+        storage_a = storage("storage-a", node_a.name)
+        storage_b = storage("storage-b", node_b.name)
+        storage_pool_a = StoragePoolModel(
+            name="storage-pool-a",
+            storages=[AssociationStoragePoolModel(storage=storage_a)],
+        )
+        storage_pool_b = StoragePoolModel(
+            name="storage-pool-b",
+            storages=[AssociationStoragePoolModel(storage=storage_b)],
+        )
+        network_a = network("network-a", node_a.name)
+        network_b = network("network-b", node_b.name)
+        port_a = NetworkPortgroupModel(
+            network=network_a,
+            name="tenant-a",
+            is_default=False,
+            update_token="token-port-a",
+        )
+        port_a.vlan_id = "101"
+        hidden_port = NetworkPortgroupModel(
+            network=network_a,
+            name="tenant-hidden",
+            is_default=False,
+            update_token="token-port-hidden",
+        )
+        hidden_port.vlan_id = "999"
+        network_pool_a = NetworkPoolModel(
+            name="network-pool-a",
+            ports=[port_a],
+        )
+        network_pool_b = NetworkPoolModel(
+            name="network-pool-b",
+            networks=[network_b],
+        )
+        flavor_a = flavor("flavor-a")
+        flavor_b = flavor("flavor-b")
+        project_a = ProjectModel(
+            id="aaaaaa",
+            name="Project A",
+            users=[admin],
+            storage_pools=[storage_pool_a],
+            network_pools=[network_pool_a],
+            flavors=[flavor_a],
+        )
+        project_b = ProjectModel(
+            id="bbbbbb",
+            name="Project B",
+            users=[other],
+            storage_pools=[storage_pool_b],
+            network_pools=[network_pool_b],
+            flavors=[flavor_b],
+        )
+        images = [
+            ImageModel(
+                name="generic-a.qcow2",
+                storage=storage_a,
+                capacity=1,
+                allocation=1,
+                path="/storage-a/generic-a.qcow2",
+                update_token="image-generic-a",
+            ),
+            ImageModel(
+                name="flavor-a.qcow2",
+                storage=storage_a,
+                flavor=flavor_a,
+                capacity=1,
+                allocation=1,
+                path="/storage-a/flavor-a.qcow2",
+                update_token="image-flavor-a",
+            ),
+            ImageModel(
+                name="cross-project.qcow2",
+                storage=storage_a,
+                flavor=flavor_b,
+                capacity=1,
+                allocation=1,
+                path="/storage-a/cross-project.qcow2",
+                update_token="image-cross",
+            ),
+            ImageModel(
+                name="generic-b.qcow2",
+                storage=storage_b,
+                capacity=1,
+                allocation=1,
+                path="/storage-b/generic-b.qcow2",
+                update_token="image-generic-b",
+            ),
+        ]
+        db.add_all([
+            admin,
+            other,
+            UserScopeModel(user_id=admin.username, name="admin"),
+            node_a,
+            node_b,
+            node_personal,
+            project_a,
+            project_b,
+            hidden_port,
+            *images,
+            vm("vm-project-a", node_a.name, owner_project_id=project_a.id),
+            vm("vm-project-b", node_b.name, owner_project_id=project_b.id),
+            vm(
+                "vm-personal-admin",
+                node_personal.name,
+                owner_user_id=admin.username,
+            ),
+            vm("vm-personal-other", node_b.name, owner_user_id=other.username),
+        ])
+        db.commit()
+        db.expire_all()
+
+        context = _context(scopes=[
+            "project.list",
+            "project.get",
+            "vm.list",
+            "vm.get",
+            "node.list",
+            "node.get",
+            "node.facts",
+            "storage.list",
+            "storage.get",
+            "storage.pool.list",
+            "image.list",
+            "network.list",
+            "network.get",
+            "network.xml.get",
+            "network.pool.list",
+            "flavor.list",
+        ])
+        query = SimpleNamespace(limit=25, page=0)
+
+        assert {
+            item["id"] for item in adapters.project_list(db, context, query, None)["data"]
+        } == {project_a.id}
+        assert {
+            item["uuid"] for item in adapters.vm_list(db, context, query, None)["data"]
+        } == {"vm-project-a", "vm-personal-admin"}
+        assert {
+            item["name"] for item in adapters.node_list(db, context, query, None)["data"]
+        } == {node_a.name, node_personal.name}
+        assert {
+            item["uuid"] for item in adapters.storage_list(db, context, query, None)["data"]
+        } == {storage_a.uuid}
+        assert {
+            item["id"] for item in adapters.storage_pool_list(db, context, None, None)["data"]
+        } == {storage_pool_a.id}
+        assert {
+            item["name"] for item in adapters.image_list(db, context, query, None)["data"]
+        } == {"generic-a.qcow2", "flavor-a.qcow2"}
+        network_result = adapters.network_list(db, context, query, None)
+        assert [item["uuid"] for item in network_result["data"]] == [network_a.uuid]
+        assert network_result["data"][0]["portgroups"] == [{
+            "name": port_a.name,
+            "vlanId": port_a.vlan_id,
+            "isDefault": False,
+        }]
+        assert {
+            item["id"] for item in adapters.network_pool_list(db, context, None, None)["data"]
+        } == {network_pool_a.id}
+        assert {
+            item["id"] for item in adapters.flavor_list(db, context, query, None)["data"]
+        } == {flavor_a.id}
+        assert adapters.node_facts(
+            db,
+            context,
+            None,
+            SimpleNamespace(resource_id=node_a.name),
+        ) == {"node": node_a.name}
+        assert actions._select_server_project(
+            db,
+            context,
+            {project_a.id, project_b.id},
+        ) == project_a.id
+
+        project_query = SimpleNamespace(
+            limit=25,
+            page=0,
+            project_id=project_a.id,
+        )
+        assert {
+            item["uuid"]
+            for item in adapters.vm_list(db, context, project_query, None)["data"]
+        } == {"vm-project-a"}
+        assert {
+            item["name"]
+            for item in adapters.node_list(db, context, project_query, None)["data"]
+        } == {node_a.name}
+        assert {
+            item["uuid"]
+            for item in adapters.storage_list(db, context, project_query, None)["data"]
+        } == {storage_a.uuid}
+        assert adapters.storage_pool_list(
+            db,
+            context,
+            project_query,
+            None,
+        )["count"] == 1
+        assert {
+            item["name"]
+            for item in adapters.image_list(db, context, project_query, None)["data"]
+        } == {"generic-a.qcow2", "flavor-a.qcow2"}
+        assert {
+            item["uuid"]
+            for item in adapters.network_list(db, context, project_query, None)["data"]
+        } == {network_a.uuid}
+        assert adapters.network_pool_list(
+            db,
+            context,
+            project_query,
+            None,
+        )["count"] == 1
+        assert {
+            item["id"]
+            for item in adapters.flavor_list(db, context, project_query, None)["data"]
+        } == {flavor_a.id}
+
+        with pytest.raises(NotFoundError, match="project"):
+            adapters.vm_list(
+                db,
+                context,
+                SimpleNamespace(limit=25, page=0, project_id=project_b.id),
+                None,
+            )
+
+        cdrom_target = ResolvedTarget(
+            "vm",
+            "vm-project-a",
+            project_a.id,
+            node_a.name,
+        )
+        with pytest.raises(AuthorizationError, match="CD-ROM image"):
+            _validate_action_references(
+                db,
+                context=context,
+                definition=ACTIONS["vm.cdrom.update"],
+                model=SimpleNamespace(path="/storage-a/cross-project.qcow2"),
+                target=cdrom_target,
+            )
+        cdrom_allowed = _validate_action_references(
+            db,
+            context=context,
+            definition=ACTIONS["vm.cdrom.update"],
+            model=SimpleNamespace(path="/storage-a/generic-a.qcow2"),
+            target=cdrom_target,
+        )
+        assert any(
+            item.get("resourceType") == "image"
+            and item.get("projectId") == project_a.id
+            for item in cdrom_allowed.related_targets
+        )
+
+        unauthorized_targets = [
+            (adapters.project_get, project_b.id, project_b.id),
+            (adapters.vm_get, "vm-project-b", project_b.id),
+            (adapters.node_get, node_b.name, project_a.id),
+            (adapters.storage_get, storage_b.uuid, project_a.id),
+            (adapters.network_get, network_b.uuid, project_a.id),
+            (adapters.network_xml, network_b.uuid, project_a.id),
+        ]
+        for adapter, resource_id, target_project_id in unauthorized_targets:
+            with pytest.raises(NotFoundError):
+                adapter(
+                    db,
+                    context,
+                    None,
+                    SimpleNamespace(
+                        resource_id=resource_id,
+                        project_id=target_project_id,
+                    ),
+                )
+
+        constrained = _context(scopes=["vm.list"], projects=[project_a.id])
+        assert {
+            item["uuid"]
+            for item in adapters.vm_list(db, constrained, query, None)["data"]
+        } == {"vm-project-a"}
+        revoked = _context(scopes=["project.list", "vm.list"], projects=[project_b.id])
+        assert adapters.project_list(db, revoked, query, None)["count"] == 0
+        assert adapters.vm_list(db, revoked, query, None)["count"] == 0
+
+
+def test_unscoped_agent_mutations_use_current_membership_and_personal_owner() -> None:
+    """空projectIdsは全Project許可ではなく、DB上の現在所属を使う。"""
+
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        admin = UserModel(username="admin", hashed_password="unused")
+        other = UserModel(username="other", hashed_password="unused")
+        node = NodeModel(name="node-1")
+        storage_a = StorageModel(
+            uuid="storage-a",
+            name="storage-a",
+            node_name=node.name,
+            capacity=1024,
+            available=512,
+            path="/storage-a",
+            active=True,
+            auto_start=True,
+            status=1,
+            update_token="storage-a-token",
+        )
+        storage_b = StorageModel(
+            uuid="storage-b",
+            name="storage-b",
+            node_name=node.name,
+            capacity=1024,
+            available=512,
+            path="/storage-b",
+            active=True,
+            auto_start=True,
+            status=1,
+            update_token="storage-b-token",
+        )
+        project_a = ProjectModel(
+            id="aaaaaa",
+            name="Project A",
+            users=[admin],
+            storage_pools=[StoragePoolModel(
+                name="pool-a",
+                storages=[AssociationStoragePoolModel(storage=storage_a)],
+            )],
+        )
+        project_b = ProjectModel(
+            id="bbbbbb",
+            name="Project B",
+            users=[other],
+            storage_pools=[StoragePoolModel(
+                name="pool-b",
+                storages=[AssociationStoragePoolModel(storage=storage_b)],
+            )],
+        )
+
+        def vm(
+            uuid: str,
+            *,
+            owner_user_id: str | None = None,
+            owner_project_id: str | None = None,
+        ) -> DomainModel:
+            model = DomainModel(
+                uuid=uuid,
+                name=uuid,
+                core=1,
+                memory=1024,
+                status=1,
+                update_token=f"{uuid}-token",
+                storage_used=0,
+                node_name=node.name,
+            )
+            model.owner_user_id = owner_user_id
+            model.owner_project_id = owner_project_id
+            return model
+
+        db.add_all([
+            node,
+            project_a,
+            project_b,
+            vm("vm-project-a", owner_project_id=project_a.id),
+            vm("vm-project-b", owner_project_id=project_b.id),
+            vm("vm-personal-admin", owner_user_id=admin.username),
+            vm("vm-personal-other", owner_user_id=other.username),
+        ])
+        db.commit()
+        db.expire_all()
+
+        def primary(
+            resource_type: str,
+            resource_id: str,
+            project_id: str | None = None,
+        ) -> list[dict[str, str]]:
+            target = {
+                "resourceType": resource_type,
+                "resourceId": resource_id,
+            }
+            if project_id is not None:
+                target["projectId"] = project_id
+            return [target]
+
+        existing_vm_actions = {
+            "vm.delete",
+            "vm.power.update",
+            "vm.cdrom.update",
+            "vm.network.update",
+            "vm.project.update",
+        }
+        for action_id in existing_vm_actions:
+            with pytest.raises(AuthorizationError, match="所属範囲外"):
+                validate_project_mutation_targets(
+                    db,
+                    principal_id=admin.username,
+                    action_id=action_id,
+                    targets=primary("vm", "vm-project-b", project_b.id),
+                )
+            with pytest.raises(AuthorizationError, match="個人owner"):
+                validate_project_mutation_targets(
+                    db,
+                    principal_id=admin.username,
+                    action_id=action_id,
+                    targets=primary("vm", "vm-personal-other"),
+                )
+
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="vm.delete",
+            targets=primary("vm", "vm-project-a", project_a.id),
+        )
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="vm.delete",
+            targets=primary("vm", "vm-personal-admin"),
+        )
+
+        with pytest.raises(AuthorizationError, match="所属範囲外"):
+            validate_project_mutation_targets(
+                db,
+                principal_id=admin.username,
+                action_id="project.update",
+                targets=primary("project", project_b.id, project_b.id),
+            )
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="project.update",
+            targets=primary("project", project_a.id, project_a.id),
+        )
+
+        with pytest.raises(AuthorizationError, match="所属範囲外"):
+            validate_project_mutation_targets(
+                db,
+                principal_id=admin.username,
+                action_id="storage.metadata.update",
+                targets=primary("storage", storage_b.uuid, project_b.id),
+            )
+        with pytest.raises(AuthorizationError, match="grant範囲外"):
+            validate_project_mutation_targets(
+                db,
+                principal_id=admin.username,
+                action_id="storage.metadata.update",
+                targets=primary("storage", storage_b.uuid, project_a.id),
+            )
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="storage.metadata.update",
+            targets=primary("storage", storage_a.uuid, project_a.id),
+        )
+
+        with pytest.raises(AuthorizationError, match="grant範囲外"):
+            validate_project_mutation_targets(
+                db,
+                principal_id=admin.username,
+                action_id="image.download",
+                targets=[
+                    *primary("image", "sha256:destination", project_a.id),
+                    *primary("storage", storage_b.uuid, project_a.id),
+                ],
+            )
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="image.download",
+            targets=[
+                *primary("image", "sha256:destination", project_a.id),
+                *primary("storage", storage_a.uuid, project_a.id),
+            ],
+        )
+
+        # storage lifecycleはglobal admin操作なのでProject grantに依存しない。
+        validate_project_mutation_targets(
+            db,
+            principal_id=admin.username,
+            action_id="storage.delete",
+            targets=primary("storage", storage_b.uuid),
+        )
+
+        replay_task = _task(SimpleNamespace(
+            uuid="operation-1",
+            dependence_uuid=None,
+            correlation_id=None,
+            method="agent",
+            resource="direct",
+            object="storage.metadata.update",
+            principal_id=admin.username,
+            user_id=admin.username,
+            resolved_targets=primary("storage", storage_b.uuid, project_b.id),
+        ))
+        context = _context(scopes=["storage.metadata.update"])
+        with pytest.raises(AuthorizationError, match="所属範囲外"):
+            authorize_operation_access(
+                db,
+                context=context,
+                definition=ACTIONS["storage.metadata.update"],
+                task=replay_task,
+            )
+        with pytest.raises(AuthorizationError, match="所属範囲外"):
+            _validate_task_constraints(db, replay_task, context.lease)
+
+
+def test_agent_vm_handlers_recheck_owner_binding_after_domain_lock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """dispatch後のVM移動・除籍・個人owner変更をbackend呼出前に拒否する。"""
+
+    from domain import tasks as domain_tasks
+
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    backend_calls: list[str] = []
+
+    def unexpected_backend(**_kwargs: object) -> None:
+        backend_calls.append("create_libvirt_backend")
+        raise AssertionError("lock後のAgent再認可より先にbackendが呼ばれました")
+
+    monkeypatch.setattr(
+        domain_tasks,
+        "create_libvirt_backend",
+        unexpected_backend,
+    )
+
+    with Session(engine) as db:
+        admin = UserModel(username="admin", hashed_password="unused")
+        other = UserModel(username="other", hashed_password="unused")
+        node = NodeModel(name="node-agent-lock")
+        source = ProjectModel(
+            id="aaaaaa",
+            name="Agent source",
+            users=[admin, other],
+        )
+        destination = ProjectModel(
+            id="bbbbbb",
+            name="Agent destination",
+            users=[admin, other],
+        )
+
+        def vm(
+            uuid: str,
+            *,
+            owner_user_id: str | None = None,
+            owner_project: ProjectModel | None = None,
+        ) -> DomainModel:
+            model = DomainModel(
+                uuid=uuid,
+                name=uuid,
+                core=1,
+                memory=1024,
+                status=5,
+                update_token=f"{uuid}-token",
+                storage_used=0,
+                node=node,
+                owner_project=owner_project,
+            )
+            model.owner_user_id = owner_user_id
+            return model
+
+        moved = vm("vm-agent-moved", owner_project=destination)
+        membership_revoked = vm(
+            "vm-agent-membership-revoked",
+            owner_project=source,
+        )
+        personal_changed = vm(
+            "vm-agent-personal-changed",
+            owner_user_id=other.username,
+        )
+        db.add_all([
+            source,
+            destination,
+            node,
+            moved,
+            membership_revoked,
+            personal_changed,
+        ])
+        db.commit()
+
+        def agent_task(
+            *,
+            uuid: str,
+            project_id: str | None,
+            object_name: str,
+            method: str,
+            body: dict[str, Any],
+        ) -> tuple[TaskModel, TaskRequest]:
+            target: dict[str, str] = {
+                "resourceType": "vm",
+                "resourceId": uuid,
+                "nodeId": node.name,
+            }
+            if project_id is not None:
+                target["projectId"] = project_id
+            request = TaskRequest(path_param={"uuid": uuid}, body=body)
+            return (
+                TaskModel(
+                    uuid=f"task-{uuid}-{object_name}",
+                    post_time=datetime.now(UTC),
+                    user_id=admin.username,
+                    principal_id=admin.username,
+                    lease_id="lease-agent-lock",
+                    status="start",
+                    resource="vm",
+                    object=object_name,
+                    method=method,
+                    request=request.model_dump_json(),
+                    resolved_targets=[target],
+                ),
+                request,
+            )
+
+        operations: list[tuple[Any, str, str, dict[str, Any]]] = [
+            (domain_tasks.delete_vm_root, "root", "delete", {}),
+            (domain_tasks.patch_vm_root, "power", "patch", {"status": "on"}),
+            (
+                domain_tasks.patch_vm_cdrom,
+                "cdrom",
+                "patch",
+                {"target": "sda", "path": None},
+            ),
+            (
+                domain_tasks.patch_vm_network,
+                "network",
+                "patch",
+                {
+                    "mac": "52:54:00:00:00:01",
+                    "networkUuid": "not-used-after-owner-check",
+                    "port": None,
+                },
+            ),
+        ]
+        for handler, object_name, method, body in operations:
+            task, request = agent_task(
+                uuid=moved.uuid,
+                project_id=source.id,
+                object_name=object_name,
+                method=method,
+                body=body,
+            )
+            with pytest.raises(AuthorizationError, match="Project binding"):
+                handler(db, task, request)
+
+        source.users.remove(admin)
+        db.flush()
+        membership_task, membership_request = agent_task(
+            uuid=membership_revoked.uuid,
+            project_id=source.id,
+            object_name="power",
+            method="patch",
+            body={"status": "on"},
+        )
+        with pytest.raises(AuthorizationError, match="所属範囲外"):
+            domain_tasks.patch_vm_root(db, membership_task, membership_request)
+
+        personal_task, personal_request = agent_task(
+            uuid=personal_changed.uuid,
+            project_id=None,
+            object_name="power",
+            method="patch",
+            body={"status": "on"},
+        )
+        with pytest.raises(AuthorizationError, match="個人owner"):
+            domain_tasks.patch_vm_root(db, personal_task, personal_request)
+
+    assert backend_calls == []
+
+
+def test_project_membership_mutation_catalog_is_explicit() -> None:
+    assert PROJECT_MEMBERSHIP_MUTATIONS == {
+        "vm.create",
+        "vm.delete",
+        "vm.power.update",
+        "vm.cdrom.update",
+        "vm.network.update",
+        "vm.project.update",
+        "storage.metadata.update",
+        "image.download",
+        "image.flavor.update",
+        "project.update",
+        "project.member.add",
+        "project.member.remove",
+    }
+    assert all(ACTIONS[action_id].mutation for action_id in PROJECT_MEMBERSHIP_MUTATIONS)
+
+
+def test_global_mutation_catalog_requires_unscoped_lease() -> None:
+    global_mutations = {
+        action_id
+        for action_id, definition in ACTIONS.items()
+        if definition.mutation and action_id not in PROJECT_MEMBERSHIP_MUTATIONS
+    }
+    assert {
+        "storage.pool.create",
+        "storage.pool.update",
+        "storage.pool.delete",
+        "storage.create",
+        "storage.delete",
+        "image.delete",
+        "network.pool.create",
+        "network.pool.update",
+        "network.pool.delete",
+        "network.create",
+        "network.delete",
+        "network.ovs.create",
+        "network.ovs.delete",
+        "project.create",
+        "project.delete",
+        "project.resource-grants.update",
+    } <= global_mutations
+
+    for action_id in global_mutations:
+        with pytest.raises(AuthorizationError) as project_denied:
+            validate_mutation_lease_constraints(
+                action_id=action_id,
+                mutation=True,
+                project_ids=["aaaaaa"],
+                node_ids=[],
+            )
+        assert project_denied.value.code == (
+            "global_mutation_requires_unscoped_lease"
+        )
+        with pytest.raises(AuthorizationError) as node_denied:
+            validate_mutation_lease_constraints(
+                action_id=action_id,
+                mutation=True,
+                project_ids=[],
+                node_ids=["node-a"],
+            )
+        assert node_denied.value.code == "global_mutation_requires_unscoped_lease"
+        validate_mutation_lease_constraints(
+            action_id=action_id,
+            mutation=True,
+            project_ids=[],
+            node_ids=[],
+        )
+
+
+def test_scoped_lease_cannot_mutate_resource_shared_with_another_project() -> None:
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        admin = UserModel(username="admin", hashed_password="unused")
+        other = UserModel(username="other", hashed_password="unused")
+        node = NodeModel(name="node-a")
+        storage = StorageModel(
+            uuid="storage-shared",
+            name="storage-shared",
+            node_name=node.name,
+            capacity=1024,
+            available=512,
+            path="/storage-shared",
+            active=True,
+            auto_start=True,
+            status=1,
+            update_token="storage-shared-token",
+        )
+        shared_pool = StoragePoolModel(
+            name="pool-shared",
+            storages=[AssociationStoragePoolModel(storage=storage)],
+        )
+        project_a = ProjectModel(
+            id="aaaaaa",
+            name="Project A",
+            users=[admin],
+            storage_pools=[shared_pool],
+        )
+        project_b = ProjectModel(
+            id="bbbbbb",
+            name="Project B",
+            users=[other],
+            storage_pools=[shared_pool],
+        )
+        image = ImageModel(
+            name="shared.qcow2",
+            storage=storage,
+            capacity=1,
+            allocation=1,
+            path="/storage-shared/shared.qcow2",
+            update_token="shared-image-token",
+        )
+        db.add_all([
+            node,
+            project_a,
+            project_b,
+            image,
+            UserScopeModel(user_id=admin.username, name="admin"),
+        ])
+        db.commit()
+        db.refresh(shared_pool)
+        assert {
+            project.id
+            for project in db.query(ProjectModel).filter(
+                ProjectModel.storage_pools.contains(shared_pool),
+            )
+        } == {project_a.id, project_b.id}
+
+        cases: list[tuple[str, dict[str, Any], str, str]] = [
+            (
+                "storage.pool.update",
+                {"id": shared_pool.id, "storageUuids": [storage.uuid]},
+                "storage-pool",
+                str(shared_pool.id),
+            ),
+            (
+                "storage.pool.delete",
+                {"id": shared_pool.id},
+                "storage-pool",
+                str(shared_pool.id),
+            ),
+            (
+                "storage.delete",
+                {"uuid": storage.uuid},
+                "storage",
+                storage.uuid,
+            ),
+            (
+                "image.delete",
+                {"uuid": storage.uuid, "name": image.name},
+                "image",
+                image.name,
+            ),
+        ]
+        for action_id, input_value, resource_type, resource_id in cases:
+            request = ActionRequest(
+                input=input_value,
+                target=ActionTarget(
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    project_id=project_a.id,
+                    node_id=node.name,
+                ),
+                expected_generation="generation",
+                idempotency_key=f"restricted-{action_id}",
+            )
+            for context in (
+                _context(scopes=[action_id], projects=[project_a.id]),
+                _context(scopes=[action_id], nodes=[node.name]),
+            ):
+                with pytest.raises(AuthorizationError) as denied:
+                    actions.execute_action(
+                        db,
+                        context=context,
+                        action_id=action_id,
+                        request=request,
+                    )
+                assert denied.value.code == (
+                    "global_mutation_requires_unscoped_lease"
+                )
+
+        unscoped = _context(scopes=["storage.pool.delete"])
+        validate_mutation_lease_constraints(
+            action_id="storage.pool.delete",
+            mutation=True,
+            project_ids=unscoped.lease.project_ids,
+            node_ids=unscoped.lease.node_ids,
+        )
+        _validate_identity_admin_scope(
+            db,
+            unscoped,
+            ACTIONS["storage.pool.delete"],
+            SimpleNamespace(id=shared_pool.id),
+        )
+
+
+def test_global_resource_reference_validation_does_not_require_a_grant(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """明示global操作はunscoped leaseで通常read用grant helperを使わない。"""
+
+    storage = SimpleNamespace(uuid="storage-a", node_name="node-a")
+    network = SimpleNamespace(uuid="network-a", node_name="node-a")
+
+    class FakeDB:
+        @staticmethod
+        def get(model: object, key: object) -> object | None:
+            name = getattr(model, "__name__", "")
+            if name == "StorageModel" and key == storage.uuid:
+                return storage
+            if name == "NetworkModel" and key == network.uuid:
+                return network
+            return None
+
+    monkeypatch.setattr(
+        actions,
+        "_allowed_storage_ids",
+        lambda *_: pytest.fail("global storage操作でgrant helperを呼んではならない"),
+    )
+    monkeypatch.setattr(
+        actions,
+        "_allowed_network_ids",
+        lambda *_: pytest.fail("global network操作でgrant helperを呼んではならない"),
+    )
+    db = _session(FakeDB())
+    context = _context(scopes=[
+        "storage.pool.create",
+        "image.delete",
+        "network.pool.update",
+    ])
+
+    storage_pool = _validate_action_references(
+        db,
+        context=context,
+        definition=ACTIONS["storage.pool.create"],
+        model=SimpleNamespace(storage_uuids=[storage.uuid]),
+        target=ResolvedTarget("storage-pool", "storage.pool.create", None, None),
+    )
+    image_delete = _validate_action_references(
+        db,
+        context=context,
+        definition=ACTIONS["image.delete"],
+        model=SimpleNamespace(uuid=storage.uuid),
+        target=ResolvedTarget("image", "image-a", None, storage.node_name),
+    )
+    network_pool = _validate_action_references(
+        db,
+        context=context,
+        definition=ACTIONS["network.pool.update"],
+        model=SimpleNamespace(network_uuid=network.uuid),
+        target=ResolvedTarget("network-pool", "1", None, None),
+    )
+    assert {item["resourceId"] for item in storage_pool.related_targets} == {
+        storage.uuid,
+    }
+    assert {item["resourceId"] for item in image_delete.related_targets} == {
+        storage.uuid,
+    }
+    assert {item["resourceId"] for item in network_pool.related_targets} == {
+        network.uuid,
+    }
 
 
 def test_public_schemas_reject_unknown_fields_and_empty_allowed_scopes() -> None:
@@ -229,7 +1376,18 @@ def test_agent_route_sanitizes_request_validation_errors() -> None:
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"]["code"] == "validation_error"
+    assert response.json()["detail"] == {
+        "code": "validation_error",
+        "message": "Request validation failed.",
+        "errors": [
+            {
+                "field": "body.unexpectedSecret",
+                "code": "invalid_type",
+                "params": {"expected": "integer"},
+            }
+        ],
+    }
+    assert response.headers["cache-control"] == "no-store"
     assert secret not in response.text
     assert "input" not in response.text
 
@@ -239,7 +1397,7 @@ def test_vm_create_requires_owner_project_in_public_input() -> None:
         "type": "manual",
         "name": "agent-vm",
         "nodeName": "node-1",
-        "projectId": "p1",
+        "projectId": "a1b2c3",
         "memoryMegaByte": 1024,
         "cpu": 1,
         "disks": [],
@@ -247,7 +1405,7 @@ def test_vm_create_requires_owner_project_in_public_input() -> None:
     }
     _validate_public_json("vm.create", payload)
     model = actions._load_input_model(ACTIONS["vm.create"], payload)
-    assert model.project_id == "p1"
+    assert model.project_id == "a1b2c3"
     with pytest.raises(AgentError, match="input"):
         _validate_public_json(
             "vm.create",
@@ -255,28 +1413,137 @@ def test_vm_create_requires_owner_project_in_public_input() -> None:
         )
 
 
+def test_image_flavor_update_requires_explicit_project() -> None:
+    payload = {
+        "projectId": "a1b2c3",
+        "storageUuid": "storage-1",
+        "path": "/images/base.qcow2",
+        "nodeName": "node-1",
+        "flavorId": 1,
+    }
+    _validate_public_json("image.flavor.update", payload)
+    model = actions._load_input_model(ACTIONS["image.flavor.update"], payload)
+    assert model.project_id == "a1b2c3"
+
+    with pytest.raises(AgentError, match="input"):
+        actions._load_input_model(
+            ACTIONS["image.flavor.update"],
+            {key: value for key, value in payload.items() if key != "projectId"},
+        )
+
+
+def test_project_resource_grant_candidates_requires_explicit_project() -> None:
+    payload = {"projectId": "a1b2c3"}
+    _validate_public_json("project.resource-grant-candidates.get", payload)
+    model = actions._load_input_model(
+        ACTIONS["project.resource-grant-candidates.get"],
+        payload,
+    )
+    assert model.project_id == "a1b2c3"
+
+
 def test_agent_update_models_keep_fields_removed_from_rest_bodies() -> None:
     vm_model = actions._load_input_model(
         ACTIONS["vm.project.update"],
-        {"uuid": "vm-1", "projectId": "p1"},
+        {"uuid": "vm-1", "projectId": "a1b2c3"},
     )
     assert vm_model.uuid == "vm-1"
-    assert vm_model.project_id == "p1"
+    assert vm_model.project_id == "a1b2c3"
 
     user_payload = {
         "pathUsername": "alice",
         "username": "alice",
         "password": "Virty-Test_2026!",
         "scopes": [{"name": "user"}],
-        "projects": [{"name": "project-a"}],
-        "publickeys": [{"name": "main", "publickey": "ssh-ed25519 test"}],
+        "publickeys": [{"name": "main", "publickey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1"}],
     }
     _validate_public_json("user.update", user_payload)
     user_model = actions._load_input_model(ACTIONS["user.update"], user_payload)
     assert user_model.path_username == "alice"
     assert user_model.username == "alice"
     assert user_model.password == "Virty-Test_2026!"
-    assert [project.name for project in user_model.projects] == ["project-a"]
+    assert not hasattr(user_model, "projects")
+
+    with pytest.raises(AgentError, match="input"):
+        _validate_public_json(
+            "user.update",
+            {**user_payload, "projects": [{"id": "a1b2c3", "name": "Project"}]},
+        )
+
+
+def test_project_actions_use_dedicated_member_and_grant_inputs() -> None:
+    project_id = "a1b2c3"
+    update = actions._load_input_model(
+        ACTIONS["project.update"],
+        {"projectId": project_id, "name": "Platform"},
+    )
+    member = actions._load_input_model(
+        ACTIONS["project.member.remove"],
+        {"projectId": project_id, "username": "alice"},
+    )
+    grants = actions._load_input_model(
+        ACTIONS["project.resource-grants.update"],
+        {
+            "projectId": project_id,
+            "storagePoolIds": [1],
+            "networkPoolIds": [2],
+            "flavorIds": [3],
+        },
+    )
+
+    assert update.name == "Platform"
+    assert member.username == "alice"
+    assert grants.storage_pool_ids == [1]
+    assert grants.network_pool_ids == [2]
+    assert grants.flavor_ids == [3]
+    assert "projects" not in public_input_schema("user.create")["properties"]
+    assert "projects" not in public_input_schema("user.update")["properties"]
+
+
+def test_project_generation_includes_members_limits_and_resource_grants() -> None:
+    project = SimpleNamespace(
+        id="a1b2c3",
+        name="Platform",
+        users=[SimpleNamespace(username="alice")],
+        core=8,
+        memory_g=16,
+        storage_capacity_g=128,
+        storage_pools=[],
+        network_pools=[],
+        flavors=[],
+    )
+
+    class FakeDB:
+        @staticmethod
+        def get(_: object, key: object) -> object | None:
+            return project if key == project.id else None
+
+    db = _session(FakeDB())
+    initial = resolve_generation(
+        db,
+        resource_type="project",
+        resource_id=project.id,
+    )
+    project.users.append(SimpleNamespace(username="bob"))
+    member_changed = resolve_generation(
+        db,
+        resource_type="project",
+        resource_id=project.id,
+    )
+    project.core = 12
+    limit_changed = resolve_generation(
+        db,
+        resource_type="project",
+        resource_id=project.id,
+    )
+    project.storage_pools.append(SimpleNamespace(id=7))
+    grant_changed = resolve_generation(
+        db,
+        resource_type="project",
+        resource_id=project.id,
+    )
+
+    assert len({initial, member_changed, limit_changed, grant_changed}) == 4
 
 
 def test_py_webauthn_v3_registration_options_accept_binary_descriptors() -> None:
@@ -941,22 +2208,24 @@ def test_create_dependent_uses_root_sentinel_and_rechecks_related_targets() -> N
     storage_exists = True
 
     class RootQuery:
-        @staticmethod
-        def filter(*_: object) -> "RootQuery":
-            return RootQuery()
+        def __init__(self, entity: object) -> None:
+            self.entity = entity
 
-        @staticmethod
-        def order_by(*_: object) -> "RootQuery":
-            return RootQuery()
+        def filter(self, *_: object) -> "RootQuery":
+            return self
 
-        @staticmethod
-        def all() -> list[object]:
+        def order_by(self, *_: object) -> "RootQuery":
+            return self
+
+        def all(self) -> list[object]:
+            if getattr(self.entity, "key", None) == "project_id":
+                return [(project.id,)]
             return [root]
 
     class FakeDB:
         @staticmethod
-        def query(*_: object) -> RootQuery:
-            return RootQuery()
+        def query(entity: object, *_: object) -> RootQuery:
+            return RootQuery(entity)
 
         @staticmethod
         def get(model: object, key: object) -> object | None:
@@ -972,7 +2241,11 @@ def test_create_dependent_uses_root_sentinel_and_rechecks_related_targets() -> N
             return None
 
     db = _session(FakeDB())
-    lease = _lease(SimpleNamespace(project_ids=["p1"], node_ids=["node-1"]))
+    lease = _lease(SimpleNamespace(
+        principal_id="admin",
+        project_ids=["p1"],
+        node_ids=["node-1"],
+    ))
     _validate_task_constraints(db, dependent, lease)
 
     storage_exists = False
@@ -1079,12 +2352,19 @@ def test_server_derives_vm_scope_and_ignores_client_project_node() -> None:
 
 
 def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> None:
+    network = SimpleNamespace(uuid="network-1", node_name="node-1")
+    port = SimpleNamespace(
+        network_uuid=network.uuid,
+        name="tenant-a",
+        network=network,
+    )
     project = SimpleNamespace(
         id="p1",
         storage_pools=[],
-        network_pools=[],
+        network_pools=[SimpleNamespace(networks=[], ports=[port])],
         flavors=[],
     )
+    principal = SimpleNamespace(projects=[project])
     node = SimpleNamespace(name="node-1")
 
     class FakeQuery:
@@ -1101,6 +2381,8 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
                 return [project]
             if name == "NodeModel":
                 return [(node.name,)]
+            if name == "NetworkModel":
+                return [(network.uuid,)]
             return []
 
         def __iter__(self):
@@ -1118,13 +2400,20 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
                 return project
             if name == "NodeModel" and key == node.name:
                 return node
+            if name == "NetworkModel" and key == network.uuid:
+                return network
+            if name == "UserModel" and key == "admin":
+                return principal
             return None
 
     model = SimpleNamespace(
         project_id="p1",
         node_name="node-1",
         disks=[],
-        interface=[],
+        interface=[SimpleNamespace(
+            network_uuid=network.uuid,
+            port=port.name,
+        )],
     )
     db = _session(FakeDB())
     resolved = _validate_action_references(
@@ -1145,6 +2434,27 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
         for item in resolved.related_targets
     )
 
+    with pytest.raises(AuthorizationError, match="network/port"):
+        _validate_action_references(
+            db,
+            context=_context(
+                scopes=["vm.create"],
+                projects=["p1"],
+                nodes=["node-1"],
+            ),
+            definition=ACTIONS["vm.create"],
+            model=SimpleNamespace(
+                project_id="p1",
+                node_name="node-1",
+                disks=[],
+                interface=[SimpleNamespace(
+                    network_uuid=network.uuid,
+                    port="tenant-b",
+                )],
+            ),
+            target=ResolvedTarget("vm", "agent-vm", None, "node-1"),
+        )
+
     with pytest.raises(AuthorizationError, match="owner project"):
         _validate_action_references(
             db,
@@ -1157,6 +2467,307 @@ def test_vm_create_resolves_owner_project_and_enforces_lease_constraint() -> Non
             model=model,
             target=ResolvedTarget("vm", "agent-vm", None, "node-1"),
         )
+
+
+def test_agent_vm_copy_and_image_flavor_use_one_project_grant() -> None:
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        user = UserModel(username="admin", hashed_password="unused")
+        node = NodeModel(name="node-1")
+        storage = StorageModel(
+            uuid="storage-1",
+            name="storage-1",
+            node_name=node.name,
+            path="/images",
+        )
+        pool = StoragePoolModel(
+            name="pool-1",
+            storages=[AssociationStoragePoolModel(storage=storage)],
+        )
+        flavor_a = FlavorModel(
+            name="flavor-a",
+            os="linux",
+            manual_url="https://docs.example.invalid/a",
+            icon="linux",
+            cloud_init_ready=False,
+            cloud_init_user="cloud-user",
+            description="a",
+        )
+        flavor_b = FlavorModel(
+            name="flavor-b",
+            os="linux",
+            manual_url="https://docs.example.invalid/b",
+            icon="linux",
+            cloud_init_ready=False,
+            cloud_init_user="cloud-user",
+            description="b",
+        )
+        project_a = ProjectModel(
+            id="aaaaaa",
+            name="Project A",
+            users=[user],
+            storage_pools=[pool],
+            flavors=[flavor_a],
+        )
+        project_b = ProjectModel(
+            id="bbbbbb",
+            name="Project B",
+            users=[user],
+            flavors=[flavor_b],
+        )
+        cross_image = ImageModel(
+            name="cross.qcow2",
+            storage=storage,
+            path="/images/cross.qcow2",
+            flavor=flavor_b,
+        )
+        generic_image = ImageModel(
+            name="generic.qcow2",
+            storage=storage,
+            path="/images/generic.qcow2",
+            flavor=None,
+        )
+        db.add_all([
+            node,
+            project_a,
+            project_b,
+            cross_image,
+            generic_image,
+            UserScopeModel(user_id=user.username, name="admin"),
+        ])
+        db.flush()
+
+        context = _context(
+            scopes=["vm.create", "image.flavor.update"],
+            projects=[project_a.id, project_b.id],
+            nodes=[node.name],
+        )
+
+        listed = adapters.image_list(
+            db,
+            context,
+            SimpleNamespace(
+                project_id=project_a.id,
+                limit=25,
+                page=0,
+                pool_uuid=None,
+                node_name=None,
+                name=None,
+                name_like=None,
+            ),
+            None,
+        )
+        assert {row["name"] for row in listed["data"]} == {generic_image.name}
+
+        def vm_input(source_name: str) -> SimpleNamespace:
+            return SimpleNamespace(
+                project_id=project_a.id,
+                node_name=node.name,
+                disks=[SimpleNamespace(
+                    save_pool_uuid=storage.uuid,
+                    original_pool_uuid=storage.uuid,
+                    original_name=source_name,
+                )],
+                interface=[],
+            )
+
+        with pytest.raises(AuthorizationError, match="copy元image"):
+            _validate_action_references(
+                db,
+                context=context,
+                definition=ACTIONS["vm.create"],
+                model=vm_input(cross_image.name),
+                target=ResolvedTarget("vm", "cross-copy", None, node.name),
+            )
+
+        generic_target = _validate_action_references(
+            db,
+            context=context,
+            definition=ACTIONS["vm.create"],
+            model=vm_input(generic_image.name),
+            target=ResolvedTarget("vm", "generic-copy", None, node.name),
+        )
+        assert any(
+            item.get("resourceType") == "image"
+            and item.get("projectId") == project_a.id
+            for item in generic_target.related_targets
+        )
+
+        cross_flavor_update = SimpleNamespace(
+            project_id=project_a.id,
+            storage_uuid=storage.uuid,
+            path=generic_image.path,
+            node_name=node.name,
+            flavor_id=flavor_b.id,
+        )
+        with pytest.raises(AuthorizationError, match="flavor"):
+            _validate_action_references(
+                db,
+                context=context,
+                definition=ACTIONS["image.flavor.update"],
+                model=cross_flavor_update,
+                target=ResolvedTarget(
+                    "image",
+                    '["storage-1","/images/generic.qcow2"]',
+                    project_a.id,
+                    node.name,
+                ),
+            )
+        with pytest.raises(AuthorizationError, match="同じProject"):
+            adapters.image_flavor_update(db, context, cross_flavor_update, None)
+
+        allowed_update = SimpleNamespace(
+            **{
+                **vars(cross_flavor_update),
+                "flavor_id": flavor_a.id,
+            },
+        )
+        result = adapters.image_flavor_update(db, context, allowed_update, None)
+        assert result["flavorId"] == flavor_a.id
+
+        candidates = adapters.project_resource_grant_candidates(
+            db,
+            context,
+            SimpleNamespace(project_id=project_a.id),
+            None,
+        )
+        assert candidates == {
+            "storagePools": [{"id": pool.id, "name": pool.name}],
+            "networkPools": [],
+            "flavors": [
+                {"id": flavor_a.id, "name": flavor_a.name},
+                {"id": flavor_b.id, "name": flavor_b.name},
+            ],
+        }
+
+        db.query(UserScopeModel).filter(
+            UserScopeModel.user_id == user.username,
+            UserScopeModel.name == "admin",
+        ).delete()
+        with pytest.raises(AuthorizationError, match="global admin"):
+            adapters.project_resource_grant_candidates(
+                db,
+                context,
+                SimpleNamespace(project_id=project_a.id),
+                None,
+            )
+
+
+def test_project_grant_replacement_can_reserve_new_resources() -> None:
+    class EmptyQuery:
+        def filter(self, *_: object) -> "EmptyQuery":
+            return self
+
+        @staticmethod
+        def all() -> list[object]:
+            return []
+
+    class FakeDB:
+        @staticmethod
+        def query(*_: object) -> EmptyQuery:
+            return EmptyQuery()
+
+        @staticmethod
+        def get(model: object, key: object) -> object | None:
+            resources = {
+                ("StoragePoolModel", 1),
+                ("NetworkPoolModel", 2),
+                ("FlavorModel", 3),
+            }
+            return object() if (getattr(model, "__name__", ""), key) in resources else None
+
+    resolved = _validate_action_references(
+        _session(FakeDB()),
+        context=_context(scopes=["project.resource-grants.update"]),
+        definition=ACTIONS["project.resource-grants.update"],
+        model=SimpleNamespace(
+            project_id="p1",
+            storage_pool_ids=[1],
+            network_pool_ids=[2],
+            flavor_ids=[3],
+        ),
+        target=ResolvedTarget("project", "p1", "p1", None),
+    )
+
+    assert {
+        (item["resourceType"], item["resourceId"])
+        for item in resolved.related_targets
+    } == {
+        ("storage-pool", "1"),
+        ("network-pool", "2"),
+        ("flavor", "3"),
+    }
+    assert all(
+        item.get("authorizationTarget") == "false"
+        for item in resolved.related_targets
+    )
+
+
+def test_agent_project_mutation_requires_principal_membership() -> None:
+    project = SimpleNamespace(
+        id="p1",
+        users=[SimpleNamespace(username="member")],
+        storage_pools=[],
+        network_pools=[],
+        flavors=[],
+    )
+    principal = SimpleNamespace(projects=[])
+
+    class FakeDB:
+        @staticmethod
+        def get(model: object, key: object) -> object | None:
+            if getattr(model, "__name__", "") == "ProjectModel" and key == "p1":
+                return project
+            if getattr(model, "__name__", "") == "UserModel" and key == "admin":
+                return principal
+            return None
+
+    db = _session(FakeDB())
+    with pytest.raises(NotFoundError, match="project"):
+        _agent_project(db, _context(scopes=["project.manage"]), "p1")
+
+    project.users.append(SimpleNamespace(username="admin"))
+    principal.projects.append(project)
+    assert _agent_project(
+        db,
+        _context(scopes=["project.manage"]),
+        "p1",
+    ) is project
+
+    class LockQuery:
+        locked = False
+
+        def filter(self, *args: object) -> "LockQuery":
+            return self
+
+        def with_for_update(self) -> "LockQuery":
+            self.locked = True
+            return self
+
+        @staticmethod
+        def scalar() -> str:
+            return "p1"
+
+    lock_query = LockQuery()
+
+    class LockingDB(FakeDB):
+        @staticmethod
+        def query(model: object) -> LockQuery:
+            return lock_query
+
+        @staticmethod
+        def expire(_: object, __: object) -> None:
+            return None
+
+    assert _agent_project(
+        _session(LockingDB()),
+        _context(scopes=["project.resource-grants.update"]),
+        "p1",
+        allow_admin=True,
+        lock=True,
+    ) is project
+    assert lock_query.locked is True
 
 
 def test_long_signed_image_url_is_hashed_instead_of_target_resource_id() -> None:
@@ -1263,6 +2874,7 @@ def test_image_generation_target_uses_canonical_id_and_server_project() -> None:
         definition=ACTIONS["image.flavor.update"],
         request=ActionRequest(
             input={
+                "projectId": "p1",
                 "storageUuid": "storage-1",
                 "path": "/images/base.qcow2",
                 "nodeName": "node-1",
@@ -1271,12 +2883,14 @@ def test_image_generation_target_uses_canonical_id_and_server_project() -> None:
             target=ActionTarget(
                 resource_type="image",
                 resource_id="/images/base.qcow2",
+                project_id="p1",
                 node_id="node-1",
             ),
             expected_generation="generation",
             idempotency_key="idempotency-1",
         ),
         model=SimpleNamespace(
+            project_id="p1",
             storage_uuid="storage-1",
             path="/images/base.qcow2",
         ),
@@ -1287,6 +2901,31 @@ def test_image_generation_target_uses_canonical_id_and_server_project() -> None:
 
 
 def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
+    vm = SimpleNamespace(
+        uuid="vm-1",
+        owner_project_id="p1",
+        owner_user_id=None,
+    )
+
+    class MembershipQuery:
+        def filter(self, *_: object) -> "MembershipQuery":
+            return self
+
+        @staticmethod
+        def all() -> list[tuple[str]]:
+            return [("p1",)]
+
+    class FakeDB:
+        @staticmethod
+        def query(*_: object) -> MembershipQuery:
+            return MembershipQuery()
+
+        @staticmethod
+        def get(model: object, key: object) -> object | None:
+            if getattr(model, "__name__", "") == "DomainModel" and key == vm.uuid:
+                return vm
+            return None
+
     task = _task(SimpleNamespace(
         uuid="operation-1",
         dependence_uuid=None,
@@ -1305,8 +2944,9 @@ def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
             },
         ],
     ))
+    db = _session(FakeDB())
     authorize_operation_access(
-        _session(SimpleNamespace()),
+        db,
         context=_context(
             scopes=["vm.network.update"],
             projects=["p1"],
@@ -1317,7 +2957,7 @@ def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
     )
     with pytest.raises(AuthorizationError, match="scope"):
         authorize_operation_access(
-            _session(SimpleNamespace()),
+            db,
             context=_context(scopes=["vm.get"], projects=["p1"], nodes=["n1"]),
             definition=ACTIONS["vm.network.update"],
             task=task,
@@ -1326,7 +2966,7 @@ def test_operation_access_rechecks_current_scope_and_all_targets() -> None:
     task.resolved_targets[1]["projectId"] = "p2"
     with pytest.raises(AuthorizationError, match="project"):
         authorize_operation_access(
-            _session(SimpleNamespace()),
+            db,
             context=_context(
                 scopes=["vm.network.update"],
                 projects=["p1"],
@@ -1377,7 +3017,11 @@ def test_dispatch_rederives_storage_project_binding_from_database() -> None:
         }],
     ))
     db = _session(FakeDB())
-    lease = _lease(SimpleNamespace(project_ids=["p1"], node_ids=["node-1"]))
+    lease = _lease(SimpleNamespace(
+        principal_id="admin",
+        project_ids=[],
+        node_ids=[],
+    ))
     with pytest.raises(AuthorizationError, match="project所属"):
         _validate_task_constraints(db, task, lease)
 
@@ -1513,109 +3157,6 @@ def test_node_lifecycle_reservation_is_node_scoped_reader_writer() -> None:
     assert same_node_specs[node_1_key] == "shared"
     assert other_node_specs[node_2_key] == "shared"
     assert node_2_key not in delete_specs
-
-
-def test_network_provider_requires_every_server_resolved_overlay_node() -> None:
-    network_node = SimpleNamespace(name="network-node", roles=[])
-    worker_a = SimpleNamespace(
-        name="worker-a",
-        roles=[SimpleNamespace(role_name="vxlan_overlay")],
-    )
-    worker_b = SimpleNamespace(
-        name="worker-b",
-        roles=[SimpleNamespace(role_name="vxlan_overlay")],
-    )
-    nodes = [network_node, worker_a, worker_b]
-
-    class FakeQuery:
-        def __init__(self, entity: object) -> None:
-            self.entity = entity
-
-        def filter(self, *_: object) -> "FakeQuery":
-            return self
-
-        def order_by(self, *_: object) -> "FakeQuery":
-            return self
-
-        def all(self) -> list[object]:
-            entity_class = getattr(self.entity, "class_", self.entity)
-            entity_name = getattr(entity_class, "__name__", "")
-            attribute_name = getattr(self.entity, "key", None)
-            if entity_name == "NodeModel" and attribute_name == "name":
-                return [SimpleNamespace(name=node.name) for node in nodes]
-            if entity_name == "NodeModel":
-                return cast(list[object], nodes)
-            return []
-
-        def __iter__(self):
-            return iter(self.all())
-
-    class FakeDB:
-        @staticmethod
-        def get(model: object, key: object) -> object | None:
-            if getattr(model, "__name__", "") == "NodeModel":
-                return next((node for node in nodes if node.name == key), None)
-            return None
-
-        @staticmethod
-        def query(entity: object, *_: object) -> FakeQuery:
-            return FakeQuery(entity)
-
-    definition = ACTIONS["network.provider.create"]
-    model = SimpleNamespace(network_node="network-node")
-    base_target = ResolvedTarget(
-        "network",
-        "network.provider.create",
-        None,
-        "network-node",
-    )
-    denied_context = _context(
-        scopes=["network.provider.create"],
-        nodes=["network-node", "worker-a"],
-    )
-    db = _session(FakeDB())
-    denied_target = _validate_action_references(
-        db,
-        context=denied_context,
-        definition=definition,
-        model=model,
-        target=base_target,
-    )
-    with pytest.raises(AuthorizationError, match="node"):
-        _validate_resolved_constraints(denied_context, denied_target)
-
-    allowed_context = _context(
-        scopes=["network.provider.create"],
-        nodes=[node.name for node in nodes],
-    )
-    allowed_target = _validate_action_references(
-        db,
-        context=allowed_context,
-        definition=definition,
-        model=model,
-        target=base_target,
-    )
-    _validate_resolved_constraints(allowed_context, allowed_target)
-    authorization_nodes = {
-        item["nodeId"]
-        for item in allowed_target.related_targets
-        if item.get("resourceType") == "node"
-    }
-    assert authorization_nodes == {node.name for node in nodes}
-
-    reserved = _apply_reservation_contract(definition, allowed_target)
-    lifecycle_nodes = {
-        item["resourceId"]
-        for item in reserved.related_targets
-        if item.get("resourceType") == "node-lifecycle"
-    }
-    assert lifecycle_nodes == {node.name for node in nodes}
-    assert any(
-        item.get("resourceType") == "network"
-        and item.get("reservationScope") == "family"
-        and item.get("reservationMode") == "exclusive"
-        for item in reserved.related_targets
-    )
 
 
 def test_network_refresh_reserves_every_current_node_lifecycle_shared() -> None:
@@ -1845,8 +3386,18 @@ def test_pool_list_read_adapters_return_object_contract(monkeypatch: pytest.Monk
     )
     monkeypatch.setattr(
         adapters,
+        "_allowed_storage_pool_ids",
+        lambda *args, **kwargs: {1},
+    )
+    monkeypatch.setattr(
+        adapters,
         "_allowed_network_ids",
         lambda *args, **kwargs: {"network-1"},
+    )
+    monkeypatch.setattr(
+        adapters,
+        "_allowed_network_pool_ids",
+        lambda *args, **kwargs: {2},
     )
     storage_pool = SimpleNamespace(
         id=1,
@@ -1928,6 +3479,7 @@ def test_task_incomplete_keeps_unknown_and_cancel_requested(
     UserModel.__table__.create(engine)
     TaskModel.__table__.create(engine)
     with Session(engine) as db:
+        db.add(UserModel(username="admin", hashed_password="unused"))
         db.add_all([
             TaskModel(
                 uuid=f"task-{status}",
@@ -1941,6 +3493,12 @@ def test_task_incomplete_keeps_unknown_and_cancel_requested(
             principal_id="admin",
             status="unknown",
             archived_at=datetime.now(UTC),
+        ))
+        db.add(TaskModel(
+            uuid="task-other-principal",
+            principal_id="other-admin",
+            user_id="admin",
+            status="wait",
         ))
         db.commit()
 
@@ -1957,6 +3515,22 @@ def test_task_incomplete_keeps_unknown_and_cancel_requested(
         "task-unknown",
         "task-wait",
     ]
+
+
+def test_task_detail_never_uses_global_admin_as_an_ownership_bypass() -> None:
+    task = SimpleNamespace(
+        uuid="task-other",
+        principal_id="other-admin",
+        user_id="admin",
+    )
+    db = _session(SimpleNamespace(get=lambda *_: task))
+    with pytest.raises(AuthorizationError, match="別principal"):
+        adapters.task_get(
+            db,
+            _context(scopes=["task.get"]),
+            None,
+            SimpleNamespace(resource_id=task.uuid),
+        )
 
 
 def test_reconciliation_list_returns_root_operation_and_openapi_schema(
@@ -2174,3 +3748,143 @@ def test_admin_credential_grant_requires_dedicated_identity_scope() -> None:
         ACTIONS["user.create"],
         model,
     )
+
+
+@pytest.mark.parametrize(
+    "action_id",
+    [
+        "project.create",
+        "project.delete",
+        "project.resource-grant-candidates.get",
+        "project.resource-grants.update",
+        "storage.pool.create",
+        "storage.pool.update",
+        "storage.pool.delete",
+        "storage.create",
+        "storage.delete",
+        "image.delete",
+        "network.pool.create",
+        "network.pool.update",
+        "network.pool.delete",
+        "network.create",
+        "network.delete",
+        "network.ovs.create",
+        "network.ovs.delete",
+        "flavor.delete",
+    ],
+)
+def test_agent_global_project_and_pool_operations_require_database_admin(
+    action_id: str,
+) -> None:
+    class AdminQuery:
+        def __init__(self, is_admin: bool) -> None:
+            self.is_admin = is_admin
+
+        def filter(self, *args: object) -> "AdminQuery":
+            return self
+
+        def first(self) -> object | None:
+            return object() if self.is_admin else None
+
+    non_admin_db = _session(SimpleNamespace(query=lambda _: AdminQuery(False)))
+    with pytest.raises(AuthorizationError, match="global admin"):
+        _validate_identity_admin_scope(
+            non_admin_db,
+            _context(scopes=[action_id]),
+            ACTIONS[action_id],
+            SimpleNamespace(),
+        )
+
+    admin_db = _session(SimpleNamespace(query=lambda _: AdminQuery(True)))
+    _validate_identity_admin_scope(
+        admin_db,
+        _context(scopes=[action_id]),
+        ACTIONS[action_id],
+        SimpleNamespace(),
+    )
+
+
+@pytest.mark.parametrize(
+    ("action_id", "guard_name", "params"),
+    [
+        ("storage.delete", "ensure_storage_deletable", {"uuid": "storage-a"}),
+        (
+            "image.delete",
+            "ensure_image_deletable",
+            {"uuid": "storage-a", "name": "image-a.qcow2"},
+        ),
+        ("network.delete", "ensure_network_deletable", {"uuid": "network-a"}),
+        (
+            "network.ovs.delete",
+            "ensure_network_port_deletable",
+            {"uuid": "network-a", "name": "tenant-a"},
+        ),
+    ],
+)
+def test_agent_destructive_task_preflight_maps_resource_conflicts(
+    monkeypatch: pytest.MonkeyPatch,
+    action_id: str,
+    guard_name: str,
+    params: dict[str, str],
+) -> None:
+    def deny(*_args: object, **_kwargs: object) -> None:
+        raise actions.ResourceDeletionConflictError("resource is in use")
+
+    monkeypatch.setattr(actions, guard_name, deny)
+    with pytest.raises(ConflictError, match="resource is in use"):
+        _preflight_task_action(
+            _session(SimpleNamespace()),
+            action_id,
+            SimpleNamespace(),
+            params,
+        )
+
+
+def test_agent_project_delete_preflight_locks_and_rechecks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, bool]] = []
+
+    def ensure_project(
+        _db: Session,
+        project_id: str,
+        *,
+        lock: bool = False,
+    ) -> None:
+        calls.append((project_id, lock))
+
+    monkeypatch.setattr(actions, "ensure_project_deletable", ensure_project)
+    _preflight_task_action(
+        _session(SimpleNamespace()),
+        "project.delete",
+        SimpleNamespace(project_id="aaaaaa"),
+        {"project_id": "aaaaaa"},
+    )
+    assert calls == [("aaaaaa", True)]
+
+
+def test_agent_project_lease_is_limited_to_admin_memberships() -> None:
+    principal = SimpleNamespace(
+        scopes=[SimpleNamespace(name="admin")],
+        projects=[SimpleNamespace(id="aaaaaa")],
+    )
+
+    class FakeDB:
+        @staticmethod
+        def get(model: object, key: object) -> object | None:
+            if getattr(model, "__name__", "") == "UserModel" and key == "admin":
+                return principal
+            return None
+
+    db = _session(FakeDB())
+    AgentIdentityService._validate_project_constraints(
+        db,
+        principal_id="admin",
+        requested_projects=["aaaaaa"],
+    )
+    with pytest.raises(AuthorizationError, match="所属範囲"):
+        AgentIdentityService._validate_project_constraints(
+            db,
+            principal_id="admin",
+            requested_projects=["bbbbbb"],
+        )

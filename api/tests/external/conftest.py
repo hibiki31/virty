@@ -1,11 +1,14 @@
 """専用labだけで実行できる破壊的testの安全境界。"""
 
+import hashlib
 import os
 import shlex
-from collections.abc import Callable
+import traceback
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -35,7 +38,68 @@ from tests.external.support.remote_inventory import (
     logical_libvirt_name,
     remote_inventory_manager,
 )
-from tests.external.support.task_poller import wait_for_tasks
+from tests.external.support.task_poller import KNOWN_STATUSES, TaskPollingError, wait_for_tasks
+
+
+def _report_source_path(path: str | Path) -> str:
+    """実行環境のdirectory名を除き、診断に必要なcode位置だけを返す。"""
+
+    source = Path(path)
+    try:
+        return str(source.relative_to(Path(__file__).resolve().parents[2]))
+    except ValueError:
+        return source.name
+
+
+def _external_failure_summary(exception: BaseException, phase: str) -> str:
+    """例外本文・notes・引数を含めず、失敗箇所と許可済みtask状態を残す。"""
+
+    lines = [f"外部試験失敗 phase={phase} type={type(exception).__name__}"]
+    frames = list(traceback.walk_tb(exception.__traceback__))
+    for frame, line in frames[-8:]:
+        lines.append(f"  {_report_source_path(frame.f_code.co_filename)}:{line} ({frame.f_code.co_name})")
+    if isinstance(exception, TaskPollingError):
+        reasons = {
+            "enqueue HTTP response is invalid", "enqueue response is not a non-empty list",
+            "enqueue response schema is invalid", "enqueue response UUID format is invalid",
+            "enqueue response UUIDs are empty or duplicated", "task HTTP response or schema is invalid",
+            "task response identity or status is invalid", "reached failure state", "timed out",
+        }
+        if exception.reason in reasons:
+            lines.append(f"  task polling: {exception.reason}")
+        for task_uuid, snapshot in exception.snapshots.items():
+            try:
+                identifier = str(UUID(task_uuid))
+            except (ValueError, TypeError, AttributeError):
+                continue
+            state = snapshot.status if snapshot.status in KNOWN_STATUSES else "unknown"
+            safe_id = hashlib.sha256(identifier.encode()).hexdigest()[:12]
+            lines.append(f"  task id={safe_id} status={state}")
+    return "\n".join(lines)
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_makereport(
+    item: pytest.Item,
+    call: pytest.CallInfo[None],
+) -> Generator[None, pytest.TestReport, pytest.TestReport]:
+    """externalの失敗reportから設定値・鍵・実node出力を除く。"""
+
+    report = yield
+    path = _report_source_path(item.path)
+    line = item.location[1] or 0
+    name = getattr(item, "originalname", None) or item.name.split("[", 1)[0]
+    report.nodeid = f"{path}::{name}"
+    report.location = (path, line, name)
+    report.sections.clear()
+    report.user_properties.clear()
+    if report.failed and call.excinfo is not None:
+        report.longrepr = f"{path}:{line + 1}::{name}\n" + _external_failure_summary(
+            call.excinfo.value, report.when,
+        )
+    elif report.skipped:
+        report.longrepr = (path, line + 1, "専用lab試験をskipしました")
+    return report
 
 
 def _load_infra_config() -> EnvConfig:
@@ -231,7 +295,9 @@ def cleanup_resources(
 
     from mixin.database import SessionLocal
     from module.ansiblelib import AnsibleManager
+    from network.models import NetworkPoolModel
     from project.models import ProjectModel
+    from storage.models import StoragePoolModel
     from tests.external.fixtures.network import (
         delete_network_target,
         reload_networks,
@@ -427,9 +493,23 @@ def cleanup_resources(
 
             def delete_project(name=entry.name) -> None:
                 with SessionLocal.begin() as db:
-                    db.query(ProjectModel).filter(ProjectModel.name == name).delete(
-                        synchronize_session=False
+                    project = (
+                        db.query(ProjectModel)
+                        .filter(ProjectModel.name == name)
+                        .one_or_none()
                     )
+                    if project is None:
+                        return
+                    storage_pool_ids = [pool.id for pool in project.storage_pools]
+                    network_pool_ids = [pool.id for pool in project.network_pools]
+                    db.delete(project)
+                    db.flush()
+                    db.query(StoragePoolModel).filter(
+                        StoragePoolModel.id.in_(storage_pool_ids)
+                    ).delete(synchronize_session=False)
+                    db.query(NetworkPoolModel).filter(
+                        NetworkPoolModel.id.in_(network_pool_ids)
+                    ).delete(synchronize_session=False)
 
             return cleanup(label, entry, delete_project)
         elif entry.kind == "node":
@@ -465,7 +545,7 @@ def cleanup_resources(
 def gust_client() -> TestClient:
     from main import app
 
-    return TestClient(app)
+    return TestClient(app, raise_server_exceptions=False)
 
 
 @pytest.fixture(scope="session")
@@ -484,7 +564,7 @@ def create_authenticated_client(
     if guest_client is None:
         from main import app
 
-        guest_client = TestClient(app)
+        guest_client = TestClient(app, raise_server_exceptions=False)
 
     req_data = {"username": env.username, "password": env.password}
     if not guest_client.get("/api/version").json()["initialized"]:
@@ -493,6 +573,7 @@ def create_authenticated_client(
     resp.raise_for_status()
     return TestClient(
         guest_client.app,
+        raise_server_exceptions=False,
         headers={
             "Authorization": f"Bearer {resp.json()['access_token']}",
             "Content-Type": "application/json",
@@ -510,5 +591,6 @@ pytest_plugins = [
     "tests.external.fixtures.node",
     "tests.external.fixtures.storage",
     "tests.external.fixtures.network",
+    "tests.external.fixtures.project",
     "tests.external.fixtures.vm",
 ]

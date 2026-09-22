@@ -8,6 +8,12 @@ import {
   type Document,
   type YAMLMap,
 } from "yaml";
+import {
+  resolveTranslation,
+  translationRef,
+  TranslationError,
+  type TranslationRef,
+} from "@/composables/i18n";
 
 export const EMPTY_CLOUD_CONFIG = "#cloud-config\n{}\n";
 
@@ -28,7 +34,7 @@ export type CloudInitSuccess = {
 
 export type CloudInitFailure = {
   ok: false;
-  errors: string[];
+  errors: TranslationRef[];
 };
 
 export type CloudInitResult = CloudInitSuccess | CloudInitFailure;
@@ -73,10 +79,18 @@ export function createCloudInitFormState(): CloudInitFormState {
 function formatPosition(
   lineCounter: LineCounter,
   offset: number,
-  message: string,
-): string {
+  message: TranslationRef,
+): TranslationRef {
   const { line, col } = lineCounter.linePos(Math.max(0, offset));
-  return `Line ${line || 1}, column ${col || 1}: ${message}`;
+  return translationRef("cloudInit.position", {
+    line: line || 1,
+    column: col || 1,
+    message,
+  });
+}
+
+export function formatCloudInitErrors(errors: readonly TranslationRef[]): string[] {
+  return errors.map(resolveTranslation);
 }
 
 function nodeOffset(node: unknown): number {
@@ -89,11 +103,15 @@ function nodeOffset(node: unknown): number {
 }
 
 function parseCloudInit(source: string): ParsedCloudInit | CloudInitFailure {
-  const errors: string[] = [];
+  const errors: TranslationRef[] = [];
   const firstLine = source.match(/^[^\r\n]*/)?.[0] ?? "";
 
   if (firstLine !== "#cloud-config") {
-    errors.push("Line 1, column 1: The first line must be exactly #cloud-config.");
+    errors.push(translationRef("cloudInit.position", {
+      line: 1,
+      column: 1,
+      message: translationRef("cloudInit.firstLine"),
+    }));
   }
 
   const lineCounter = new LineCounter();
@@ -108,12 +126,20 @@ function parseCloudInit(source: string): ParsedCloudInit | CloudInitFailure {
   for (const document of documents) {
     for (const error of document.errors) {
       errors.push(
-        formatPosition(lineCounter, error.pos[0], error.message),
+        formatPosition(
+          lineCounter,
+          error.pos[0],
+          translationRef("cloudInit.invalidYaml"),
+        ),
       );
     }
     for (const warning of document.warnings) {
       errors.push(
-        formatPosition(lineCounter, warning.pos[0], warning.message),
+        formatPosition(
+          lineCounter,
+          warning.pos[0],
+          translationRef("cloudInit.invalidYaml"),
+        ),
       );
     }
   }
@@ -124,7 +150,7 @@ function parseCloudInit(source: string): ParsedCloudInit | CloudInitFailure {
       formatPosition(
         lineCounter,
         secondDocument?.range?.[0] ?? 0,
-        "Cloud-init user-data must contain exactly one YAML document.",
+        translationRef("cloudInit.multipleDocuments"),
       ),
     );
   }
@@ -135,7 +161,7 @@ function parseCloudInit(source: string): ParsedCloudInit | CloudInitFailure {
       formatPosition(
         lineCounter,
         nodeOffset(document.contents),
-        "The YAML document root must be a mapping.",
+        translationRef("cloudInit.mappingRoot"),
       ),
     );
   }
@@ -168,26 +194,26 @@ function splitNonEmptyLines(value: string): string[] {
 
 function appendPublicKey(
   key: string,
-  label: string,
+  label: TranslationRef,
   keys: string[],
   seen: Set<string>,
-  errors: string[],
+  errors: TranslationRef[],
 ): void {
   if (PRIVATE_KEY_MARKER.test(key)) {
-    errors.push(`${label} contains a private-key marker. Only public keys are allowed.`);
+    errors.push(translationRef("cloudInit.privateKey", { label }));
     return;
   }
 
   if (!OPENSSH_PUBLIC_KEY_PATTERN.test(key)) {
     errors.push(
-      `${label} must use the OpenSSH format "type base64 [comment]".`,
+      translationRef("cloudInit.publicKeyFormat", { label }),
     );
     return;
   }
 
   const [keyType, encodedKey] = key.split(/[\t ]+/, 2);
   if (decodeOpenSshAlgorithm(encodedKey) !== keyType) {
-    errors.push(`${label} does not contain a valid OpenSSH public-key blob.`);
+    errors.push(translationRef("cloudInit.publicKeyBlob", { label }));
     return;
   }
 
@@ -230,17 +256,17 @@ function usesDefaultUser(node: unknown): boolean {
 }
 
 function normalizeForm(form: CloudInitFormState): NormalizedForm | CloudInitFailure {
-  const errors: string[] = [];
+  const errors: TranslationRef[] = [];
 
   if (form.username !== "" && !USERNAME_PATTERN.test(form.username)) {
     errors.push(
-      "Username must match ^[a-z_][a-z0-9_-]{0,31}$ when provided.",
+      translationRef("cloudInit.username"),
     );
   }
 
   if (form.sshPasswordAuthentication && form.password.length === 0) {
     errors.push(
-      "Password is required when SSH password authentication is enabled.",
+      translationRef("cloudInit.passwordRequired"),
     );
   }
 
@@ -250,12 +276,12 @@ function normalizeForm(form: CloudInitFormState): NormalizedForm | CloudInitFail
   form.selectedPublicKeys.forEach((value, index) => {
     const lines = splitNonEmptyLines(value);
     if (lines.length !== 1) {
-      errors.push(`Selected SSH key ${index + 1} must contain exactly one public key.`);
+      errors.push(translationRef("cloudInit.selectedKeyCount", { index: index + 1 }));
       return;
     }
     appendPublicKey(
       lines[0],
-      `Selected SSH key ${index + 1}`,
+      translationRef("cloudInit.selectedKey", { index: index + 1 }),
       publicKeys,
       seenPublicKeys,
       errors,
@@ -269,7 +295,7 @@ function normalizeForm(form: CloudInitFormState): NormalizedForm | CloudInitFail
     }
     appendPublicKey(
       key,
-      `Manual SSH key line ${index + 1}`,
+      translationRef("cloudInit.manualKey", { index: index + 1 }),
       publicKeys,
       seenPublicKeys,
       errors,
@@ -293,7 +319,7 @@ function normalizeForm(form: CloudInitFormState): NormalizedForm | CloudInitFail
 function createBlockMap(document: Document): YAMLMap {
   const map = document.createNode({});
   if (!isMap(map)) {
-    throw new Error("Failed to create a YAML mapping.");
+    throw new TranslationError(translationRef("cloudInit.createMappingFailed"));
   }
   map.flow = false;
   return map;
@@ -306,7 +332,7 @@ function validateMergeCompatibility(
 ):
   | { ok: true; userNode: unknown; chpasswdNode: unknown }
   | CloudInitFailure {
-  const errors: string[] = [];
+  const errors: TranslationRef[] = [];
   const userNode = root.has("user") ? root.get("user", true) : undefined;
   const chpasswdNode = root.has("chpasswd")
     ? root.get("chpasswd", true)
@@ -318,7 +344,7 @@ function validateMergeCompatibility(
       formatPosition(
         lineCounter,
         nodeOffset(userNode),
-        "The existing user value must be a mapping to update user.name.",
+        translationRef("cloudInit.userMapping"),
       ),
     );
   }
@@ -327,7 +353,7 @@ function validateMergeCompatibility(
       formatPosition(
         lineCounter,
         nodeOffset(chpasswdNode),
-        "The existing chpasswd value must be a mapping to update chpasswd.expire.",
+        translationRef("cloudInit.chpasswdMapping"),
       ),
     );
   }
@@ -345,7 +371,7 @@ function validateMergeCompatibility(
       formatPosition(
         lineCounter,
         nodeOffset(usersNode),
-        "The existing users value must keep default as its first user before applying default-user form settings.",
+        translationRef("cloudInit.usersDefault"),
       ),
     );
   }
@@ -357,7 +383,7 @@ function validateMergeCompatibility(
           formatPosition(
             lineCounter,
             nodeOffset(chpasswdNode.get(key, true)),
-            `The existing chpasswd.${key} conflicts with the form password. Remove it in YAML before applying the form.`,
+            translationRef("cloudInit.chpasswdConflict", { key }),
           ),
         );
       }
@@ -445,7 +471,10 @@ export function mergeCloudInitForm(
     const runcmd = document.createNode([normalized.script]);
     const scriptNode = isSeq(runcmd) ? runcmd.items[0] : undefined;
     if (!isSeq(runcmd) || !isScalar(scriptNode)) {
-      return { ok: false, errors: ["Failed to create the runcmd YAML node."] };
+      return {
+        ok: false,
+        errors: [translationRef("cloudInit.createRunCommandFailed")],
+      };
     }
     scriptNode.type = Scalar.BLOCK_LITERAL;
     root.set("runcmd", runcmd);
@@ -455,8 +484,10 @@ export function mergeCloudInitForm(
 
   try {
     return { ok: true, value: document.toString({ lineWidth: 0 }) };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { ok: false, errors: [`Failed to serialize cloud-init YAML: ${message}`] };
+  } catch {
+    return {
+      ok: false,
+      errors: [translationRef("cloudInit.serializeFailed")],
+    };
   }
 }

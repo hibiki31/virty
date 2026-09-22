@@ -2,10 +2,13 @@ import {
   formatGib,
   formatPercentage,
   getDashboard,
-  pluralize,
+  networkTypeLabel,
+  nodeRoleLabel,
   progressPercent,
   ratioPercent,
-  titleCase,
+  taskMethodLabel,
+  taskResourceLabel,
+  taskStatusLabel,
   utilizationColor,
 } from "@/composables/dashboard";
 import type {
@@ -13,9 +16,11 @@ import type {
   DashboardResponse,
 } from "@/composables/dashboard";
 import DashboardPage from "@/pages/index.vue";
+import { setLocale } from "@/plugins/i18n";
 import { flushPromises, mount } from "@vue/test-utils";
 import { defineComponent, nextTick } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createPinia } from "pinia";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -120,7 +125,12 @@ function ok(data: DashboardResponse = dashboard) {
 
 function failed(status = 503) {
   return {
-    error: { detail: "unavailable" },
+    error: {
+      detail: {
+        code: "service_unavailable",
+        message: "The service is temporarily unavailable.",
+      },
+    },
     response: new Response(null, { status }),
   };
 }
@@ -193,6 +203,7 @@ const dashboardStubs = {
 function mountDashboard() {
   return mount(DashboardPage, {
     global: {
+      plugins: [createPinia()],
       stubs: dashboardStubs,
     },
   });
@@ -208,7 +219,9 @@ describe("dashboard APIと表示helper", () => {
     mocks.get.mockResolvedValue(ok());
 
     await expect(getDashboard()).resolves.toBe(dashboard);
-    expect(mocks.get).toHaveBeenCalledWith("/api/dashboard");
+    expect(mocks.get).toHaveBeenCalledWith("/api/dashboard", {
+      params: { query: { admin: false } },
+    });
   });
 
   it("response dataがない場合はstatus付きerrorにする", async () => {
@@ -237,14 +250,17 @@ describe("dashboard APIと表示helper", () => {
     expect(utilizationColor(50)).toBe("primary");
     expect(utilizationColor(80)).toBe("warning");
     expect(utilizationColor(80.1)).toBe("error");
-    expect(titleCase("lost_node")).toBe("Lost Node");
+    expect(taskStatusLabel("lost_node")).toBe("lost_node");
   });
 
-  it("件数に応じてAttention文言の単複を切り替える", () => {
-    expect(pluralize(1, "task")).toBe("task");
-    expect(pluralize(2, "task")).toBe("tasks");
-    expect(pluralize(1, "VM")).toBe("VM");
-    expect(pluralize(2, "VM")).toBe("VMs");
+  it("既知domain値だけを翻訳し、未知値を変形しない", () => {
+    expect(taskStatusLabel("finish")).toBe("Finished");
+    expect(taskResourceLabel("vm")).toBe("VM");
+    expect(taskMethodLabel("post")).toBe("POST");
+    expect(nodeRoleLabel("ssh")).toBe("SSH");
+    expect(networkTypeLabel("openvswitch")).toBe("Open vSwitch");
+    expect(taskResourceLabel("future_resource")).toBe("future_resource");
+    expect(taskMethodLabel("custom_method")).toBe("custom_method");
   });
 });
 
@@ -273,7 +289,7 @@ describe("dashboard page", () => {
       "Refresh dashboard",
     );
     expect(wrapper.get(".dashboard-kpi-card").attributes("aria-label")).toBe(
-      "Virtual Machines: 7, 4 running. Open Virtual Machines.",
+      "Virtual Machines: 7, 4 VMs running. Open Virtual Machines.",
     );
     expect(wrapper.find(".dashboard-hero-subtitle").exists()).toBe(true);
     const sectionHeadings = wrapper.findAll("h2").map((heading) => heading.text());
@@ -297,13 +313,26 @@ describe("dashboard page", () => {
     expect(wrapper.text()).toContain("Capacity overview");
     expect(wrapper.text()).toContain("vCPU allocation");
     expect(wrapper.text()).toContain("Storage usage");
+    expect(wrapper.text()).toContain("75% allocated");
     expect(wrapper.text()).toContain("60% used");
+    expect(wrapper.get(".dashboard-metric .progress-stub").attributes("aria-label")).toBe(
+      "vCPU allocation: 75%",
+    );
+    setLocale("ja");
+    await nextTick();
+    expect(wrapper.get(".dashboard-metric .progress-stub").attributes("aria-label")).toBe(
+      "vCPU割り当て: 75%",
+    );
+    expect(wrapper.text()).toContain("75% 割り当て済み");
+    expect(wrapper.text()).toContain("60% 使用済み");
+    setLocale("en");
+    await nextTick();
     expect(wrapper.text()).toContain("Node roles");
     expect(wrapper.text()).toContain("Network types");
-    expect(wrapper.text()).toContain("2 failed or lost tasks");
-    expect(wrapper.text()).toContain("1 storage pool at high usage");
-    expect(wrapper.text()).toContain("1 VM lost its node");
-    expect(wrapper.text()).toContain("1 deleted VM in inventory");
+    expect(wrapper.text()).toContain("Failed or lost tasks in the last 24 hours: 2");
+    expect(wrapper.text()).toContain("Storage pool at high usage: 1");
+    expect(wrapper.text()).toContain("VM that lost its node: 1");
+    expect(wrapper.text()).toContain("Deleted VM in inventory: 1");
     expect(wrapper.text()).toContain("Usage unavailable");
     expect(wrapper.text()).not.toContain("Unavailable used");
     expect(wrapper.text()).toContain("POST");

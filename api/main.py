@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, Response
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from agent.router import app as agent_router
 from auth.router import CurrentUser, get_current_user
@@ -20,6 +21,16 @@ from flavor.router import app as flavor_router
 from images.router import app as image_router
 from images.router_task import app as image_task_router
 from mixin.log import setup_logger
+from mixin.exception import (
+    COMMON_ERROR_RESPONSES,
+    AgentNoStoreMiddleware,
+    ApiCORSMiddleware,
+    ApiError,
+    api_error_exception_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from mixin.prometheus import install_prometheus_route_compatibility
 from mixin.router import app as mixin_router
 from network.router import app as network_router
@@ -94,15 +105,22 @@ app = FastAPI(
     servers=[{"url": "", "description": "Default"}],
     generate_unique_id_function=operation_id_from_route_name,
     lifespan=lifespan,
+    responses=COMMON_ERROR_RESPONSES,
 )
 
+app.add_exception_handler(ApiError, api_error_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
+
 app.add_middleware(
-    CORSMiddleware,
+    ApiCORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=bool(CORS_ORIGINS),
     allow_methods=["*"],
     allow_headers=["*"]
 )
+app.add_middleware(AgentNoStoreMiddleware)
 
 app.include_router(task_router)
 app.include_router(auth_router)

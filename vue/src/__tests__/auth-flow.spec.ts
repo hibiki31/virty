@@ -1,4 +1,5 @@
 import {
+  hasScope,
   removeAuth,
   resolveAuthNavigation,
   setAxios,
@@ -88,6 +89,13 @@ beforeEach(() => {
 });
 
 describe("認証navigation", () => {
+  it("legacy userとnamespace wildcardをAPIと同じ規則で判定する", () => {
+    expect(hasScope(["user"], "project.read")).toBe(true);
+    expect(hasScope(["user"], "project.manage")).toBe(false);
+    expect(hasScope(["vm.*"], "vm.project")).toBe(true);
+    expect(hasScope(["admin"], "identity.manage")).toBe(true);
+  });
+
   it("未認証のdeep linkをloginへ送り、認証済みloginはrootへ戻す", () => {
     expect(
       resolveAuthNavigation(false, { path: "/vms/vm-1", fullPath: "/vms/vm-1" }),
@@ -135,7 +143,7 @@ describe("認証navigation", () => {
     const wrapper = mountLogin();
     await flushPromises();
 
-    await field(wrapper, "ID").get("input").setValue("operator");
+    await field(wrapper, "User ID").get("input").setValue("operator");
     await field(wrapper, "Password").get("input").setValue("password");
     await loginButton(wrapper).trigger("click");
     await flushPromises();
@@ -156,7 +164,13 @@ describe("認証navigation", () => {
     expect(mocks.notify).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "error",
-        title: "Login fail",
+        data: {
+          title: { kind: "translation", key: "pages.login.notifications.failureTitle" },
+          content: {
+            kind: "translation",
+            key: "pages.login.notifications.serviceUnavailable",
+          },
+        },
       }),
     );
     expect(loginButton(wrapper).props("loading")).toBe(false);
@@ -175,14 +189,28 @@ describe("認証navigation", () => {
     expect(mocks.removeCookie).toHaveBeenCalledWith("accessToken");
     expect(mocks.auth.loginFailure).toHaveBeenCalledOnce();
     expect(mocks.notify).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Login Failed", type: "error" }),
+      expect.objectContaining({
+        type: "error",
+        data: {
+          title: { kind: "translation", key: "pages.login.notifications.failureTitle" },
+          content: {
+            kind: "translation",
+            key: "pages.login.notifications.tokenValidationFailed",
+          },
+        },
+      }),
     );
   });
 
   it("保存tokenが401なら期限切れ通知後にcookieと認証stateを破棄する", async () => {
     mocks.getCookie.mockReturnValue("expired-token");
     mocks.apiGet.mockResolvedValue({
-      error: { detail: "expired" },
+      error: {
+        detail: {
+          code: "token_expired",
+          message: "The authentication token has expired.",
+        },
+      },
       response: new Response(null, { status: 401 }),
     });
 
@@ -193,8 +221,18 @@ describe("認証navigation", () => {
     expect(mocks.auth.loginFailure).toHaveBeenCalledOnce();
     expect(mocks.notify).toHaveBeenCalledWith({
       type: "error",
-      title: "Login Failed",
-      text: "Token have expired",
+      data: {
+        title: { kind: "translation", key: "pages.login.notifications.failureTitle" },
+        content: {
+          kind: "api-error",
+          error: {
+            detail: {
+              code: "token_expired",
+              message: "The authentication token has expired.",
+            },
+          },
+        },
+      },
     });
   });
 });

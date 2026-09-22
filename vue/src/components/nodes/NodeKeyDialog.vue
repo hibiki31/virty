@@ -3,28 +3,26 @@
     <v-dialog width="800" v-model="model">
       <v-card>
         <v-form ref="dialogForm">
-          <v-card-title>Administration Key</v-card-title>
+          <v-card-title>{{ t('dialogs.nodeKey.title') }}</v-card-title>
           <v-card-text>
-            This SSH key is used by Virty to operate each node. Passwordless sudo privileges are required.
-            If you wish to restrict the user's permissions, please contact us via an issue.
+            {{ t('dialogs.nodeKey.description') }}
 
-            <v-switch v-model="requestData.generate" color="error" label="Generated on the server side" hide-details
+            <v-switch v-model="requestData.generate" color="error" :label="t('dialogs.nodeKey.generated')" hide-details
               inset></v-switch>
-            <v-textarea class="text-caption pt-3" outlined clearable auto-grow label="Key"
+            <v-textarea class="text-caption pt-3" outlined clearable auto-grow :label="t('dialogs.nodeKey.privateKey')"
               v-model="requestData.privateKey" :disabled="requestData.generate"></v-textarea>
-            <v-textarea class="text-caption" outlined clearable auto-grow label="Pub" v-model="requestData.publicKey"
+            <v-textarea class="text-caption" outlined clearable auto-grow :label="t('dialogs.nodeKey.publicKey')" v-model="requestData.publicKey"
               :disabled="requestData.generate"></v-textarea>
 
             <div class="text-error">
               <v-icon icon="mdi-alert-circle-outline"></v-icon>
-              An SSH key already exists on the server.
-              In this case, it will be overwritten and cannot be recovered, so please proceed with caution.
+              {{ t('dialogs.nodeKey.warning') }}
             </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn :loading="submitting" color="error" v-on:click="addNode" v-if="alreadyKeySave">Overwrite</v-btn>
-            <v-btn :loading="submitting" color="primary" v-on:click="addNode" v-else>Submit</v-btn>
+            <v-btn :loading="submitting" color="error" v-on:click="addNode" v-if="alreadyKeySave">{{ t('common.actions.overwrite') }}</v-btn>
+            <v-btn :loading="submitting" color="primary" v-on:click="addNode" v-else>{{ t('common.actions.submit') }}</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -34,9 +32,11 @@
 
 <script setup lang="ts">
 import { apiClient } from '@/api';
-import { useNotification } from '@kyvg/vue3-notification'
+import { useI18n } from 'vue-i18n'
+import notify, { apiErrorRef } from '@/composables/notify'
+import { translationRef } from '@/composables/i18n'
 
-const { notify } = useNotification()
+const { t } = useI18n({ useScope: 'global' })
 
 const model = defineModel({ default: false })
 const submitting = ref(false)
@@ -52,17 +52,9 @@ const addNode = () => {
   apiClient.POST('/api/nodes/key', { body: requestData }).then((res) => {
     if (res.response.ok) {
       model.value = false
-      notify({
-        type: 'success',
-        title: 'Add key successful',
-        text: 'Wait until the task is completed'
-      })
+      notify('success', translationRef('dialogs.nodeKey.success'), translationRef('dialogs.nodeKey.wait'))
     } else {
-      notify({
-        type: 'error',
-        title: 'Add key failed',
-        text: 'Check the key format'
-      })
+      notify('error', translationRef('dialogs.nodeKey.failed'), apiErrorRef(res.error))
     }
     submitting.value = false
   })

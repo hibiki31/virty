@@ -3,20 +3,20 @@
     <v-card>
       <v-form ref="formRef" @submit.prevent="submit">
         <v-card-title class="headline">
-          Delete the Node
+          {{ t('dialogs.nodeDelete.title') }}
         </v-card-title>
         <v-card-text>
-          Are you sure you want to delete the node?
-          <v-checkbox density="comfortable" :label="'Delete ' + props.item?.name" :rules="[r.requiredCheckbox]"
+          {{ t('dialogs.nodeDelete.confirm') }}
+          <v-checkbox density="comfortable" :label="t('dialogs.nodeDelete.confirmation', { name: props.item?.name || '' })" :rules="[r.requiredCheckbox]"
             color="error"></v-checkbox>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="success" text @click="model = false">
-            Cancel
+            {{ t('common.actions.cancel') }}
           </v-btn>
           <v-btn :loading="loading" color="error" text type="submit">
-            Delete
+            {{ t('common.actions.delete') }}
           </v-btn>
         </v-card-actions>
       </v-form>
@@ -27,9 +27,14 @@
 <script setup lang="ts">
 import type { schemas } from '@/composables/schemas';
 import { apiClient } from '@/api';
-import notify, { notifyTask } from '@/composables/notify';
+import notify, { apiErrorRef, notifyTask } from '@/composables/notify';
+import { translationRef } from '@/composables/i18n';
 import { asyncSleep } from '@/composables/sleep';
+import { useI18n } from 'vue-i18n';
+import { useLocalizedRules } from '@/composables/rules';
 
+const { t } = useI18n({ useScope: 'global' })
+const r = useLocalizedRules()
 
 const model = defineModel({ default: false })
 const props = defineProps({
@@ -57,7 +62,7 @@ async function submit(event: Promise<{ valid: boolean }>) {
       model.value = false
     }
     if (res.error) {
-      notify('error', 'Delete Node failed', res.error)
+      notify('error', translationRef('dialogs.nodeDelete.failed'), apiErrorRef(res.error))
     }
     loading.value = false
   }

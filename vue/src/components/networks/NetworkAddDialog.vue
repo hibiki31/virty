@@ -1,25 +1,25 @@
 <template>
   <v-dialog width="700" v-model="dialogState" data-testid="network-create-dialog" color="black">
     <v-form ref="formRef" @submit.prevent="submit">
-      <v-card title="Create Network">
+      <v-card :title="t('dialogs.networkAdd.title')">
         <v-card-text>
           <!-- 基本 -->
           <v-row cols="12">
             <v-col>
-              <v-text-field data-testid="network-name" variant="outlined" density="compact" label="Name" v-model="postData.name"
+              <v-text-field data-testid="network-name" variant="outlined" density="compact" :label="t('common.fields.name')" v-model="postData.name"
                 :rules="[r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions]"
                 counter="64"></v-text-field>
             </v-col>
             <v-col md="3">
-              <v-select variant="outlined" density="compact" label="Mode" :items="itemsForwardMode"
+              <v-select variant="outlined" density="compact" :label="t('common.fields.mode')" :items="itemsForwardMode"
                 :rules="[r.required]" v-model="postData.forwardMode" @update:model-value="updateMode"></v-select>
             </v-col>
             <v-col md="3">
-              <v-select variant="outlined" density="compact" label="Node" :items="itemsNodes.data" :rules="[r.required]"
+              <v-select variant="outlined" density="compact" :label="t('common.fields.node')" :items="itemsNodes.data" :rules="[r.required]"
                 item-title="name" item-value="name" v-model="postData.nodeName"></v-select>
             </v-col>
             <v-col>
-              <v-text-field variant="outlined" density="compact" label="Bridge Name" v-model="bridgeName"
+              <v-text-field variant="outlined" density="compact" :label="t('dialogs.networkAdd.bridgeName')" v-model="bridgeName"
                 :rules="enableBridge ? [r.required, r.limitLength64, r.characterRestrictions, r.firstCharacterRestrictions] : []"
                 counter="64"></v-text-field>
             </v-col>
@@ -30,37 +30,37 @@
 
           <v-divider></v-divider>
           <p class="text-body-2 pt-3">
-            The GW is not available for type isolated, ovs. DHCP must be enabled on the GW.</p>
+            {{ t('dialogs.networkAdd.gatewayHelp') }}</p>
 
 
           <v-row class="pt-1">
             <!-- IP -->
             <v-col>
-              <v-checkbox density="compact" label="Enable GW" color="primary" hide-details v-model="enableIP"
+              <v-checkbox density="compact" :label="t('dialogs.networkAdd.enableGateway')" color="primary" hide-details v-model="enableIP"
                 :disabled="disableIP"
                 @update:model-value="() => { if (!enableIP) { enableDHCP = false } }"></v-checkbox>
               <v-row cols="12">
                 <v-col>
-                  <v-text-field variant="outlined" density="compact" label="IP" v-model="postDataIP.address"
+                  <v-text-field variant="outlined" density="compact" :label="t('dialogs.networkAdd.ip')" v-model="postDataIP.address"
                     :disabled="!enableIP" :rules="[r.required, r.isValidIp]" counter="64"></v-text-field>
                 </v-col>
                 <v-col>
-                  <v-text-field variant="outlined" density="compact" label="Netmask" v-model="postDataIP.netmask"
+                  <v-text-field variant="outlined" density="compact" :label="t('dialogs.networkAdd.netmask')" v-model="postDataIP.netmask"
                     :disabled="!enableIP" :rules="[r.required, r.isValidIp]" counter="64"></v-text-field>
                 </v-col>
               </v-row>
             </v-col>
             <!-- DHCP -->
             <v-col>
-              <v-checkbox density="compact" label="Enable DHCP" color="primary" hide-details v-model="enableDHCP"
+              <v-checkbox density="compact" :label="t('dialogs.networkAdd.enableDhcp')" color="primary" hide-details v-model="enableDHCP"
                 :disabled="disableIP || !enableIP"></v-checkbox>
               <v-row cols="12">
                 <v-col>
-                  <v-text-field variant="outlined" density="compact" label="Start" v-model="postDataDHCP.start"
+                  <v-text-field variant="outlined" density="compact" :label="t('dialogs.networkAdd.start')" v-model="postDataDHCP.start"
                     :disabled="!enableDHCP" :rules="[r.required, r.isValidIp]" counter="64"></v-text-field>
                 </v-col>
                 <v-col>
-                  <v-text-field variant="outlined" density="compact" label="End" v-model="postDataDHCP.end"
+                  <v-text-field variant="outlined" density="compact" :label="t('dialogs.networkAdd.end')" v-model="postDataDHCP.end"
                     :disabled="!enableDHCP" :rules="[r.required, r.isValidIp]" counter="64"></v-text-field>
                 </v-col>
               </v-row>
@@ -69,8 +69,8 @@
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
-          <v-btn data-testid="network-create-cancel" variant="text" @click="dialogState = false">Cancel</v-btn>
-          <v-btn data-testid="network-create-submit" color="primary" type="submit" :loading="loading">CREATE</v-btn>
+          <v-btn data-testid="network-create-cancel" variant="text" @click="dialogState = false">{{ t('common.actions.cancel') }}</v-btn>
+          <v-btn data-testid="network-create-submit" color="primary" type="submit" :loading="loading">{{ t('common.actions.create') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -80,14 +80,18 @@
 
 <script lang="ts" setup>
 import type { schemas } from '@/composables/schemas';
-import { onMounted, reactive, ref } from 'vue';
-import r from '@/composables/rules';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useLocalizedRules } from '@/composables/rules';
 
 import { getNode } from '@/composables/nodes';
 import { apiClient } from '@/api';
-import notify, { notifyTask } from '@/composables/notify';
+import notify, { apiErrorRef, notifyTask } from '@/composables/notify';
+import { translationRef } from '@/composables/i18n';
 
 const dialogState = defineModel({ default: false })
+const { t } = useI18n({ useScope: 'global' })
+const r = useLocalizedRules()
 const loading = ref(false)
 
 const disableIP = ref(false)
@@ -96,13 +100,13 @@ const enableDHCP = ref(true)
 const bridgeName = ref("")
 const enableBridge = ref(false)
 
-const itemsForwardMode = [
-  { title: "Bridge", value: "bridge" },
+const itemsForwardMode = computed(() => [
+  { title: t('common.fields.bridge'), value: "bridge" },
   { title: "NAT", value: "nat" },
   { title: "OVS", value: "ovs" },
-  { title: "Route", value: "route" },
-  { title: "Isolated", value: "isolated" },
-]
+  { title: t('dialogs.networkAdd.route'), value: "route" },
+  { title: t('dialogs.networkAdd.isolated'), value: "isolated" },
+])
 
 const itemsNodes = ref<schemas["NodePage"]>({ count: 0, data: [], })
 
@@ -175,10 +179,10 @@ async function submit(event: Promise<{ valid: boolean }>) {
       notifyTask(res.data[0].uuid)
       dialogState.value = false
     } else if (res.error) {
-      notify('error', 'Create Network failed', res.error)
+      notify('error', translationRef('dialogs.networkAdd.createFailed'), apiErrorRef(res.error))
     }
   } catch {
-    notify('error', 'Create Network failed', 'Unable to reach the network service')
+    notify('error', translationRef('dialogs.networkAdd.createFailed'), translationRef('dialogs.networkAdd.unreachable'))
   } finally {
     loading.value = false
   }

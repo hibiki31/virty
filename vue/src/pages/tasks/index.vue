@@ -3,15 +3,15 @@
     <task-detail-dialog v-model="stateDetailDialog" :item="dataDetailDaalog"></task-detail-dialog>
     <v-card-title class="d-flex align-center pe-2">
       <v-icon icon="mdi-checkbox-multiple-marked-outline"></v-icon> &nbsp;
-      Task List
+      {{ t('pages.tasks.heading') }}
 
       <v-spacer></v-spacer>
-      <v-select density="compact" clearable label="Status" v-model="query.status" @update:model-value="reload"
-        :items="['finish', 'error', 'init', 'wait', 'incomplete']" variant="solo" width="1" class="pr-3"></v-select>
-      <v-select density="compact" clearable label="Resouce" v-model="query.resource" @update:model-value="reload"
-        :items="['vm', 'network', 'node', 'storage']" variant="solo" width="1" class="pr-3"></v-select>
-      <v-select density="compact" clearable label="Method" v-model="query.method" @update:model-value="reload"
-        :items="['post', 'put', 'delete', 'patch']" variant="solo" width="1"></v-select>
+      <v-select density="compact" clearable :label="t('pages.tasks.filters.status')" v-model="query.status" @update:model-value="reload"
+        :items="taskStatusItems" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable :label="t('pages.tasks.filters.resource')" v-model="query.resource" @update:model-value="reload"
+        :items="taskResourceItems" variant="solo" width="1" class="pr-3"></v-select>
+      <v-select density="compact" clearable :label="t('pages.tasks.filters.method')" v-model="query.method" @update:model-value="reload"
+        :items="taskMethodItems" variant="solo" width="1"></v-select>
 
     </v-card-title>
     <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
@@ -19,21 +19,23 @@
       :items-length="items.count" :loading="loading" item-value="name" @update:options="loadItems">
 
       <template v-slot:item.status="{ value }">
-        <v-chip :color="getStatusColor(value)" :text="value.toUpperCase()" variant="flat" size="x-small"></v-chip>
+        <v-chip :color="getStatusColor(value)" :text="getTaskStatusLabel(value)" variant="flat" size="x-small"></v-chip>
       </template>
 
       <template v-slot:item.postTime="{ value }">
-        {{ toJST(value) }}
+        {{ formatTaskDateTime(value) }}
       </template>
 
       <template v-slot:item.actions="{ item }">
         <v-icon color="medium-emphasis" icon="mdi-dots-horizontal-circle-outline" size="small"
+          data-testid="task-view-details"
+          :aria-label="t('common.actions.viewDetails')" role="button" tabindex="0"
           @click="dataDetailDaalog = item; stateDetailDialog = true"></v-icon>
       </template>
 
       <template v-slot:item.runTime="{ value }">
         <div class="text-end">
-          {{ toFixedTow(value) }}s
+          {{ t('pages.tasks.durationSeconds', { value: formatTaskDuration(value) }) }}
         </div>
       </template>
 
@@ -46,9 +48,9 @@
           <template v-slot:activator="{ props }">
             <v-icon v-bind="props" :color="getMethodColor(item.method)">{{ getResourceIcon(item.resource) }}</v-icon>
           </template>
-          <span>Json Param: {{ item.request }}</span>
+          <span>{{ taskRequestLabel(item.request) }}</span>
         </v-tooltip>
-        <span class="ml-3">{{ item.method }}.{{ item.resource }}.{{ item.object }}</span>
+        <span class="ml-3">{{ taskMethodLabel(item.method) }}.{{ taskResourceLabel(item.resource) }}.{{ item.object }}</span>
       </template>
 
     </v-data-table-server>
@@ -57,18 +59,30 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Tasks
+  titleKey: pages.tasks.documentTitle
 </route>
 
 <script lang="ts" setup>
 import type { typeListTask, typeListTaskQuery } from '@/composables/task'
 
 import { hasAdminScope } from '@/composables/auth'
-import { toJST, getStatusColor, getTaskList, toFixedTow, getMethodColor, getResourceIcon } from '@/composables/task'
+import {
+  formatTaskDateTime,
+  formatTaskDuration,
+  getMethodColor,
+  getResourceIcon,
+  getStatusColor,
+  getTaskList,
+  taskMethodLabel,
+  taskRequestLabel,
+  taskResourceLabel,
+} from '@/composables/task'
 import { itemsPerPAgeOption } from '@/composables/table'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
 
 const auth = useAuthStore()
+const { t } = useI18n({ useScope: 'global' })
 const loading = ref(false)
 const stateDetailDialog = ref(false)
 const dataDetailDaalog = ref<typeListTask["data"][0]>()
@@ -85,15 +99,35 @@ const query = ref<NonNullable<typeListTaskQuery>>({
 })
 
 
-const headers = [
-  { title: 'Status', value: 'status' },
-  { title: 'PostTime', value: 'postTime' },
-  { title: 'userId', value: 'userId' },
-  { title: 'Request', value: 'resource' },
-  { title: 'ID', value: 'uuid' },
-  { title: 'TunTime', value: 'runTime' },
-  { title: 'Actions', value: 'actions' }
-]
+const taskStatusValues = ['finish', 'error', 'init', 'wait', 'incomplete'] as const
+const taskResourceValues = ['vm', 'network', 'node', 'storage'] as const
+const taskMethodValues = ['post', 'put', 'delete', 'patch'] as const
+
+const taskStatusItems = computed(() => taskStatusValues.map(value => ({
+  title: t(`pages.tasks.statuses.${value}`),
+  value,
+})))
+const taskResourceItems = computed(() => taskResourceValues.map(value => ({
+  title: t(`pages.tasks.resources.${value}`),
+  value,
+})))
+const taskMethodItems = computed(() => taskMethodValues.map(value => ({
+  title: t(`pages.tasks.methods.${value}`),
+  value,
+})))
+
+const getTaskStatusLabel = (value: string) =>
+  taskStatusItems.value.find(item => item.value === value)?.title ?? value
+
+const headers = computed(() => [
+  { title: t('pages.tasks.columns.status'), value: 'status' },
+  { title: t('pages.tasks.columns.postTime'), value: 'postTime' },
+  { title: t('pages.tasks.columns.userId'), value: 'userId' },
+  { title: t('pages.tasks.columns.request'), value: 'resource' },
+  { title: t('pages.tasks.columns.id'), value: 'uuid' },
+  { title: t('pages.tasks.columns.runTime'), value: 'runTime' },
+  { title: t('pages.tasks.columns.actions'), value: 'actions' }
+])
 
 
 const items = ref<typeListTask>({

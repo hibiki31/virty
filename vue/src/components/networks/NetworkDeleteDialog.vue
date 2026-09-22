@@ -2,16 +2,16 @@
   <v-dialog v-model="model" persistent max-width="290">
     <v-card>
       <v-card-title class="headline">
-        Delete Network
+        {{ t('dialogs.networkDelete.title') }}
       </v-card-title>
       <v-card-text>{{ props.item?.name }}</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="success" text @click="model = false">
-          Cancel
+          {{ t('common.actions.cancel') }}
         </v-btn>
         <v-btn :loading="loading" color="error" text @click="submit()">
-          Delete
+          {{ t('common.actions.delete') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -21,11 +21,13 @@
 <script setup lang="ts">
 import type { typeListNetwork } from '@/composables/network';
 import { apiClient } from '@/api';
-import { useNotification } from '@kyvg/vue3-notification'
 import { asyncSleep } from '@/composables/sleep';
+import notify, { apiErrorRef } from '@/composables/notify';
+import { translationRef } from '@/composables/i18n';
+import { useI18n } from 'vue-i18n';
 const router = useRouter()
 
-const { notify } = useNotification()
+const { t } = useI18n({ useScope: 'global' })
 const model = defineModel({ default: false })
 const props = defineProps({
   item: {
@@ -44,26 +46,15 @@ async function submit() {
       const res = await apiClient.DELETE('/api/tasks/networks/{uuid}', { params: { path: { uuid: props.item.uuid } } })
 
       if (res.response.ok) {
-        notify({
-          type: 'success',
-          title: 'Delete Network successful',
-          text: 'Wait until the task is completed'
-        })
+        notify('success', translationRef('dialogs.networkDelete.success'), translationRef('dialogs.networkDelete.wait'))
         model.value = false
         await asyncSleep(600)
         await router.push("/networks")
       } else {
-        notify({
-          type: 'error',
-          title: 'Delete Network failed'
-        })
+        notify('error', translationRef('dialogs.networkDelete.failed'), apiErrorRef(res.error))
       }
     } catch {
-      notify({
-        type: 'error',
-        title: 'Delete Network failed',
-        text: 'Unable to reach the network service'
-      })
+      notify('error', translationRef('dialogs.networkDelete.failed'), translationRef('dialogs.networkDelete.unreachable'))
     } finally {
       loading.value = false
     }

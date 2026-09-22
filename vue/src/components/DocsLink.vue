@@ -1,5 +1,5 @@
 <template>
-  <v-btn color="info" prepend-icon="mdi-file-document-outline" text="Open Docs" class="text-none mb-3" size="small"
+  <v-btn color="info" prepend-icon="mdi-file-document-outline" :text="$t('docsLink.open')" class="text-none mb-3" size="small"
     variant="tonal" @click="openInNewTab"></v-btn>
 </template>
 

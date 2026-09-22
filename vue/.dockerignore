@@ -1,6 +1,9 @@
 node_modules
 dist
 coverage
+fullstack-results
+test-results
+playwright-report
 .env
 .env.local
 .env.*.local

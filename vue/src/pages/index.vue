@@ -6,16 +6,16 @@
           <v-icon icon="mdi-view-dashboard-outline" size="34" />
         </div>
         <div>
-          <h1 class="text-h4 font-weight-bold">Dashboard</h1>
+          <h1 class="text-h4 font-weight-bold">{{ t('dashboard.title') }}</h1>
           <p class="dashboard-hero-subtitle text-body-2 mt-1 mb-0">
-            Infrastructure inventory and recent control-plane activity
+            {{ t('dashboard.subtitle') }}
           </p>
           <div v-if="dashboard" class="d-flex flex-wrap align-center ga-2 mt-3">
             <v-chip color="white" prepend-icon="mdi-eye-outline" size="small" variant="outlined">
               {{ visibilityLabel }}
             </v-chip>
             <span class="dashboard-hero-meta text-caption">
-              Updated {{ formatTimestamp(dashboard.generatedAt) }}
+              {{ t('dashboard.updated', { date: formatTimestamp(dashboard.generatedAt) }) }}
             </span>
           </div>
         </div>
@@ -23,10 +23,10 @@
         <v-btn
           :disabled="isInitialLoading"
           :loading="isRefreshing"
-          aria-label="Refresh dashboard"
+          :aria-label="t('dashboard.refreshAria')"
           color="white"
           icon="mdi-refresh"
-          title="Refresh dashboard"
+          :title="t('dashboard.refreshAria')"
           variant="tonal"
           @click="loadDashboard"
         />
@@ -34,7 +34,7 @@
     </v-sheet>
 
     <div v-if="isInitialLoading" data-testid="dashboard-loading" role="status" aria-live="polite">
-      <span class="sr-only">Loading dashboard</span>
+      <span class="sr-only">{{ t('dashboard.loading') }}</span>
       <v-row>
         <v-col v-for="index in 6" :key="index" cols="12" sm="6" md="4" xl="2">
           <v-skeleton-loader class="dashboard-kpi-card" type="article" />
@@ -55,12 +55,12 @@
       variant="outlined"
     >
       <v-icon color="error" icon="mdi-cloud-alert-outline" size="52" />
-      <h2 class="text-h5 mt-4">Dashboard unavailable</h2>
+      <h2 class="text-h5 mt-4">{{ t('dashboard.unavailableTitle') }}</h2>
       <p class="text-body-2 text-medium-emphasis mx-auto mt-2 dashboard-message-width">
-        The API did not return a dashboard snapshot. Your existing resources were not changed.
+        {{ t('dashboard.unavailableDescription') }}
       </p>
       <v-btn class="mt-5" color="primary" prepend-icon="mdi-refresh" @click="loadDashboard">
-        Retry
+        {{ t('common.actions.retry') }}
       </v-btn>
     </v-card>
 
@@ -70,13 +70,13 @@
         class="mb-5"
         data-testid="dashboard-stale-alert"
         icon="mdi-history"
-        title="Showing the last available snapshot"
+        :title="t('dashboard.staleTitle')"
         type="warning"
         variant="tonal"
       >
-        The latest refresh failed. Values below may be stale.
+        {{ t('dashboard.staleDescription') }}
         <template #append>
-          <v-btn :loading="isRefreshing" size="small" variant="text" @click="loadDashboard">Retry</v-btn>
+          <v-btn :loading="isRefreshing" size="small" variant="text" @click="loadDashboard">{{ t('common.actions.retry') }}</v-btn>
         </template>
       </v-alert>
 
@@ -85,25 +85,26 @@
         class="mb-5"
         data-testid="dashboard-empty"
         icon="mdi-package-variant-closed"
-        title="No infrastructure inventory yet"
+        :title="t('dashboard.noInventoryTitle')"
         type="info"
         variant="tonal"
       >
-        Register a node and run inventory scans to populate this dashboard.
+        {{ t('dashboard.noInventoryDescription') }}
         <template #append>
-          <v-btn size="small" to="/nodes" variant="text">Go to Nodes</v-btn>
+          <v-btn size="small" to="/nodes" variant="text">{{ t('dashboard.nodesLink') }}</v-btn>
         </template>
       </v-alert>
 
       <section aria-labelledby="dashboard-overview-heading">
-        <h2 id="dashboard-overview-heading" class="sr-only">Resource overview</h2>
+        <h2 id="dashboard-overview-heading" class="sr-only">{{ t('dashboard.overview') }}</h2>
         <v-row>
           <v-col v-for="item in kpis" :key="item.title" cols="12" sm="6" md="4" xl="2">
             <v-card
-              :aria-label="`${item.title}: ${item.value}, ${item.detail}. Open ${item.title}.`"
+              :aria-label="t('dashboard.kpiAria', { title: item.title, value: formatNumber(item.value), detail: item.detail })"
               :to="item.to"
               class="dashboard-kpi-card h-100"
               color="primary"
+              :data-testid="`dashboard-kpi-${item.to.slice(1)}`"
               variant="tonal"
             >
               <v-card-text class="d-flex align-center ga-4">
@@ -126,9 +127,9 @@
           <v-card class="h-100" variant="outlined">
             <v-card-title class="d-flex align-center ga-2" tag="h2">
               <v-icon color="primary" icon="mdi-gauge" />
-              Capacity overview
+              {{ t('dashboard.capacityTitle') }}
             </v-card-title>
-            <v-card-subtitle>Cached inventory totals, not real-time utilization</v-card-subtitle>
+            <v-card-subtitle>{{ t('dashboard.capacitySubtitle') }}</v-card-subtitle>
             <v-card-text>
               <div v-for="metric in allocationMetrics" :key="metric.label" class="dashboard-metric mb-5">
                 <div class="d-flex justify-space-between ga-4 mb-2">
@@ -136,24 +137,27 @@
                   <span class="text-body-2 text-medium-emphasis text-right">{{ metric.summary }}</span>
                 </div>
                 <v-progress-linear
-                  :aria-label="`${metric.label}: ${formatPercentage(metric.percent)}`"
+                  :aria-label="t('dashboard.metricAria', {
+                    label: metric.label,
+                    value: formatPercentage(metric.percent),
+                  })"
                   :color="utilizationColor(metric.percent)"
                   :model-value="progressPercent(metric.percent)"
                   height="10"
                   rounded
                 />
                 <div class="text-caption text-medium-emphasis mt-1">
-                  {{ metric.percent === null ? metric.unavailableLabel : `${formatPercentage(metric.percent)} ${metric.verb}` }}
+                  {{ metric.percentLabel }}
                 </div>
               </div>
 
               <v-divider class="mb-4" />
               <div class="d-flex align-center justify-space-between ga-3 mb-2">
-                <h3 class="text-subtitle-1 font-weight-bold">Highest storage usage</h3>
-                <v-btn size="small" to="/storages" variant="text">View all</v-btn>
+                <h3 class="text-subtitle-1 font-weight-bold">{{ t('dashboard.highestStorageUsage') }}</h3>
+                <v-btn size="small" to="/storages" variant="text">{{ t('common.actions.viewAll') }}</v-btn>
               </div>
               <div v-if="dashboard.storages.highestUsage.length === 0" class="text-body-2 text-medium-emphasis py-4">
-                No storage capacity data is available.
+                {{ t('dashboard.noStorageCapacity') }}
               </div>
               <template v-else>
                 <div
@@ -179,16 +183,16 @@
                     </div>
                   </div>
                   <v-progress-linear
-                    :aria-label="`${storage.name} storage usage: ${storage.usagePercent === null ? 'Usage unavailable' : formatPercentage(storage.usagePercent)}`"
+                    :aria-label="t('dashboard.storageUsageAria', { name: storage.name, usage: storage.usagePercent === null ? t('dashboard.usageUnavailable') : formatPercentage(storage.usagePercent) })"
                     :color="utilizationColor(storage.usagePercent)"
                     :model-value="progressPercent(storage.usagePercent)"
                     height="8"
                     rounded
                   />
                   <div class="text-caption text-medium-emphasis mt-1">
-                    <template v-if="storage.usagePercent === null">Usage unavailable</template>
-                    <template v-else>{{ formatPercentage(storage.usagePercent) }} used</template>
-                    · {{ formatGib(storage.availableGib) }} available
+                    <template v-if="storage.usagePercent === null">{{ t('dashboard.usageUnavailable') }}</template>
+                    <template v-else>{{ t('dashboard.percentUsed', { percent: formatPercentage(storage.usagePercent) }) }}</template>
+                    · {{ t('dashboard.valueAvailable', { value: formatGib(storage.availableGib) }) }}
                   </div>
                 </div>
               </template>
@@ -200,13 +204,13 @@
           <v-card class="h-100" variant="outlined">
             <v-card-title class="d-flex align-center ga-2" tag="h2">
               <v-icon color="primary" icon="mdi-desktop-tower-monitor" />
-              Virtual machine state
+              {{ t('dashboard.vmStateTitle') }}
             </v-card-title>
-            <v-card-subtitle>Power state from the latest inventory scan</v-card-subtitle>
+            <v-card-subtitle>{{ t('dashboard.vmStateSubtitle') }}</v-card-subtitle>
             <v-card-text>
               <div class="d-flex flex-column flex-sm-row align-center justify-space-around ga-6 py-3">
                 <v-progress-circular
-                  :aria-label="`Running virtual machines: ${formatPercentage(vmRunningPercent)}`"
+                  :aria-label="t('dashboard.runningVmsAria', { percent: formatPercentage(vmRunningPercent) })"
                   :model-value="progressPercent(vmRunningPercent)"
                   color="primary"
                   size="152"
@@ -214,8 +218,8 @@
                 >
                   <div class="text-center">
                     <div class="text-h4 font-weight-bold">{{ formatNumber(dashboard.vms.statuses.running) }}</div>
-                    <div class="text-caption">Running</div>
-                    <div class="text-caption text-medium-emphasis">of {{ formatNumber(dashboard.vms.count) }}</div>
+                    <div class="text-caption">{{ t('dashboard.running') }}</div>
+                    <div class="text-caption text-medium-emphasis">{{ t('dashboard.ofCount', { count: formatNumber(dashboard.vms.count) }, dashboard.vms.count) }}</div>
                   </div>
                 </v-progress-circular>
 
@@ -241,20 +245,20 @@
           <v-card class="h-100" variant="outlined">
             <v-card-title class="d-flex align-center ga-2" tag="h2">
               <v-icon color="primary" icon="mdi-shield-account-outline" />
-              Node roles
+              {{ t('dashboard.nodeRoles') }}
             </v-card-title>
             <v-card-text>
               <div v-if="dashboard.nodes.roles.length === 0" class="text-body-2 text-medium-emphasis py-4">
-                No node roles are assigned.
+                {{ t('dashboard.noNodeRoles') }}
               </div>
               <template v-else>
                 <div v-for="role in dashboard.nodes.roles" :key="role.name" class="mb-4">
                   <div class="d-flex justify-space-between mb-2">
-                    <span>{{ titleCase(role.name) }}</span>
+                    <span>{{ nodeRoleLabel(role.name) }}</span>
                     <span class="font-weight-bold">{{ formatNumber(role.count) }}</span>
                   </div>
                   <v-progress-linear
-                    :aria-label="`${titleCase(role.name)} role: ${role.count} nodes`"
+                    :aria-label="t('dashboard.roleAria', { role: nodeRoleLabel(role.name), count: formatNumber(role.count) }, role.count)"
                     color="primary"
                     :model-value="progressPercent(ratioPercent(role.count, dashboard.nodes.count))"
                     height="8"
@@ -270,20 +274,20 @@
           <v-card class="h-100" variant="outlined">
             <v-card-title class="d-flex align-center ga-2" tag="h2">
               <v-icon color="primary" icon="mdi-access-point-network" />
-              Network types
+              {{ t('dashboard.networkTypes') }}
             </v-card-title>
             <v-card-text>
               <div v-if="dashboard.networks.types.length === 0" class="text-body-2 text-medium-emphasis py-4">
-                No virtual networks are registered.
+                {{ t('dashboard.noNetworks') }}
               </div>
               <template v-else>
                 <div v-for="networkType in dashboard.networks.types" :key="networkType.name" class="mb-4">
                   <div class="d-flex justify-space-between mb-2">
-                    <span>{{ titleCase(networkType.name) }}</span>
+                    <span>{{ networkTypeLabel(networkType.name) }}</span>
                     <span class="font-weight-bold">{{ formatNumber(networkType.count) }}</span>
                   </div>
                   <v-progress-linear
-                    :aria-label="`${titleCase(networkType.name)} networks: ${networkType.count}`"
+                    :aria-label="t('dashboard.networkAria', { type: networkTypeLabel(networkType.name), count: formatNumber(networkType.count) }, networkType.count)"
                     color="info"
                     :model-value="progressPercent(ratioPercent(networkType.count, dashboard.networks.count))"
                     height="8"
@@ -293,7 +297,7 @@
               </template>
               <v-divider v-if="dashboard.networks.types.length > 0" class="mb-3" />
               <div class="d-flex justify-space-between text-body-2">
-                <span class="text-medium-emphasis">Port groups</span>
+                <span class="text-medium-emphasis">{{ t('dashboard.portGroups') }}</span>
                 <strong>{{ formatNumber(dashboard.networks.portGroupCount) }}</strong>
               </div>
             </v-card-text>
@@ -304,14 +308,14 @@
           <v-card class="h-100" variant="outlined">
             <v-card-title class="d-flex align-center ga-2" tag="h2">
               <v-icon color="primary" icon="mdi-alert-circle-outline" />
-              Attention
+              {{ t('dashboard.attentionTitle') }}
             </v-card-title>
             <v-card-text>
               <v-alert
                 v-if="attentionItems.length === 0"
                 icon="mdi-check-circle-outline"
-                text="No dashboard warning indicators are present in this snapshot."
-                title="No dashboard warnings"
+                :text="t('dashboard.noWarningsDescription')"
+                :title="t('dashboard.noWarningsTitle')"
                 type="success"
                 variant="tonal"
               />
@@ -335,11 +339,11 @@
         <v-card variant="outlined">
           <v-card-title class="d-flex align-center ga-2">
             <v-icon color="primary" icon="mdi-history" />
-            <h2 id="recent-activity-heading" class="text-h6">Recent activity</h2>
+            <h2 id="recent-activity-heading" class="text-h6">{{ t('dashboard.recentActivity') }}</h2>
             <v-spacer />
-            <v-btn size="small" to="/tasks" variant="text">View all</v-btn>
+            <v-btn size="small" to="/tasks" variant="text">{{ t('common.actions.viewAll') }}</v-btn>
           </v-card-title>
-          <v-card-subtitle>The six most recently queued tasks visible to you</v-card-subtitle>
+          <v-card-subtitle>{{ t('dashboard.recentSubtitle') }}</v-card-subtitle>
           <v-card-text>
             <div
               v-if="dashboard.tasks.recent.length === 0"
@@ -347,7 +351,7 @@
               data-testid="recent-activity-empty"
             >
               <v-icon class="d-block mx-auto mb-2" icon="mdi-inbox-outline" size="36" />
-              No recent activity.
+              {{ t('dashboard.noRecentActivity') }}
             </div>
             <v-list v-else class="pa-0" lines="two">
               <v-list-item
@@ -361,8 +365,8 @@
                   </v-avatar>
                 </template>
                 <v-list-item-title class="dashboard-task-title d-flex flex-wrap align-center ga-2">
-                  <strong>{{ task.method.toUpperCase() }}</strong>
-                  <span>{{ titleCase(task.resource) }}</span>
+                  <strong>{{ taskMethodLabel(task.method) }}</strong>
+                  <span>{{ taskResourceLabel(task.resource) }}</span>
                   <span class="dashboard-task-object text-medium-emphasis text-truncate" :title="task.object">
                     {{ task.object }}
                   </span>
@@ -373,7 +377,7 @@
                 </v-list-item-subtitle>
                 <template #append>
                   <v-chip :color="getStatusColor(task.status)" size="small" variant="tonal">
-                    {{ titleCase(task.status) }}
+                    {{ taskStatusLabel(task.status) }}
                   </v-chip>
                 </template>
               </v-list-item>
@@ -387,7 +391,7 @@
 
 <route lang="yaml">
 meta:
-  title: Virty - Dashboard
+  titleKey: navigation.dashboard
   layout: default
 </route>
 
@@ -398,16 +402,24 @@ import {
   formatPercentage,
   formatTimestamp,
   getDashboard,
-  pluralize,
+  networkTypeLabel,
+  nodeRoleLabel,
   progressPercent,
   ratioPercent,
-  titleCase,
+  taskMethodLabel,
+  taskResourceLabel,
+  taskStatusLabel,
   utilizationColor,
 } from '@/composables/dashboard'
 import type { DashboardResponse } from '@/composables/dashboard'
 import { useReloadListener } from '@/composables/trigger'
 import { getMethodColor, getResourceIcon, getStatusColor } from '@/composables/task'
 import { computed, onMounted, ref, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { hasAdminScope } from '@/composables/auth'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 type KpiItem = {
   title: string
@@ -421,8 +433,7 @@ type AllocationMetric = {
   label: string
   summary: string
   percent: number | null
-  verb: 'allocated' | 'used'
-  unavailableLabel: 'Capacity unavailable' | 'Usage unavailable'
+  percentLabel: string
 }
 
 type AttentionItem = {
@@ -434,6 +445,7 @@ type AttentionItem = {
 }
 
 const dashboard = shallowRef<DashboardResponse>()
+const { t } = useI18n({ useScope: 'global' })
 const isLoading = ref(true)
 const loadError = ref(false)
 let pendingRequest: Promise<void> | undefined
@@ -443,7 +455,9 @@ const isInitialLoading = computed(() => isLoading.value && !dashboard.value)
 const isRefreshing = computed(() => isLoading.value && Boolean(dashboard.value))
 
 const visibilityLabel = computed(() =>
-  dashboard.value?.visibility === 'all' ? 'All VMs and tasks' : 'Assigned VMs and tasks',
+  dashboard.value?.visibility === 'all'
+    ? t('dashboard.visibilityAll')
+    : t('dashboard.visibilityAssigned'),
 )
 
 const isInventoryEmpty = computed(() => {
@@ -460,44 +474,44 @@ const kpis = computed<KpiItem[]>(() => {
 
   return [
     {
-      title: 'Virtual Machines',
+      title: t('dashboard.kpis.vms'),
       value: value.vms.count,
-      detail: `${formatNumber(value.vms.statuses.running)} running`,
+      detail: t('dashboard.kpis.running', { count: formatNumber(value.vms.statuses.running) }, value.vms.statuses.running),
       icon: 'mdi-desktop-tower',
       to: '/vms',
     },
     {
-      title: 'Nodes',
+      title: t('dashboard.kpis.nodes'),
       value: value.nodes.count,
-      detail: `${formatNumber(value.nodes.core)} CPU cores`,
+      detail: t('dashboard.kpis.cpuCores', { count: formatNumber(value.nodes.core) }, value.nodes.core),
       icon: 'mdi-server',
       to: '/nodes',
     },
     {
-      title: 'Storage Pools',
+      title: t('dashboard.kpis.storagePools'),
       value: value.storages.count,
-      detail: `${formatGib(value.storages.availableGib)} available`,
+      detail: t('dashboard.valueAvailable', { value: formatGib(value.storages.availableGib) }),
       icon: 'mdi-database',
       to: '/storages',
     },
     {
-      title: 'Networks',
+      title: t('dashboard.kpis.networks'),
       value: value.networks.count,
-      detail: `${formatNumber(value.networks.portGroupCount)} port groups`,
+      detail: t('dashboard.kpis.portGroups', { count: formatNumber(value.networks.portGroupCount) }, value.networks.portGroupCount),
       icon: 'mdi-wan',
       to: '/networks',
     },
     {
-      title: 'Images',
+      title: t('dashboard.kpis.images'),
       value: value.images.count,
-      detail: 'inventory images',
+      detail: t('dashboard.kpis.inventoryImages'),
       icon: 'mdi-harddisk',
       to: '/images',
     },
     {
-      title: 'Active Tasks',
+      title: t('dashboard.kpis.activeTasks'),
       value: value.tasks.incompleteCount,
-      detail: 'queued or in progress',
+      detail: t('dashboard.kpis.inProgress'),
       icon: 'mdi-progress-clock',
       to: '/tasks',
     },
@@ -508,27 +522,43 @@ const allocationMetrics = computed<AllocationMetric[]>(() => {
   const value = dashboard.value
   if (!value) return []
 
+  const vcpuPercent = ratioPercent(value.vms.core, value.nodes.core)
+  const memoryPercent = ratioPercent(value.vms.memoryGib, value.nodes.memoryGib)
+  const storagePercent = ratioPercent(value.storages.usedGib, value.storages.capacityGib)
+
   return [
     {
-      label: 'vCPU allocation',
-      summary: `${formatNumber(value.vms.core)} of ${formatNumber(value.nodes.core)} cores`,
-      percent: ratioPercent(value.vms.core, value.nodes.core),
-      verb: 'allocated',
-      unavailableLabel: 'Capacity unavailable',
+      label: t('dashboard.metrics.vcpu'),
+      summary: t('dashboard.metrics.ofCores', {
+        value: formatNumber(value.vms.core),
+        total: formatNumber(value.nodes.core),
+      }),
+      percent: vcpuPercent,
+      percentLabel: vcpuPercent === null
+        ? t('dashboard.capacityUnavailable')
+        : t('dashboard.percentAllocated', { percent: formatPercentage(vcpuPercent) }),
     },
     {
-      label: 'Memory allocation',
-      summary: `${formatGib(value.vms.memoryGib)} of ${formatGib(value.nodes.memoryGib)}`,
-      percent: ratioPercent(value.vms.memoryGib, value.nodes.memoryGib),
-      verb: 'allocated',
-      unavailableLabel: 'Capacity unavailable',
+      label: t('dashboard.metrics.memory'),
+      summary: t('dashboard.metrics.ofValues', {
+        value: formatGib(value.vms.memoryGib),
+        total: formatGib(value.nodes.memoryGib),
+      }),
+      percent: memoryPercent,
+      percentLabel: memoryPercent === null
+        ? t('dashboard.capacityUnavailable')
+        : t('dashboard.percentAllocated', { percent: formatPercentage(memoryPercent) }),
     },
     {
-      label: 'Storage usage',
-      summary: `${formatGib(value.storages.usedGib)} of ${formatGib(value.storages.capacityGib)}`,
-      percent: ratioPercent(value.storages.usedGib, value.storages.capacityGib),
-      verb: 'used',
-      unavailableLabel: 'Usage unavailable',
+      label: t('dashboard.metrics.storage'),
+      summary: t('dashboard.metrics.ofValues', {
+        value: formatGib(value.storages.usedGib),
+        total: formatGib(value.storages.capacityGib),
+      }),
+      percent: storagePercent,
+      percentLabel: storagePercent === null
+        ? t('dashboard.usageUnavailable')
+        : t('dashboard.percentUsed', { percent: formatPercentage(storagePercent) }),
     },
   ]
 })
@@ -543,12 +573,12 @@ const vmStatuses = computed(() => {
   if (!statuses) return []
 
   return [
-    { label: 'Running', count: statuses.running, color: 'primary', icon: 'mdi-play-circle-outline' },
-    { label: 'Stopped', count: statuses.stopped, color: 'grey', icon: 'mdi-stop-circle-outline' },
-    { label: 'Maintenance', count: statuses.maintenance, color: 'warning', icon: 'mdi-tools' },
-    { label: 'Lost node', count: statuses.lostNode, color: 'error', icon: 'mdi-server-off' },
-    { label: 'Deleted', count: statuses.deleted, color: 'grey-darken-1', icon: 'mdi-delete-outline' },
-    { label: 'Unknown', count: statuses.unknown, color: 'warning', icon: 'mdi-help-circle-outline' },
+    { label: t('dashboard.running'), count: statuses.running, color: 'primary', icon: 'mdi-play-circle-outline' },
+    { label: t('dashboard.stopped'), count: statuses.stopped, color: 'grey', icon: 'mdi-stop-circle-outline' },
+    { label: t('dashboard.maintenance'), count: statuses.maintenance, color: 'warning', icon: 'mdi-tools' },
+    { label: t('dashboard.lostNode'), count: statuses.lostNode, color: 'error', icon: 'mdi-server-off' },
+    { label: t('dashboard.deleted'), count: statuses.deleted, color: 'grey-darken-1', icon: 'mdi-delete-outline' },
+    { label: t('dashboard.unknown'), count: statuses.unknown, color: 'warning', icon: 'mdi-help-circle-outline' },
   ]
 })
 
@@ -560,8 +590,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.tasks.failedLast24Hours > 0) {
     const count = value.tasks.failedLast24Hours
     items.push({
-      title: `${formatNumber(count)} failed or lost ${pluralize(count, 'task')}`,
-      detail: 'Errors or lost tasks in the last 24 hours',
+      title: t('dashboard.attention.failedTasks', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.failedTasksDetail'),
       icon: 'mdi-alert-octagon-outline',
       color: 'error',
       to: '/tasks',
@@ -570,8 +600,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.storages.highUsageCount > 0) {
     const count = value.storages.highUsageCount
     items.push({
-      title: `${formatNumber(count)} storage ${pluralize(count, 'pool')} at high usage`,
-      detail: 'More than 80% of capacity is used',
+      title: t('dashboard.attention.highStorage', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.highStorageDetail'),
       icon: 'mdi-database-alert-outline',
       color: 'error',
       to: '/storages',
@@ -580,8 +610,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.vms.statuses.lostNode > 0) {
     const count = value.vms.statuses.lostNode
     items.push({
-      title: `${formatNumber(count)} ${pluralize(count, 'VM')} ${count === 1 ? 'lost its node' : 'lost their nodes'}`,
-      detail: 'Inventory reports a lost-node VM state',
+      title: t('dashboard.attention.lostNode', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.lostNodeDetail'),
       icon: 'mdi-server-off',
       color: 'error',
       to: '/vms',
@@ -590,8 +620,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.vms.statuses.maintenance > 0) {
     const count = value.vms.statuses.maintenance
     items.push({
-      title: `${formatNumber(count)} ${pluralize(count, 'VM')} in maintenance`,
-      detail: 'Review before scheduling lifecycle operations',
+      title: t('dashboard.attention.maintenance', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.maintenanceDetail'),
       icon: 'mdi-tools',
       color: 'warning',
       to: '/vms',
@@ -600,8 +630,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.vms.statuses.deleted > 0) {
     const count = value.vms.statuses.deleted
     items.push({
-      title: `${formatNumber(count)} deleted ${pluralize(count, 'VM')} in inventory`,
-      detail: 'Review inventory state before relying on capacity totals',
+      title: t('dashboard.attention.deleted', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.deletedDetail'),
       icon: 'mdi-delete-alert-outline',
       color: 'warning',
       to: '/vms',
@@ -610,8 +640,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
   if (value.vms.statuses.unknown > 0) {
     const count = value.vms.statuses.unknown
     items.push({
-      title: `${formatNumber(count)} ${pluralize(count, 'VM')} with unknown state`,
-      detail: 'Run an inventory scan to refresh their state',
+      title: t('dashboard.attention.unknown', { count: formatNumber(count) }, count),
+      detail: t('dashboard.attention.unknownDetail'),
       icon: 'mdi-help-circle-outline',
       color: 'warning',
       to: '/vms',
@@ -628,7 +658,7 @@ function loadDashboard(): Promise<void> {
 
   isLoading.value = true
   loadError.value = false
-  const request = getDashboard()
+  const request = getDashboard(hasAdminScope(auth.scopes))
     .then((response) => {
       dashboard.value = response
     })
