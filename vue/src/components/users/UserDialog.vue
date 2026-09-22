@@ -52,6 +52,7 @@ import { formatApiError } from '@/composables/apiError'
 import { useUnsavedChanges } from '@/composables/unsavedChanges'
 import { removeAuth } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import notify from '@/composables/notify'
 import PublicKeyEditor from './PublicKeyEditor.vue'
 import NewPasswordFields from './NewPasswordFields.vue'
@@ -141,6 +142,7 @@ async function submit(event: Promise<{ valid: boolean }>) {
       && JSON.stringify(scopes.value) !== initialScopes.value) {
       removeAuth()
       auth.loginFailure()
+      useAppStore().$reset()
       busy.value = false
       await router.replace('/login')
     }

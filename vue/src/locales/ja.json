@@ -291,6 +291,8 @@
       "unreachable": "VMサービスに接続できません。"
     },
     "vmAdd": {
+      "adminTitle": "管理者としてVMを作成",
+      "adminHelp": "Projectに属さない個人所有のVMを作成します。選択したnodeの全リソースを利用でき、作成者が所有者になります。",
       "additionalKeys": "追加のSSH公開鍵",
       "addInterface": "インターフェースを追加",
       "applyYaml": "YAMLへ適用",

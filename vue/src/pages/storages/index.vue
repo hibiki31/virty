@@ -7,14 +7,8 @@
       <v-btn prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.storages.actions.rescan') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">{{ t('pages.storages.actions.create') }}</v-btn>
-      <v-spacer />
-      <project-filter-select
-        :model-value="query.projectId"
-        style="max-width: 300px"
-        @update:model-value="updateProjectFilter"
-      />
     </v-card-actions>
-    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
+    <v-data-table-server v-model:page="query.page" v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
@@ -47,6 +41,7 @@
 <route lang="yaml">
 meta:
   titleKey: pages.storages.documentTitle
+  projectFilter: true
 </route>
 
 <script lang="ts" setup>
@@ -60,15 +55,14 @@ import type { schemas } from '@/composables/schemas'
 import { useI18n } from 'vue-i18n'
 import { hasAdminScope } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
-import { useRoute, useRouter } from 'vue-router'
+import { useProjectFilter } from '@/composables/projectFilter'
 
 const { t } = useI18n({ useScope: 'global' })
 
 const loading = ref(false)
 const auth = useAuthStore()
 const isAdmin = hasAdminScope(auth.scopes)
-const route = useRoute()
-const router = useRouter()
+const { projectId } = useProjectFilter()
 const dialogDelete = ref(false)
 
 const dataDailogDelete = ref<schemas['Storage']>()
@@ -91,7 +85,7 @@ const query = ref<typeListStorageQuery>({
   admin: isAdmin,
   limit: 20,
   page: 1,
-  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
+  projectId: projectId.value,
 })
 
 const items = ref<schemas['StoragePage']>(initStorageList)
@@ -117,15 +111,11 @@ async function reload() {
   loading.value = false
 }
 
-async function updateProjectFilter(value: string | null) {
+watch(projectId, async value => {
   query.value.projectId = value
   query.value.page = 1
-  const routeQuery = { ...route.query }
-  if (value) routeQuery.projectId = value
-  else delete routeQuery.projectId
-  await router.replace({ query: routeQuery })
   await reload()
-}
+})
 
 useReloadListener(() => {
   reload()

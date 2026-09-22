@@ -42,6 +42,12 @@ export default defineConfig({
           lines: 90,
           statements: 90,
         },
+        "src/composables/projectFilter.ts": {
+          branches: 80,
+          functions: 80,
+          lines: 90,
+          statements: 90,
+        },
         "src/composables/taskPolling.ts": {
           branches: 80,
           functions: 80,

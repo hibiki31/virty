@@ -25,12 +25,14 @@ from storage.models import (
 from task.functions import TaskBase, is_agent_task
 from task.models import TaskModel
 from task.schemas import TaskRequest
+from user.models import UserModel
 
 from .authorization import validate_locked_domain_task_authorization
 from .models import DomainDriveModel, DomainInterfaceModel, DomainModel
 from .service import lock_domain_owner_context
 from .schemas import (
     CdromForUpdateDomain,
+    DomainForAdminCreate,
     DomainForCreate,
     NetworkForUpdateDomain,
     PowerStatusForUpdateDomain,
@@ -123,7 +125,7 @@ def put_vm_list(db: Session, model: TaskModel, req: TaskRequest):
 
 
 @worker_task(key="post.vm.root")
-def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
+def post_vm_root(db: Session, model: TaskModel, req: TaskRequest) -> None:
     body: DomainForCreate
     if is_agent_task(model):
         from agent.input_models import AgentDomainForCreate
@@ -132,18 +134,37 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     else:
         body = DomainForCreate.model_validate(req.body)
 
+    _create_vm(db, model, body)
+
+
+@worker_task(key="post.vm.admin")
+def post_vm_admin(db: Session, model: TaskModel, req: TaskRequest) -> None:
+    if is_agent_task(model):
+        raise ValueError("Agent taskでは管理者用VM作成を利用できません")
+    user = db.get(UserModel, model.user_id) if model.user_id else None
+    if user is None or not any(scope.name == "admin" for scope in user.scopes):
+        raise ValueError("VM作成者の管理者権限がありません")
+    _create_vm(db, model, DomainForAdminCreate.model_validate(req.body))
+
+
+def _create_vm(
+    db: Session,
+    model: TaskModel,
+    body: DomainForCreate | DomainForAdminCreate,
+) -> None:
     if body.type != "manual":
         raise ValueError("このendpointではmanual作成だけを利用できます")
 
     owner_project_id = body.project_id
-    locked_project_id = (
-        db.query(ProjectModel.id)
-        .filter(ProjectModel.id == owner_project_id)
-        .with_for_update()
-        .scalar()
-    )
-    if locked_project_id is None:
-        raise ValueError("VM owner projectがありません")
+    if owner_project_id is not None:
+        locked_project_id = (
+            db.query(ProjectModel.id)
+            .filter(ProjectModel.id == owner_project_id)
+            .with_for_update()
+            .scalar()
+        )
+        if locked_project_id is None:
+            raise ValueError("VM owner projectがありません")
 
     # データベースから情報とってきて確認も行う
     domains = db.query(DomainModel).filter(DomainModel.name==body.name).all()
@@ -154,11 +175,13 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         node = db.query(NodeModel).filter(NodeModel.name==body.node_name).one()
     except NoResultFound:
         raise Exception("node not found")
-    if node.name not in project_node_names(db, owner_project_id):
+    if owner_project_id is not None and node.name not in project_node_names(db, owner_project_id):
         raise ValueError("request node is outside the project grants")
 
-    allowed_storage_ids = project_storage_ids(db, owner_project_id)
-    if any(
+    allowed_storage_ids = (
+        project_storage_ids(db, owner_project_id) if owner_project_id is not None else None
+    )
+    if owner_project_id is not None and any(
         not project_allows_network_attachment(
             db,
             owner_project_id,
@@ -168,7 +191,7 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         for interface in body.interface
     ):
         raise ValueError("request network is outside the project grants")
-    if any(
+    if allowed_storage_ids is not None and any(
         disk.save_pool_uuid not in allowed_storage_ids
         or (
             disk.type == "copy"
@@ -178,8 +201,17 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
     ):
         raise ValueError("request storage is outside the project grants")
 
-    # 外部処理を始める前にcopy元imageを再検査する。flavor未設定imageは
-    # OS flavorに依存しない汎用imageとして全Projectで利用できる。
+    # 外部処理前に全resourceの存在とnodeを検査し、途中までdiskを作る事態を避ける。
+    for interface in body.interface:
+        network = db.get(NetworkModel, interface.network_uuid)
+        if network is None or network.node_name != node.name:
+            raise ValueError("指定networkが存在しないか、選択nodeに属していません")
+    for disk in body.disks:
+        storage = db.get(StorageModel, disk.save_pool_uuid)
+        if storage is None or storage.node_name != node.name:
+            raise ValueError("保存先storageが存在しないか、選択nodeに属していません")
+
+    # Project経路ではcopy元imageのflavorも同じgrant境界で再検査する。
     for disk in body.disks:
         if disk.type != "copy":
             continue
@@ -192,7 +224,10 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         if (
             source_image is None
             or source_image.storage.node_name != node.name
-            or not project_allows_image(db, owner_project_id, source_image)
+            or (
+                owner_project_id is not None
+                and not project_allows_image(db, owner_project_id, source_image)
+            )
         ):
             raise ValueError("request source image is outside the project grants")
 
@@ -306,7 +341,7 @@ def post_vm_root(db: Session, model: TaskModel, req: TaskRequest):
         status=5,
         node_name=body.node_name,
     )
-    created_domain.owner_user_id = None
+    created_domain.owner_user_id = model.user_id if owner_project_id is None else None
     created_domain.owner_project_id = owner_project_id
     created_domain.storage_used = sum(
         int(disk.size_giga_byte or 0) for disk in body.disks

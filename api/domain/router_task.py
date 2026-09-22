@@ -20,11 +20,13 @@ from resource_authorization import (
 )
 from storage.models import ImageModel, StorageModel
 from task.functions import TaskManager
+from task.models import TaskModel
 from task.schemas import Task
 
 from .authorization import domain_task_path_param, get_authorized_domain
 from .schemas import (
     CdromForUpdateDomain,
+    DomainForAdminCreate,
     DomainForCreate,
     NetworkForUpdateDomain,
     PowerStatusForUpdateDomain,
@@ -59,19 +61,40 @@ def create_vm(
         body: DomainForCreate,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
-):
+) -> list[TaskModel]:
     cu.verify_scope(["vm.create"])
     get_member_project(db, body.project_id, cu)
+    return _queue_vm_create(req, body, cu, db)
+
+
+@app.post("/admin", response_model=List[Task])
+def create_admin_vm(
+    req: Request,
+    body: DomainForAdminCreate,
+    cu: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[TaskModel]:
+    require_admin(cu)
+    return _queue_vm_create(req, body, cu, db)
+
+
+def _queue_vm_create(
+    req: Request,
+    body: DomainForCreate | DomainForAdminCreate,
+    cu: CurrentUser,
+    db: Session,
+) -> list[TaskModel]:
+    project_id = body.project_id
     node = db.query(NodeModel).filter(NodeModel.name == body.node_name).one_or_none()
-    if node is None or node.name not in project_node_names(db, body.project_id):
+    if node is None or (
+        project_id is not None and node.name not in project_node_names(db, project_id)
+    ):
         raise ApiError(404, ApiErrorCode.NODE_NOT_FOUND, "The node was not found.")
     for interface in body.interface:
-        network = get_project_network(
-            db,
-            body.project_id,
-            interface.network_uuid,
-            cu,
-            interface.port,
+        network = (
+            get_project_network(db, project_id, interface.network_uuid, cu, interface.port)
+            if project_id is not None
+            else get_authorized_network(db, interface.network_uuid, cu, admin=True)
         )
         if network.node_name != node.name:
             raise ApiError(
@@ -80,11 +103,10 @@ def create_vm(
                 "The network must belong to the selected node.",
             )
     for disk in body.disks:
-        destination = get_project_storage(
-            db,
-            body.project_id,
-            disk.save_pool_uuid,
-            cu,
+        destination = (
+            get_project_storage(db, project_id, disk.save_pool_uuid, cu)
+            if project_id is not None
+            else get_authorized_storage(db, disk.save_pool_uuid, cu, admin=True)
         )
         if destination.node_name != node.name:
             raise ApiError(
@@ -99,7 +121,10 @@ def create_vm(
                     ApiErrorCode.COPY_SOURCE_REQUIRED,
                     "The copy source storage and image are required.",
                 )
-            get_project_storage(db, body.project_id, disk.original_pool_uuid, cu)
+            if project_id is not None:
+                get_project_storage(db, project_id, disk.original_pool_uuid, cu)
+            else:
+                get_authorized_storage(db, disk.original_pool_uuid, cu, admin=True)
             source = (
                 db.query(ImageModel)
                 .filter(
@@ -111,15 +136,15 @@ def create_vm(
             if (
                 source is None
                 or source.storage.node_name != node.name
-                or not project_allows_image(db, body.project_id, source)
+                or (project_id is not None and not project_allows_image(db, project_id, source))
             ):
                 raise ApiError(
                     404,
                     ApiErrorCode.IMAGE_NOT_FOUND,
-                    "The source image is not available to the selected project.",
+                    "The source image is not available for this VM.",
                 )
     task = TaskManager(db=db)
-    task.select(method='post', resource='vm', object='root')
+    task.select(method='post', resource='vm', object='root' if project_id is not None else 'admin')
     task.commit(user=cu, req=req, body=body)
 
     task_list = TaskManager(db=db)

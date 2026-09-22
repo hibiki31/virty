@@ -868,6 +868,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tasks/vms/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Admin Vm */
+        post: operations["create_admin_vm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tasks/vms/{uuid}": {
         parameters: {
             query?: never;
@@ -2081,6 +2098,29 @@ export interface components {
             /** Capacitygb */
             capacityGb?: number | null;
         };
+        /** DomainForAdminCreate */
+        DomainForAdminCreate: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "manual";
+            /** Name */
+            name: string;
+            /** Nodename */
+            nodeName: string;
+            /** Memorymegabyte */
+            memoryMegaByte: number;
+            /** Cpu */
+            cpu: number;
+            /** Disks */
+            disks: components["schemas"]["DomainForCreateDisk"][];
+            /** Interface */
+            interface: components["schemas"]["DomainForCreateInterface"][];
+            cloudInit?: components["schemas"]["CloudInitInsert"] | null;
+            /** Projectid */
+            projectId?: null;
+        };
         /** DomainForCreate */
         DomainForCreate: {
             /**
@@ -2092,8 +2132,6 @@ export interface components {
             name: string;
             /** Nodename */
             nodeName: string;
-            /** Projectid */
-            projectId: string;
             /** Memorymegabyte */
             memoryMegaByte: number;
             /** Cpu */
@@ -2103,6 +2141,8 @@ export interface components {
             /** Interface */
             interface: components["schemas"]["DomainForCreateInterface"][];
             cloudInit?: components["schemas"]["CloudInitInsert"] | null;
+            /** Projectid */
+            projectId: string;
         };
         /** DomainForCreateDisk */
         DomainForCreateDisk: {
@@ -5729,6 +5769,48 @@ export interface operations {
             };
         };
     };
+    create_admin_vm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainForAdminCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     delete_vm: {
         parameters: {
             query?: never;
@@ -6448,7 +6530,9 @@ export interface operations {
     };
     download_image: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

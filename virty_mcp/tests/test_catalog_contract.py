@@ -84,6 +84,8 @@ def test_catalog_covers_reviewed_management_routes_and_excludes_web_only_routes(
         ("PUT", "/api/users/{username}/reset-password", "reset_user_password"),
         ("GET", "/api/users/scopes", "get_user_scopes"),
         ("GET", "/api/users/detail/{username}", "get_user"),
+        # Projectを経由しない管理者用作成はWeb専用とし、Agentへ公開しない。
+        ("POST", "/api/tasks/vms/admin", "create_admin_vm"),
     }
     catalog = ActionCatalog.load_default()
     catalog_routes = {

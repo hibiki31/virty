@@ -189,6 +189,8 @@ server側で導出する。nodeは許可VM・storage・networkが存在するnod
 Project未割当resourceも管理できるよう、VM、node、storage、image、network、各pool、flavor、Projectの
 一覧と提供済みの詳細・XML・node診断、dashboardには`admin=true`で明示する管理用readを設ける。
 VMのconsole ticket発行も`admin=true`指定時だけ管理者に他人のVMへの接続を許可する。
+image downloadも`admin=true`指定とDB・token双方のadmin scopeを条件に全storageを保存先にできる。
+管理用download dialogは一覧取得と送信の双方で管理用指定を送り、通常のdownloadとAgentのgrant境界は維持する。
 共通判定でDBとtoken双方のadmin scopeを検査し、Project filterがない場合だけ全体参照を許可する。
 Project filter指定時は従来のmembershipとgrant、networkのportgroup単位grantを維持する。
 共通の`allowed_*`は変更せず、通常read、変更操作、AgentのProject境界を保持する。
@@ -197,8 +199,13 @@ Project filter指定時は従来のmembershipとgrant、networkのportgroup単�
 
 Project IDは重複しない6桁hex、名称は重複可能な表示値とする。membership、storage pool、network pool、flavorの
 多対多関係には組合せ一意制約を置き、Project別roleや旧`group` tableを認可へ使わない。VMは個人ownerまたは
-Project ownerのどちらか一方だけを持ち、新規VMではProject ownerを必須にする。移行前から存在する未所属VMだけは
-personal legacyとして残す。
+Project ownerのどちらか一方だけを持つ。通常の新規VMではProject ownerを必須にし、管理者用作成経路では
+作成者を個人ownerとして保存する。移行前から存在する未所属VMもpersonal VMとして残す。
+
+管理者用VM作成は専用REST endpointとtask keyで通常のProject作成から分離する。Webは同じformを別dialogとして
+開き、管理用inventory readから候補を取得する。Project grantは要求せず、nodeと各resourceの存在・同一node条件は
+APIとworkerの双方で検査する。workerは外部処理前に作成者の最新admin権限を再確認し、Agent taskは拒否する。
+Project作成endpoint・schemaとAgent catalogの境界は維持する。
 
 共同管理migrationは、NULL・重複membershipを整理した結果memberが0名になるProjectを検出するとupgradeを中止する。
 運用者は該当Projectを確認し、`users_to_projects`へ有効な利用者を1名以上割り当ててからupgradeを再実行する。
@@ -240,6 +247,10 @@ Web dashboardはBearer token付きの型付きclientで専用のdashboard query 
 VM、node、storage、image、network、各pool、flavorの一覧は任意のProject filterを受け取り、指定時は
 Projectの存在と認可を404で秘匿したうえで、そのProjectだけから導出したresourceを返す。WebはfilterをURL queryに
 保持するため、Project詳細からresource一覧へ遷移しても管理境界が失われない。
+WebのVM、node、storage、image、network一覧はroute metaでProject filterの対象と宣言し、App barが
+共通selectorを所有する。共通composableがURL queryを読み書きし、各一覧は変更を監視して先頭pageから
+再取得する。image一覧ではnode・storage候補と選択行もリセットする。App storeは最後のfilterを
+サイドナビゲーションの遷移先へ渡すためだけに保持し、直接URLや履歴からの選択を上書きしない。
 
 このflowはread-onlyであり、表示や再読込を契機に管理nodeへのSSH・libvirt接続、inventory再走査、
 task投入を行わない。表示値は取得時点のsnapshotであり、時系列dataやreal-time監視を表さない。

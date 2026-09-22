@@ -71,6 +71,7 @@ import { formatProjectName } from '@/composables/project'
 import { translationRef, userScopeListLabel } from '@/composables/i18n'
 import { removeAuth } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import notify from '@/composables/notify'
 import PublicKeyEditor from '@/components/users/PublicKeyEditor.vue'
 import NewPasswordFields from '@/components/users/NewPasswordFields.vue'
@@ -139,6 +140,7 @@ async function savePassword(event: Promise<{ valid: boolean }>) {
     originalKeys.value = JSON.stringify(keys.value)
     removeAuth()
     auth.loginFailure()
+    useAppStore().$reset()
     notify('success', translationRef('userManagement.passwordChanged'))
     passwordSaving.value = false
     await router.replace('/login')

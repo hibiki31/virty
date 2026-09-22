@@ -74,11 +74,14 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - VM詳細では、接続networkへの導線と、disk容量、pathから識別できるfile名を確認できる。
   diskのfull pathは必要なときだけfile名chipから展開する。
 - storageとnetworkを選択し、空diskまたは既存imageのcopyからVMを作成できる。
-- cloud-init user data、CD-ROM、network interface、Project割り当てを扱える。新規VMは所有Projectを必須とし、
+- cloud-init user data、CD-ROM、network interface、Project割り当てを扱える。通常の新規VMは所有Projectを必須とし、
   選択Projectへgrantされたstorage・network・flavorだけを同じProject境界内で組み合わせる。
   copy元imageにflavorがある場合はそのflavorも選択Projectのgrantを必須とし、flavor未設定imageは
   OS flavorに依存しない汎用imageとして利用できる。
-- 既存の未所属VMはlegacyなpersonal VMとして保持する。Projectへ移動すると個人ownerを解除し、既存diskとnetworkが
+- global adminには通常のProject作成とは別に、Projectを指定せず全node・storage・network・imageから選べる
+  管理者用VM作成dialogを提供する。同じnode上のresourceだけを組み合わせ、作成者を個人ownerとして保存する。
+  API受付時とworker実行時にadmin権限を検査し、AgentのProject作成経路にはこの例外を適用しない。
+- 既存の未所属VMと管理者用作成経路のVMはpersonal VMとして保持する。Projectへ移動すると個人ownerを解除し、既存diskとnetworkが
   移動先Projectのgrantを満たさない場合は移動を拒否する。
 - WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、初回起動scriptを
   cloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
@@ -95,6 +98,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 - storage poolの発見、登録、metadata更新、再走査、削除を行える。
 - volume/imageの一覧、metadata更新、HTTP download、削除を行える。
+- global adminは明示的な管理用指定により、Project未割当を含む全storageへimageをdownloadできる。
+  通常のdownloadは所属Projectからgrantされたstorageに限定する。
 - libvirt networkの発見、作成、削除と、Open vSwitchのport group追加・削除を扱える。
 - 複数のstorageやnetworkを、Projectへgrantする共有resource poolとしてまとめられる。pool自体は複数Projectから
   参照でき、poolの構成変更・削除とProjectへのgrant変更はglobal adminだけが行う。
@@ -132,8 +137,12 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者管理・本人設定、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
 Project画面は一覧・詳細、使用量と非強制limit、member、resource grantを表示し、権限に応じて作成、名称変更、
-member変更、grant変更、削除を行う。resource画面はURL queryのProject filterを保持し、Project詳細から
-絞り込み済み一覧へ移動できる。全画面へ影響するglobal active Project selectorは持たない。
+member変更、grant変更、削除を行う。VM、node、storage、image、network一覧のProject filterはApp barの
+共通selectorで操作し、各ページ内には重複配置しない。名称とIDを併記し、clear操作で絞り込みを解除する。
+選択状態はURL queryを正本とし、再読込・履歴移動・Project詳細からの絞り込みリンクに追従する。
+サイドナビゲーションでresource一覧を移動すると選択を引き継ぐ。対象外の画面ではselectorを表示せず、
+最後の選択を次のresource一覧への移動に使う。作成・変更dialogのProject指定は操作対象として個別に保持する。
+App barのselectorは幅を制限し、狭い画面ではApp bar内の次行へ配置して操作領域を確保する。
 dashboardは、認証利用者が参照できるVM、node、storage、image、network、taskの件数、状態、容量を、
 DB上のinventory cacheとtask recordから集約した現在値のsnapshotとして表示する。
 表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。

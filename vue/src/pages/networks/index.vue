@@ -1,18 +1,12 @@
 <template>
   <v-card>
     <network-add-dialog v-if="isAdmin" v-model="stateCreateDialog"></network-add-dialog>
-    <v-card-actions>
+    <v-card-actions v-if="isAdmin">
       <v-btn v-if="isAdmin" prepend-icon="mdi-cached" variant="flat" color="info" size="small" @click="rescan">{{ t('pages.networks.actions.rescan') }}</v-btn>
       <v-btn v-if="isAdmin" prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="stateCreateDialog = true">{{ t('pages.networks.actions.create') }}</v-btn>
-      <v-spacer />
-      <project-filter-select
-        :model-value="query.projectId"
-        style="max-width: 300px"
-        @update:model-value="updateProjectFilter"
-      />
     </v-card-actions>
-    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
+    <v-data-table-server v-model:page="query.page" v-model:items-per-page="query.limit" :headers="headers" :items="items.data"
       density="comfortable" :items-length="items.count" :loading="loading" item-value="name"
       @update:options="loadItems">
 
@@ -38,6 +32,7 @@
 <route lang="yaml">
 meta:
   titleKey: pages.networks.documentTitle
+  projectFilter: true
 </route>
 
 <script lang="ts" setup>
@@ -50,14 +45,13 @@ import { getNetworkList, initNetworkList } from '@/composables/network'
 import { useI18n } from 'vue-i18n'
 import { hasAdminScope } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
-import { useRoute, useRouter } from 'vue-router'
+import { useProjectFilter } from '@/composables/projectFilter'
 
 
 const loading = ref(false)
 const auth = useAuthStore()
 const isAdmin = hasAdminScope(auth.scopes)
-const route = useRoute()
-const router = useRouter()
+const { projectId } = useProjectFilter()
 const stateCreateDialog = ref(false)
 
 const { t } = useI18n({ useScope: 'global' })
@@ -77,7 +71,7 @@ const query = ref<NonNullable<typeListNetworkQuery>>({
   admin: isAdmin,
   limit: 20,
   page: 1,
-  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
+  projectId: projectId.value,
 })
 
 
@@ -103,15 +97,11 @@ async function reload() {
   loading.value = false
 }
 
-async function updateProjectFilter(value: string | null) {
+watch(projectId, async value => {
   query.value.projectId = value
   query.value.page = 1
-  const routeQuery = { ...route.query }
-  if (value) routeQuery.projectId = value
-  else delete routeQuery.projectId
-  await router.replace({ query: routeQuery })
   await reload()
-}
+})
 
 useReloadListener(() => {
   reload()

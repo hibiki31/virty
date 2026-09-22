@@ -6,6 +6,13 @@
 
     <v-spacer></v-spacer>
 
+    <ProjectFilterSelect
+      v-if="route.meta.projectFilter && !xs"
+      :model-value="projectId"
+      class="app-bar-project mr-4"
+      @update:model-value="updateProjectFilter"
+    />
+
     <LocaleSwitcher class="d-none d-md-flex mr-2" />
     <LocaleSwitcher compact class="d-flex d-md-none" />
 
@@ -22,6 +29,11 @@
       size="24"></v-progress-circular>
 
     <v-btn variant="text" icon="mdi-logout-variant" :aria-label="t('appBar.logout')" @click="logout"></v-btn>
+    <template v-if="route.meta.projectFilter && xs" #extension>
+      <div class="app-bar-project-row px-4 pb-2">
+        <ProjectFilterSelect :model-value="projectId" @update:model-value="updateProjectFilter" />
+      </div>
+    </template>
   </v-app-bar>
 </template>
 
@@ -29,10 +41,15 @@
 import { removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
 import { applyTaskPollingSnapshot, createTaskPoller } from '@/composables/taskPolling'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
+import ProjectFilterSelect from '@/components/projects/ProjectFilterSelect.vue'
+import { useProjectFilter } from '@/composables/projectFilter'
+import { useAppStore } from '@/stores/app'
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
 
@@ -42,7 +59,15 @@ import { translationRef } from '@/composables/i18n'
 
 const state = useStateStore()
 const auth = useAuthStore()
+const app = useAppStore()
+const route = useRoute()
+const { xs } = useDisplay()
+const { projectId, updateProjectFilter } = useProjectFilter()
 const { t } = useI18n({ useScope: 'global' })
+
+watch(() => route.fullPath, () => {
+  if (route.meta.projectFilter) app.projectId = projectId.value
+}, { immediate: true })
 
 const taskCount = ref(0)
 const enableAutoReload = ref(true)
@@ -51,6 +76,7 @@ const logout = async () => {
   if (!window.dispatchEvent(new Event('virty:before-logout', { cancelable: true }))) return
   removeAuth()
   auth.loginFailure()
+  app.$reset()
   notify('success', translationRef('appBar.logoutComplete'), translationRef('appBar.logoutRedirect'))
 
   await asyncSleep(200)
@@ -99,3 +125,14 @@ onBeforeUnmount(() => {
 })
 
 </script>
+
+<style scoped>
+.app-bar-project {
+  flex: 0 1 20rem;
+  min-width: 0;
+}
+
+.app-bar-project-row {
+  width: 100%;
+}
+</style>

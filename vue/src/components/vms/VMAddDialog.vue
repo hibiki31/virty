@@ -1,9 +1,10 @@
 <template>
-  <v-dialog v-model="dialogState" data-testid="vm-create-dialog" width="calc(100% - 32px)" max-width="1100">
+  <v-dialog v-model="dialogState" data-testid="vm-create-dialog" width="calc(100% - 32px)" max-width="1100"
+    :aria-label="t(admin ? 'dialogs.vmAdd.adminTitle' : 'dialogs.vmAdd.title')">
     <v-form class="vm-create-dialog__form" @submit.prevent="submit">
       <v-card class="vm-create-dialog">
         <v-card-title class="d-flex align-center px-4 py-3">
-          <span class="text-h6">{{ t('dialogs.vmAdd.title') }}</span>
+          <span class="text-h6">{{ t(admin ? 'dialogs.vmAdd.adminTitle' : 'dialogs.vmAdd.title') }}</span>
           <v-btn class="ml-auto" icon="mdi-close" size="small" variant="text" :aria-label="t('common.actions.close')"
             @click="dialogState = false"></v-btn>
         </v-card-title>
@@ -12,12 +13,15 @@
         <v-card-text class="vm-create-dialog__body pa-4">
           <section class="vm-create-dialog__section">
             <h3 class="vm-create-dialog__section-title">{{ t('dialogs.vmAdd.basic') }}</h3>
-            <v-alert v-if="!projectsLoading && itemsProjects.length === 0" class="mb-3" density="compact"
+            <v-alert v-if="admin" class="mb-3" density="compact" type="info" variant="tonal">
+              {{ t('dialogs.vmAdd.adminHelp') }}
+            </v-alert>
+            <v-alert v-else-if="!projectsLoading && itemsProjects.length === 0" class="mb-3" density="compact"
               type="warning" variant="tonal">
               {{ t('dialogs.vmAdd.projectRequired') }}
             </v-alert>
             <v-row class="ma-n1">
-              <v-col cols="12" md="4" class="pa-1">
+              <v-col v-if="!admin" cols="12" md="4" class="pa-1">
                 <v-select v-model="postData.projectId" data-testid="vm-project" variant="outlined" density="compact"
                   :label="t('common.fields.project')" hide-details="auto" :items="projectOptions" :loading="projectsLoading"
                   :rules="[r.required]" item-title="title" item-value="value"></v-select>
@@ -30,7 +34,7 @@
               </v-col>
               <v-col cols="12" md="4" class="pa-1">
                 <v-select v-model="postData.nodeName" data-testid="vm-node" variant="outlined" density="compact" :label="t('common.fields.node')"
-                  hide-details="auto" :items="itemsNodes.data" :loading="resourcesLoading" :disabled="!postData.projectId"
+                  hide-details="auto" :items="itemsNodes.data" :loading="resourcesLoading" :disabled="resourcesDisabled"
                   :rules="[r.required]" item-title="name"
                   item-value="name"></v-select>
               </v-col>
@@ -66,19 +70,19 @@
               <v-col cols="12" sm="6" :md="disk.type === 'copy' ? 3 : 8" class="pa-1">
                 <v-select v-model="disk.savePoolUuid" data-testid="vm-destination-pool" variant="outlined" density="compact" :label="t('dialogs.vmAdd.destinationPool')"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
-                  :disabled="!postData.projectId" :loading="resourcesLoading"
+                  :disabled="resourcesDisabled" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="2" class="pa-1">
                 <v-select v-model="disk.originalPoolUuid" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourcePool')"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
-                  :disabled="!postData.projectId" :loading="resourcesLoading"
+                  :disabled="resourcesDisabled" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="3" class="pa-1">
                 <v-select v-model="disk.originalName" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourceImage')"
                   hide-details="auto" :items="itemsImages.data.filter(x => x.storageUuid === disk.originalPoolUuid)"
-                  :disabled="!postData.projectId" :loading="resourcesLoading"
+                  :disabled="resourcesDisabled" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="name"></v-select>
               </v-col>
             </v-row>
@@ -94,7 +98,7 @@
               <v-col cols="10" :md="checkOVS(nic.networkUuid) ? 6 : 11" class="pa-1">
                 <v-select v-model="nic.networkUuid" data-testid="vm-network" variant="outlined" density="compact" :label="t('common.fields.network')"
                   hide-details="auto" :items="itemsNetworks.data.filter(x => x.nodeName === postData.nodeName)"
-                  :disabled="!postData.projectId" :loading="resourcesLoading"
+                  :disabled="resourcesDisabled" :loading="resourcesLoading"
                   item-title="name" item-value="uuid" :rules="[r.required]"></v-select>
               </v-col>
               <v-col v-if="checkOVS(nic.networkUuid)" cols="10" md="5" class="pa-1">
@@ -209,7 +213,7 @@
         <v-card-actions class="justify-end px-4 py-2">
           <v-btn data-testid="vm-create-cancel" variant="text" @click="dialogState = false">{{ t('common.actions.cancel') }}</v-btn>
           <v-btn data-testid="vm-create-submit" color="primary" type="submit" :loading="loading"
-            :disabled="itemsProjects.length === 0">{{ t('common.actions.create') }}</v-btn>
+            :disabled="creationDisabled">{{ t('common.actions.create') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -247,10 +251,15 @@ import {
 import type { CloudInitFormState } from '@/composables/cloudInit';
 import type { TranslationRef } from '@/composables/i18n';
 import { useAuthStore } from '@/stores/auth';
+import { hasAdminScope } from '@/composables/auth';
 import { formatProjectName, getProjectList, type ProjectSummary } from '@/composables/project';
 
 const { locale, t } = useI18n({ useScope: 'global' })
 const r = useLocalizedRules()
+const props = withDefaults(defineProps<{ admin?: boolean }>(), { admin: false })
+const auth = useAuthStore()
+const resourcesDisabled = computed(() => props.admin ? !hasAdminScope(auth.scopes) : !postData.projectId)
+const creationDisabled = computed(() => props.admin ? !hasAdminScope(auth.scopes) : itemsProjects.value.length === 0)
 const loading = ref(false)
 const projectsLoading = ref(false)
 const resourcesLoading = ref(false)
@@ -324,7 +333,7 @@ const postData = reactive<bodyPostVM>({
 })
 
 async function submit(event: Promise<{ valid: boolean }>) {
-  if (!(await event).valid) {
+  if (!(await event).valid || loading.value || creationDisabled.value) {
     return
   }
 
@@ -339,7 +348,9 @@ async function submit(event: Promise<{ valid: boolean }>) {
 
   loading.value = true
   try {
-    const res = await apiClient.POST('/api/tasks/vms', { body: postData })
+    const res = props.admin
+      ? await apiClient.POST('/api/tasks/vms/admin', { body: { ...postData, projectId: null } })
+      : await apiClient.POST('/api/tasks/vms', { body: postData })
 
     if (res.data) {
       notifyTask(res.data[0].uuid)
@@ -475,26 +486,26 @@ function resetProjectResources() {
   itemsImages.value = initImageList
 }
 
-async function loadProjectResources(projectId: string) {
+async function loadProjectResources(projectId?: string) {
   const request = ++projectResourceRequest
   resetProjectResources()
-  if (!projectId) return
+  if (resourcesDisabled.value) return
 
   resourcesLoading.value = true
   const queryImage: typeListImageQuery = {
-    admin: false,
+    admin: props.admin,
     limit: 999999,
     page: 1,
     projectId,
   }
   const queryNetwork: typeListNetworkQuery = {
-    admin: false,
+    admin: props.admin,
     limit: 999999,
     page: 1,
     projectId,
   }
   const queryStorage: typeListStorageQuery = {
-    admin: false,
+    admin: props.admin,
     limit: 999999,
     page: 1,
     projectId,
@@ -522,6 +533,10 @@ watch(() => postData.projectId, projectId => {
 })
 
 onMounted(async () => {
+  if (props.admin) {
+    await loadProjectResources()
+    return
+  }
   projectsLoading.value = true
   try {
     const response = await getProjectList({ limit: 0, page: 1 })
