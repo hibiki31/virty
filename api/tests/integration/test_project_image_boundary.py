@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
-from auth.router import create_access_token
+from auth.router import CurrentUser, create_access_token
 from domain import tasks as domain_tasks
+from domain import router_task as domain_router_task
 from domain.authorization import DomainTaskAuthorizationError
 from domain.models import DomainDriveModel, DomainModel
+from domain.schemas import CdromForUpdateDomain
 from flavor.models import FlavorModel
 from mixin.database import SessionLocal
 from node.models import NodeModel
@@ -345,6 +349,52 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
         assert admin_images.status_code == 200, admin_images.text
         assert cross_name in {image["name"] for image in admin_images.json()["data"]}
 
+        captured_tasks: list[TaskModel] = []
+
+        class CapturedTaskManager:
+            def __init__(self, db: Session) -> None:
+                self.method = ""
+                self.resource = ""
+                self.object = ""
+                self._model: TaskModel | None = None
+
+            @property
+            def model(self) -> TaskModel:
+                assert self._model is not None
+                return self._model
+
+            def select(self, method: str, resource: str, object: str) -> None:
+                self.method = method
+                self.resource = resource
+                self.object = object
+
+            def commit(
+                self,
+                user: CurrentUser,
+                req: object,
+                body: CdromForUpdateDomain,
+                param: dict[str, Any] | None = None,
+                dep_uuid: str | None = None,
+            ) -> TaskModel:
+                request = TaskRequest(
+                    path_param=param or {},
+                    body=body.model_dump(mode="json", by_alias=True),
+                )
+                self._model = TaskModel(
+                    uuid=str(uuid4()),
+                    post_time=datetime.now().astimezone(),
+                    user_id=user.id,
+                    status="wait",
+                    resource=self.resource,
+                    object=self.object,
+                    method=self.method,
+                    request=request.model_dump_json(),
+                    dependence_uuid=dep_uuid,
+                )
+                captured_tasks.append(self._model)
+                return self._model
+
+        monkeypatch.setattr(domain_router_task, "TaskManager", CapturedTaskManager)
         admin_cdrom = api_client.patch(
             f"/api/tasks/vms/{domain_uuid}/cdrom",
             headers=admin_headers,
@@ -352,7 +402,10 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
             json={"target": "sda", "path": cross_path},
         )
         assert admin_cdrom.status_code == 200, admin_cdrom.text
-        admin_task_uuid = admin_cdrom.json()[0]["uuid"]
+        admin_task = captured_tasks[0]
+        assert admin_task.uuid == admin_cdrom.json()[0]["uuid"]
+        admin_request = TaskRequest.model_validate_json(admin_task.request)
+        assert admin_request.path_param["ownerBinding"]["admin"] is True
 
         class CdromBackend:
             def domain_cdrom(self, uuid: str, target: str, path: str) -> None:
@@ -369,9 +422,6 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
                 UserScopeModel.name == "admin",
             ).delete(synchronize_session=False)
         with SessionLocal.begin() as db:
-            admin_task = db.get(TaskModel, admin_task_uuid)
-            assert admin_task is not None
-            admin_request = TaskRequest.model_validate_json(admin_task.request)
             with pytest.raises(DomainTaskAuthorizationError, match="管理者権限"):
                 domain_tasks.patch_vm_cdrom(db, admin_task, admin_request)
         assert backend_calls == []
@@ -379,10 +429,6 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
         with SessionLocal.begin() as db:
             db.add(UserScopeModel(user_id=username, name="admin"))
         with SessionLocal.begin() as db:
-            admin_task = db.get(TaskModel, admin_task_uuid)
-            assert admin_task is not None
-            admin_request = TaskRequest.model_validate_json(admin_task.request)
-            assert admin_request.path_param["ownerBinding"]["admin"] is True
             domain_tasks.patch_vm_cdrom(db, admin_task, admin_request)
         assert backend_calls == [f"{domain_uuid}:sda:{cross_path}"]
 
