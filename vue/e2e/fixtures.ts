@@ -81,7 +81,7 @@ const nodeInfo = {
   uptime: "Uptime output",
 };
 
-const vm = {
+export const vm = {
   core: 2,
   description: "E2E VM",
   drives: [],

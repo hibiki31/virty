@@ -1,8 +1,11 @@
 import { openVNC } from "@/composables/vm";
+import { translationRef } from "@/composables/i18n";
+import { apiErrorRef } from "@/composables/notify";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   post: vi.fn(),
+  notify: vi.fn(),
 }));
 
 vi.mock("@/api", () => ({
@@ -13,8 +16,15 @@ vi.mock("@/api", () => ({
   },
 }));
 
+vi.mock("@/composables/notify", () => ({
+  default: mocks.notify,
+  apiErrorRef: (error: unknown) => ({ kind: "api-error", error }),
+}));
+
 beforeEach(() => {
   mocks.post.mockReset();
+  mocks.notify.mockReset();
+  vi.restoreAllMocks();
 });
 
 describe("VM console ticket", () => {
@@ -43,7 +53,7 @@ describe("VM console ticket", () => {
     );
   });
 
-  it("ticket取得失敗時は空windowを閉じる", async () => {
+  it("ticket取得失敗時は空windowを閉じてAPIの失敗理由を通知する", async () => {
     const consoleWindow = {
       close: vi.fn(),
       location: { href: "about:blank" },
@@ -64,5 +74,34 @@ describe("VM console ticket", () => {
 
     expect(consoleWindow.close).toHaveBeenCalledOnce();
     expect(consoleWindow.location.href).toBe("about:blank");
+    expect(mocks.notify).toHaveBeenCalledWith(
+      "error",
+      translationRef("pages.vmDetail.notifications.consoleFailed"),
+      apiErrorRef({
+        detail: {
+          code: "scope_denied",
+          message: "The required permission is missing.",
+        },
+      }),
+    );
+  });
+
+  it("通信例外でも空windowを閉じて失敗を通知する", async () => {
+    const consoleWindow = {
+      close: vi.fn(),
+      location: { href: "about:blank" },
+      opener: window,
+    };
+    vi.spyOn(window, "open").mockReturnValue(consoleWindow as unknown as Window);
+    mocks.post.mockRejectedValue(new Error("network failure"));
+
+    await openVNC("vm-uuid");
+
+    expect(consoleWindow.close).toHaveBeenCalledOnce();
+    expect(mocks.notify).toHaveBeenCalledWith(
+      "error",
+      translationRef("pages.vmDetail.notifications.consoleFailed"),
+      translationRef("pages.vmDetail.notifications.consoleUnreachable"),
+    );
   });
 });

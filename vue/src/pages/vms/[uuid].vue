@@ -27,13 +27,16 @@
           <v-icon left>mdi-power-standby</v-icon>{{ t('pages.vmDetail.actions.powerOn') }}
         </v-btn>
 
-        <v-btn small class="ma-2" color="primary" @click="openVNC(data.uuid)" :disabled="data.vncPort === -1">
+        <v-btn small class="ma-2" color="primary" @click="openVNC(data.uuid)" :disabled="!canOpenConsole">
           <v-icon left>mdi-console</v-icon>{{ t('pages.vmDetail.actions.console') }}
         </v-btn>
         <v-btn small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
           <v-icon left>mdi-delete</v-icon>{{ t('pages.vmDetail.actions.delete') }}
         </v-btn>
       </v-card-actions>
+      <v-alert v-if="!hasConsoleAccess" class="mx-4 mb-2" density="compact" type="info" variant="tonal">
+        {{ t('pages.vmDetail.actions.consoleUnavailable') }}
+      </v-alert>
 
       <v-card-text>
         <v-row>
@@ -231,6 +234,12 @@ const data = ref<schemas['DomainDetail']>()
 const dataXML = ref<schemas['DomainXML']>()
 const auth = useAuthStore()
 const canChangeProject = computed(() => hasScope(auth.scopes, 'vm.project'))
+const hasConsoleAccess = computed(() => data.value != null
+  && hasScope(auth.scopes, 'vm.read')
+  && (data.value.ownerUserId === auth.username
+    || (data.value.ownerProjectId != null && auth.projects.includes(data.value.ownerProjectId))))
+const canOpenConsole = computed(() => hasConsoleAccess.value
+  && data.value?.vncPort != null && data.value.vncPort !== -1)
 
 const stateDeleteDialog = ref(false)
 const stateCdromDialog = ref(false)

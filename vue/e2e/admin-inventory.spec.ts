@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, test, vm } from "./fixtures";
 
 const routes = [
   ["/", "/api/dashboard"],
@@ -41,3 +41,27 @@ for (const [pagePath, apiPath] of routes) {
     }
   });
 }
+
+test("管理用readだけで表示したVMのコンソールは開けない", async ({ authenticatedPage: page }) => {
+  await page.route("**/api/vms/vm-e2e-uuid?*", route => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ ...vm, ownerUserId: "another-user", vncPort: 5901 }),
+  }));
+
+  await page.goto("/vms/vm-e2e-uuid");
+
+  const consoleButton = page.getByRole("button", { name: "Console" });
+  await expect(consoleButton).toBeDisabled();
+  await expect(page.getByText(/own this VM/)).toBeVisible();
+});
+
+test("所有するVMではコンソールを開ける", async ({ authenticatedPage: page }) => {
+  await page.route("**/api/vms/vm-e2e-uuid?*", route => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ ...vm, vncPort: 5901 }),
+  }));
+
+  await page.goto("/vms/vm-e2e-uuid");
+
+  await expect(page.getByRole("button", { name: "Console" })).toBeEnabled();
+});
