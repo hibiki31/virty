@@ -6,11 +6,15 @@
         <v-card-text>
           <v-checkbox :label="$t('dialogs.vmCdrom.unmount')" v-model="umount" hide-details></v-checkbox>
           <v-select :loading="loadingList" v-model="isoPath" :items="isoImages" v-if="!umount" append-icon="mdi-reload"
-            variant="outlined" density="comfortable" @click:append="getIsoList"></v-select>
+            variant="outlined" density="comfortable" @click:append="getIsoList">
+            <template #no-data>
+              <v-list-item :title="$t('dialogs.vmCdrom.noImages')"></v-list-item>
+            </template>
+          </v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" type="submit">{{ $t('common.actions.submit') }}</v-btn>
+          <v-btn color="error" type="submit" :disabled="!umount && !isoPath">{{ $t('common.actions.submit') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -20,6 +24,7 @@
 <script setup lang="ts">
 import { apiClient } from '@/api'
 import type { schemas } from '@/composables/schemas'
+import { ref, watch, type PropType } from 'vue'
 
 const umount = ref(false)
 const isoPath = ref<string>()
@@ -37,6 +42,7 @@ const props = defineProps({
 })
 
 async function submit() {
+  if (!umount.value && !isoPath.value) return
   if (props.target) {
 
     if (props.item) {
@@ -59,21 +65,36 @@ async function submit() {
 
 
 async function getIsoList() {
+  if (!model.value || !props.item) return
   loadingList.value = true
-  if (model.value && props.item) {
+  isoImages.value = []
+  try {
     const res = await apiClient.GET("/api/images", {
       params: {
         query: {
           nameLike: ".iso",
-          nodeName: props.item.nodeName
+          nodeName: props.item.nodeName,
+          projectId: props.item.ownerProjectId,
         }
       }
     })
     if (res.data) {
       isoImages.value = res.data.data.map((d) => d.path)
     }
+  } finally {
+    loadingList.value = false
   }
-  loadingList.value = false
 }
+
+watch(
+  [model, () => props.item?.uuid, () => props.item?.nodeName, () => props.item?.ownerProjectId],
+  ([open]) => {
+    if (!open) return
+    umount.value = false
+    isoPath.value = undefined
+    void getIsoList()
+  },
+  { immediate: true },
+)
 
 </script>
