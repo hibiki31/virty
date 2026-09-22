@@ -8,14 +8,8 @@
         @click="dialogKey = true">{{ t('pages.nodes.actions.key') }}</v-btn>
       <v-btn prepend-icon="mdi-server-plus" variant="flat" color="primary" size="small"
         @click="dialogAdd = true">{{ t('pages.nodes.actions.join') }}</v-btn>
-      <v-spacer />
-      <project-filter-select
-        :model-value="projectId"
-        style="max-width: 300px"
-        @update:model-value="updateProjectFilter"
-      />
     </v-card-actions>
-    <v-data-table :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
+    <v-data-table v-model:page="pageState" :items="items.data" :loading="loading" :headers="headers" :items-per-page="10" density="comfortable">
       <template v-slot:item.name="{ item }">
         <router-link :to="'/nodes/' + item.name" class="font-mono">{{ item.name }}</router-link>
       </template>
@@ -39,6 +33,7 @@
 <route lang="yaml">
 meta:
   titleKey: pages.nodes.documentTitle
+  projectFilter: true
 </route>
 
 <script lang="ts" setup>
@@ -47,7 +42,7 @@ import { apiClient } from '@/api'
 import { getNodeStatusColor } from '@/composables/nodes'
 import { useI18n } from 'vue-i18n'
 import { formatNumber, nodeStatusLabel, translateDomainValue } from '@/composables/i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useProjectFilter } from '@/composables/projectFilter'
 import { hasAdminScope } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
 
@@ -55,9 +50,8 @@ const { t } = useI18n({ useScope: 'global' })
 
 const loading = ref(false)
 const auth = useAuthStore()
-const route = useRoute()
-const router = useRouter()
-const projectId = ref(typeof route.query.projectId === 'string' ? route.query.projectId : null)
+const { projectId } = useProjectFilter()
+const pageState = ref(1)
 
 const dialogAdd = ref(false)
 const dialogKey = ref(false)
@@ -101,14 +95,10 @@ const reload = () => {
   })
 }
 
-async function updateProjectFilter(value: string | null) {
-  projectId.value = value
-  const routeQuery = { ...route.query }
-  if (value) routeQuery.projectId = value
-  else delete routeQuery.projectId
-  await router.replace({ query: routeQuery })
+watch(projectId, () => {
+  pageState.value = 1
   reload()
-}
+})
 
 useReloadListener(() => {
   reload()

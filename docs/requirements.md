@@ -123,8 +123,12 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者一覧、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
 Project画面は一覧・詳細、使用量と非強制limit、member、resource grantを表示し、権限に応じて作成、名称変更、
-member変更、grant変更、削除を行う。resource画面はURL queryのProject filterを保持し、Project詳細から
-絞り込み済み一覧へ移動できる。全画面へ影響するglobal active Project selectorは持たない。
+member変更、grant変更、削除を行う。VM、node、storage、image、network一覧のProject filterはApp barの
+共通selectorで操作し、各ページ内には重複配置しない。名称とIDを併記し、clear操作で絞り込みを解除する。
+選択状態はURL queryを正本とし、再読込・履歴移動・Project詳細からの絞り込みリンクに追従する。
+サイドナビゲーションでresource一覧を移動すると選択を引き継ぐ。対象外の画面ではselectorを表示せず、
+最後の選択を次のresource一覧への移動に使う。作成・変更dialogのProject指定は操作対象として個別に保持する。
+App barのselectorは幅を制限し、狭い画面ではApp bar内の次行へ配置して操作領域を確保する。
 dashboardは、認証利用者が参照できるVM、node、storage、image、network、taskの件数、状態、容量を、
 DB上のinventory cacheとtask recordから集約した現在値のsnapshotとして表示する。
 表示と再読込はread-onlyであり、管理nodeへのSSH・libvirt接続、inventory再走査、task投入を行わない。

@@ -5,6 +5,7 @@ import { mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  app: { projectId: null, $reset: vi.fn() },
   auth: { authed: true, loginFailure: vi.fn() },
   createTaskPoller: vi.fn(),
   notify: vi.fn(),
@@ -21,6 +22,12 @@ vi.mock("@/composables/taskPolling", async (importOriginal) => ({
   createTaskPoller: mocks.createTaskPoller,
 }));
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => mocks.auth }));
+vi.mock("@/stores/app", () => ({ useAppStore: () => mocks.app }));
+vi.mock("vue-router", () => ({
+  useRoute: () => ({ fullPath: "/", meta: {}, query: {} }),
+  useRouter: () => ({ replace: vi.fn() }),
+}));
+vi.mock("vuetify", () => ({ useDisplay: () => ({ xs: false }) }));
 vi.mock("@/stores/state", () => ({ useStateStore: () => mocks.state }));
 vi.mock("@/composables/notify", () => ({ default: mocks.notify }));
 vi.mock("@/composables/sleep", () => ({ asyncSleep: vi.fn() }));

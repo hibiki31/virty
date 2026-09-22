@@ -2,11 +2,11 @@
   <v-navigation-drawer v-model="state.showSideDrawer">
     <v-list density="compact" nav class="primary--text text--primary">
       <v-list-item prepend-icon="mdi-view-dashboard" :title="$t('navigation.dashboard')" :to="{ name: '/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-desktop-tower" :title="$t('navigation.vms')" :to="{ name: '/vms/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-server" :title="$t('navigation.nodes')" :to="{ name: '/nodes/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-database" :title="$t('navigation.storages')" :to="{ name: '/storages/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-harddisk" :title="$t('navigation.images')" :to="{ name: '/images/' }"></v-list-item>
-      <v-list-item prepend-icon="mdi-wan" :title="$t('navigation.networks')" :to="{ name: '/networks/' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-desktop-tower" :title="$t('navigation.vms')" :to="{ name: '/vms/', query: projectQuery }"></v-list-item>
+      <v-list-item prepend-icon="mdi-server" :title="$t('navigation.nodes')" :to="{ name: '/nodes/', query: projectQuery }"></v-list-item>
+      <v-list-item prepend-icon="mdi-database" :title="$t('navigation.storages')" :to="{ name: '/storages/', query: projectQuery }"></v-list-item>
+      <v-list-item prepend-icon="mdi-harddisk" :title="$t('navigation.images')" :to="{ name: '/images/', query: projectQuery }"></v-list-item>
+      <v-list-item prepend-icon="mdi-wan" :title="$t('navigation.networks')" :to="{ name: '/networks/', query: projectQuery }"></v-list-item>
       <v-list-item v-if="canReadProjects" prepend-icon="mdi-folder-account-outline" :title="$t('navigation.projects')"
         :to="{ name: '/projects/' }"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-account" :title="$t('navigation.users')"
@@ -40,10 +40,13 @@
 <script lang="ts" setup>
 import { useStateStore } from '@/stores/state'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import { hasScope } from '@/composables/auth'
 const apiURL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL + "/api" : "/api"
 const state = useStateStore()
 const auth = useAuthStore()
+const app = useAppStore()
+const projectQuery = computed(() => app.projectId ? { projectId: app.projectId } : {})
 const isAdmin = computed(() => auth.scopes.includes('admin'))
 const canReadProjects = computed(() => hasScope(auth.scopes, 'project.read'))
 import { useDisplay } from 'vuetify'

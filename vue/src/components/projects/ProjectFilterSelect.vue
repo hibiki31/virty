@@ -9,6 +9,8 @@
     item-title="title"
     item-value="value"
     :label="t('common.fields.project')"
+    :aria-label="t('common.fields.project')"
+    :title="options.find(option => option.value === modelValue)?.title"
     persistent-placeholder
     variant="solo-filled"
     @update:model-value="value => emit('update:modelValue', value || null)"
