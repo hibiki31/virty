@@ -6,7 +6,8 @@ from fastapi.testclient import TestClient
 
 from auth.router import create_access_token
 from domain import tasks as domain_tasks
-from domain.models import DomainModel
+from domain.authorization import DomainTaskAuthorizationError
+from domain.models import DomainDriveModel, DomainModel
 from flavor.models import FlavorModel
 from mixin.database import SessionLocal
 from node.models import NodeModel
@@ -25,7 +26,12 @@ from user.models import UserModel, UserScopeModel
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(60)]
 
 
-def _headers(username: str, project_ids: list[str]) -> dict[str, str]:
+def _headers(
+    username: str,
+    project_ids: list[str],
+    *,
+    admin: bool = False,
+) -> dict[str, str]:
     token = create_access_token(
         data={
             "sub": username,
@@ -35,7 +41,7 @@ def _headers(username: str, project_ids: list[str]) -> dict[str, str]:
                 "image.manage",
                 "vm.create",
                 "vm.attach",
-            ],
+            ] + (["admin"] if admin else []),
             "projects": project_ids,
         },
         expires_delta=timedelta(hours=1),
@@ -138,6 +144,15 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
                     status=5,
                     node=node,
                     owner_project=project_a,
+                    update_token=suffix,
+                )
+            )
+            db.add(
+                DomainDriveModel(
+                    domain_uuid=domain_uuid,
+                    target="sda",
+                    device="cdrom",
+                    type="file",
                     update_token=suffix,
                 )
             )
@@ -310,6 +325,66 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
             with pytest.raises(ValueError, match="outside the VM project grants"):
                 domain_tasks.patch_vm_cdrom(db, worker_model, task_request)
         assert backend_calls == []
+
+        denied_admin = api_client.patch(
+            f"/api/tasks/vms/{domain_uuid}/cdrom",
+            headers=headers,
+            params={"admin": "true"},
+            json={"target": "sda", "path": cross_path},
+        )
+        assert denied_admin.status_code == 403
+
+        with SessionLocal.begin() as db:
+            db.add(UserScopeModel(user_id=username, name="admin"))
+        admin_headers = _headers(username, [project_a_id, project_b_id], admin=True)
+        admin_images = api_client.get(
+            "/api/images",
+            headers=admin_headers,
+            params={"admin": "true", "nodeName": node_name, "limit": 100},
+        )
+        assert admin_images.status_code == 200, admin_images.text
+        assert cross_name in {image["name"] for image in admin_images.json()["data"]}
+
+        admin_cdrom = api_client.patch(
+            f"/api/tasks/vms/{domain_uuid}/cdrom",
+            headers=admin_headers,
+            params={"admin": "true"},
+            json={"target": "sda", "path": cross_path},
+        )
+        assert admin_cdrom.status_code == 200, admin_cdrom.text
+        admin_task_uuid = admin_cdrom.json()[0]["uuid"]
+
+        class CdromBackend:
+            def domain_cdrom(self, uuid: str, target: str, path: str) -> None:
+                backend_calls.append(f"{uuid}:{target}:{path}")
+
+        monkeypatch.setattr(
+            domain_tasks,
+            "create_libvirt_backend",
+            lambda node_model: CdromBackend(),
+        )
+        with SessionLocal.begin() as db:
+            db.query(UserScopeModel).filter(
+                UserScopeModel.user_id == username,
+                UserScopeModel.name == "admin",
+            ).delete(synchronize_session=False)
+        with SessionLocal.begin() as db:
+            admin_task = db.get(TaskModel, admin_task_uuid)
+            assert admin_task is not None
+            admin_request = TaskRequest.model_validate_json(admin_task.request)
+            with pytest.raises(DomainTaskAuthorizationError, match="管理者権限"):
+                domain_tasks.patch_vm_cdrom(db, admin_task, admin_request)
+        assert backend_calls == []
+
+        with SessionLocal.begin() as db:
+            db.add(UserScopeModel(user_id=username, name="admin"))
+        with SessionLocal.begin() as db:
+            admin_task = db.get(TaskModel, admin_task_uuid)
+            assert admin_task is not None
+            admin_request = TaskRequest.model_validate_json(admin_task.request)
+            assert admin_request.path_param["ownerBinding"]["admin"] is True
+            domain_tasks.patch_vm_cdrom(db, admin_task, admin_request)
+        assert backend_calls == [f"{domain_uuid}:sda:{cross_path}"]
 
         schema = api_client.get("/api/openapi.json").json()
         update_schema = schema["components"]["schemas"][

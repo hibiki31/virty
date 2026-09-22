@@ -5897,7 +5897,9 @@ export interface operations {
     };
     control_vm_cdrom: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;

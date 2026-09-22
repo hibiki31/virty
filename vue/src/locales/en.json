@@ -258,7 +258,7 @@
     },
     "vmCdrom": {
       "title": "Mount ISO image",
-      "noImages": "No ISO found. Check the VM node and the storage assignment to its project.",
+      "noImages": "No ISO found. Check the VM node, image inventory, and access permissions.",
       "unmount": "Unmount"
     },
     "vmDelete": {
