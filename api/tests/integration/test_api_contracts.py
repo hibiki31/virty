@@ -461,7 +461,10 @@ def test_network_create_accepts_isolated_and_rejects_obsolete_typo(
             db.query(UserModel).filter(UserModel.username == username).delete()
 
 
-def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
+def test_vm_project_update_uses_path_uuid(
+    api_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     suffix = uuid4().hex
     username = f"vm-project-user-{suffix}"
     outsider_username = f"vm-project-outsider-{suffix}"
@@ -535,6 +538,21 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
         )
         assert denied_response.status_code == 404
 
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                "domain.service.domain_project_resource_conflicts",
+                lambda _db, _domain, _project_id: ["storage:ungranted"],
+            )
+            conflict_response = api_client.patch(
+                f"/api/vms/{other_uuid}/project",
+                headers=_headers(username, projects=[project_id]),
+                json={"projectId": project_id},
+            )
+        assert conflict_response.status_code == 409, conflict_response.text
+        assert conflict_response.json()["detail"]["code"] == (
+            ApiErrorCode.VM_PROJECT_RESOURCE_CONFLICT
+        )
+
         response = api_client.patch(
             f"/api/vms/{target_uuid}/project",
             headers=_headers(username, projects=[project_id]),
@@ -542,12 +560,19 @@ def test_vm_project_update_uses_path_uuid(api_client: TestClient) -> None:
         )
         assert response.status_code == 200, response.text
 
+        legacy_response = api_client.patch(
+            f"/api/vms/{other_uuid}/project",
+            headers=_headers(username, projects=[project_id]),
+            json={"projectId": project_id},
+        )
+        assert legacy_response.status_code == 200, legacy_response.text
+
         with SessionLocal() as db:
             target = db.query(DomainModel).filter(DomainModel.uuid == target_uuid).one()
             other = db.query(DomainModel).filter(DomainModel.uuid == other_uuid).one()
             assert target.owner_project_id == project_id
             assert target.owner_user_id is None
-            assert other.owner_project_id is None
+            assert other.owner_project_id == project_id
 
         schema = api_client.get("/api/openapi.json").json()
         body_schema = schema["components"]["schemas"]["DomainProjectForUpdate"]

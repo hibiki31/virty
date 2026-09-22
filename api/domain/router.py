@@ -148,7 +148,8 @@ def update_vm_project(
 ):
     """VMを、接続済みresourceを利用できるprojectへ移動する。"""
     current_user.verify_scope(["vm.project"])
-    get_authorized_domain(db, uuid, current_user)
+    admin_move = current_user.verify_scope(["admin"], return_bool=True)
+    get_authorized_domain(db, uuid, current_user, admin=admin_move)
     get_member_project(db, request.project_id, current_user)
     try:
         domain = move_domain_to_project(
@@ -156,7 +157,7 @@ def update_vm_project(
             domain_uuid=uuid,
             destination_project_id=request.project_id,
             authorize_locked=lambda locked_domain, destination: (
-                can_access_domain(current_user, locked_domain)
+                (admin_move or can_access_domain(current_user, locked_domain))
                 and destination.id in current_user.projects
             ),
         )
