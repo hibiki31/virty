@@ -57,6 +57,10 @@ SHA-256先頭12桁からCLIと同じproject名を作り、repository rootのigno
 - PostgreSQLは配布環境と同じ18系を使い、healthcheck成功後にmigrationとtestを開始する。
 - Python、Node、PostgreSQL、pgAdminのimageと開発toolは追跡fileで固定し、container起動後に
   `apt`、`pip install`、`pnpm install`で環境を作り直さない。
+- APIのOS packageを取得するbaseは、Debianのsecurity support期間内のBookwormを使い、
+  公式Python imageのdigestを固定する。Bullseyeは[2026年8月末にLTSが終了](https://www.debian.org/News/2026/20260831)し、
+  security packageの取得に失敗するため使用しない。base更新時はcache済みlayerの成功だけで判断せず、
+  新しいbaseで`quick api`と引数なし`verify`を通し、CIでもpackage取得と全層E2Eを確認する。
 - source変更では依存layerを再構築しないCOPY順とBuildKit cacheを維持する。
 - `clean`は現worktree由来のprojectだけを対象にする。`docker system prune`や他projectのvolume削除を
   開発手順へ含めない。
