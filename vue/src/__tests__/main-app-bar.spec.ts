@@ -42,20 +42,28 @@ vi.mock("@/api", () => ({ apiClient: { GET: mocks.apiGet } }));
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.authed = true;
+  mocks.auth.scopes = ["user"];
   mocks.state.task_uuids = [];
   mocks.createTaskPoller.mockReturnValue(mocks.poller);
 });
 
 describe("MainAppBer task polling", () => {
-  it.each([false, true])("task監視に実効管理者モード=%sを指定する", async admin => {
-    mocks.auth.scopes = admin ? ['admin'] : ['user'];
-    mocks.apiGet.mockResolvedValue({ data: { count: 0, hash: 'empty', uuids: [] } });
+  it.each([
+    { scopes: ["admin"], admin: true },
+    { scopes: ["user"], admin: false },
+    { scopes: ["user", "vm.create"], admin: false },
+  ])("$scopes のtask取得範囲を権限に合わせる", async ({ scopes, admin }) => {
+    mocks.auth.scopes = scopes;
+    const snapshot = { count: 0, hash: "empty", uuids: [] };
+    mocks.apiGet.mockResolvedValue({ data: snapshot });
     const wrapper = mount(MainAppBer, { global: { stubs: componentStubs } });
     const options = mocks.createTaskPoller.mock.calls[0][0];
     const signal = new AbortController().signal;
-    await options.request('hash', signal);
-    expect(mocks.apiGet).toHaveBeenCalledWith('/api/tasks/incomplete', {
-      params: { query: { referenceHash: 'hash', admin } }, signal,
+
+    await expect(options.request("previous", signal)).resolves.toEqual(snapshot);
+    expect(mocks.apiGet).toHaveBeenCalledWith("/api/tasks/incomplete", {
+      params: { query: { referenceHash: "previous", admin } },
+      signal,
     });
     wrapper.unmount();
   });

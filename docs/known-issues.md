@@ -26,6 +26,9 @@
 | image tagやpost-create installによる環境drift | base imageをtagとdigestで固定し、Python依存lockと`pnpm --frozen-lockfile`をbuild layerへ入れる | `./devctl quick`、production image build |
 | 開発credential fileのmode・owner・file種別が安全でない | `devctl`が実行user所有のregular non-symlink fileかつ`0600`だけを受理し、境界self-testを標準check前に行う | `./devctl quick`、`./devctl verify` |
 | 標準testからSSH、Ansible、libvirt、downloadへ接続 | backend factory、deterministic fake、networkなしquick、internal network verifyを使う | `./devctl verify api` |
+| browser内の代替応答だけではWeb・API・worker間の不整合を見逃す | 配布bundle、実API、専用PostgreSQL、実workerを接続し、外部adapterだけを置換する | `./devctl verify e2e` |
+| 一般利用者のApp barが管理者用task取得で403になる | 現在のscopeに合わせてtask取得範囲を指定する | App bar unit test、全層E2Eのmember・非member試験 |
+| VM作成直後のdisk関連付けとProject使用量が欠落する | storage inventoryを確定してからVM inventoryを更新するtask依存順を使う | VM作成integration、全層E2Eの作成後資源集計 |
 | API-001: pathと異なるuser更新、または部分commit | path `username`を更新対象の正本とし、`scopes`と`publickeys`を単一transactionで更新する | user API integration、OpenAPI drift check |
 | user作成時のscope・公開鍵の保存漏れ、本人設定による権限変更 | REST・Agentの共通保存処理と、本人から変更可能なfieldだけの専用schemaを使う | user management integration、Web user CRUD E2E |
 | password変更後や同名user再作成後のWeb JWT再利用 | DB上のsession generationを照合し、hash変更と同時に更新する | user management integration、migration upgrade/downgrade test |
@@ -36,7 +39,7 @@
 | TEST-002: worker外部処理の失敗pathを未検証 | SSH timeout、Ansible nonzero、libvirt例外、download metadata失敗をproduction handler境界で注入し、親taskの`error`と後続非実行を検証する | worker failure integration |
 | INFRA-002: cleanupが想定名の再構築だけに依存 | mutation前のversion付きmanifestと作成UUIDを永続化し、manifestだけを削除allowlistにする。DB/worker起動前のidentity guardと依存tier間のfailure barrierも必須化する | manifest/cleanup unit test、`infra cleanup`後の独立inventory |
 | 実機testによる既存lab資源の再利用・削除 | run ID、exact name、lab側read-only preflight、serial lock、manifest-only cleanupを必須化する | `./devctl infra preflight --config ...`、external support unit test |
-| CIがimage buildだけを行いlint・test失敗を見逃す | API、Web、Proxy、MCP jobがcomponent別`devctl verify`を実行し、publish前にも同じgateを置く | GitHub Actions workflow |
+| CIがimage buildだけを行いlint・test失敗を見逃す | API、Web、全層E2E、Proxy、MCP jobがcomponent別`devctl verify`を実行し、publish前にも対象componentを検証する | GitHub Actions workflow |
 
 ## 未解決の課題
 
@@ -59,7 +62,7 @@
 
 - 優先度: P2
 - 状態: 未解決
-- 影響: maintained API code 74 fileはmypyを通るが、第三者stub不足とlegacy実装のため
+- 影響: APIの型check対象はmypyを通るが、第三者stub不足とlegacy実装のため
   `ansiblelib`、`cloudinitlib`、`paramikolib`、`virtlib`、`xmllib`内部はdirect checkから除外される。
   Protocol境界の利用側は検査できても、production adapter内部の型不整合はruntimeまで残り得る。
 - 根拠: [`api/pyproject.toml`](../api/pyproject.toml)のmypy `exclude`と`follow_imports = "skip"`。
@@ -72,13 +75,15 @@
 
 - 優先度: P2
 - 状態: 未解決
-- 影響: 最新`master`統合後にVitest 100件とPlaywright 3 flowは成功し、認証、API error、
-  pagination、task polling、VM/network/node/storage/image dialogの主要分岐を標準verifyへ取り込んだ。
+- 影響: 最新`master`統合後にVitest 156件は成功し、認証、API error、pagination、task polling、
+  VM/network/node/storage/image dialogの主要分岐を標準verifyへ取り込んだ。主要browser flowは
+  API代替型Playwrightと、実API・DB・workerを接続した全層E2Eで検証する。
   ただし全srcのcoverageにglobal gateは置いておらず、未抽出のpage/componentには依然として
-  測定とtestの薄い範囲が残る。全体coverageの実測はstatements 43.17%、branches 45.65%、
-  functions 36.24%、lines 44.74%である。
+  測定とtestの薄い範囲が残る。全体coverageの実測はstatements 40.75%、branches 42.13%、
+  functions 36.31%、lines 42.31%である。
 - 根拠: [`vue/vitest.config.mts`](../vue/vitest.config.mts)と
-  [`vue/src/__tests__/`](../vue/src/__tests__)、[`vue/e2e/`](../vue/e2e/)。実測手順と環境は
+  [`vue/src/__tests__/`](../vue/src/__tests__)、[`vue/e2e/`](../vue/e2e/)、
+  [`vue/e2e-fullstack/`](../vue/e2e-fullstack/)。実測手順と環境は
   [development.md](development.md)に記録する。
 - 改善方針: 全体値は推移値として記録し、根拠のないglobal閾値は置かない。抽出済みの認証、
   error整形、pagination、poller helperだけはlines/statements 90%、branches/functions 80%でgateし、
@@ -93,11 +98,11 @@
 - 影響: fail-closed preflight、fake integration、cleanup判断は検証済みだが、実SSH、Ansible、libvirt、
   image downloadを組み合わせたsuiteはまだ実行していない。OS、libvirt、network、storage固有の
   差異と、実worker停止・INT・TERM時の診断とcleanupは標準verifyだけでは保証できない。
-  提供済みlocal configは親directoryがmode `0775`、fileがmode `0664`であり、`devctl`が求める
-  `0700`/`0600`を満たさないため、現状のままではpreflightもfail closedする。
+  設定fileと親directoryの権限・所有者は実行ごとのpreflightで検査する。過去の設定metadataを
+  現在の実行可否の根拠として扱わない。
 - 根拠: [`api/tests/external/`](../api/tests/external/)と
   [`api/tests/external/infra-config.example.json`](../api/tests/external/infra-config.example.json)。
-- 改善方針: operatorが設定のmetadataを`0700`/`0600`へ修正した後、標準verifyと
+- 改善方針: 設定のmetadataが`0700`/`0600`と実行user所有を満たすことを確認し、標準verifyと
   read-only preflightの成功を確認し、破壊的実行の別承認を得る。各scenarioは新しいrun IDで
   `happy`、`task-failure`、`worker-stop`、`signal-int`、`signal-term`の順に直列実測する。
   credentialや管理node固有値はrepositoryへ保存しない。

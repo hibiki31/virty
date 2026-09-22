@@ -15,6 +15,8 @@ export default defineConfig({
   },
   test: {
     clearMocks: true,
+    // 並行するworktree検証やimage buildとのCPU競合を抑える。
+    maxWorkers: 2,
     environment: "jsdom",
     include: ["src/**/*.spec.ts", "e2e/**/*.unit.ts"],
     restoreMocks: true,

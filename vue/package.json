@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:fullstack": "playwright test --config playwright.fullstack.config.ts",
     "check:quick": "run-p lint type-check test",
     "check:full": "run-s check:web-types check:full:parallel",
     "check:full:parallel": "run-p lint type-check:full test:coverage"

@@ -149,6 +149,7 @@
               />
               <v-select
                 v-model="grants.storagePoolIds"
+                data-testid="project-grant-storage-pools"
                 :items="storagePoolOptions"
                 item-title="name"
                 item-value="id"
@@ -164,6 +165,7 @@
               />
               <v-select
                 v-model="grants.networkPoolIds"
+                data-testid="project-grant-network-pools"
                 :items="networkPoolOptions"
                 item-title="name"
                 item-value="id"
@@ -179,6 +181,7 @@
               />
               <v-select
                 v-model="grants.flavorIds"
+                data-testid="project-grant-flavors"
                 :items="flavorOptions"
                 item-title="name"
                 item-value="id"

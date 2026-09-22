@@ -4,6 +4,8 @@ import { playwrightBaseURL } from "./e2e/base-url";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
+  // 複数worktreeの並列検証でbrowser同士がCPUを奪い合わないようにする。
+  workers: 2,
   forbidOnly: true,
   reporter: "line",
   retries: 0,

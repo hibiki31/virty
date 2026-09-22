@@ -59,7 +59,7 @@
             </div>
             <v-row v-for="(disk, index) in postData.disks" :key="index" class="ma-n1">
               <v-col cols="6" sm="3" md="2" class="pa-1">
-                <v-select v-model="disk.type" variant="outlined" density="compact" :label="t('common.fields.mode')" hide-details="auto"
+                <v-select v-model="disk.type" data-testid="vm-disk-mode" variant="outlined" density="compact" :label="t('common.fields.mode')" hide-details="auto"
                   :items="diskModeItems"
                   :rules="[r.required]"></v-select>
               </v-col>
@@ -74,13 +74,13 @@
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="2" class="pa-1">
-                <v-select v-model="disk.originalPoolUuid" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourcePool')"
+                <v-select v-model="disk.originalPoolUuid" data-testid="vm-source-pool" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourcePool')"
                   hide-details="auto" :items="itemsStorages.data.filter(x => x.nodeName === postData.nodeName)"
                   :disabled="resourcesDisabled" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="uuid"></v-select>
               </v-col>
               <v-col v-if="disk.type === 'copy'" cols="12" sm="6" md="3" class="pa-1">
-                <v-select v-model="disk.originalName" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourceImage')"
+                <v-select v-model="disk.originalName" data-testid="vm-source-image" variant="outlined" density="compact" :label="t('dialogs.vmAdd.sourceImage')"
                   hide-details="auto" :items="itemsImages.data.filter(x => x.storageUuid === disk.originalPoolUuid)"
                   :disabled="resourcesDisabled" :loading="resourcesLoading"
                   :rules="[r.required]" item-title="name" item-value="name"></v-select>

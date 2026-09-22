@@ -16,6 +16,8 @@ INFRA_CLEANUP_ENABLED=0
 SIGNAL_CHILD_PID_FILE=""
 SIGNAL_CHILD_PROJECT=""
 SIGNAL_CHILD_PROCESS_GROUP=""
+E2E_RUNNER_NAME=""
+E2E_ARTIFACT_DIR=""
 
 die() {
   printf 'エラー: %s\n' "$*" >&2
@@ -26,7 +28,7 @@ usage() {
   cat <<'EOF'
 Usage:
   ./devctl quick [api|web|mcp]
-  ./devctl verify [api|web|proxy|mcp]
+  ./devctl verify [api|web|e2e|proxy|mcp]
   ./devctl up [--tools]
   ./devctl down
   ./devctl logs [service ...]
@@ -93,6 +95,7 @@ terminate_project_containers_with_term() {
 
 cleanup_active_project() {
   local project profile
+  local artifact_status=0
 
   if [[ -z "${ACTIVE_PROJECT}" ]]; then
     return 0
@@ -100,6 +103,8 @@ cleanup_active_project() {
 
   project="${ACTIVE_PROJECT}"
   profile="${ACTIVE_PROFILE}"
+
+  collect_e2e_artifacts || artifact_status=$?
 
   if [[ "${profile}" == "external" ]]; then
     terminate_project_containers_with_term "${project}" "" 60 || return $?
@@ -117,7 +122,42 @@ cleanup_active_project() {
   fi
   ACTIVE_PROJECT=""
   ACTIVE_PROFILE=""
-  return 0
+  return "${artifact_status}"
+}
+
+collect_e2e_artifacts() {
+  local container_id container_ids
+  local artifact_status=0
+
+  if [[ -z "${E2E_RUNNER_NAME}" || -z "${E2E_ARTIFACT_DIR}" ]]; then
+    return 0
+  fi
+  # 起動失敗も診断できるよう、秘密値を含まない状態fieldだけを保存する。
+  container_ids="$(compose_project "${ACTIVE_PROJECT}" --profile verify ps --all --quiet)" \
+    || artifact_status=1
+  for container_id in ${container_ids}; do
+    docker inspect --format \
+      '{{.Name}} status={{.State.Status}} exit={{.State.ExitCode}}{{if .State.Health}} health={{.State.Health.Status}}{{end}}' \
+      "${container_id}" >>"${E2E_ARTIFACT_DIR}/services.txt" || artifact_status=1
+  done
+  if docker container inspect "${E2E_RUNNER_NAME}" >/dev/null 2>&1; then
+    # reporterのallowlist診断だけを保存し、containerの環境値やraw logは取得しない。
+    if ! docker cp \
+      "${E2E_RUNNER_NAME}:/workspace/vue/fullstack-results/report.json" \
+      "${E2E_ARTIFACT_DIR}/report.json"; then
+      printf 'エラー: 全層E2Eの試験成果物を保存できませんでした: %s\n' \
+        "${E2E_ARTIFACT_DIR}" >&2
+      artifact_status=1
+    fi
+    if ! docker cp \
+      "${E2E_RUNNER_NAME}:/workspace/vue/fullstack-results/diagnostics" \
+      "${E2E_ARTIFACT_DIR}/diagnostics"; then
+      artifact_status=1
+    fi
+  fi
+  printf '全層E2Eの試験成果物: %s\n' "${E2E_ARTIFACT_DIR}"
+  E2E_RUNNER_NAME=""
+  return "${artifact_status}"
 }
 
 cleanup_infra_resources() {
@@ -362,6 +402,47 @@ validate_distribution_compose_contract() {
   [[ "${web_definition}" != *'/etc/virty/tls/'* ]]
 }
 
+validate_e2e_compose_contract() {
+  local rendered_file="$1"
+  local service definition network_definition
+
+  compose_project virty-contract --profile verify config >"${rendered_file}" || return 1
+  for service in db-e2e api-migrate-e2e worker-e2e api-e2e web-fullstack-server web-fullstack; do
+    definition="$(awk -v service="${service}:" '
+      $0 == "  " service { in_service = 1 }
+      in_service && /^  [[:alnum:]_.-]+:$/ && $1 != service { exit }
+      in_service { print }
+    ' "${rendered_file}")"
+    [[ "${definition}" == *'e2e-internal:'* ]] || return 1
+    [[ "${definition}" != *'verify-internal:'* ]] || return 1
+    [[ "${definition}" != *'default:'* ]] || return 1
+    if grep -Eq '^    (ports|network_mode|extra_hosts|devices|privileged):|type: bind|external:' \
+      <<<"${definition}"; then
+      return 1
+    fi
+    case "${service}" in
+      db-e2e)
+        [[ "${definition}" == *'POSTGRES_DB: virty_test_e2e'* ]] || return 1
+        [[ "${definition}" == *'/var/lib/postgresql'* ]] || return 1
+        [[ "${definition}" == *'tmpfs:'* ]] || return 1
+        ;;
+      api-migrate-e2e|worker-e2e|api-e2e)
+        [[ "${definition}" == *'@db-e2e:5432/virty_test_e2e'* ]] || return 1
+        [[ "${definition}" == *'VIRTY_BACKEND_MODE: e2e'* ]] || return 1
+        [[ "${definition}" == *'VIRTY_TESTING: "1"'* ]] || return 1
+        [[ "${definition}" == *'source: e2e-data'* ]] || return 1
+        ;;
+    esac
+  done
+  network_definition="$(awk '
+    /^networks:$/ { in_networks = 1 }
+    in_networks && /^  e2e-internal:$/ { in_e2e = 1; next }
+    in_e2e && /^  [[:alnum:]_.-]+:$/ { exit }
+    in_e2e { print }
+  ' "${rendered_file}")"
+  [[ "${network_definition}" == *'internal: true'* ]]
+}
+
 run_devctl_contract_tests() {
   local test_dir regular_file symlink_file fifo_file missing_file expected_owner
 
@@ -376,6 +457,8 @@ run_devctl_contract_tests() {
   validate_distribution_compose_contract \
     "${test_dir}/compose.example.rendered.yml" \
     || die "配布ComposeのHTTP起動contract testに失敗しました"
+  validate_e2e_compose_contract "${test_dir}/compose.e2e.rendered.yml" \
+    || die "全層E2EのDB/network分離contract testに失敗しました"
 
   if ! cleanup_active_project; then
     die "空project cleanupのcontract testに失敗しました"
@@ -512,6 +595,10 @@ enable_ci_cache() {
     emit_cache_service openapi-contract-verify web-development
     emit_cache_service api-verify api-check
     emit_cache_service api-production-verify api-production
+    emit_cache_service api-e2e-volume-init api-check
+    emit_cache_service api-migrate-e2e api-check
+    emit_cache_service api-e2e api-check
+    emit_cache_service worker-e2e api-check
     emit_cache_service infra-preflight api-check
     emit_cache_service infra-volume-init api-development
     emit_cache_service infra-migrate api-development
@@ -529,6 +616,8 @@ enable_ci_cache() {
     emit_cache_service web-production-verify web-production
     emit_cache_service web-e2e-server web-e2e-http
     emit_cache_service web-e2e web-playwright
+    emit_cache_service web-fullstack-server web-e2e-fullstack
+    emit_cache_service web-fullstack web-playwright
     emit_cache_service proxy proxy-production
     emit_cache_service proxy-production-verify proxy-production
     emit_cache_service mcp-quick mcp-development
@@ -643,6 +732,11 @@ verify_runtime() {
         web-verify node -e \
         'const summary = require("./coverage/coverage-summary.json"); console.log(JSON.stringify(summary.total))'
       ;;
+    e2e)
+      # named containerをcleanupまで保持し、失敗時もreportを回収する。
+      compose_project "${project}" --profile verify run \
+        --name "${E2E_RUNNER_NAME}" -T web-fullstack
+      ;;
     proxy)
       # Proxy確認はimage build内で完結する。
       ;;
@@ -659,7 +753,7 @@ run_verify() {
   local -a services=()
 
   (($# <= 1)) || die "verifyの引数が多すぎます"
-  validate_component "${component}" all api web proxy mcp
+  validate_component "${component}" all api web e2e proxy mcp
   run_devctl_contract_tests
 
   run_id="$(date -u +%s)-$$-${RANDOM}"
@@ -667,15 +761,27 @@ run_verify() {
   ACTIVE_PROJECT="${project}"
   ACTIVE_PROFILE="verify"
 
+  if [[ "${component}" == "all" || "${component}" == "e2e" ]]; then
+    E2E_RUNNER_NAME="${project}-fullstack"
+    E2E_ARTIFACT_DIR="${ROOT_DIR}/.artifacts/e2e/${run_id}"
+    install -d -m 0700 "${ROOT_DIR}/.artifacts" "${ROOT_DIR}/.artifacts/e2e" "${E2E_ARTIFACT_DIR}"
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+      printf 'e2e_artifacts=%s\n' "${E2E_ARTIFACT_DIR}" >>"${GITHUB_OUTPUT}"
+    fi
+  fi
+
   case "${component}" in
     all)
-      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify web-e2e-server web-e2e proxy-production-verify mcp-verify)
+      services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify web-verify web-production-verify web-e2e-server web-e2e api-e2e-volume-init api-migrate-e2e api-e2e worker-e2e web-fullstack-server web-fullstack proxy-production-verify mcp-verify)
       ;;
     api)
       services=(api-migrate-verify api-worker-verify openapi-schema-verify openapi-contract-verify api-verify api-production-verify)
       ;;
     web)
       services=(openapi-schema-verify openapi-contract-verify web-verify web-production-verify web-e2e-server web-e2e)
+      ;;
+    e2e)
+      services=(api-e2e-volume-init api-migrate-e2e api-e2e worker-e2e web-fullstack-server web-fullstack)
       ;;
     proxy)
       services=(proxy-production-verify)
@@ -699,6 +805,8 @@ run_verify() {
     run_labeled mcp verify_runtime "${project}" mcp &
     CHILD_PIDS+=("$!")
     wait_for_children || die "verifyに失敗しました"
+    # browser suite同士の資源競合を避け、既存検証の成功後に全層E2Eを実行する。
+    run_labeled e2e verify_runtime "${project}" e2e
   else
     verify_runtime "${project}" "${component}"
   fi

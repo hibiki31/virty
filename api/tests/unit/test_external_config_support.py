@@ -72,6 +72,22 @@ def _parse_payload(payload: dict[str, Any]) -> EnvConfig:
     return parse_infra_config_json(json.dumps(payload))
 
 
+def test_fixture_representation_does_not_expose_lab_settings() -> None:
+    config = _parse_payload(_valid_payload())
+
+    for model in [
+        config,
+        *config.users,
+        *config.servers,
+        *config.projects,
+        *config.storages,
+        *config.networks,
+        *config.vms,
+    ]:
+        assert repr(model) == f"{type(model).__name__}(redacted=True)"
+        assert str(model) == "redacted=True"
+
+
 def test_valid_config_and_run_prefix_do_not_mutate_input() -> None:
     config = _parse_payload(_valid_payload())
     original = config.model_dump()

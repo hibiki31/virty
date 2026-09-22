@@ -12,3 +12,4 @@ feature/dev.sh
 __pycache__
 /.pnpm-store/
 /.secrets/
+/.artifacts/

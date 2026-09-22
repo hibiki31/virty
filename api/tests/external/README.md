@@ -119,6 +119,11 @@ preflightの成功、collision/capacity結果と次の5 commandを示し、破�
 設定modelは余分なfield、各配列の空・重複、server接続先、storage path、network octetの重複、非NAT、
 credential/query/fragment付きURL、使用fieldのplaceholder、password policy違反、秘密鍵と公開鍵の
 不一致をDBや管理nodeの起動前に拒否する。errorにはJSON pathと理由だけを出し、設定値を含めない。
+設定modelの文字列表現も値を隠す。pytestの失敗reportはtest位置、phase、例外型、code位置、
+許可済みのtask状態とhash化IDだけを出し、例外の引数・本文・notes・captured outputを表示しない。
+API内部例外はHTTP 500として検証し、秘密鍵を含み得る関数引数をpytestへ再送出しない。
+失敗時に保持する復旧用volumeには実node由来の診断が含まれ得るため、raw logやvolume本文を
+会話・CI artifact・repositoryへ転記せず、失敗箇所と状態だけを報告する。
 
 `infra preflight`のreadiness phaseはproject固有SSH volumeへのkey配置を除き、専用labを変更しない。
 全serverでSSH、SFTP、passwordless sudo、virsh/libvirt、qemu、Ansible facts、storage parentと容量、

@@ -258,7 +258,7 @@ class FakeDownloadMetadataBackend(_FaultInjectableFake):
         return 0
 
 
-BackendMode = Literal["production", "fake"]
+BackendMode = Literal["production", "fake", "e2e"]
 
 
 def _backend_mode() -> BackendMode:
@@ -269,13 +269,23 @@ def _backend_mode() -> BackendMode:
         if os.getenv("VIRTY_TESTING") != "1":
             raise RuntimeError("fake backendにはVIRTY_TESTING=1が必要です")
         return "fake"
+    if mode == "e2e":
+        from tests.e2e.state import require_e2e_environment
+
+        require_e2e_environment()
+        return "e2e"
     raise RuntimeError(f"未対応のVIRTY_BACKEND_MODEです: {mode}")
 
 
 def create_ansible_backend(user: str, domain: str) -> AnsibleBackend:
     """選択されたAnsible backendを生成する。"""
 
-    if _backend_mode() == "fake":
+    mode = _backend_mode()
+    if mode == "e2e":
+        from tests.e2e.backends import E2EAnsibleBackend
+
+        return E2EAnsibleBackend(domain=domain)
+    if mode == "fake":
         return FakeAnsibleBackend()
     return AnsibleManager(user=user, domain=domain)
 
@@ -283,7 +293,10 @@ def create_ansible_backend(user: str, domain: str) -> AnsibleBackend:
 def create_ssh_backend(user: str, domain: str, port: int) -> SSHBackend:
     """選択されたSSH backendを生成する。"""
 
-    if _backend_mode() == "fake":
+    mode = _backend_mode()
+    if mode == "e2e":
+        raise NotImplementedError("E2EではSSH操作を実装していません")
+    if mode == "fake":
         return FakeSSHBackend()
     return ParamikoManager(user=user, domain=domain, port=port)
 
@@ -291,7 +304,12 @@ def create_ssh_backend(user: str, domain: str, port: int) -> SSHBackend:
 def create_libvirt_backend(node_model: NodeModel) -> LibvirtBackend:
     """選択されたlibvirt backendを生成する。"""
 
-    if _backend_mode() == "fake":
+    mode = _backend_mode()
+    if mode == "e2e":
+        from tests.e2e.backends import E2ELibvirtBackend
+
+        return E2ELibvirtBackend(node_name=node_model.name)
+    if mode == "fake":
         return FakeLibvirtBackend()
     return VirtManager(node_model=node_model)
 
@@ -299,6 +317,9 @@ def create_libvirt_backend(node_model: NodeModel) -> LibvirtBackend:
 def create_download_metadata_backend() -> DownloadMetadataBackend:
     """選択されたdownload metadata backendを生成する。"""
 
-    if _backend_mode() == "fake":
+    mode = _backend_mode()
+    if mode == "e2e":
+        raise NotImplementedError("E2EではHTTP downloadを実装していません")
+    if mode == "fake":
         return FakeDownloadMetadataBackend()
     return HttpDownloadMetadataBackend()

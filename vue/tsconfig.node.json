@@ -4,9 +4,11 @@
     "vite.config.*",
     "vitest.config.*",
     "e2e/**/*.ts",
+    "e2e-fullstack/**/*.ts",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    "playwright.fullstack.config.ts"
   ],
   "compilerOptions": {
     "composite": true,

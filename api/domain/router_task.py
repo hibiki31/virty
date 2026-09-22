@@ -147,13 +147,14 @@ def _queue_vm_create(
     task.select(method='post', resource='vm', object='root' if project_id is not None else 'admin')
     task.commit(user=cu, req=req, body=body)
 
-    task_list = TaskManager(db=db)
-    task_list.select('put', 'vm', 'list')
-    task_list.commit(user=cu, dep_uuid=task.model.uuid)
-
+    # 新diskを先にDBへ反映し、VM inventoryの容量集計・disk関連付けに使う。
     task_storage = TaskManager(db=db)
     task_storage.select('put', 'storage', 'list')
     task_storage.commit(user=cu, dep_uuid=task.model.uuid)
+
+    task_list = TaskManager(db=db)
+    task_list.select('put', 'vm', 'list')
+    task_list.commit(user=cu, dep_uuid=task_storage.model.uuid)
 
     return [ task.model, task_list.model, task_storage.model ]
 

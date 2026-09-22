@@ -30,6 +30,11 @@ FROM web-runtime AS e2e-http
 COPY nginx.e2e.conf /etc/nginx/nginx.conf
 EXPOSE 80
 
+# 全層E2Eでは同じ配布bundleから実APIへ接続する。
+FROM web-runtime AS e2e-fullstack
+COPY nginx.fullstack.conf /etc/nginx/nginx.conf
+EXPOSE 80
+
 # 本番環境。既定build targetをproductionに保つため最後に配置する。
 FROM web-runtime AS production
 COPY nginx.conf /etc/nginx/nginx.conf

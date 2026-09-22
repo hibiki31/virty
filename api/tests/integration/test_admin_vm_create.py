@@ -137,7 +137,11 @@ def test_admin_create_without_project_runs_registered_worker_and_preserves_owner
     tasks = response.json()
     assert len(tasks) == 3
     assert tasks[0]["object"] == "admin"
-    assert all(task["dependenceUuid"] == tasks[0]["uuid"] for task in tasks[1:])
+    # 返却順の互換性を保ち、VM集計だけはdisk inventoryの確定後に実行する。
+    assert tasks[1]["resource"] == "vm"
+    assert tasks[2]["resource"] == "storage"
+    assert tasks[2]["dependenceUuid"] == tasks[0]["uuid"]
+    assert tasks[1]["dependenceUuid"] == tasks[2]["uuid"]
     domain_tasks.worker_task.run("post.vm.admin", tasks[0]["uuid"])
     with SessionLocal() as db:
         domain = db.query(DomainModel).filter(DomainModel.name == body["name"]).one()

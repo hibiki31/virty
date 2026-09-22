@@ -33,6 +33,7 @@ files = [
     "user",
     "tests/unit",
     "tests/integration",
+    "tests/e2e",
     "tests/external/support",
 ]
 check_untyped_defs = true
