@@ -141,6 +141,12 @@
         <v-card class="mt-5" :title="t('pages.projectDetail.sections.grants')" variant="outlined">
           <v-card-text>
             <template v-if="isAdmin && editingGrants">
+              <v-checkbox
+                :model-value="allSelected(grants.storagePoolIds, storagePoolOptions)"
+                :label="t('pages.projectDetail.grants.allStoragePools')"
+                hide-details
+                @update:model-value="grants.storagePoolIds = selectAll($event, storagePoolOptions)"
+              />
               <v-select
                 v-model="grants.storagePoolIds"
                 :items="storagePoolOptions"
@@ -150,6 +156,12 @@
                 multiple
                 chips
               />
+              <v-checkbox
+                :model-value="allSelected(grants.networkPoolIds, networkPoolOptions)"
+                :label="t('pages.projectDetail.grants.allNetworkPools')"
+                hide-details
+                @update:model-value="grants.networkPoolIds = selectAll($event, networkPoolOptions)"
+              />
               <v-select
                 v-model="grants.networkPoolIds"
                 :items="networkPoolOptions"
@@ -158,6 +170,12 @@
                 :label="t('pages.projectDetail.grants.networkPools')"
                 multiple
                 chips
+              />
+              <v-checkbox
+                :model-value="allSelected(grants.flavorIds, flavorOptions)"
+                :label="t('pages.projectDetail.grants.allFlavors')"
+                hide-details
+                @update:model-value="grants.flavorIds = selectAll($event, flavorOptions)"
               />
               <v-select
                 v-model="grants.flavorIds"
@@ -274,6 +292,15 @@ const grants = reactive<ProjectResourceGrantsUpdate>({
 const storagePoolOptions = ref<components['schemas']['ProjectResourceReference'][]>([])
 const networkPoolOptions = ref<components['schemas']['ProjectResourceReference'][]>([])
 const flavorOptions = ref<components['schemas']['ProjectResourceReference'][]>([])
+type GrantOption = components['schemas']['ProjectResourceReference']
+
+function allSelected(selected: number[], options: GrantOption[]): boolean {
+  return options.length > 0 && options.every(option => selected.includes(option.id))
+}
+
+function selectAll(value: boolean | null, options: GrantOption[]): number[] {
+  return value ? options.map(option => option.id) : []
+}
 
 useLocalizedDocumentTitle(() => project.value
   ? formatProjectName(project.value)

@@ -12,6 +12,7 @@ from resource_authorization import (
     network_grants_for_pool_ids,
     project_flavor_ids,
     project_network_pool_ids,
+    project_storage_ids,
     project_storage_pool_ids,
 )
 from storage.models import (
@@ -359,6 +360,53 @@ def ensure_network_pool_deletable(db: Session, pool_id: int) -> NetworkPoolModel
             project_id=project_id,
             storage_pool_ids=project_storage_pool_ids(db, project_id),
             network_pool_ids=project_network_pool_ids(db, project_id) - {pool_id},
+            flavor_ids=project_flavor_ids(db, project_id),
+        )
+
+    pool = db.get(NetworkPoolModel, pool_id)
+    if pool is None:
+        raise ProjectGrantNotFoundError("指定されたnetwork poolが見つかりません")
+    return pool
+
+
+def ensure_network_pool_update_allowed(
+    db: Session,
+    pool_id: int,
+    network_ids: set[str],
+    network_ports: set[tuple[str, str]],
+) -> NetworkPoolModel:
+    """network poolの構成置換が使用中VMのgrantを解除しないことを確認する。"""
+    locked_id = (
+        db.query(NetworkPoolModel.id)
+        .filter(NetworkPoolModel.id == pool_id)
+        .with_for_update()
+        .scalar()
+    )
+    if locked_id is None:
+        raise ProjectGrantNotFoundError("指定されたnetwork poolが見つかりません")
+
+    project_ids = sorted({
+        str(project_id)
+        for (project_id,) in db.query(
+            association_projects_to_networks_pools.c.projects_id,
+        ).filter(
+            association_projects_to_networks_pools.c.networks_pools_id == pool_id,
+        ).all()
+    })
+    for project_id in project_ids:
+        db.query(ProjectModel.id).filter(
+            ProjectModel.id == project_id,
+        ).with_for_update().scalar()
+        remaining_ids = project_network_pool_ids(db, project_id) - {pool_id}
+        granted_ids, granted_ports = network_grants_for_pool_ids(db, remaining_ids)
+        granted_ids.update(network_ids)
+        granted_ports.update(network_ports)
+        _validate_project_resource_coverage(
+            db,
+            project_id=project_id,
+            storage_ids=project_storage_ids(db, project_id),
+            network_ids=granted_ids,
+            network_ports=granted_ports,
             flavor_ids=project_flavor_ids(db, project_id),
         )
 

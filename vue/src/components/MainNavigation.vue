@@ -9,6 +9,8 @@
       <v-list-item prepend-icon="mdi-wan" :title="$t('navigation.networks')" :to="{ name: '/networks/', query: projectQuery }"></v-list-item>
       <v-list-item v-if="canReadProjects" prepend-icon="mdi-folder-account-outline" :title="$t('navigation.projects')"
         :to="{ name: '/projects/' }"></v-list-item>
+      <v-list-item v-if="isAdmin" prepend-icon="mdi-folder-multiple-outline" :title="$t('navigation.resourcePools')"
+        to="/resource-pools"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-account" :title="$t('navigation.users')"
         :to="{ name: '/users/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-account-cog" :title="$t('userManagement.account')"

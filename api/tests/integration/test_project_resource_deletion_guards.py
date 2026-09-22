@@ -194,6 +194,31 @@ def test_shared_resource_delete_is_rejected_before_task_enqueue(
             projects=[project_a_id],
         )
         with SessionLocal() as db:
+            network_pool_id = db.query(NetworkPoolModel.id).filter(
+                NetworkPoolModel.name == network_pool_name,
+            ).scalar()
+        assert network_pool_id is not None
+        pool_url = f"/api/networks/pools/{network_pool_id}"
+        assert api_client.put(
+            pool_url,
+            headers=member_headers,
+            json={"networkUuids": [], "ports": []},
+        ).status_code == 403
+        assert api_client.put(
+            pool_url,
+            headers=admin_headers,
+            json={"networkUuids": [], "ports": []},
+        ).status_code == 409
+        retained = api_client.put(
+            pool_url,
+            headers=admin_headers,
+            json={"networkUuids": [], "ports": [
+                {"networkUuid": network_uuid, "portName": port_name},
+            ]},
+        )
+        assert retained.status_code == 200
+        assert retained.json()["ports"][0]["name"] == port_name
+        with SessionLocal() as db:
             task_count = db.query(TaskModel).filter(
                 TaskModel.user_id == admin_name,
             ).count()

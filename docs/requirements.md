@@ -105,6 +105,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - libvirt networkの発見、作成、削除と、Open vSwitchのport group追加・削除を扱える。
 - 複数のstorageやnetworkを、Projectへgrantする共有resource poolとしてまとめられる。pool自体は複数Projectから
   参照でき、poolの構成変更・削除とProjectへのgrant変更はglobal adminだけが行う。
+- global adminは管理画面でstorage poolとnetwork poolを作成・編集・削除し、各poolに含めるresourceを設定できる。
+  Projectのresource grant編集では、種類ごとに現在存在する候補を「すべて」選択できる。
 
 ### Project・flavor・非同期task
 
