@@ -58,7 +58,10 @@ async function submit(event: Promise<{ valid: boolean }>) {
   }
   loading.value = true
   try {
-    const res = await apiClient.POST('/api/tasks/images/download', { body: postData })
+    const res = await apiClient.POST('/api/tasks/images/download', {
+      params: { query: { admin: true } },
+      body: postData,
+    })
     if (res.data) {
       notifyTask(res.data[0].uuid)
       model.value = false

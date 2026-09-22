@@ -199,6 +199,10 @@ describe("ImageDownloadDialog", () => {
     await flushPromises();
 
     expect(mocks.notifyTask).toHaveBeenCalledWith("image-task");
+    expect(mocks.apiPost).toHaveBeenCalledWith("/api/tasks/images/download", {
+      params: { query: { admin: true } },
+      body: expect.objectContaining({ storageUuid: expect.any(String) }),
+    });
     expect(wrapper.emitted("update:modelValue")?.slice(-1)[0]).toEqual([false]);
     expect(button(wrapper, "Add").props("loading")).toBe(false);
   });

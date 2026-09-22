@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -13,6 +14,7 @@ from network.models import NetworkModel, NetworkPoolModel, NetworkPortgroupModel
 from node.models import NodeModel
 from project.models import ProjectModel
 from storage.models import AssociationStoragePoolModel, ImageModel, StorageModel, StoragePoolModel
+from task.functions import TaskManager
 from task.models import TaskModel
 from user.models import UserModel, UserScopeModel
 
@@ -44,6 +46,17 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
     task_id = str(uuid4())
     monkeypatch.setattr("domain.router.DATA_ROOT", str(tmp_path))
     monkeypatch.setattr("network.router.DATA_ROOT", str(tmp_path))
+    original_commit = TaskManager.commit
+
+    def hold_task(manager: TaskManager, *args: Any, **kwargs: Any) -> TaskModel:
+        # downloadの受付だけを検査し、verify workerによる外部処理を防ぐ。
+        kwargs["commit_transaction"] = False
+        task = original_commit(manager, *args, **kwargs)
+        task.status = "test-held"
+        manager.db.commit()
+        return task
+
+    monkeypatch.setattr(TaskManager, "commit", hold_task)
     for kind, ids in (("domain", vm_ids), ("network", network_ids)):
         directory = tmp_path / "xml" / kind
         directory.mkdir(parents=True)
@@ -58,6 +71,7 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
                 admin, member,
                 UserScopeModel(user_id=admin_name, name="admin"),
                 UserScopeModel(user_id=member_name, name="user"),
+                UserScopeModel(user_id=member_name, name="image.manage"),
             ])
             project = ProjectModel(id=project_id, name=prefix, users=[admin, member])
             db.add(project)
@@ -207,9 +221,46 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
                 params={"admin": True},
             ).status_code == 403
         assert api_client.get("/api/projects/missing", headers=admin_headers, params={"admin": True}).status_code == 404
+
+        download_path = "/api/tasks/images/download"
+        download_body = {"storageUuid": storage_ids[1], "imageUrl": "https://unused.invalid/installer.iso"}
+        # 一覧で選択できるProject未割当storageへ、明示的な管理操作で受付できる。
+        ordinary = api_client.post(download_path, headers=admin_headers, json=download_body)
+        assert ordinary.status_code == 404
+        assert ordinary.json()["detail"]["code"] == "storage_not_found"
+        download = api_client.post(
+            download_path, headers=admin_headers, params={"admin": True}, json=download_body,
+        )
+        assert download.status_code == 200, download.text
+        task = download.json()[0]
+        assert (task["method"], task["resource"], task["object"]) == ("post", "image", "download")
+        assert task["request"]["body"]["storage_uuid"] == storage_ids[1]
+
+        scoped_headers = _headers(member_name, ["image.manage"], [project_id])
+        for headers in (scoped_headers, _headers(member_name, ["admin"]), _headers(admin_name, ["image.manage"])):
+            rejected = api_client.post(
+                download_path, headers=headers, params={"admin": True}, json=download_body,
+            )
+            assert rejected.status_code == 403, rejected.text
+        missing = api_client.post(
+            download_path, headers=admin_headers, params={"admin": True},
+            json={**download_body, "storageUuid": str(uuid4())},
+        )
+        assert missing.status_code == 404
+        assert missing.json()["detail"]["code"] == "storage_not_found"
+        assert api_client.post(download_path, headers=scoped_headers, json=download_body).status_code == 404
+        allowed = api_client.post(
+            download_path, headers=scoped_headers,
+            json={**download_body, "storageUuid": storage_ids[0]},
+        )
+        assert allowed.status_code == 200, allowed.text
+        with SessionLocal() as db:
+            assert db.query(TaskModel).filter(
+                TaskModel.user_id.in_([admin_name, member_name]), TaskModel.resource == "image",
+            ).count() == 2
     finally:
         with SessionLocal.begin() as db:
-            db.query(TaskModel).filter(TaskModel.uuid == task_id).delete()
+            db.query(TaskModel).filter(TaskModel.user_id.in_([admin_name, member_name])).delete(synchronize_session=False)
             db.query(DomainModel).filter(DomainModel.uuid.in_(vm_ids)).delete(synchronize_session=False)
             db.query(ProjectModel).filter(ProjectModel.id == project_id).delete()
             db.query(StoragePoolModel).filter(StoragePoolModel.name.in_(nodes)).delete(synchronize_session=False)

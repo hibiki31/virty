@@ -89,6 +89,8 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 - storage poolの発見、登録、metadata更新、再走査、削除を行える。
 - volume/imageの一覧、metadata更新、HTTP download、削除を行える。
+- global adminは明示的な管理用指定により、Project未割当を含む全storageへimageをdownloadできる。
+  通常のdownloadは所属Projectからgrantされたstorageに限定する。
 - libvirt networkの発見、作成、削除と、Open vSwitchのport group追加・削除を扱える。
 - 複数のstorageやnetworkを、Projectへgrantする共有resource poolとしてまとめられる。pool自体は複数Projectから
   参照でき、poolの構成変更・削除とProjectへのgrant変更はglobal adminだけが行う。

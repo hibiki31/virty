@@ -6415,7 +6415,9 @@ export interface operations {
     };
     download_image: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
