@@ -27,7 +27,11 @@ from task.models import TaskModel
 from task.schemas import TaskRequest
 from user.models import UserModel
 
-from .authorization import validate_locked_domain_task_authorization
+from .authorization import (
+    DOMAIN_TASK_OWNER_BINDING_KEY,
+    DomainTaskOwnerBinding,
+    validate_locked_domain_task_authorization,
+)
 from .models import DomainDriveModel, DomainInterfaceModel, DomainModel
 from .service import lock_domain_owner_context
 from .schemas import (
@@ -406,8 +410,13 @@ def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
         req,
         agent_action_id="vm.cdrom.update",
     )
-    owner_project_id = domain.owner_project_id
-    if body.path and owner_project_id is not None:
+    admin = (
+        not is_agent_task(model)
+        and DomainTaskOwnerBinding.model_validate(
+            req.path_param.get(DOMAIN_TASK_OWNER_BINDING_KEY),
+        ).admin
+    )
+    if body.path:
         image = (
             db.query(ImageModel)
             .join(StorageModel, ImageModel.storage_uuid == StorageModel.uuid)
@@ -417,9 +426,10 @@ def patch_vm_cdrom(db: Session, model: TaskModel, req: TaskRequest):
             )
             .one_or_none()
         )
-        if (
-            image is None
-            or not project_allows_image(db, owner_project_id, image)
+        if image is None or (
+            not admin
+            and domain.owner_project_id is not None
+            and not project_allows_image(db, domain.owner_project_id, image)
         ):
             raise ValueError("CD-ROM image is outside the VM project grants")
 

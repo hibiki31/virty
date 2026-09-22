@@ -7,7 +7,7 @@ from auth.router import CurrentUser
 from mixin.exception import ApiError, ApiErrorCode
 from mixin.schemas import BaseSchema
 from resource_authorization import is_global_inventory
-from user.models import association_users_to_projects
+from user.models import UserModel, association_users_to_projects
 
 from .models import DomainModel
 
@@ -23,6 +23,7 @@ class DomainTaskOwnerBinding(BaseSchema):
     principal_id: str
     owner_user_id: str | None = None
     owner_project_id: str | None = None
+    admin: bool = False
 
     @model_validator(mode="after")
     def validate_single_owner(self) -> "DomainTaskOwnerBinding":
@@ -38,6 +39,8 @@ class DomainTaskAuthorizationError(ValueError):
 def domain_task_path_param(
     domain: DomainModel,
     principal_id: str,
+    *,
+    admin: bool = False,
 ) -> dict[str, Any]:
     """REST taskへ受付時のVM owner bindingを保存する。"""
 
@@ -45,6 +48,7 @@ def domain_task_path_param(
         principal_id=principal_id,
         owner_user_id=domain.owner_user_id,
         owner_project_id=domain.owner_project_id,
+        admin=admin,
     )
     return {
         "uuid": domain.uuid,
@@ -86,6 +90,12 @@ def validate_locked_domain_task_authorization(
         raise DomainTaskAuthorizationError(
             "VM ownerがtask受付時から変更されています",
         )
+
+    if binding.admin:
+        user = db.get(UserModel, binding.principal_id)
+        if user is None or not any(scope.name == "admin" for scope in user.scopes):
+            raise DomainTaskAuthorizationError("VM task実行者の管理者権限がありません")
+        return binding
 
     if binding.owner_user_id is not None:
         if binding.owner_user_id != binding.principal_id:

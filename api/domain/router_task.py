@@ -213,6 +213,7 @@ def control_vm_cdrom(
         uuid: str,
         req: Request,
         body: CdromForUpdateDomain,
+        admin: bool = False,
         cu: CurrentUser = Depends(get_current_user),
         db: Session = Depends(get_db),
 
@@ -224,7 +225,7 @@ def control_vm_cdrom(
     - path = iso file path
     """
     cu.verify_scope(["vm.attach"])
-    domain = get_authorized_domain(db, uuid, cu)
+    domain = get_authorized_domain(db, uuid, cu, admin=admin)
 
     if body.path:
         image = (
@@ -243,8 +244,8 @@ def control_vm_cdrom(
                 "The CD-ROM image was not found.",
             )
         if domain.owner_project_id is None:
-            get_authorized_storage(db, image.storage_uuid, cu)
-        elif not project_allows_image(db, domain.owner_project_id, image):
+            get_authorized_storage(db, image.storage_uuid, cu, admin=admin)
+        elif not admin and not project_allows_image(db, domain.owner_project_id, image):
             raise ApiError(
                 404,
                 ApiErrorCode.CDROM_IMAGE_NOT_FOUND,
@@ -257,7 +258,7 @@ def control_vm_cdrom(
         user=cu,
         req=req,
         body=body,
-        param=domain_task_path_param(domain, cu.id),
+        param=domain_task_path_param(domain, cu.id, admin=admin),
     )
 
     task_vm_list = TaskManager(db=db)

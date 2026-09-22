@@ -23,7 +23,9 @@
 
 <script setup lang="ts">
 import { apiClient } from '@/api'
+import { hasAdminScope } from '@/composables/auth'
 import type { schemas } from '@/composables/schemas'
+import { useAuthStore } from '@/stores/auth'
 import { ref, watch, type PropType } from 'vue'
 
 const umount = ref(false)
@@ -31,6 +33,7 @@ const isoPath = ref<string>()
 
 const isoImages = ref<string[]>([])
 const loadingList = ref(false)
+const auth = useAuthStore()
 
 const model = defineModel({ default: false })
 const props = defineProps({
@@ -48,7 +51,8 @@ async function submit() {
     if (props.item) {
       const res = await apiClient.PATCH("/api/tasks/vms/{uuid}/cdrom", {
         params: {
-          path: { uuid: props.item.uuid }
+          path: { uuid: props.item.uuid },
+          query: { admin: hasAdminScope(auth.scopes) },
         },
         body: {
           target: props.target,
@@ -72,9 +76,11 @@ async function getIsoList() {
     const res = await apiClient.GET("/api/images", {
       params: {
         query: {
+          admin: hasAdminScope(auth.scopes),
+          limit: 0,
           nameLike: ".iso",
           nodeName: props.item.nodeName,
-          projectId: props.item.ownerProjectId,
+          projectId: hasAdminScope(auth.scopes) ? undefined : props.item.ownerProjectId,
         }
       }
     })

@@ -189,6 +189,9 @@ server側で導出する。nodeは許可VM・storage・networkが存在するnod
 Project未割当resourceも管理できるよう、VM、node、storage、image、network、各pool、flavor、Projectの
 一覧と提供済みの詳細・XML・node診断、dashboardには`admin=true`で明示する管理用readを設ける。
 VMのconsole ticket発行も`admin=true`指定時だけ管理者に他人のVMへの接続を許可する。
+VMのISO候補一覧とCD-ROM更新も管理画面から`admin=true`を明示し、同じnode上の登録済みISOを管理者が利用できる。
+CD-ROM更新は受付時にDB・token双方のadmin scopeを確認し、workerはVM ownerの変化と実行時のDB admin scopeを再確認する。
+通常利用者のProject grant検査とAgent taskの境界は維持する。
 image downloadも`admin=true`指定とDB・token双方のadmin scopeを条件に全storageを保存先にできる。
 管理用download dialogは一覧取得と送信の双方で管理用指定を送り、通常のdownloadとAgentのgrant境界は維持する。
 storage metadata更新にも同じ明示的な管理用指定を設け、管理画面の編集dialogから送信する。
