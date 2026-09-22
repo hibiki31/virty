@@ -176,10 +176,10 @@ CPU競合を抑える。再試行で失敗を隠さず、各testのtimeout内に
 
 | 実行 | 確認した基準 |
 |---|---|
-| `./devctl quick api` | Ruff、mypy 163 source、unit 325件成功、Pydantic warning 0 |
+| `./devctl quick api` | Ruff、mypy 164 source、unit 333件成功、Pydantic warning 0 |
 | `./devctl quick web` | ESLint、incremental型check、Vitest 31 file・156件成功 |
 | `./devctl verify e2e` | 実API・DB・workerを接続した14件成功、診断artifactの回収成功 |
-| `./devctl verify` | API 413件、Vitest 156件、API代替型Playwright 48件、全層E2E 14件、MCP 51件成功。migration、生成型drift 0、Proxyを含むproduction imageも確認 |
+| `./devctl verify` | API 421件、Vitest 156件、API代替型Playwright 48件、全層E2E 14件、MCP 51件成功。migration、生成型drift 0、Proxyを含むproduction imageも確認 |
 
 Web全体coverageはstatements 40.75%、branches 42.13%、functions 36.31%、lines 42.31%である。
 個別gateはcomposableの`auth.ts`、`pagination.ts`、`notify.ts`、`projectFilter.ts`が全指標100%、
