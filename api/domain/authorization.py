@@ -27,7 +27,9 @@ class DomainTaskOwnerBinding(BaseSchema):
 
     @model_validator(mode="after")
     def validate_single_owner(self) -> "DomainTaskOwnerBinding":
-        if (self.owner_user_id is None) == (self.owner_project_id is None):
+        if self.owner_user_id is not None and self.owner_project_id is not None:
+            raise ValueError("VM task ownerはuserとProjectを同時に指定できません")
+        if self.owner_user_id is None and self.owner_project_id is None and not self.admin:
             raise ValueError("VM task ownerはuserまたはProjectの一方だけが必要です")
         return self
 
