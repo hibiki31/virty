@@ -85,6 +85,7 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
   移動先Projectのgrantを満たさない場合は移動を拒否する。
 - VMのISOマウント候補は通常利用者にはVMの所属Project、個人VMでは利用者のgrantで利用可能な同一nodeの登録済みimageに限定する。
   global adminは明示的な管理用指定により、Projectへのgrantに関係なく同一nodeの登録済みISOを表示・マウントできる。
+  所有者未設定の旧VMも、同じ管理用指定でISOのマウント・アンマウントを許可する。
 - WebのCreate VM dialogは、初期user名、password・password認証、SSH公開鍵、初回起動scriptを
   cloud-initへ設定するguided formを提供し、認証利用者に登録済みの公開鍵を候補として補完できる。
 - guided formは明示的な適用操作で管理対象の設定だけをraw user dataへ一方向にmergeし、その他の設定を保持する。

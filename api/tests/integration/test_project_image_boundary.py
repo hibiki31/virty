@@ -408,7 +408,7 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
         assert admin_request.path_param["ownerBinding"]["admin"] is True
 
         class CdromBackend:
-            def domain_cdrom(self, uuid: str, target: str, path: str) -> None:
+            def domain_cdrom(self, uuid: str, target: str, path: str | None = None) -> None:
                 backend_calls.append(f"{uuid}:{target}:{path}")
 
         monkeypatch.setattr(
@@ -431,6 +431,75 @@ def test_image_list_update_and_vm_copy_use_one_project_boundary(
         with SessionLocal.begin() as db:
             domain_tasks.patch_vm_cdrom(db, admin_task, admin_request)
         assert backend_calls == [f"{domain_uuid}:sda:{cross_path}"]
+
+        # 旧VMのowner未設定を再現し、受付からworkerまで管理用操作を検証する。
+        with SessionLocal.begin() as db:
+            domain = db.get(DomainModel, domain_uuid)
+            assert domain is not None
+            domain.owner_project_id = None
+        for path in (cross_path, None):
+            backend_calls.clear()
+            for request_headers, params, status in (
+                (admin_headers, {}, 404),
+                (headers, {"admin": "true"}, 403),
+            ):
+                denied = api_client.patch(
+                    f"/api/tasks/vms/{domain_uuid}/cdrom",
+                    headers=request_headers,
+                    params=params,
+                    json={"target": "sda", "path": path},
+                )
+                assert denied.status_code == status, denied.text
+
+            captured_tasks.clear()
+            accepted = api_client.patch(
+                f"/api/tasks/vms/{domain_uuid}/cdrom",
+                headers=admin_headers,
+                params={"admin": "true"},
+                json={"target": "sda", "path": path},
+            )
+            assert accepted.status_code == 200, accepted.text
+            ownerless_task = captured_tasks[0]
+            ownerless_request = TaskRequest.model_validate_json(ownerless_task.request)
+            assert ownerless_request.path_param["ownerBinding"] == {
+                "principalId": username,
+                "ownerUserId": None,
+                "ownerProjectId": None,
+                "admin": True,
+            }
+
+            # 受付後のowner割り当ては、個人・Projectのどちらも副作用前に拒否する。
+            for owner_field, owner_id in (
+                ("owner_user_id", username),
+                ("owner_project_id", project_a_id),
+            ):
+                with SessionLocal.begin() as db:
+                    domain = db.get(DomainModel, domain_uuid)
+                    assert domain is not None
+                    setattr(domain, owner_field, owner_id)
+                with SessionLocal.begin() as db:
+                    with pytest.raises(DomainTaskAuthorizationError, match="VM ownerがtask受付時から変更"):
+                        domain_tasks.patch_vm_cdrom(db, ownerless_task, ownerless_request)
+                assert backend_calls == []
+                with SessionLocal.begin() as db:
+                    domain = db.get(DomainModel, domain_uuid)
+                    assert domain is not None
+                    setattr(domain, owner_field, None)
+
+            with SessionLocal.begin() as db:
+                db.query(UserScopeModel).filter(
+                    UserScopeModel.user_id == username,
+                    UserScopeModel.name == "admin",
+                ).delete(synchronize_session=False)
+            with SessionLocal.begin() as db:
+                with pytest.raises(DomainTaskAuthorizationError, match="管理者権限"):
+                    domain_tasks.patch_vm_cdrom(db, ownerless_task, ownerless_request)
+            assert backend_calls == []
+            with SessionLocal.begin() as db:
+                db.add(UserScopeModel(user_id=username, name="admin"))
+            with SessionLocal.begin() as db:
+                domain_tasks.patch_vm_cdrom(db, ownerless_task, ownerless_request)
+            assert backend_calls == [f"{domain_uuid}:sda:{path}"]
 
         schema = api_client.get("/api/openapi.json").json()
         update_schema = schema["components"]["schemas"][

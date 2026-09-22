@@ -201,6 +201,8 @@ Project未割当resourceも管理できるよう、VM、node、storage、image�
 VMのconsole ticket発行も`admin=true`指定時だけ管理者に他人のVMへの接続を許可する。
 VMのISO候補一覧とCD-ROM更新も管理画面から`admin=true`を明示し、同じnode上の登録済みISOを管理者が利用できる。
 CD-ROM更新は受付時にDB・token双方のadmin scopeを確認し、workerはVM ownerの変化と実行時のDB admin scopeを再確認する。
+明示的な管理用CD-ROM更新では、個人・Projectのownerがともに未設定の旧VMも許可する。taskには未設定のownerを
+そのまま固定し、実行までにownerが割り当てられた場合は拒否する。通常taskではowner必須、全taskで二重ownerは禁止する。
 通常利用者のProject grant検査とAgent taskの境界は維持する。
 image downloadも`admin=true`指定とDB・token双方のadmin scopeを条件に全storageを保存先にできる。
 管理用download dialogは一覧取得と送信の双方で管理用指定を送り、通常のdownloadとAgentのgrant境界は維持する。
@@ -214,7 +216,7 @@ Project filter指定時は従来のmembershipとgrant、networkのportgroup単�
 
 Project IDは重複しない6桁hex、名称は重複可能な表示値とする。membership、storage pool、network pool、flavorの
 多対多関係には組合せ一意制約を置き、Project別roleや旧`group` tableを認可へ使わない。VMは個人ownerまたは
-Project ownerのどちらか一方だけを持つ。通常の新規VMではProject ownerを必須にし、管理者用作成経路では
+Project ownerを最大一つ持つ。通常の新規VMではProject ownerを必須にし、管理者用作成経路では
 作成者を個人ownerとして保存する。移行前から存在する未所属VMもpersonal VMとして残す。
 
 管理者用VM作成は専用REST endpointとtask keyで通常のProject作成から分離する。Webは同じformを別dialogとして
