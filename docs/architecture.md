@@ -176,6 +176,7 @@ server側で導出する。nodeは許可VM・storage・networkが存在するnod
 
 Project未割当resourceも管理できるよう、VM、node、storage、image、network、各pool、flavor、Projectの
 一覧と提供済みの詳細・XML・node診断、dashboardには`admin=true`で明示する管理用readを設ける。
+VMのconsole ticket発行も`admin=true`指定時だけ管理者に他人のVMへの接続を許可する。
 共通判定でDBとtoken双方のadmin scopeを検査し、Project filterがない場合だけ全体参照を許可する。
 Project filter指定時は従来のmembershipとgrant、networkのportgroup単位grantを維持する。
 共通の`allowed_*`は変更せず、通常read、変更操作、AgentのProject境界を保持する。

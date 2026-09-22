@@ -1382,7 +1382,7 @@
         "powerOff": "Power off",
         "powerOn": "Power on",
         "console": "Console",
-        "consoleUnavailable": "You must own this VM or belong to its project to open the console.",
+        "consoleUnavailable": "You must own this VM, belong to its project, or be an admin to open the console.",
         "delete": "Delete"
       },
       "notifications": {

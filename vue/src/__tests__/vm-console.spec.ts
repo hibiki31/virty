@@ -28,7 +28,7 @@ beforeEach(() => {
 });
 
 describe("VM console ticket", () => {
-  it("one-time ticketをencodeして先に開いたwindowへ設定する", async () => {
+  it("管理者指定付きのone-time ticketをencodeして先に開いたwindowへ設定する", async () => {
     const consoleWindow = {
       close: vi.fn(),
       location: { href: "about:blank" },
@@ -39,13 +39,13 @@ describe("VM console ticket", () => {
       .mockReturnValue(consoleWindow as unknown as Window);
     mocks.post.mockResolvedValue({ data: { token: "ticket/a+b?" } });
 
-    await openVNC("vm-uuid");
+    await openVNC("vm-uuid", true);
 
     expect(open).toHaveBeenCalledWith("about:blank", "_blank");
     expect(consoleWindow.opener).toBeNull();
     expect(mocks.post).toHaveBeenCalledWith(
       "/api/vms/{uuid}/console-ticket",
-      { params: { path: { uuid: "vm-uuid" } } },
+      { params: { path: { uuid: "vm-uuid" }, query: { admin: true } } },
     );
     expect(consoleWindow.location.href).toBe(
       "/novnc/vnc.html?resize=remote&autoconnect=true" +
@@ -73,6 +73,10 @@ describe("VM console ticket", () => {
     await openVNC("vm-uuid");
 
     expect(consoleWindow.close).toHaveBeenCalledOnce();
+    expect(mocks.post).toHaveBeenCalledWith(
+      "/api/vms/{uuid}/console-ticket",
+      { params: { path: { uuid: "vm-uuid" }, query: { admin: false } } },
+    );
     expect(consoleWindow.location.href).toBe("about:blank");
     expect(mocks.notify).toHaveBeenCalledWith(
       "error",

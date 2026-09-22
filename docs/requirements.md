@@ -78,9 +78,9 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - cloud-init user dataは`#cloud-config`から始まる単一のYAML mappingとして厳密に検証し、不正な内容を
   VM作成へ送信しない。平文passwordがuser dataとrequestへ含まれること、初回起動scriptがroot権限で
   実行されることをWeb UIで警告する。
-- VMの起動・停止・削除と、noVNC経由のconsole接続を提供する。管理用readで参照できるVMでも、
-  console接続は所有者または所属Projectのmemberだけに許可する。接続には短命・一回限りの
-  opaque ticketを使い、ticketをreverse proxyやAPIのaccess logへ残さない。
+- VMの起動・停止・削除と、noVNC経由のconsole接続を提供する。console接続は所有者、所属Projectの
+  member、または管理者に許可する。管理者が他人のVMへ接続する場合は明示的な管理用指定を要する。
+  接続には短命・一回限りのopaque ticketを使い、ticketをreverse proxyやAPIのaccess logへ残さない。
 
 ### Storage・image・network
 

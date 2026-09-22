@@ -5494,7 +5494,9 @@ export interface operations {
     };
     create_console_ticket: {
         parameters: {
-            query?: never;
+            query?: {
+                admin?: boolean;
+            };
             header?: never;
             path: {
                 uuid: string;

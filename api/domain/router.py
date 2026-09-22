@@ -203,12 +203,13 @@ def get_vm_xml(
 def create_console_ticket(
     uuid: str,
     response: Response,
+    admin: bool = False,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> DomainConsoleTicket:
     """noVNC resolverだけが一度消費できる短命opaque ticketを発行する。"""
     current_user.verify_scope(["vm.read"])
-    get_authorized_domain(db, uuid, current_user)
+    get_authorized_domain(db, uuid, current_user, admin=admin)
     now = datetime.now(UTC)
     expires_in = 60
     token = secrets.token_urlsafe(32)

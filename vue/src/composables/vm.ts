@@ -69,13 +69,13 @@ export function vmPowerOn(uuid: string) {
   });
 }
 
-export async function openVNC(uuid: string) {
+export async function openVNC(uuid: string, admin = false) {
   const consoleWindow = window.open("about:blank", "_blank");
   if (consoleWindow) consoleWindow.opener = null;
 
   try {
     const response = await apiClient.POST("/api/vms/{uuid}/console-ticket", {
-      params: { path: { uuid } },
+      params: { path: { uuid }, query: { admin } },
     });
     if (!response.data) {
       consoleWindow?.close();

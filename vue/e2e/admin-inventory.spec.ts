@@ -42,17 +42,29 @@ for (const [pagePath, apiPath] of routes) {
   });
 }
 
-test("管理用readだけで表示したVMのコンソールは開けない", async ({ authenticatedPage: page }) => {
+test("管理者は他人のVMのコンソールを開ける", async ({ authenticatedPage: page }) => {
   await page.route("**/api/vms/vm-e2e-uuid?*", route => route.fulfill({
     contentType: "application/json",
     body: JSON.stringify({ ...vm, ownerUserId: "another-user", vncPort: 5901 }),
   }));
+  let adminParam: string | null = null;
+  await page.route("**/api/vms/vm-e2e-uuid/console-ticket?*", route => {
+    adminParam = new URL(route.request().url()).searchParams.get("admin");
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ token: "ticket-e2e", expiresIn: 60 }),
+    });
+  });
 
   await page.goto("/vms/vm-e2e-uuid");
 
   const consoleButton = page.getByRole("button", { name: "Console" });
-  await expect(consoleButton).toBeDisabled();
-  await expect(page.getByText(/own this VM/)).toBeVisible();
+  await expect(consoleButton).toBeEnabled();
+  const popupPromise = page.waitForEvent("popup");
+  await consoleButton.click();
+  const popup = await popupPromise;
+  await expect.poll(() => popup.url()).toContain("/novnc/vnc.html");
+  expect(adminParam).toBe("true");
 });
 
 test("所有するVMではコンソールを開ける", async ({ authenticatedPage: page }) => {

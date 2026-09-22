@@ -1382,7 +1382,7 @@
         "powerOff": "電源オフ",
         "powerOn": "電源オン",
         "console": "コンソール",
-        "consoleUnavailable": "このVMのコンソールを開くには、所有者または所属プロジェクトのメンバーである必要があります。",
+        "consoleUnavailable": "このVMのコンソールを開くには、所有者、所属プロジェクトのメンバー、または管理者である必要があります。",
         "delete": "削除"
       },
       "notifications": {

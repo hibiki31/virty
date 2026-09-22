@@ -27,7 +27,7 @@
           <v-icon left>mdi-power-standby</v-icon>{{ t('pages.vmDetail.actions.powerOn') }}
         </v-btn>
 
-        <v-btn small class="ma-2" color="primary" @click="openVNC(data.uuid)" :disabled="!canOpenConsole">
+        <v-btn small class="ma-2" color="primary" @click="openVNC(data.uuid, hasAdminScope(auth.scopes))" :disabled="!canOpenConsole">
           <v-icon left>mdi-console</v-icon>{{ t('pages.vmDetail.actions.console') }}
         </v-btn>
         <v-btn small dark class="ma-2" color="error" @click="stateDeleteDialog = true">
@@ -236,7 +236,8 @@ const auth = useAuthStore()
 const canChangeProject = computed(() => hasScope(auth.scopes, 'vm.project'))
 const hasConsoleAccess = computed(() => data.value != null
   && hasScope(auth.scopes, 'vm.read')
-  && (data.value.ownerUserId === auth.username
+  && (hasAdminScope(auth.scopes)
+    || data.value.ownerUserId === auth.username
     || (data.value.ownerProjectId != null && auth.projects.includes(data.value.ownerProjectId))))
 const canOpenConsole = computed(() => hasConsoleAccess.value
   && data.value?.vncPort != null && data.value.vncPort !== -1)

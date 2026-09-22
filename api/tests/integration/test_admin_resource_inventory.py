@@ -191,8 +191,21 @@ def test_admin_inventory_covers_all_resources_and_preserves_project_boundaries(
             for path in list_paths + pool_paths + detail_paths + ["/api/projects", "/api/dashboard"]:
                 assert api_client.get(path, headers=headers, params={"admin": True}).status_code == 403, path
         assert api_client.get(f"/api/vms/{vm_ids[0]}", headers=member_headers).status_code == 200
-        # 管理用readを追加しても変更・console操作のProject認可は変わらない。
+        # 管理者のconsole接続には明示指定とDB・token双方のadmin scopeが必要。
         assert api_client.post(f"/api/vms/{vm_ids[1]}/console-ticket", headers=admin_headers).status_code == 404
+        admin_ticket = api_client.post(
+            f"/api/vms/{vm_ids[1]}/console-ticket",
+            headers=admin_headers,
+            params={"admin": True},
+        )
+        assert admin_ticket.status_code == 200, admin_ticket.text
+        assert admin_ticket.json()["token"]
+        for headers in (member_headers, _headers(member_name, ["admin"]), _headers(admin_name, ["user"])):
+            assert api_client.post(
+                f"/api/vms/{vm_ids[1]}/console-ticket",
+                headers=headers,
+                params={"admin": True},
+            ).status_code == 403
         assert api_client.get("/api/projects/missing", headers=admin_headers, params={"admin": True}).status_code == 404
     finally:
         with SessionLocal.begin() as db:
