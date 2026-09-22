@@ -12,6 +12,7 @@ from project.service import (
     ProjectConflictError,
     ProjectGrantNotFoundError,
     ensure_network_pool_deletable,
+    ensure_network_pool_update_allowed,
 )
 from resource_authorization import (
     allowed_network_ids,
@@ -31,6 +32,7 @@ from .schemas import (
     NetworkPool,
     NetworkPoolDeleteResponse,
     NetworkPoolForCreate,
+    NetworkPoolForReplace,
     NetworkPoolForUpdate,
     NetworkXML,
 )
@@ -163,6 +165,39 @@ def update_network_pool(
         pool_model.networks.append(network_model)
     db.commit()
     return pool_model
+
+
+@app.put("/pools/{pool_id}", response_model=NetworkPool)
+def replace_network_pool(
+    pool_id: int,
+    model: NetworkPoolForReplace,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+) -> NetworkPoolModel:
+    """networkとportgroupの構成を完全置換する。"""
+    current_user.verify_scope(["network.manage"])
+    require_admin(current_user)
+    network_ids = set(model.network_uuids)
+    port_keys = {(port.network_uuid, port.port_name) for port in model.ports}
+    networks = db.query(NetworkModel).filter(NetworkModel.uuid.in_(network_ids)).all()
+    ports = db.query(NetworkPortgroupModel).filter(
+        NetworkPortgroupModel.network_uuid.in_({key[0] for key in port_keys}),
+    ).all()
+    selected_ports = [port for port in ports if (port.network_uuid, port.name) in port_keys]
+    if {network.uuid for network in networks} != network_ids or {
+        (port.network_uuid, port.name) for port in selected_ports
+    } != port_keys:
+        raise ApiError(404, ApiErrorCode.NETWORK_OR_PORT_NOT_FOUND, "The network or port was not found.")
+    try:
+        pool = ensure_network_pool_update_allowed(db, pool_id, network_ids, port_keys)
+    except ProjectGrantNotFoundError as exc:
+        raise ApiError(404, ApiErrorCode.NETWORK_POOL_NOT_FOUND, "The network pool was not found.") from exc
+    except ProjectConflictError as exc:
+        raise ApiError(409, ApiErrorCode.NETWORK_POOL_IN_USE, "The network pool is still in use.") from exc
+    pool.networks = networks
+    pool.ports = selected_ports
+    db.commit()
+    return pool
 
 
 @app.delete("/pools/{id}", response_model=NetworkPoolDeleteResponse)

@@ -131,6 +131,7 @@
     "networks": "ネットワーク",
     "nodes": "ノード",
     "projects": "プロジェクト",
+    "resourcePools": "リソースプール",
     "storages": "ストレージ",
     "tasks": "タスク",
     "users": "ユーザー",
@@ -1356,6 +1357,13 @@
       },
       "gibValue": "{value} GiB"
     },
+    "resourcePools": {
+      "create": "プールを作成",
+      "edit": "プールを編集",
+      "members": "含めるリソース",
+      "deleteConfirm": "{name}を削除しますか？",
+      "failed": "プールの操作に失敗しました"
+    },
     "projectDetail": {
       "deleteConfirm": "{project}を削除しますか？",
       "documentTitle": "プロジェクト",
@@ -1373,6 +1381,9 @@
         "add": "メンバーを追加"
       },
       "grants": {
+        "allStoragePools": "ストレージプールをすべて選択",
+        "allNetworkPools": "ネットワークプールをすべて選択",
+        "allFlavors": "フレーバーをすべて選択",
         "edit": "許可を編集",
         "flavors": "フレーバー",
         "networkPools": "ネットワークプール",

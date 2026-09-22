@@ -131,6 +131,7 @@
     "networks": "Networks",
     "nodes": "Nodes",
     "projects": "Projects",
+    "resourcePools": "Resource pools",
     "storages": "Storage",
     "tasks": "Tasks",
     "users": "Users",
@@ -1356,6 +1357,13 @@
       },
       "gibValue": "{value} GiB"
     },
+    "resourcePools": {
+      "create": "Create pool",
+      "edit": "Edit pool",
+      "members": "Resources in pool",
+      "deleteConfirm": "Delete {name}?",
+      "failed": "Pool operation failed"
+    },
     "projectDetail": {
       "deleteConfirm": "Delete {project}?",
       "documentTitle": "Project",
@@ -1373,6 +1381,9 @@
         "add": "Add member"
       },
       "grants": {
+        "allStoragePools": "Select all storage pools",
+        "allNetworkPools": "Select all network pools",
+        "allFlavors": "Select all flavors",
         "edit": "Edit grants",
         "flavors": "Flavors",
         "networkPools": "Network pools",

@@ -1174,6 +1174,26 @@ export interface paths {
         patch: operations["update_network_pool"];
         trace?: never;
     };
+    "/api/networks/pools/{pool_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace Network Pool
+         * @description networkとportgroupの構成を完全置換する。
+         */
+        put: operations["replace_network_pool"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/networks/pools/{id}": {
         parameters: {
             query?: never;
@@ -2642,6 +2662,13 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** NetworkPoolForReplace */
+        NetworkPoolForReplace: {
+            /** Networkuuids */
+            networkUuids: string[];
+            /** Ports */
+            ports: components["schemas"]["NetworkPoolPortSelection"][];
+        };
         /** NetworkPoolForUpdate */
         NetworkPoolForUpdate: {
             /** Poolid */
@@ -2658,6 +2685,13 @@ export interface components {
             /** Vlanid */
             vlanId?: number | null;
             network: components["schemas"]["NetworkForNetworkPool"];
+        };
+        /** NetworkPoolPortSelection */
+        NetworkPoolPortSelection: {
+            /** Networkuuid */
+            networkUuid: string;
+            /** Portname */
+            portName: string;
         };
         /** NetworkPortgroup */
         NetworkPortgroup: {
@@ -6715,6 +6749,50 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NetworkPoolForUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPool"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    replace_network_pool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pool_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkPoolForReplace"];
             };
         };
         responses: {

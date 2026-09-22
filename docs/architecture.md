@@ -238,6 +238,8 @@ resource poolは複数Projectから共有される独立resourceである。Proj
 所属VMが参照中のstorage、network、flavorをgrant外にする変更を拒否する。CPU・memory・storage limitは互換表示値で、
 現時点の配置・作成処理ではquotaとして強制しない。grant編集の未grant resource候補は引き続き
 Project配下のglobal admin専用candidate APIから取得する。作成・変更dialogのProject選択には所属Project一覧を使う。
+管理画面の「すべて」は保存時点の候補ID集合を選択する操作であり、将来追加されるpoolやflavorへの自動grantではない。
+network poolの構成置換は、変更後も共有Projectの使用中VMが必要とするnetworkとportgroupを保持する場合だけ許可する。
 
 ### Inventory同期
 

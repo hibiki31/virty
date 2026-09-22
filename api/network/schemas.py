@@ -98,6 +98,16 @@ class NetworkPoolForUpdate(BaseSchema):
     port_name:str | None = None
 
 
+class NetworkPoolPortSelection(BaseSchema):
+    network_uuid: str
+    port_name: str
+
+
+class NetworkPoolForReplace(BaseSchema):
+    network_uuids: list[str]
+    ports: list[NetworkPoolPortSelection]
+
+
 class NetworkForNetworkPool(BaseSchema):
     name: str
     uuid: str

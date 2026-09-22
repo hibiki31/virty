@@ -86,6 +86,8 @@ def test_catalog_covers_reviewed_management_routes_and_excludes_web_only_routes(
         ("GET", "/api/users/detail/{username}", "get_user"),
         # Projectを経由しない管理者用作成はWeb専用とし、Agentへ公開しない。
         ("POST", "/api/tasks/vms/admin", "create_admin_vm"),
+        # Network poolの構成一括編集は管理画面専用とする。
+        ("PUT", "/api/networks/pools/{pool_id}", "replace_network_pool"),
     }
     catalog = ActionCatalog.load_default()
     catalog_routes = {
