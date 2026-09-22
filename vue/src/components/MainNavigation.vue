@@ -11,6 +11,8 @@
         :to="{ name: '/projects/' }"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-account" :title="$t('navigation.users')"
         :to="{ name: '/users/' }"></v-list-item>
+      <v-list-item prepend-icon="mdi-account-cog" :title="$t('userManagement.account')"
+        to="/account"></v-list-item>
       <v-list-item v-if="isAdmin" prepend-icon="mdi-robot-outline" :title="$t('navigation.agent')"
         :to="{ name: '/agent/' }"></v-list-item>
       <v-list-item prepend-icon="mdi-checkbox-multiple-marked-outline" :title="$t('navigation.tasks')"

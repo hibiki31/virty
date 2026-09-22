@@ -418,16 +418,8 @@ async function loadSavedPublicKeys() {
       return
     }
 
-    const response = await apiClient.GET('/api/users', {
-      params: {
-        query: {
-          nameLike: username,
-          limit: 0,
-          page: 0,
-        },
-      },
-    })
-    const currentUser = response.data?.data.find(user => user.username === username)
+    const response = await apiClient.GET('/api/users/me')
+    const currentUser = response.data?.username === username ? response.data : undefined
 
     if (!response.data) {
       savedPublicKeysError.value = true

@@ -12,8 +12,7 @@
           <v-text-field v-model="postData.username" variant="underlined" density="compact" :label="t('setup.adminUsername')"
             class="pt-3" :rules="[r.required, r.limitLength32, r.characterRestrictions, r.firstCharacterRestrictions]"
             counter="64"></v-text-field>
-          <v-text-field v-model="postData.password" variant="underlined" density="compact" :rules="[r.required]"
-            type="password" :label="t('common.fields.password')" :hint="t('setup.passwordHint')" counter></v-text-field>
+          <NewPasswordFields v-model="postData.password" v-model:confirmation="confirmation" :disabled="loading" />
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -33,11 +32,13 @@ import { asyncSleep } from '@/composables/sleep';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import NewPasswordFields from '@/components/users/NewPasswordFields.vue';
 
 const { t } = useI18n({ useScope: 'global' })
 const r = useLocalizedRules()
 
 const dialogState = ref(false)
+const confirmation = ref('')
 const postData = ref({
   username: '',
   password: ''
@@ -56,6 +57,8 @@ async function commit(event: Promise<{ valid: boolean }>) {
     const res = await apiClient.POST("/api/auth/setup", { body: postData.value })
 
     if (res.response.ok) {
+      postData.value.password = ''
+      confirmation.value = ''
       notify("success", translationRef('setup.success'))
       await asyncSleep(500)
       await reload()

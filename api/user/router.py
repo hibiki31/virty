@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from auth.function import get_password_hash
-from auth.router import CurrentUser, get_current_user as require_current_user
+from auth.function import verify_password
+from auth.router import OAUTH_SCOPES, CurrentUser, get_current_user as require_current_user
 from mixin.database import get_db
 from mixin.exception import ApiError, ApiErrorCode, raise_notfound
 from mixin.log import setup_logger
@@ -14,24 +14,113 @@ from project.service import (
 from resource_authorization import require_admin
 from user.admin_guard import would_remove_last_admin
 from user.functions import overwrite_user_scopes
-from user.models import UserModel, UserPublickeyModel, UserScopeModel
+from user.models import UserModel
+from user.service import change_password, create_user_record, replace_publickeys
 from user.schemas import (
-    TokenData,
+    OwnPublickeysUpdate,
+    PasswordChange,
+    PasswordReset,
     User,
     UserForCreate,
     UserForQuery,
     UserForUpdate,
     UserPage,
+    UserProfile,
+    UserProject,
+    UserPublickey,
 )
 
 logger = setup_logger(__name__)
 app = APIRouter(prefix="/api/users", tags=["users"])
 
-@app.get("/me", response_model=TokenData)
+def find_user(db: Session, username: str, *, lock: bool = False) -> UserModel:
+    query = db.query(UserModel).filter(UserModel.username == username)
+    if lock:
+        query = query.with_for_update(of=UserModel).populate_existing()
+    user = query.one_or_none()
+    if user is None:
+        raise_notfound("The user was not found.", code=ApiErrorCode.USER_NOT_FOUND)
+    assert user is not None
+    return user
+
+
+def profile(user: UserModel) -> UserProfile:
+    return UserProfile(
+        id=user.username, username=user.username,
+        scopes=[scope.name for scope in user.scopes],
+        projects=[UserProject.model_validate(item) for item in user.projects],
+        publickeys=[UserPublickey.model_validate(item) for item in user.publickeys],
+    )
+
+
+@app.get("/me", response_model=UserProfile)
 def get_current_user_profile(
     current_user: CurrentUser = Depends(require_current_user),
-):
-    return current_user
+    db: Session = Depends(get_db),
+) -> UserProfile:
+    return profile(find_user(db, current_user.id))
+
+
+@app.put("/me/publickeys", response_model=UserProfile)
+def update_own_publickeys(
+    request: OwnPublickeysUpdate,
+    current_user: CurrentUser = Depends(require_current_user),
+    db: Session = Depends(get_db),
+) -> UserProfile:
+    user = find_user(db, current_user.id, lock=True)
+    replace_publickeys(user, request.publickeys)
+    db.commit()
+    return profile(user)
+
+
+@app.put("/me/password", status_code=204)
+def update_own_password(
+    request: PasswordChange,
+    current_user: CurrentUser = Depends(require_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    user = find_user(db, current_user.id, lock=True)
+    if user.session_generation != current_user.session_generation:
+        raise ApiError(401, ApiErrorCode.INVALID_TOKEN, "Please sign in again.")
+    if not verify_password(request.current_password, user.hashed_password):
+        raise ApiError(403, ApiErrorCode.PASSWORD_REAUTHENTICATION_FAILED,
+                       "The current password is incorrect.")
+    change_password(user, request.new_password)
+    db.commit()
+    return Response(status_code=204)
+
+
+@app.get("/scopes", response_model=list[str])
+def get_user_scopes(current_user: CurrentUser = Depends(require_current_user)) -> list[str]:
+    require_admin(current_user)
+    return list(OAUTH_SCOPES)
+
+
+@app.get("/detail/{username}", response_model=User)
+def get_user(
+    username: str,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(require_current_user),
+) -> UserModel:
+    require_admin(current_user)
+    return find_user(db, username)
+
+
+@app.put("/{username}/reset-password", status_code=204)
+def reset_user_password(
+    username: str,
+    request: PasswordReset,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(require_current_user),
+) -> Response:
+    require_admin(current_user)
+    if username == current_user.id:
+        raise ApiError(409, ApiErrorCode.PASSWORD_REAUTHENTICATION_FAILED,
+                       "Use the account settings to change your own password.")
+    user = find_user(db, username, lock=True)
+    change_password(user, request.new_password)
+    db.commit()
+    return Response(status_code=204)
 
 
 @app.post("", response_model=User)
@@ -39,7 +128,7 @@ def create_user(
         request: UserForCreate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(require_current_user),
-):
+) -> UserModel:
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
     if request.username == "":
@@ -56,14 +145,7 @@ def create_user(
             "The user already exists.",
         )
 
-    # ユーザ追加
-    user_model = UserModel(
-        username=request.username,
-        hashed_password=get_password_hash(request.password),
-    )
-
-    user_model.scopes.append(UserScopeModel(name="user"))
-    db.add(user_model)
+    user_model = create_user_record(db, request)
 
     db.commit()
     db.refresh(
@@ -79,7 +161,7 @@ def update_user(
         request: UserForUpdate,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(require_current_user),
-):
+) -> UserModel:
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
     try:
@@ -98,10 +180,7 @@ def update_user(
             "The last administrator must retain the admin scope.",
         )
 
-    user_model.publickeys = [
-        UserPublickeyModel(name=key.name, publickey=key.publickey)
-        for key in request.publickeys
-    ]
+    replace_publickeys(user_model, request.publickeys)
     overwrite_user_scopes(
         db=db,
         user=user_model,
@@ -120,7 +199,7 @@ def get_users(
         param: UserForQuery = Depends(),
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(require_current_user),
-):
+) -> UserPage:
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
     query = db.query(UserModel)
@@ -132,7 +211,7 @@ def get_users(
     if param.limit > 0:
         query = query.limit(param.limit).offset(int(param.limit*param.page))
 
-    return {"count": count, "data": query.all()}
+    return UserPage(count=count, data=[User.model_validate(user) for user in query.all()])
 
 
 @app.delete("/{username}")
@@ -140,7 +219,7 @@ def delete_user(
         username: str,
         db: Session = Depends(get_db),
         current_user: CurrentUser = Depends(require_current_user),
-):
+) -> int:
     current_user.verify_scope(["identity.manage"])
     require_admin(current_user)
     if username == current_user.id:

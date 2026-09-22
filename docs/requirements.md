@@ -22,6 +22,15 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 - 初回アクセス時に最初の管理利用者を作成できる。
 - OAuth2 password flowでBearer JWTを発行し、保護されたAPIとWeb UIで利用する。
 - APIから利用者の作成、一覧、更新、削除を行い、scopeと複数のSSH公開鍵を保持できる。
+- 管理者はWebから利用者を作成・削除し、scopeと公開鍵を編集し、他人のpasswordを再設定できる。
+  自己削除、最後の管理者の削除・降格、Project最後のmemberの削除を拒否する。
+- 全利用者はアカウント設定で自分の権限・所属を参照し、公開鍵とpasswordを変更できる。
+  本人のpassword変更には現在のpasswordを必要とし、変更・再設定後は全Web端末で再loginする。
+  Agent端末・leaseの失効は既存の独立した管理操作で行う。
+- 新規passwordは8文字以上、英小文字・英大文字・数字・記号を含み、空白なし、UTF-8で72byte以下とする。
+  初期設定・REST・Agentで同じ検証を行い、既存passwordのlogin互換性は保持する。
+- 公開鍵は名前とOpenSSH形式の鍵を組として管理し、秘密鍵・不正形式・名前重複を拒否する。
+  作成・編集は明示保存とし、失敗時は入力を保持し、未保存入力を破棄する前に確認する。
 - scopeをAPI認可に利用し、Project IDをtokenに含める。実効権限は操作scopeと対象Projectへの所属を
   ともに満たす場合だけ与え、VM・Project・関連resourceの一覧と詳細を同じ境界で絞り込む。
 - Project membershipはProject APIだけから変更する。member追加後の権限は再loginで取得したJWTから有効になり、
@@ -120,7 +129,7 @@ Virtyは管理対象nodeの代替hypervisorではなく、libvirt、Ansible、SS
 
 ## 提供中のWeb UI範囲
 
-Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者一覧、task一覧・詳細、
+Web UIには、login・初期設定、VM、Project、node、storage、image、network、利用者管理・本人設定、task一覧・詳細、
 Agent端末・能力lease・global停止・`unknown` operation整合確認の管理画面がある。
 Project画面は一覧・詳細、使用量と非強制limit、member、resource grantを表示し、権限に応じて作成、名称変更、
 member変更、grant変更、削除を行う。resource画面はURL queryのProject filterを保持し、Project詳細から

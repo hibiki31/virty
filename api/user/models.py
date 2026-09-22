@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, ForeignKey, String, Table, UniqueConstraint
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mixin.database import Base
 
@@ -35,6 +35,8 @@ class UserModel(Base):
     __tablename__ = "users"
     username: Mapped[str] = Column(String, primary_key=True, index=True)
     hashed_password: Mapped[str] = Column(String)
+    # NULLはmigration前の既存ユーザ。新規作成serviceではUUIDを必ず設定する。
+    session_generation: Mapped[str | None] = mapped_column(String(36), nullable=True)
     
     scopes: Mapped[list["UserScopeModel"]] = relationship(
         "UserScopeModel",

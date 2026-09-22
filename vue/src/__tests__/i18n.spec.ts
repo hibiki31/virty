@@ -245,7 +245,7 @@ describe("localized presentation", () => {
   });
 
   it("contains a non-empty translation for every generated field error code", () => {
-    expect(FIELD_ERROR_CODES).toHaveLength(14);
+    expect(FIELD_ERROR_CODES).toHaveLength(19);
     for (const code of FIELD_ERROR_CODES) {
       expect(en.fieldErrors[code].trim(), code).not.toBe("");
       expect(ja.fieldErrors[code].trim(), code).not.toBe("");

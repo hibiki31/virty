@@ -1455,7 +1455,7 @@ def test_agent_update_models_keep_fields_removed_from_rest_bodies() -> None:
         "username": "alice",
         "password": "Virty-Test_2026!",
         "scopes": [{"name": "user"}],
-        "publickeys": [{"name": "main", "publickey": "ssh-ed25519 test"}],
+        "publickeys": [{"name": "main", "publickey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1"}],
     }
     _validate_public_json("user.update", user_payload)
     user_model = actions._load_input_model(ACTIONS["user.update"], user_payload)

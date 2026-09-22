@@ -284,6 +284,11 @@ class FieldErrorCode(StrEnum):
     REQUIRED = "required"
     TOO_LONG = "too_long"
     TOO_SHORT = "too_short"
+    PASSWORD_POLICY = "password_policy"
+    INVALID_PUBLIC_KEY = "invalid_public_key"
+    DUPLICATE_KEY_NAME = "duplicate_key_name"
+    KEY_NAME_REQUIRED = "key_name_required"
+    INVALID_USERNAME = "invalid_username"
 
 
 ApiErrorParam = str | int | FiniteFloat | bool | None
@@ -609,7 +614,10 @@ def _normalized_field_error(item: Mapping[str, Any]) -> ApiFieldError:
     safe_context = context if isinstance(context, Mapping) else {}
     params: dict[str, ApiErrorParam] = {}
 
-    if error_type == "missing":
+    if error_type in {"password_policy", "invalid_public_key", "duplicate_key_name",
+                      "key_name_required", "invalid_username"}:
+        code = FieldErrorCode(error_type)
+    elif error_type == "missing":
         code = FieldErrorCode.REQUIRED
     elif error_type == "extra_forbidden":
         code = FieldErrorCode.EXTRA_FORBIDDEN

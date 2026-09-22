@@ -48,6 +48,7 @@ const taskCount = ref(0)
 const enableAutoReload = ref(true)
 
 const logout = async () => {
+  if (!window.dispatchEvent(new Event('virty:before-logout', { cancelable: true }))) return
   removeAuth()
   auth.loginFailure()
   notify('success', translationRef('appBar.logoutComplete'), translationRef('appBar.logoutRedirect'))

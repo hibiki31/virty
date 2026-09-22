@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
 from sqlalchemy import and_, false, func, or_
 from sqlalchemy.orm import Query, Session, object_session
 
-from auth.function import get_password_hash
+from user.service import change_password, create_user_record, replace_publickeys
 from domain.models import DomainModel
 from domain.service import (
     DomainProjectMoveConflictError,
@@ -59,7 +59,6 @@ from task.functions import ARCHIVABLE_STATUSES, archive_terminal_tasks
 from user.admin_guard import would_remove_last_admin
 from user.models import (
     UserModel,
-    UserPublickeyModel,
     UserScopeModel,
 )
 
@@ -1541,21 +1540,7 @@ def project_resource_grants_update(
 def user_create(db: Session, _: LeaseContext, model: Any, __: Any) -> Any:
     if db.get(UserModel, model.username) is not None:
         raise ConflictError("user_exists", "userは既に存在します")
-    user = UserModel(
-        username=model.username,
-        hashed_password=get_password_hash(model.password),
-    )
-    db.add(user)
-    scopes = {scope.name for scope in model.scopes} | {"user"}
-    for scope in scopes:
-        db.add(UserScopeModel(user_id=user.username, name=scope))
-    for key in model.publickeys:
-        db.add(UserPublickeyModel(
-            user_id=user.username,
-            name=key.name,
-            publickey=key.publickey,
-        ))
-    db.flush()
+    user = create_user_record(db, model)
     db.expire(user)
     return _user_dict(db, user)
 
@@ -1569,11 +1554,8 @@ def user_update(db: Session, _: LeaseContext, model: Any, __: Any) -> Any:
     user = db.get(UserModel, model.path_username)
     if user is None:
         raise NotFoundError("user_not_found", "userがありません")
-    user.hashed_password = get_password_hash(model.password)
-    user.publickeys = [
-        UserPublickeyModel(name=key.name, publickey=key.publickey)
-        for key in model.publickeys
-    ]
+    change_password(user, model.password)
+    replace_publickeys(user, model.publickeys)
     existing_scopes = {item.name: item for item in user.scopes}
     requested_scopes = {item.name for item in model.scopes}
     if would_remove_last_admin(db, user.username, requested_scopes):

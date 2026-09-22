@@ -57,6 +57,18 @@ interfaceをproviderから受け取る。production providerは`api/module/`の�
 
 ### 初期設定と認証
 
+ユーザ管理は管理者用CRUDと本人用APIを分離する。本人用APIの対象はJWTから決定し、scopeや他人の
+usernameを更新入力として受け付けない。公開鍵候補は管理者用一覧でなく本人profileから取得する。
+RESTとAgentの作成・公開鍵保存・password更新は共通serviceを使い、transactionのcommitは呼出し側が行う。
+ユーザ編集・本人設定では公開鍵と新規password fieldを共用する。未保存入力はdialog終了、route離脱、
+browser離脱で確認し、logout時は共通の取消可能eventを認証情報の破棄前に発行する。
+
+Web JWTはユーザごとのsession generationを持ち、requestごとにDBと照合する。password変更はhashと
+generationを同一transactionで更新する。migration前のユーザのみgenerationをNULLとして旧JWTを受理し、
+初回変更後は旧JWTを拒否する。新規ユーザにはUUIDを付与し、同名再作成でも旧JWTを再利用できない。
+Agent credentialの失効はこのgenerationから独立する。downgradeはgeneration列を削除するため、
+失効保証を維持したrollbackにはWeb JWT署名鍵のrotationが必要となる。
+
 1. WebがAPIのversion/初期化状態を確認する。
 2. 利用者が存在しない場合だけ、初期管理利用者を作成する。
 3. loginはOAuth2 formを受け取り、利用者ID、scope、projectを含む期限付きBearer JWTを返す。
@@ -153,7 +165,7 @@ VM作成も許可しない。
 管理対象外のkeyは保持し、適用後はraw dataを送信内容の正本とする。raw側の手編集をformへ逆同期せず、再適用時だけ
 formの値で管理対象を更新する。平文passwordとroot権限で実行するscriptの安全上の警告もWebの責務である。
 
-登録済みSSH公開鍵の補完では、認証状態のuser名と既存の利用者取得APIを使い、完全一致した利用者の公開鍵だけを候補にする。
+登録済みSSH公開鍵の補完では、本人profile APIを使い、認証状態のuser名と完全一致した利用者の公開鍵だけを候補にする。
 取得失敗や候補なしはmanual入力を妨げない。この補助処理とYAML生成はWeb内で完結し、APIは従来どおり
 `cloudInit.userData`をopaqueな文字列として受け取る。form用schemaやendpointを追加せず、既存API契約を変更しない。
 

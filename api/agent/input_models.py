@@ -1,12 +1,10 @@
 """既存APIに専用schemaがないAgent actionのstrict input。"""
 
-import re
-
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field
 
 from domain.schemas import DomainForCreate
 from mixin.schemas import BaseSchema
-from user.schemas import UserPublickey, UserScope
+from user.schemas import UserForCreate
 
 
 class StrictInput(BaseSchema):
@@ -108,31 +106,10 @@ class FlavorDeleteInput(StrictInput):
     flavor_id: int
 
 
-class AgentUserCreateInput(StrictInput):
-    """Project membershipを変更しないAgent専用の利用者作成input。"""
+class AgentUserCreateInput(UserForCreate):
+    """RESTと同じ検証を行い、余分な入力は拒否する。"""
 
-    username: str = Field(min_length=1, max_length=255)
-    password: str = Field(
-        min_length=8,
-        max_length=128,
-        pattern=r"^[^\s]+$",
-        json_schema_extra={"writeOnly": True},
-    )
-    scopes: list[UserScope] = Field(default_factory=list, max_length=256)
-    publickeys: list[UserPublickey] = Field(default_factory=list, max_length=64)
-
-    @field_validator("password")
-    @classmethod
-    def strong_password(cls, value: str) -> str:
-        categories = sum(
-            bool(re.search(pattern, value))
-            for pattern in (r"[a-z]", r"[A-Z]", r"\d", r"[^A-Za-z0-9]")
-        )
-        if categories < 4:
-            raise ValueError(
-                "Password must contain lower-case, upper-case, digit and symbol",
-            )
-        return value
+    model_config = StrictInput.model_config
 
 
 class AgentUserUpdateInput(AgentUserCreateInput):

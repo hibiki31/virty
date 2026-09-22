@@ -142,7 +142,7 @@ def test_update_user_uses_path_and_accepts_only_update_fields(
                 "password": "Ignored-Test_2026!",
                 "projects": [{"name": "ignored"}],
                 "scopes": [{"name": "admin"}],
-                "publickeys": [{"name": "main", "publickey": "ssh-ed25519 test"}],
+                "publickeys": [{"name": "main", "publickey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1"}],
             },
         )
         assert response.status_code == 200, response.text
@@ -152,7 +152,7 @@ def test_update_user_uses_path_and_accepts_only_update_fields(
             untouched = db.query(UserModel).filter(UserModel.username == other).one()
             assert {scope.name for scope in updated.scopes} == {"admin"}
             assert [(key.name, key.publickey) for key in updated.publickeys] == [
-                ("main", "ssh-ed25519 test")
+                ("main", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1")
             ]
             assert updated.hashed_password == "unchanged"
             assert {scope.name for scope in untouched.scopes} == {"user"}
@@ -218,7 +218,7 @@ def test_update_user_rolls_back_publickeys_when_scope_update_fails(
                 json={
                     "scopes": [{"name": "admin"}],
                     "publickeys": [
-                        {"name": "replacement", "publickey": "ssh-ed25519 replacement"}
+                        {"name": "replacement", "publickey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1"}
                     ],
                 },
             )

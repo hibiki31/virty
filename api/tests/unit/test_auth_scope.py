@@ -77,6 +77,7 @@ def test_access_token_preserves_project_constraint() -> None:
         "DbUser",
         (),
         {
+            "session_generation": None,
             "scopes": [type("Scope", (), {"name": "vm.read"})()],
             "projects": [type("Project", (), {"id": "a1b2c3"})()],
         },
@@ -123,6 +124,7 @@ def test_new_database_grant_does_not_expand_existing_token() -> None:
         "DbUser",
         (),
         {
+            "session_generation": None,
             "scopes": [
                 type("Scope", (), {"name": "vm.read"})(),
                 type("Scope", (), {"name": "vm.delete"})(),

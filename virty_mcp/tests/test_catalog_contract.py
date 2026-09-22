@@ -54,7 +54,7 @@ def _routes(path: Path) -> set[tuple[str, str, str]]:
     return routes
 
 
-def test_catalog_covers_reviewed_management_routes_and_only_excludes_sensitive_routes() -> None:
+def test_catalog_covers_reviewed_management_routes_and_excludes_web_only_routes() -> None:
     files = [
         API_ROOT / area / filename
         for area in (
@@ -77,6 +77,13 @@ def test_catalog_covers_reviewed_management_routes_and_only_excludes_sensitive_r
     excluded = {
         ("GET", "/api/vms/vnc/{token}", "get_vnc_address"),
         ("POST", "/api/vms/{uuid}/console-ticket", "create_console_ticket"),
+        # 本人passwordによる再認証とWeb設定用APIはAgentへ追加公開しない。
+        # Agentは既存のuser.me/list/updateを専用adapterで実行する。
+        ("PUT", "/api/users/me/publickeys", "update_own_publickeys"),
+        ("PUT", "/api/users/me/password", "update_own_password"),
+        ("PUT", "/api/users/{username}/reset-password", "reset_user_password"),
+        ("GET", "/api/users/scopes", "get_user_scopes"),
+        ("GET", "/api/users/detail/{username}", "get_user"),
     }
     catalog = ActionCatalog.load_default()
     catalog_routes = {

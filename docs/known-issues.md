@@ -27,6 +27,8 @@
 | 開発credential fileのmode・owner・file種別が安全でない | `devctl`が実行user所有のregular non-symlink fileかつ`0600`だけを受理し、境界self-testを標準check前に行う | `./devctl quick`、`./devctl verify` |
 | 標準testからSSH、Ansible、libvirt、downloadへ接続 | backend factory、deterministic fake、networkなしquick、internal network verifyを使う | `./devctl verify api` |
 | API-001: pathと異なるuser更新、または部分commit | path `username`を更新対象の正本とし、`scopes`と`publickeys`を単一transactionで更新する | user API integration、OpenAPI drift check |
+| user作成時のscope・公開鍵の保存漏れ、本人設定による権限変更 | REST・Agentの共通保存処理と、本人から変更可能なfieldだけの専用schemaを使う | user management integration、Web user CRUD E2E |
+| password変更後や同名user再作成後のWeb JWT再利用 | DB上のsession generationを照合し、hash変更と同時に更新する | user management integration、migration upgrade/downgrade test |
 | API-002: 必須bodyの欠落をoptionalと公開 | VM、network、node、storageの対象9 endpointを必須bodyに統一し、欠落時の422を契約化する | API contract integration、OpenAPI drift check |
 | API-003: Pydantic warningによるschema driftの見逃し | FastAPI互換versionを固定し、対象warningをpytestでerrorにする | `./devctl quick api`、`./devctl verify api` |
 | WEB-002: 未参照legacy SFCが削除済みaxios adapterへ依存 | 対象5 SFCを削除し、coverageの個別除外も外す | ESLint、forced型check、Vitest、production build |

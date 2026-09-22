@@ -1294,6 +1294,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/publickeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Own Publickeys */
+        put: operations["update_own_publickeys"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Own Password */
+        put: operations["update_own_password"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User Scopes */
+        get: operations["get_user_scopes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/detail/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User */
+        get: operations["get_user"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{username}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reset User Password */
+        put: operations["reset_user_password"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -2091,7 +2176,7 @@ export interface components {
          * @description Pydantic固有表現から独立した公開field error code。
          * @enum {string}
          */
-        FieldErrorCode: "extra_forbidden" | "greater_than" | "greater_than_or_equal" | "invalid_choice" | "invalid_format" | "invalid_json" | "invalid_type" | "invalid_value" | "less_than" | "less_than_or_equal" | "multiple_of" | "required" | "too_long" | "too_short";
+        FieldErrorCode: "extra_forbidden" | "greater_than" | "greater_than_or_equal" | "invalid_choice" | "invalid_format" | "invalid_json" | "invalid_type" | "invalid_value" | "less_than" | "less_than_or_equal" | "multiple_of" | "required" | "too_long" | "too_short" | "password_policy" | "invalid_public_key" | "duplicate_key_name" | "key_name_required" | "invalid_username";
         /** Flavor */
         Flavor: {
             /** Name */
@@ -2727,6 +2812,11 @@ export interface components {
             /** Result */
             result?: unknown | null;
         };
+        /** OwnPublickeysUpdate */
+        OwnPublickeysUpdate: {
+            /** Publickeys */
+            publickeys: components["schemas"]["UserPublickeyInput"][];
+        };
         /** P256PublicKeyJwk */
         P256PublicKeyJwk: {
             /**
@@ -2823,6 +2913,18 @@ export interface components {
              * Format: date-time
              */
             expiresAt: string;
+        };
+        /** PasswordChange */
+        PasswordChange: {
+            /** Newpassword */
+            newPassword: string;
+            /** Currentpassword */
+            currentPassword: string;
+        };
+        /** PasswordReset */
+        PasswordReset: {
+            /** Newpassword */
+            newPassword: string;
         };
         /** PowerStatusForUpdateDomain */
         PowerStatusForUpdateDomain: {
@@ -3153,15 +3255,6 @@ export interface components {
             /** Data */
             data: components["schemas"]["Task"][];
         };
-        /** TokenData */
-        TokenData: {
-            /** Id */
-            id?: string | null;
-            /** Scopes */
-            scopes?: string[];
-            /** Role */
-            role?: string[];
-        };
         /** TokenRFC6749Response */
         TokenRFC6749Response: {
             /** Access Token */
@@ -3187,7 +3280,7 @@ export interface components {
             /** Scopes */
             scopes?: components["schemas"]["UserScope"][];
             /** Publickeys */
-            publickeys?: components["schemas"]["UserPublickey"][];
+            publickeys?: components["schemas"]["UserPublickeyInput"][];
             /** Password */
             password: string;
         };
@@ -3196,7 +3289,7 @@ export interface components {
             /** Scopes */
             scopes: components["schemas"]["UserScope"][];
             /** Publickeys */
-            publickeys: components["schemas"]["UserPublickey"][];
+            publickeys: components["schemas"]["UserPublickeyInput"][];
         };
         /** UserPage */
         UserPage: {
@@ -3204,6 +3297,21 @@ export interface components {
             count: number;
             /** Data */
             data: components["schemas"]["User"][];
+        };
+        /** UserProfile */
+        UserProfile: {
+            /** Id */
+            id?: string | null;
+            /** Scopes */
+            scopes?: string[];
+            /** Role */
+            role?: string[];
+            /** Username */
+            username: string;
+            /** Projects */
+            projects?: components["schemas"]["UserProject"][];
+            /** Publickeys */
+            publickeys?: components["schemas"]["UserPublickey"][];
         };
         /** UserProject */
         UserProject: {
@@ -3214,6 +3322,13 @@ export interface components {
         };
         /** UserPublickey */
         UserPublickey: {
+            /** Name */
+            name: string;
+            /** Publickey */
+            publickey: string;
+        };
+        /** UserPublickeyInput */
+        UserPublickeyInput: {
             /** Name */
             name: string;
             /** Publickey */
@@ -6890,8 +7005,210 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenData"];
+                    "application/json": components["schemas"]["UserProfile"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_own_publickeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnPublickeysUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    update_own_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_user_scopes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    get_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description API Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7059,7 +7376,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": number;
                 };
             };
             /** @description Validation Error */

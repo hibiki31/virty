@@ -538,15 +538,6 @@ describe("VMAddDialog cloud-init support", () => {
   it("現在usernameの完全一致だけから保存鍵を取得し、自動選択しない", async () => {
     mocks.apiGet.mockResolvedValue({
       data: {
-        count: 2,
-        data: [
-          {
-            username: "alice-admin",
-            scopes: [],
-            projects: [],
-            publickeys: [{ name: "wrong", publickey: "ssh-ed25519 WRONG" }],
-          },
-          {
             username: "alice",
             scopes: [],
             projects: [],
@@ -554,8 +545,6 @@ describe("VMAddDialog cloud-init support", () => {
               { name: "laptop", publickey: "ssh-ed25519 AAAA laptop" },
               { name: "desktop", publickey: "ssh-ed25519 BBBB desktop" },
             ],
-          },
-        ],
       },
     });
     const wrapper = await mountDialog();
@@ -563,9 +552,7 @@ describe("VMAddDialog cloud-init support", () => {
     await toggleCloudInit(wrapper, true);
     const select = getSelectStub(wrapper, "cloud-init-saved-public-keys");
 
-    expect(mocks.apiGet).toHaveBeenCalledWith("/api/users", {
-      params: { query: { nameLike: "alice", limit: 0, page: 0 } },
-    });
+    expect(mocks.apiGet).toHaveBeenCalledWith("/api/users/me");
     expect(select.props("items")).toEqual([
       { name: "laptop", publickey: "ssh-ed25519 AAAA laptop" },
       { name: "desktop", publickey: "ssh-ed25519 BBBB desktop" },
@@ -580,15 +567,10 @@ describe("VMAddDialog cloud-init support", () => {
   it("現在usernameが応答にない場合は保存鍵を空のままにする", async () => {
     mocks.apiGet.mockResolvedValue({
       data: {
-        count: 1,
-        data: [
-          {
             username: "alice-admin",
             scopes: [],
             projects: [],
             publickeys: [{ name: "wrong", publickey: "ssh-ed25519 WRONG" }],
-          },
-        ],
       },
     });
     const wrapper = await mountDialog();

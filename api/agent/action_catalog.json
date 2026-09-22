@@ -908,7 +908,7 @@
       "mutation": true, "destructive": true, "risk": "R3",
       "parameters": {
         "username": {"type": "string", "minLength": 1, "maxLength": 255},
-        "password": {"type": "string", "minLength": 8, "maxLength": 128, "writeOnly": true},
+        "password": {"type": "string", "minLength": 8, "maxLength": 72, "writeOnly": true},
         "scopes": {
           "type": "array", "maxItems": 256,
           "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
@@ -939,7 +939,7 @@
       "parameters": {
         "pathUsername": {"type": "string", "minLength": 1, "maxLength": 255},
         "username": {"type": "string", "minLength": 1, "maxLength": 255},
-        "password": {"type": "string", "minLength": 8, "maxLength": 128, "writeOnly": true},
+        "password": {"type": "string", "minLength": 8, "maxLength": 72, "writeOnly": true},
         "scopes": {
           "type": "array", "maxItems": 256,
           "items": {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 255}}, "required": ["name"], "additionalProperties": false}
