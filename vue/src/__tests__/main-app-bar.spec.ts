@@ -1,6 +1,7 @@
 import MainAppBer from "@/components/MainAppBer.vue";
 import { componentStubs, LocaleSwitcherStub } from "@/__tests__/support/components";
 import type * as TaskPollingModule from "@/composables/taskPolling";
+import type * as AuthModule from "@/composables/auth";
 import { mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -33,7 +34,7 @@ vi.mock("@/stores/state", () => ({ useStateStore: () => mocks.state }));
 vi.mock("@/composables/notify", () => ({ default: mocks.notify }));
 vi.mock("@/composables/sleep", () => ({ asyncSleep: vi.fn() }));
 vi.mock("@/composables/auth", async importOriginal => ({
-  ...await importOriginal<typeof import('@/composables/auth')>(),
+  ...await importOriginal<typeof AuthModule>(),
   removeAuth: vi.fn(),
 }));
 vi.mock("@/api", () => ({ apiClient: { GET: mocks.apiGet } }));

@@ -7,7 +7,7 @@
 
     <v-spacer></v-spacer>
 
-    <v-switch v-if="auth.canUseAdminMode && lgAndUp" :model-value="auth.adminMode"
+    <v-switch v-if="auth.canUseAdminMode && lgAndUp" :model-value="selectedAdminMode"
       :label="t(auth.adminMode ? 'appBar.adminMode' : 'appBar.generalMode')"
       :aria-label="t('appBar.switchAdminMode')" data-testid="admin-mode-switch"
       class="d-none d-lg-flex flex-grow-0 mx-3" color="warning" hide-details
@@ -38,7 +38,7 @@
     <v-btn variant="text" icon="mdi-logout-variant" :aria-label="t('appBar.logout')" @click="logout"></v-btn>
     <template v-if="(auth.canUseAdminMode && !lgAndUp) || (route.meta.projectFilter && xs)" #extension>
       <div class="app-bar-project-row d-flex flex-wrap align-center ga-2 px-4 pb-2">
-        <v-switch v-if="auth.canUseAdminMode && !lgAndUp" :model-value="auth.adminMode"
+        <v-switch v-if="auth.canUseAdminMode && !lgAndUp" :model-value="selectedAdminMode"
           :label="t(auth.adminMode ? 'appBar.adminMode' : 'appBar.generalMode')"
           :aria-label="t('appBar.switchAdminMode')" data-testid="admin-mode-switch"
           class="flex-grow-0" color="warning" hide-details @update:model-value="changeMode" />
@@ -53,7 +53,7 @@
 import { hasAdminScope, removeAuth } from '@/composables/auth'
 import { asyncSleep } from '@/composables/sleep'
 import { applyTaskPollingSnapshot, createTaskPoller } from '@/composables/taskPolling'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
@@ -83,9 +83,16 @@ watch(() => route.fullPath, () => {
 
 const taskCount = ref(0)
 const enableAutoReload = ref(true)
+const selectedAdminMode = ref(auth.adminMode)
 
-function changeMode(enabled: boolean | null) {
-  if (!window.dispatchEvent(new Event('virty:before-mode-change', { cancelable: true }))) return
+async function changeMode(enabled: boolean | null) {
+  selectedAdminMode.value = enabled === true
+  if (!window.dispatchEvent(new Event('virty:before-mode-change', { cancelable: true }))) {
+    // 取消時はnative checkboxの表示も元に戻す。
+    await nextTick()
+    selectedAdminMode.value = auth.adminMode
+    return
+  }
   auth.setAdminMode(enabled === true)
   window.location.assign(import.meta.env.BASE_URL)
 }
