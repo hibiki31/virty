@@ -235,6 +235,10 @@ Web dashboardはBearer token付きの型付きclientで専用のdashboard query 
 VM、node、storage、image、network、各pool、flavorの一覧は任意のProject filterを受け取り、指定時は
 Projectの存在と認可を404で秘匿したうえで、そのProjectだけから導出したresourceを返す。WebはfilterをURL queryに
 保持するため、Project詳細からresource一覧へ遷移しても管理境界が失われない。
+WebのVM、node、storage、image、network一覧はroute metaでProject filterの対象と宣言し、App barが
+共通selectorを所有する。共通composableがURL queryを読み書きし、各一覧は変更を監視して先頭pageから
+再取得する。image一覧ではnode・storage候補と選択行もリセットする。App storeは最後のfilterを
+サイドナビゲーションの遷移先へ渡すためだけに保持し、直接URLや履歴からの選択を上書きしない。
 
 このflowはread-onlyであり、表示や再読込を契機に管理nodeへのSSH・libvirt接続、inventory再走査、
 task投入を行わない。表示値は取得時点のsnapshotであり、時系列dataやreal-time監視を表さない。

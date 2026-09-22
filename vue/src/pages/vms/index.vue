@@ -13,12 +13,6 @@
         data-testid="vm-admin-create-open"
         @click="stateAdminCreateDialog = true">{{ t('dialogs.vmAdd.adminTitle') }}</v-btn>
       <v-spacer></v-spacer>
-      <project-filter-select
-        :model-value="query.projectId"
-        class="pr-3"
-        style="max-width: 300px"
-        @update:model-value="updateProjectFilter"
-      />
       <v-text-field v-model="query.nameLike" density="compact" :label="t('pages.vms.filters.search')" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
@@ -56,6 +50,7 @@
 <route lang="yaml">
 meta:
   titleKey: pages.vms.documentTitle
+  projectFilter: true
 </route>
 
 <script lang="ts" setup>
@@ -70,11 +65,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/composables/i18n'
 import { formatProjectName } from '@/composables/project'
-import { useRoute, useRouter } from 'vue-router'
+import { useProjectFilter } from '@/composables/projectFilter'
 
 const auth = useAuthStore()
-const route = useRoute()
-const router = useRouter()
+const { projectId } = useProjectFilter()
 const { t } = useI18n({ useScope: 'global' })
 const loading = ref(false)
 const stateCreateDialog = ref(false)
@@ -106,7 +100,7 @@ const query = ref<typeListVMQuery>({
   page: 1,
   nameLike: "",
   nodeNameLike: "",
-  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
+  projectId: projectId.value,
 })
 
 const items = ref<typeListVM>(initVMList)
@@ -132,16 +126,12 @@ async function reload() {
   loading.value = false
 }
 
-async function updateProjectFilter(projectId: string | null) {
-  query.value.projectId = projectId
-  const routeQuery = { ...route.query }
-  if (projectId) routeQuery.projectId = projectId
-  else delete routeQuery.projectId
-  await router.replace({ query: routeQuery })
+watch(projectId, async value => {
+  query.value.projectId = value
   pageState.value = 1
   query.value.page = 1
   await reload()
-}
+})
 
 useReloadListener(() => {
   reload()

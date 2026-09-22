@@ -11,12 +11,6 @@
         :disabled="imageSelected.length === 0">{{ t('pages.images.actions.delete') }}</v-btn>
       <v-spacer></v-spacer>
       <!-- フィルタ -->
-      <project-filter-select
-        :model-value="query.projectId"
-        class="pr-3"
-        style="max-width: 300px"
-        @update:model-value="updateProjectFilter"
-      />
       <v-select density="compact" clearable :label="t('pages.images.filters.node')" v-model="query.nodeName"
         @update:model-value="async () => { queryImtesReload(); reload() }" :items="itemsNodes.data"
         variant="solo-filled" width="1" hide-details flat item-title="name" item-value="name" persistent-placeholder
@@ -31,7 +25,7 @@
       <v-text-field v-model="query.nameLike" density="compact" :label="t('pages.images.filters.search')" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" flat hide-details single-line @update:model-value="reload"></v-text-field>
     </v-card-actions>
-    <v-data-table-server v-model:items-per-page="query.limit" :headers="headers" :items="items.data" show-select
+    <v-data-table-server v-model:page="query.page" v-model:items-per-page="query.limit" :headers="headers" :items="items.data" show-select
       v-model="imageSelected" :items-per-page-options="itemsPerPAgeOption" density="comfortable"
       :items-length="items.count" :loading="loading" item-value="name" return-object @update:options="loadItems">
       <template v-slot:item.vm="{ item }">
@@ -46,6 +40,7 @@
 <route lang="yaml">
 meta:
   titleKey: pages.images.documentTitle
+  projectFilter: true
 </route>
 
 <script lang="ts" setup>
@@ -62,7 +57,7 @@ import { initStorageList, getStorageList } from '@/composables/storage'
 import type { typeListStorageQuery } from '@/composables/storage'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/composables/i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useProjectFilter } from '@/composables/projectFilter'
 import { hasAdminScope } from '@/composables/auth'
 import { useAuthStore } from '@/stores/auth'
 
@@ -70,8 +65,7 @@ import { useAuthStore } from '@/stores/auth'
 const loading = ref(false)
 const auth = useAuthStore()
 const isAdmin = hasAdminScope(auth.scopes)
-const route = useRoute()
-const router = useRouter()
+const { projectId } = useProjectFilter()
 const stateCreateDialog = ref(false)
 const stateDeleteDialog = ref(false)
 
@@ -84,7 +78,7 @@ const query = ref<typeListImageQuery>({
   name: "",
   rool: "",
   poolUuid: null,
-  projectId: typeof route.query.projectId === 'string' ? route.query.projectId : null,
+  projectId: projectId.value,
 })
 
 const { t } = useI18n({ useScope: 'global' })
@@ -139,18 +133,15 @@ async function reload() {
   loading.value = false
 }
 
-async function updateProjectFilter(value: string | null) {
+watch(projectId, async value => {
   query.value.projectId = value
   query.value.page = 1
   query.value.nodeName = null
   query.value.poolUuid = null
-  const routeQuery = { ...route.query }
-  if (value) routeQuery.projectId = value
-  else delete routeQuery.projectId
-  await router.replace({ query: routeQuery })
+  imageSelected.value = []
   await queryImtesReload()
   await reload()
-}
+})
 
 useReloadListener(() => {
   reload()
